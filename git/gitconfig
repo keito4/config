@@ -1,0 +1,13 @@
+[user]
+	name = keito
+	email = newto30000@gmail.com
+[ghq]
+    root = ~/src
+
+[core]
+	editor = vim
+  excludesfile = ~/.gitignore
+  attributesfile = ~/.gitattributes
+
+[include]
+	path = ~/.gitconfig.local
