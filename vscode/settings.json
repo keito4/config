@@ -1,0 +1,105 @@
+{
+  // editor
+  "editor.formatOnSave": true,
+  "editor.autoClosingBrackets": "always",
+  "editor.tabSize": 2,
+  "editor.fontSize": 12,
+  "editor.fontFamily": "Fira Code",
+  "editor.fontLigatures": true,
+  "editor.minimap.renderCharacters": false,
+  "editor.renderIndentGuides": false,
+  // terminal
+  "terminal.integrated.scrollback": 2000,
+  "terminal.integrated.copyOnSelection": true,
+  "terminal.integrated.rendererType": "dom",
+  "terminal.integrated.inheritEnv": false,
+  // files
+  "files.autoSave": "onFocusChange",
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  // other
+  "explorer.confirmDelete": false,
+  "workbench.startupEditor": "newUntitledFile",
+  "workbench.sideBar.location": "right",
+  // extensions
+  "git.confirmSync": false,
+  "git.autofetch": true,
+  "git.autoStash": true,
+  "sync.gist": "9d0bc1f9765ae497fabdb2208987e574",
+  "sync.autoUpload": true,
+  "sync.quietSync": true,
+  "sync.forceUpload": true,
+  "window.zoomLevel": 1,
+  "liveServer.settings.donotShowInfoMsg": true,
+  "liveshare.featureSet": "insiders",
+  "breadcrumbs.enabled": true,
+  "extensions.autoUpdate": true,
+  "explorer.confirmDragAndDrop": false,
+  // language
+  // python
+  "python.linting.pylintPath": "",
+  "python.linting.pylintEnabled": false,
+  "python.linting.pylintUseMinimalCheckers": false,
+  "python.linting.banditPath": "",
+  "python.linting.lintOnSave": false,
+  "python.linting.enabled": false,
+  "python.jediEnabled": false,
+  "python.formatting.provider": "autopep8",
+  "[python]": {
+    "editor.tabSize": 4
+  },
+  "python.dataScience.sendSelectionToInteractiveWindow": true,
+  // ruby
+  "ruby.format": "rubocop",
+  // I don't know how to use home directory
+  "ruby.rubocop.executePath": "/Users/keito/.rbenv/shims/",
+  "ruby.rubocop.configFilePath": "/Users/keito/.rubocop.yml",
+  "ruby.lint": {
+    "rubocop": true
+  },
+  "ruby.useLanguageServer": true,
+  "solargraph.definitions": true,
+  "solargraph.diagnostics": true,
+  "solargraph.formatting": true,
+  // go
+  "go.useLanguageServer": true,
+  // javascript
+  "[javascript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "eslint.options": {
+    "configFile": "app/javascript/src/.eslintrc.js"
+  },
+  // other
+  "[markdown]": {
+    "editor.quickSuggestions": true
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  // docker
+  "docker.images.groupBy": "RepositoryName",
+  "docker.containers.sortBy": "Label",
+  "diffEditor.ignoreTrimWhitespace": false,
+  "workbench.enableExperiments": false,
+  "editor.suggestSelection": "first",
+  "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+  "vs-kubernetes": {
+    "vs-kubernetes.minikube-path": "/Users/mbp012/.vs-kubernetes/tools/minikube/darwin-amd64/minikube",
+    "vs-kubernetes.minikube-path.mac": "/Users/mbp012/.vs-kubernetes/tools/minikube/darwin-amd64/minikube",
+    "vs-kubernetes.helm-path.mac": "/Users/keito/.vs-kubernetes/tools/helm/darwin-amd64/helm",
+    "vs-kubernetes.draft-path.mac": "/Users/keito/.vs-kubernetes/tools/draft/darwin-amd64/draft"
+  },
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "workbench.iconTheme": "material-icon-theme",
+  "[ruby]": {
+    "editor.defaultFormatter": "misogi.ruby-rubocop"
+  }
+}
