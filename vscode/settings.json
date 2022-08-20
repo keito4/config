@@ -31,7 +31,7 @@
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "breadcrumbs.enabled": true,
-  "cSpell.userWords": ["firestore"],
+  "cSpell.userWords": ["firestore", "Kubernetes"],
   "diffEditor.ignoreTrimWhitespace": false,
   "docker.containers.sortBy": "Label",
   "docker.images.groupBy": "RepositoryName",
@@ -102,10 +102,12 @@
   "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
   "window.zoomLevel": 1,
   "workbench.editorAssociations": {
-    "*.ipynb": "jupyter.notebook.ipynb"
+    "*.ipynb": "jupyter.notebook.ipynb",
+    "*.plist": "default"
   },
   "workbench.enableExperiments": false,
   "workbench.iconTheme": "material-icon-theme",
   "workbench.sideBar.location": "right",
-  "workbench.startupEditor": "newUntitledFile"
+  "workbench.startupEditor": "newUntitledFile",
+  "editor.experimental.stickyScroll.enabled": true
 }

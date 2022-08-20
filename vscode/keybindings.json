@@ -163,5 +163,13 @@
   {
     "key": "cmd+k cmd+l",
     "command": "extension.vsKubernetesShowLogs"
+  },
+  {
+    "key": "shift+cmd+r",
+    "command": "-solargraph.search"
+  },
+  {
+    "key": "shift+cmd+r",
+    "command": "workbench.view.remote"
   }
 ]

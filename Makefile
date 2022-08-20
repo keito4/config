@@ -9,13 +9,27 @@ else
 endif
 
 
-export: export-vscode export-brew
+export: export-vscode export-brew export-git export-sh export-zsh
 
 export-vscode:
-	code --list-extensions > extensions_list.txt
+	code --list-extensions > ./vscode/extensions.txt
+	cat ~/Library/Application\ Support/Code/User/settings.json > ./vscode/settings.json
+	cat ~/Library/Application\ Support/Code/User/keybindings.json > ./vscode/keybindings.json
 
 export-brew:
-	brew bundle dump
+	brew bundle dump --file ./macOS/Brewfile --force
+
+export-git:
+	cat ~/.gitconfig > ./git/gitconfig
+	cat ~/.gitignore > ./git/gitignore
+	cat ~/.gitattributes > ./git/gitattributes
+
+export-sh:
+	cat ~/.zprofile > ./sh/.zprofile
+	cat ~/.zshrc > ./sh/.zshrc
+
+export-zsh:
+	cp -r -f ~/.zsh/ ./zsh
 
 import-brew:
-	brew bundle
+	brew bundle --file ./macOS/Brewfile

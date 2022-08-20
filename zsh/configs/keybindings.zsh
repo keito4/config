@@ -17,4 +17,3 @@ bindkey "^Q" push-line-or-edit
 bindkey "^F" forward-char
 bindkey "^B" backward-char
 bindkey -s "^T" "^[Isudo ^[A" # "t" for "toughguy"
-
