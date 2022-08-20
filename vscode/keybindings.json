@@ -1,9 +1,8 @@
-// Place your key bindings in this file to overwrite the defaults
 [
   {
     "key": "ctrl+enter",
     "command": "jupyter.execCurrentCell",
-    "when": "editorTextFocus"
+    "when": "editorTextFocus && editorLangId == 'python'"
   },
   {
     "key": "ctrl+]",
@@ -27,6 +26,11 @@
     "key": "ctrl+j",
     "command": "-editor.action.joinLines",
     "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "key": "shift+alt+d",
+    "command": "editor.action.goToTypeDefinition",
+    "when": "editorTextFocus"
   },
   {
     "key": "alt+d",
@@ -131,50 +135,6 @@
   {
     "key": "alt+cmd+0",
     "command": "-workbench.action.toggleEditorGroupLayout"
-  },
-  {
-    "key": "ctrl+s ctrl+l",
-    "command": "spotify.lyrics"
-  },
-  {
-    "key": "ctrl+s ctrl+f",
-    "command": "spotify.next"
-  },
-  {
-    "key": "ctrl+cmd+]",
-    "command": "-spotify.next"
-  },
-  {
-    "key": "ctrl+s ctrl+b",
-    "command": "spotify.previous"
-  },
-  {
-    "key": "ctrl+cmd+[",
-    "command": "-spotify.previous"
-  },
-  {
-    "key": "ctrl+s ctrl+n",
-    "command": "spotify.volumeDown"
-  },
-  {
-    "key": "shift+cmd+;",
-    "command": "-spotify.volumeDown"
-  },
-  {
-    "key": "ctrl+s ctrl+p",
-    "command": "spotify.volumeUp"
-  },
-  {
-    "key": "shift+cmd+'",
-    "command": "-spotify.volumeUp"
-  },
-  {
-    "key": "ctrl+s t",
-    "command": "vscode-spotify-tracks.focus"
-  },
-  {
-    "key": "ctrl+s p",
-    "command": "vscode-spotify-playlists.focus"
   },
   {
     "key": "ctrl+shift+cmd+p",
