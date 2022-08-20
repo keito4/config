@@ -1,13 +1,15 @@
 [user]
 	name = keito4
-	email = newto30000@gmail.com
+	email = newton30000@gmail.com
+
+
+[url "github:"]
+    InsteadOf = https://github.com/
+    InsteadOf = git@github.com:
+
 [ghq]
-    root = ~/src
+    root = ~/develop
 
 [core]
-	editor = vim
-  excludesfile = ~/.gitignore
-  attributesfile = ~/.gitattributes
-
-[include]
-	path = ~/.gitconfig.local
+	excludesfile = ~/.gitignore
+	attributesfile = ~/.gitattributes
