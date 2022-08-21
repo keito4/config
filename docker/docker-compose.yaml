@@ -1,0 +1,17 @@
+
+version: "3"
+services:
+  code-server:
+    build:
+      context: ./../
+      dockerfile: ./docker/Dockerfile
+    shm_size: '2gb'
+    container_name: code-server
+    environment:
+      PASSWORD: "password"
+    ports:
+      - 8080:8080
+    volumes:
+      - ~/.gitconfig:/home/coder/.gitconfig
+      - ~/.ssh:/home/coder/.ssh
+      - ../volume/extensions:/home/coder/.local/share/code-server/extensions

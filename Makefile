@@ -17,7 +17,7 @@ export-vscode:
 	cat ~/Library/Application\ Support/Code/User/keybindings.json > ./vscode/keybindings.json
 
 export-brew:
-	brew bundle dump --file ./macOS/Brewfile --force
+	brew bundle dump --file ./macOS/Brewfile --force --all
 
 export-git:
 	cat ~/.gitconfig > ./git/gitconfig
@@ -33,3 +33,10 @@ export-zsh:
 
 import-brew:
 	brew bundle --file ./macOS/Brewfile
+
+import-vscode:
+	# cat ./vscode/extensions.txt | xargs -I@ code --install-extension @
+	cat ./vscode/extensions.txt | xargs -I@ code-server --install-extension @
+
+import-zsh:
+	cp -r -f ./zsh ~/.zsh/
