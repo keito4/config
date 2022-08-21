@@ -1,4 +1,3 @@
-adpyke.vscode-sql-formatter
 BriteSnow.vscode-toggle-quotes
 bung87.rails
 bung87.vscode-gemfile
@@ -44,7 +43,6 @@ PKief.material-icon-theme
 qezhu.gitlink
 quicktype.quicktype
 rebornix.ruby
-redhat.java
 redhat.vscode-yaml
 ritwickdey.LiveServer
 shd101wyy.markdown-preview-enhanced
@@ -57,9 +55,6 @@ toba.vsfire
 tomoki1207.vscode-input-sequence
 tuxtina.json2yaml
 Tyriar.sort-lines
-VisualStudioExptTeam.vscodeintellicode
-vscjava.vscode-java-debug
-vscjava.vscode-java-pack
 wingrunr21.vscode-ruby
 wmaurer.change-case
 wmontalvo.vsc-meta-snippet
