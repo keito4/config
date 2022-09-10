@@ -1,0 +1,19 @@
+function gcop() {
+    git branch | peco | xargs git checkout
+}
+
+function gbdp () {
+    git branch | peco | xargs git branch -d
+}
+
+function gbda () {
+    git branch | grep -v '*' | xargs -I % git branch -D %
+}
+
+function gap (){
+    git diff master --name-only | peco | xargs git add
+}
+
+function gdp (){
+    git diff master --name-only | peco | xargs git diff
+}

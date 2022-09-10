@@ -1,3 +1,4 @@
+echo "okay"
 export PYENV_ROOT="${HOME}/.pyenv"
 
 if [ -d "${PYENV_ROOT}" ]; then
@@ -14,3 +15,6 @@ fi
 # source $HOME/.poetry/env
 
 # export CLOUDSDK_PYTHON=~/.pyenv/shims/python
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+

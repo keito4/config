@@ -7,6 +7,7 @@ dbaeumer.vscode-eslint
 dnicolson.binary-plist
 EditorConfig.EditorConfig
 esbenp.prettier-vscode
+firsttris.vscode-jest-runner
 formulahendry.auto-rename-tag
 formulahendry.code-runner
 GitHub.copilot

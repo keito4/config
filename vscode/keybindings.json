@@ -137,10 +137,6 @@
     "command": "-workbench.action.toggleEditorGroupLayout"
   },
   {
-    "key": "ctrl+shift+cmd+p",
-    "command": "workbench.view.extension.github-pull-requests"
-  },
-  {
     "key": "ctrl+cmd+tab",
     "command": "workbench.action.nextPanelView"
   },
@@ -151,6 +147,18 @@
   {
     "key": "shift+cmd+k",
     "command": "workbench.view.extension.kubernetesView"
+  },
+  {
+    "key": "cmd+k cmd+r",
+    "command": "extension.vsKubernetesRefreshExplorer"
+  },
+  {
+    "key": "cmd+k cmd+d",
+    "command": "extension.vsKubernetesDescribe"
+  },
+  {
+    "key": "cmd+k shift+r",
+    "command": "extension.vsKubernetesDescribe.Refresh"
   },
   {
     "key": "cmd+k cmd+n",
@@ -171,5 +179,15 @@
   {
     "key": "shift+cmd+r",
     "command": "workbench.view.remote"
+  },
+  {
+    "key": "shift+cmd+g",
+    "command": "workbench.view.scm",
+    "when": "workbench.scm.active"
+  },
+  {
+    "key": "ctrl+shift+g",
+    "command": "-workbench.view.scm",
+    "when": "workbench.scm.active"
   }
 ]
