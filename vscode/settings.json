@@ -87,7 +87,7 @@
   "solargraph.definitions": true,
   "solargraph.diagnostics": true,
   "solargraph.formatting": true,
-  "terminal.integrated.copyOnSelection": true,
+  "terminal.integrated.copyOnSelection": false,
   "terminal.integrated.inheritEnv": false,
   "terminal.integrated.scrollback": 2000,
   "typescript.updateImportsOnFileMove.enabled": "always",
@@ -109,6 +109,17 @@
   "workbench.iconTheme": "material-icon-theme",
   "workbench.sideBar.location": "right",
   "workbench.startupEditor": "newUntitledFile",
-  "editor.experimental.stickyScroll.enabled": true,
-  "workbench.colorTheme": "Default Dark+"
+  "workbench.colorTheme": "Default Dark+",
+  "editor.stickyScroll.enabled": true,
+  "github.copilot.enable": {
+    "*": true,
+    "yaml": false,
+    "plaintext": true,
+    "markdown": false
+  },
+  "remote.SSH.defaultExtensions": [
+    "GitHub.copilot",
+    "esbenp.prettier-vscode",
+    "steoates.autoimport"
+  ]
 }

@@ -3,7 +3,8 @@ FROM codercom/code-server
 RUN sudo chown coder:coder /home/coder -R && sudo chmod 777 -R /home/coder
 RUN sudo apt-get update && sudo apt-get install --no-install-recommends -y \
   curl \
-  make
+  make \
+  gcc
 
 ENV SHELL /usr/bin/zsh
 RUN curl -L https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh | zsh
@@ -32,6 +33,12 @@ RUN curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/s
   && rm get_helm.sh
 
 RUN /usr/local/go/bin/go install github.com/x-motemen/ghq@latest
+RUN git clone https://github.com/jonas/tig \
+  && cd tig \
+  && make \
+  && sudo make install \
+  && cd .. \
+  && rm -rf tig
 
 RUN mkdir /home/coder/develop
 RUN mkdir -p /home/coder/.local/share/code-server/User
