@@ -7,6 +7,10 @@ plugins=(
 
 source $ZSH/oh-my-zsh.sh
 
+if [[ $OS = "linux" ]] then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
 
 # load custom executable functions
 for function in ~/.zsh/functions/*; do
