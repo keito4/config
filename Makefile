@@ -44,7 +44,7 @@ import-zsh:
 	# apt install zsh
 	# sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 	# chsh -s /usr/bin/zsh
-	cp -r -f ./zsh ~/.zsh/
+	cp -r -f .zsh ~
 	cp ./sh/.zprofile ~/.zprofile
 	cp ./sh/.zshrc ~/.zshrc
 
