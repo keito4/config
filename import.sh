@@ -38,4 +38,4 @@ cp ./sh/.zprofile ~/
 cp ./sh/.zshrc ~/
 
 # import-git:
-cp -r -f ./git ~/.git
+cp -r -f ./git ~/

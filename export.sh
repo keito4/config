@@ -11,9 +11,9 @@ else
 fi
 
 # export-git:
-cat ~/.gitconfig > ./git/gitconfig
-cat ~/.gitignore > ./git/gitignore
-cat ~/.gitattributes > ./git/gitattributes
+cat ~/.git/gitconfig > ./git/gitconfig
+cat ~/.git/gitignore > ./git/gitignore
+cat ~/.git/gitattributes > ./git/gitattributes
 
 # export-sh:
 cat ~/.zprofile > ./sh/.zprofile
