@@ -13,4 +13,4 @@
 [core]
 	excludesfile = ~/.gitignore
 	attributesfile = ~/.gitattributes
-	editor = "emacs"
+	editor = emacs -nw

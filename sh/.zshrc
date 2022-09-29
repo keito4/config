@@ -7,7 +7,7 @@ plugins=(
 
 source $ZSH/oh-my-zsh.sh
 
-if [[ $OS = "linux" ]] then
+if [[ $(uname) = "Linux" ]] then
   eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
