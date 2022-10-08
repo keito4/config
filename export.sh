@@ -1,7 +1,9 @@
 # export-vscode:
-# 	code --list-extensions > ./vscode/extensions.txt
-# 	cat ~/Library/Application\ Support/Code/User/settings.json > ./vscode/settings.json
-# 	cat ~/Library/Application\ Support/Code/User/keybindings.json > ./vscode/keybindings.json
+if [[ $(uname) = "Darwin" ]] then
+	code --list-extensions > ./vscode/extensions.txt
+	cat ~/Library/Application\ Support/Code/User/settings.json > ./vscode/settings.json
+	cat ~/Library/Application\ Support/Code/User/keybindings.json > ./vscode/keybindings.json
+fi
 
 # export-brew:
 if [[ $(uname) = "Linux" ]] then
@@ -16,8 +18,11 @@ cat ~/.git/gitignore > ./git/gitignore
 cat ~/.git/gitattributes > ./git/gitattributes
 
 # export-sh:
-cat ~/.zprofile > ./sh/.zprofile
-cat ~/.zshrc > ./sh/.zshrc
+cat ~/.zprofile > ./dot/.zprofile
+cat ~/.zshrc > ./dot/.zshrc
+
+# export-others:
+cat ~/.rubocop.yml > ./dot/.rubocop.yml
 
 # export-zsh:
 cp -r -f ~/.zsh ./

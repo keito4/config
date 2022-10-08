@@ -9,10 +9,29 @@ function peco-src () {
 zle -N peco-src
 
 
+function peco-code () {
+  local selected_dir=$(ghq list -p | peco --query "$LBUFFER")
+  if [ -n "$selected_dir" ]; then
+    BUFFER="code ${selected_dir}"
+    zle accept-line
+  fi
+  zle clear-screen
+}
+zle -N peco-code
+
+function peco-select-ssh () {
+  local selected_host=$(grep -rh '^Host ' "${HOME}/.ssh/" | grep -v '*' | sed 's/Host//' | sort | peco --query "$LBUFFER")
+  if [ -n "$selected_host" ]; then
+    BUFFER="ssh ${selected_host}"
+    zle accept-line
+  fi
+  zle clear-screen
+}
+zle -N peco-select-ssh
+
 function peco-select-history() {
   BUFFER=$(\history -n -r 1 | peco --query "$LBUFFER")
   CURSOR=$#BUFFER
   zle clear-screen
 }
 zle -N peco-select-history
-

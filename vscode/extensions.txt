@@ -1,7 +1,8 @@
+1Password.op-vscode
+bbenoist.vagrant
 BriteSnow.vscode-toggle-quotes
 bung87.rails
 bung87.vscode-gemfile
-castwide.solargraph
 christian-kohler.npm-intellisense
 dbaeumer.vscode-eslint
 dnicolson.binary-plist
@@ -24,7 +25,6 @@ lokalise.i18n-ally
 mechatroner.rainbow-csv
 mhutchie.git-graph
 mikestead.dotenv
-misogi.ruby-rubocop
 mquandalle.graphql
 ms-azuretools.vscode-docker
 MS-CEINTL.vscode-language-pack-ja
@@ -34,6 +34,8 @@ ms-python.vscode-pylance
 ms-toolsai.jupyter
 ms-toolsai.jupyter-keymap
 ms-toolsai.jupyter-renderers
+ms-toolsai.vscode-jupyter-cell-tags
+ms-toolsai.vscode-jupyter-slideshow
 ms-vscode-remote.remote-containers
 ms-vscode-remote.remote-ssh
 ms-vscode-remote.remote-ssh-edit

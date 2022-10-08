@@ -22,3 +22,5 @@ bindkey -s "^T" "^[Isudo ^[A" # "t" for "toughguy"
 # peco
 bindkey '^R' peco-select-history
 bindkey '^G' peco-src
+bindkey '^V' peco-code
+bindkey '^S' peco-select-ssh

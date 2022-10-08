@@ -37,7 +37,7 @@ brew "node@14"
 brew "nvm"
 brew "openjdk"
 brew "peco"
-brew "php@7.4", restart_service: true, link: true
+brew "php"
 brew "pulumi"
 brew "pyenv"
 brew "python@3.10"
@@ -83,5 +83,7 @@ mas "Duplicate File Finder", id: 1032755628
 mas "KakaoTalk", id: 869223134
 mas "Keynote", id: 409183694
 mas "LINE", id: 539883307
+mas "Meeter", id: 1510445899
+mas "Microsoft Remote Desktop", id: 1295203466
 mas "NordVPN", id: 905953485
 mas "Paste", id: 967805235

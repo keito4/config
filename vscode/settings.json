@@ -80,13 +80,8 @@
   "ruby.lint": {
     "rubocop": true
   },
-  "ruby.rubocop.configFilePath": "~/.rubocop.yml",
-  "ruby.rubocop.executePath": "~/.rbenv/shims/",
   "ruby.useLanguageServer": true,
   "security.workspace.trust.untrustedFiles": "open",
-  "solargraph.definitions": true,
-  "solargraph.diagnostics": true,
-  "solargraph.formatting": true,
   "terminal.integrated.copyOnSelection": false,
   "terminal.integrated.inheritEnv": false,
   "terminal.integrated.scrollback": 2000,
@@ -99,7 +94,6 @@
   //   "vscode-kubernetes.helm-path.mac": "~/.vs-kubernetes/tools/helm/darwin-arm64/helm",
   //   "vscode-kubernetes.minikube-path.mac": "~/.vs-kubernetes/tools/minikube/darwin-arm64/minikube"
   // },
-  "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
   "window.zoomLevel": 1,
   "workbench.editorAssociations": {
     "*.ipynb": "jupyter.notebook.ipynb",
