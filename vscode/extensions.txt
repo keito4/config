@@ -11,6 +11,7 @@ esbenp.prettier-vscode
 firsttris.vscode-jest-runner
 formulahendry.auto-rename-tag
 formulahendry.code-runner
+funkyremi.vscode-google-translate
 GitHub.copilot
 golang.go
 IBM.output-colorizer
@@ -50,6 +51,7 @@ redhat.vscode-yaml
 ritwickdey.LiveServer
 shd101wyy.markdown-preview-enhanced
 sianglim.slim
+soerenuhrbach.vscode-deepl
 sporto.rails-go-to-spec
 sryze.uridecode
 steoates.autoimport
@@ -58,6 +60,7 @@ toba.vsfire
 tomoki1207.vscode-input-sequence
 tuxtina.json2yaml
 Tyriar.sort-lines
+Vue.volar
 wingrunr21.vscode-ruby
 wmaurer.change-case
 wmontalvo.vsc-meta-snippet

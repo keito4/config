@@ -115,5 +115,6 @@
     "GitHub.copilot",
     "esbenp.prettier-vscode",
     "steoates.autoimport"
-  ]
+  ],
+  "vscodeGoogleTranslate.preferredLanguage": "English"
 }
