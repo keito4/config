@@ -30,6 +30,7 @@ mquandalle.graphql
 ms-azuretools.vscode-docker
 MS-CEINTL.vscode-language-pack-ja
 ms-kubernetes-tools.vscode-kubernetes-tools
+ms-python.isort
 ms-python.python
 ms-python.vscode-pylance
 ms-toolsai.jupyter
@@ -40,6 +41,7 @@ ms-toolsai.vscode-jupyter-slideshow
 ms-vscode-remote.remote-containers
 ms-vscode-remote.remote-ssh
 ms-vscode-remote.remote-ssh-edit
+ms-vscode.remote-explorer
 ms-vsliveshare.vsliveshare
 naumovs.color-highlight
 peterj.proto
