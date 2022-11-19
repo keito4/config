@@ -24,7 +24,12 @@ fi
 # WORKON_HOME=$HOME/.virtualenvs
 # source /Users/keito/.pyenv/versions/3.5.2/bin/virtualenvwrapper.sh
 
-PATH="$HOME/.poetry/bin:$PATH"
-source $HOME/.poetry/env
+FILE="$HOME/.poetry/env"
+
+if [ -e $FILE ]; then
+    PATH="$HOME/.poetry/bin:$PATH"
+    source $HOME/.poetry/env
+fi
+
 
 export CLOUDSDK_PYTHON=~/.pyenv/shims/python

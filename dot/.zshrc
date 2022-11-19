@@ -47,5 +47,3 @@ _load_settings() {
 }
 
 _load_settings "$HOME/.zsh/configs"
-
-export PATH="$HOME/.poetry/bin:$PATH"
