@@ -27,7 +27,7 @@ fi
 FILE="$HOME/.poetry/env"
 
 if [ -e $FILE ]; then
-    PATH="$HOME/.poetry/bin:$PATH"
+    export PATH="$HOME/.poetry/bin:$PATH"
     source $HOME/.poetry/env
 fi
 

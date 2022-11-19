@@ -31,7 +31,7 @@
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "breadcrumbs.enabled": true,
-  "cSpell.userWords": ["firestore", "Kubernetes"],
+  "cSpell.userWords": ["firestore", "Kubernetes", "sqlalchemy"],
   "diffEditor.ignoreTrimWhitespace": false,
   "docker.containers.sortBy": "Label",
   "docker.images.groupBy": "RepositoryName",
@@ -116,5 +116,6 @@
     "esbenp.prettier-vscode",
     "steoates.autoimport"
   ],
-  "vscodeGoogleTranslate.preferredLanguage": "English"
+  "vscodeGoogleTranslate.preferredLanguage": "English",
+  "jupyter.askForKernelRestart": false
 }
