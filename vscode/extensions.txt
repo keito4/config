@@ -4,6 +4,7 @@ BriteSnow.vscode-toggle-quotes
 bung87.rails
 bung87.vscode-gemfile
 christian-kohler.npm-intellisense
+DanielSanMedium.dscodegpt
 dbaeumer.vscode-eslint
 dnicolson.binary-plist
 EditorConfig.EditorConfig

@@ -19,7 +19,8 @@
     }
   },
   "[python]": {
-    "editor.tabSize": 4
+    "editor.tabSize": 4,
+    "editor.formatOnType": true
   },
   "[ruby]": {
     "editor.defaultFormatter": "misogi.ruby-rubocop"
@@ -66,7 +67,6 @@
   "git.confirmSync": false,
   "go.toolsManagement.autoUpdate": true,
   "go.useLanguageServer": true,
-  "jupyter.sendSelectionToInteractiveWindow": true,
   "liveServer.settings.donotShowInfoMsg": true,
   "liveServer.settings.donotVerifyTags": true,
   "liveshare.featureSet": "insiders",
@@ -117,5 +117,18 @@
     "steoates.autoimport"
   ],
   "vscodeGoogleTranslate.preferredLanguage": "English",
-  "jupyter.askForKernelRestart": false
+  "jupyter.askForKernelRestart": false,
+  "vs-kubernetes": {
+    "vs-kubernetes.kubeconfig": "/Users/keito/.kube/config",
+    "vs-kubernetes.knownKubeconfigs": [
+      "/Users/keito/.kube/config",
+      "/home/keito4/.kube/config"
+    ]
+  },
+  "jupyter.interactiveWindow.textEditor.executeSelection": true,
+  "github.copilot.advanced": {},
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "javascript.updateImportsOnFileMove.enabled": "always"
 }
