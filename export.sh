@@ -1,28 +1,32 @@
-# export-vscode:
-if [[ $(uname) = "Darwin" ]] then
+#!/bin/zsh
+
+# Determine the OS
+if [[ $(uname) = "Linux" ]]; then
+	OS=linux
+elif [[ $(uname) = "Darwin" ]]; then
+	OS=darwin
+else
+	OS=windows
+fi
+
+# Export settings for the specific OS
+if [[ $OS = "darwin" ]]; then
 	code --list-extensions > ./vscode/extensions.txt
 	cat ~/Library/Application\ Support/Code/User/settings.json > ./vscode/settings.json
 	cat ~/Library/Application\ Support/Code/User/keybindings.json > ./vscode/keybindings.json
 fi
 
-# export-brew:
-if [[ $(uname) = "Linux" ]] then
+if [[ $OS = "linux" ]]; then
 	brew bundle dump --file ./brew/LinuxBrewfile --force --all
-else
+elif [[ $OS = "darwin" ]]; then
 	brew bundle dump --file ./brew/MacOSBrewfile --force --all
 fi
 
-# export-git:
+# Export general settings
 cat ~/.git/gitconfig > ./git/gitconfig
 cat ~/.git/gitignore > ./git/gitignore
 cat ~/.git/gitattributes > ./git/gitattributes
-
-# export-sh:
 cat ~/.zprofile > ./dot/.zprofile
 cat ~/.zshrc > ./dot/.zshrc
-
-# export-others:
 cat ~/.rubocop.yml > ./dot/.rubocop.yml
-
-# export-zsh:
 cp -r -f ~/.zsh ./
