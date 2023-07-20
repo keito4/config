@@ -86,15 +86,6 @@
   "terminal.integrated.inheritEnv": false,
   "terminal.integrated.scrollback": 2000,
   "typescript.updateImportsOnFileMove.enabled": "always",
-  // "vs-kubernetes": {
-  //   "vs-kubernetes.minikube-path": "~/.vs-kubernetes/tools/minikube/darwin-amd64/minikube",
-  //   "vs-kubernetes.minikube-path.mac": "~/.vs-kubernetes/tools/minikube/darwin-amd64/minikube",
-  //   "vs-kubernetes.helm-path.mac": "~/.vs-kubernetes/tools/helm/darwin-amd64/helm",
-  //   "vs-kubernetes.draft-path.mac": "~/.vs-kubernetes/tools/draft/darwin-amd64/draft",
-  //   "vscode-kubernetes.helm-path.mac": "~/.vs-kubernetes/tools/helm/darwin-arm64/helm",
-  //   "vscode-kubernetes.minikube-path.mac": "~/.vs-kubernetes/tools/minikube/darwin-arm64/minikube"
-  // },
-  "window.zoomLevel": 1,
   "workbench.editorAssociations": {
     "*.ipynb": "jupyter.notebook.ipynb",
     "*.plist": "default"
@@ -102,7 +93,6 @@
   "workbench.enableExperiments": false,
   "workbench.iconTheme": "material-icon-theme",
   "workbench.sideBar.location": "right",
-  "workbench.startupEditor": "newUntitledFile",
   "workbench.colorTheme": "Default Dark+",
   "editor.stickyScroll.enabled": true,
   "github.copilot.enable": {
@@ -130,5 +120,11 @@
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "javascript.updateImportsOnFileMove.enabled": "always"
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "remote.SSH.useLocalServer": false,
+  "remote.SSH.remotePlatform": {
+    "windows": "windows"
+  },
+  "workbench.startupEditor": "none",
+  "window.zoomLevel": -1
 }
