@@ -1,2 +1,3 @@
 volume/extensions/*
 */.env
+.zsh/configs/pre/.env.secret
