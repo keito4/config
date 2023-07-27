@@ -15,6 +15,7 @@ if [[ $OS = "linux" ]]; then
 elif [[ $OS = "darwin" ]]; then
 	brew bundle --file ./brew/MacOSBrewfile
 	cat ./vscode/extensions.txt | xargs -I@ code --install-extension @
+	op inject --in-file ./.zsh/configs/pre/.env.secret.template --out-file ./.zsh/configs/pre/.env.secret
 fi
 
 # Import general settings
