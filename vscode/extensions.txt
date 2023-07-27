@@ -1,8 +1,8 @@
+1Password.op-vscode
 BriteSnow.vscode-toggle-quotes
 bung87.rails
 bung87.vscode-gemfile
 christian-kohler.npm-intellisense
-DanielSanMedium.dscodegpt
 dbaeumer.vscode-eslint
 EditorConfig.EditorConfig
 esbenp.prettier-vscode
@@ -12,6 +12,7 @@ formulahendry.auto-rename-tag
 formulahendry.code-runner
 funkyremi.vscode-google-translate
 GitHub.copilot
+GitHub.copilot-chat
 golang.go
 IBM.output-colorizer
 ionutvmi.path-autocomplete

@@ -1,3 +1,2 @@
 .DS_Store
 .vscode/*.log
-.zsh/configs/pre/env.secret
