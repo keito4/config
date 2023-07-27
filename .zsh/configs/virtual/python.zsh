@@ -31,5 +31,5 @@ if [ -e $FILE ]; then
     source $HOME/.poetry/env
 fi
 
-
+eval "$(register-python-argcomplete conda)"
 export CLOUDSDK_PYTHON=~/.pyenv/shims/python
