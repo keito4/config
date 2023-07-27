@@ -12,8 +12,6 @@ fi
 # Export settings for the specific OS
 if [[ $OS = "darwin" ]]; then
 	code --list-extensions > ./vscode/extensions.txt
-	cat ~/Library/Application\ Support/Code/User/settings.json > ./vscode/settings.json
-	cat ~/Library/Application\ Support/Code/User/keybindings.json > ./vscode/keybindings.json
 fi
 
 if [[ $OS = "linux" ]]; then

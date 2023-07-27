@@ -1,8 +1,7 @@
 [user]
 	name = keito4
 	email = newton30000@gmail.com
-	signingkey =
-
+	signingkey = ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC5wg+V/70kCWSwZ2dS5+ahTAmBT8ql5td3nawixO5YSZpC4ry64fwLWJpZYy5NhsxZ789ZF6SV2Bh865TYX3xBzJ8PidW4Gz2pwBE0oRpz6klNenPyjghmdWDEbCz17aSth1coA4s07gQqOmi1NMmIt6qMSRqrbthHYDO+PcfstoR/uDPZOM+8ttiO0mMe3chDy+DuAnzgHqxnV+JoEU3+u2fNUqqXdNJnrgjedqbPQSQW4/YLByo6RWbraJ1tKazKzy3eRADQYdXbaRJBMSVp13yiMMrPpK/8RooDgB/Tq970eUBvlGhHYSEf3eLCE2s//qosOv53ctPQTSoptZ8ghxDchn29BRT++2lJQOnRCfT+65KUGfKHgp16wJYJcZ6RIY3UBWG62l54EpElxK5KIYTNV8CUgjIXwClSbzRYvn0tXLMs7XbsJdPWTj/A7V1oE//OcQecYPT4Wobfzczs3LE45ri73sDzK37yw4cvN2YP53McvMI3tghrd+X6TL0=
 
 [url "github:"]
     InsteadOf = https://github.com/
