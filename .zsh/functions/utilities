@@ -1,0 +1,19 @@
+function envup() {
+  if [ -f .env ]; then
+    export $(sed '/^ *#/ d' .env)
+  else
+    echo 'No .env file found' 1>&2
+    return 1
+  fi
+}
+
+function op_inject() {
+  file=$1
+  if [ -f "$file" ]; then
+    output_file="${file%.*}"
+    op inject --in-file $file --out-file $output_file
+  else
+    echo "No $file file found" 1>&2
+    return 1
+  fi
+}
