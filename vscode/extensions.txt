@@ -1,5 +1,4 @@
 1Password.op-vscode
-BriteSnow.vscode-toggle-quotes
 bung87.rails
 bung87.vscode-gemfile
 christian-kohler.npm-intellisense
@@ -10,7 +9,6 @@ figma.figma-vscode-extension
 firsttris.vscode-jest-runner
 formulahendry.auto-rename-tag
 formulahendry.code-runner
-funkyremi.vscode-google-translate
 GitHub.copilot
 GitHub.copilot-chat
 golang.go
@@ -18,8 +16,6 @@ IBM.output-colorizer
 ionutvmi.path-autocomplete
 jebbs.plantuml
 jithurjacob.nbpreviewer
-kaiwood.center-editor-window
-kaiwood.endwise
 lokalise.i18n-ally
 mechatroner.rainbow-csv
 mhutchie.git-graph
@@ -51,15 +47,11 @@ redhat.vscode-yaml
 ritwickdey.LiveServer
 shd101wyy.markdown-preview-enhanced
 sianglim.slim
-soerenuhrbach.vscode-deepl
-sporto.rails-go-to-spec
 sryze.uridecode
 steoates.autoimport
 streetsidesoftware.code-spell-checker
 toba.vsfire
 tomoki1207.vscode-input-sequence
-tuxtina.json2yaml
-Tyriar.sort-lines
 Vue.volar
 wingrunr21.vscode-ruby
 wmaurer.change-case
