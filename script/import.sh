@@ -24,3 +24,5 @@ cp ./dot/.zprofile ~/
 cp ./dot/.zshrc ~/
 cp ./dot/.rubocop.yml ~/
 cp -r -f ./git ~/
+npm install -g $(jq -r '.dependencies | keys | .[]' ./npm/global.json)
+

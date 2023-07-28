@@ -1,0 +1,29 @@
+{
+  "name": "lib",
+  "dependencies": {
+    "@types/node": {
+      "version": "20.3.1"
+    },
+    "aicommits": {
+      "version": "1.11.0"
+    },
+    "eslint": {
+      "version": "8.12.0"
+    },
+    "firebase-tools": {
+      "version": "12.3.1"
+    },
+    "fs": {
+      "version": "0.0.1-security"
+    },
+    "npm": {
+      "version": "8.1.2"
+    },
+    "prettier": {
+      "version": "2.6.0"
+    },
+    "ts-node": {
+      "version": "10.9.1"
+    }
+  }
+}

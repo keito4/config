@@ -28,3 +28,4 @@ cat ~/.zprofile > ./dot/.zprofile
 cat ~/.zshrc > ./dot/.zshrc
 cat ~/.rubocop.yml > ./dot/.rubocop.yml
 cp -r -f ~/.zsh ./
+npm list -g --depth=0 --json > ./npm/global.json
