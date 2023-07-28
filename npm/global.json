@@ -2,28 +2,40 @@
   "name": "lib",
   "dependencies": {
     "@types/node": {
-      "version": "20.3.1"
+      "version": "20.4.5",
+      "overridden": false
     },
     "aicommits": {
-      "version": "1.11.0"
+      "version": "1.11.0",
+      "overridden": false
     },
     "eslint": {
-      "version": "8.12.0"
+      "version": "8.45.0",
+      "overridden": false
     },
     "firebase-tools": {
-      "version": "12.3.1"
+      "version": "12.4.6",
+      "overridden": false
     },
     "fs": {
-      "version": "0.0.1-security"
+      "version": "0.0.1-security",
+      "overridden": false
     },
     "npm": {
-      "version": "8.1.2"
+      "version": "9.8.1",
+      "overridden": false
+    },
+    "pbjs": {
+      "version": "0.0.14",
+      "overridden": false
     },
     "prettier": {
-      "version": "2.6.0"
+      "version": "3.0.0",
+      "overridden": false
     },
     "ts-node": {
-      "version": "10.9.1"
+      "version": "10.9.1",
+      "overridden": false
     }
   }
 }
