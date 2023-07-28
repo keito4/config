@@ -41,6 +41,7 @@ brew "graphviz"
 brew "helm"
 brew "imagemagick"
 brew "jemalloc"
+brew "jq"
 brew "k6"
 brew "k9s"
 brew "kompose"
@@ -109,6 +110,7 @@ cask "vivaldi"
 cask "zoom"
 mas "Battery Monitor", id: 836505650
 mas "LINE", id: 539883307
+mas "Mayday", id: 1473168024
 mas "Meeter", id: 1510445899
 mas "Microsoft Remote Desktop", id: 1295203466
 mas "NordVPN", id: 905953485
@@ -126,11 +128,13 @@ vscode "formulahendry.auto-rename-tag"
 vscode "formulahendry.code-runner"
 vscode "GitHub.copilot"
 vscode "GitHub.copilot-chat"
+vscode "github.vscode-github-actions"
 vscode "golang.go"
 vscode "IBM.output-colorizer"
 vscode "ionutvmi.path-autocomplete"
 vscode "jebbs.plantuml"
 vscode "jithurjacob.nbpreviewer"
+vscode "kangping.protobuf"
 vscode "lokalise.i18n-ally"
 vscode "mechatroner.rainbow-csv"
 vscode "mhutchie.git-graph"
