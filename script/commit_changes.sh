@@ -1,9 +1,7 @@
 #!/bin/bash
 
-repo_path="~/develop/github.com/keito4/config"
-
 function check_and_commit() {
-    cd $repo_path
+    cd $REPO_PATH
 
     bash ./script/export.sh
 
