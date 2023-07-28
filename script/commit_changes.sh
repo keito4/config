@@ -7,7 +7,7 @@ function check_and_commit() {
 
     if [[ `git status --porcelain` ]]; then
         git add .
-        git-aicommit
+        aicommits --all
     fi
 }
 
