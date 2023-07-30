@@ -31,6 +31,7 @@ brew "gawk"
 brew "gcc"
 brew "libavif"
 brew "gd"
+brew "gh"
 brew "ghostscript"
 brew "ghq"
 brew "git"
@@ -99,8 +100,8 @@ cask "lark"
 cask "miniconda"
 cask "ngrok"
 cask "notion"
+cask "paperpile"
 cask "postman"
-cask "powershell"
 cask "rewind"
 cask "slack"
 cask "tableplus"
@@ -110,7 +111,6 @@ cask "vivaldi"
 cask "zoom"
 mas "Battery Monitor", id: 836505650
 mas "LINE", id: 539883307
-mas "Mayday", id: 1473168024
 mas "Meeter", id: 1510445899
 mas "Microsoft Remote Desktop", id: 1295203466
 mas "NordVPN", id: 905953485
@@ -139,6 +139,7 @@ vscode "lokalise.i18n-ally"
 vscode "mechatroner.rainbow-csv"
 vscode "mhutchie.git-graph"
 vscode "mikestead.dotenv"
+vscode "miroreo.replit"
 vscode "ms-azuretools.vscode-docker"
 vscode "MS-CEINTL.vscode-language-pack-ja"
 vscode "ms-kubernetes-tools.vscode-kubernetes-tools"

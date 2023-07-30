@@ -25,3 +25,5 @@ cp "$REPO_PATH/dot/.zshrc" ~/
 cp "$REPO_PATH/dot/.rubocop.yml" ~/
 cp -r -f "$REPO_PATH/git" ~/
 npm install -g $(jq -r '.dependencies | keys | .[]' "$REPO_PATH/npm/global.json")
+
+gh api user/repos | jq -r '.[].ssh_url' | xargs -L1 ghq get
