@@ -9,6 +9,20 @@ else
 	OS=windows
 fi
 
+# install brew if brew is not installed
+if ! type brew > /dev/null 2>&1; then
+	if [[ $OS = "linux" ]]; then
+		sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
+	elif [[ $OS = "darwin" ]]; then
+		/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+	fi
+fi
+
+# if REPO_PATH is not set, set it to the current directory
+if [[ -z $REPO_PATH ]]; then
+	REPO_PATH=$(pwd)
+fi
+
 # Import settings for the specific OS
 if [[ $OS = "linux" ]]; then
 	brew bundle --file "$REPO_PATH/brew/LinuxBrewfile"
