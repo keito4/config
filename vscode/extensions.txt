@@ -1,8 +1,11 @@
 1Password.op-vscode
+antfu.unocss
+bradlc.vscode-tailwindcss
 bung87.rails
 bung87.vscode-gemfile
 christian-kohler.npm-intellisense
 dbaeumer.vscode-eslint
+denoland.vscode-deno
 EditorConfig.EditorConfig
 esbenp.prettier-vscode
 figma.figma-vscode-extension
@@ -26,6 +29,7 @@ miroreo.replit
 ms-azuretools.vscode-docker
 MS-CEINTL.vscode-language-pack-ja
 ms-kubernetes-tools.vscode-kubernetes-tools
+ms-python.autopep8
 ms-python.isort
 ms-python.python
 ms-python.vscode-pylance

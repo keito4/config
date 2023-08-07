@@ -2,11 +2,15 @@
   "name": "lib",
   "dependencies": {
     "@types/node": {
-      "version": "20.4.5",
+      "version": "20.4.8",
       "overridden": false
     },
     "aicommits": {
       "version": "1.11.0",
+      "overridden": false
+    },
+    "corepack": {
+      "version": "0.18.0",
       "overridden": false
     },
     "eslint": {
@@ -14,7 +18,7 @@
       "overridden": false
     },
     "firebase-tools": {
-      "version": "12.4.6",
+      "version": "12.4.7",
       "overridden": false
     },
     "fs": {
@@ -30,7 +34,7 @@
       "overridden": false
     },
     "prettier": {
-      "version": "3.0.0",
+      "version": "3.0.1",
       "overridden": false
     },
     "ts-node": {
