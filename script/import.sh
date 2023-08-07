@@ -23,6 +23,11 @@ if [[ -z $REPO_PATH ]]; then
 	REPO_PATH=$(pwd)
 fi
 
+# Install oh-my-zsh
+if [[ ! -d ~/.oh-my-zsh ]]; then
+	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
+
 # Import settings for the specific OS
 if [[ $OS = "linux" ]]; then
 	brew bundle --file "$REPO_PATH/brew/LinuxBrewfile"
@@ -31,6 +36,7 @@ elif [[ $OS = "darwin" ]]; then
 	cat "$REPO_PATH/vscode/extensions.txt" | xargs -I@ code --install-extension @
 	op inject --in-file "$REPO_PATH/.zsh/configs/pre/.env.secret.template" --out-file "$REPO_PATH/.zsh/configs/pre/.env.secret"
 fi
+
 
 # Import general settings
 cp -r -f "$REPO_PATH/.zsh" ~/
