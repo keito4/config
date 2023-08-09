@@ -22,7 +22,6 @@ fi
 
 # export PIP_RESPECT_VIRTUALENV=true
 # WORKON_HOME=$HOME/.virtualenvs
-# source /Users/keito/.pyenv/versions/3.5.2/bin/virtualenvwrapper.sh
 
 FILE="$HOME/.poetry/env"
 
