@@ -22,6 +22,7 @@ fi
 
 # export PIP_RESPECT_VIRTUALENV=true
 # WORKON_HOME=$HOME/.virtualenvs
+# source /Users/keito/.pyenv/versions/3.5.2/bin/virtualenvwrapper.sh
 
 FILE="$HOME/.poetry/env"
 
@@ -30,5 +31,5 @@ if [ -e $FILE ]; then
     source $HOME/.poetry/env
 fi
 
-eval "$(register-python-argcomplete conda)"
+# eval "$(register-python-argcomplete conda)"
 export CLOUDSDK_PYTHON=~/.pyenv/shims/python
