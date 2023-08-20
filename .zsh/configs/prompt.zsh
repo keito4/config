@@ -1,14 +1,21 @@
-# modify the prompt to contain git branch name if applicable
-git_prompt_info() {
-  current_branch=$(git branch -a > /dev/null 2>&1 | grep -E '^\*' | cut -b 3- 2 >  /dev/null 2>&1)
-  if [[ -n $current_branch ]]; then
-    echo " %{$fg_bold[green]%}$current_branch%{$reset_color%}"
-  fi
+function shortened_pwd() {
+    local max_length=36
+    local current_dir=$(pwd)
+    local dir_length=${#current_dir}
+
+    if (( dir_length <= max_length )); then
+        echo "$current_dir"
+    else
+        local cut_length=$((dir_length - max_length + 3))
+        local prefix_length=$(( (dir_length - cut_length) / 2 ))
+        local suffix_length=$(( dir_length - prefix_length - cut_length ))
+
+        local prefix=${current_dir[1,prefix_length]}
+        local suffix=${current_dir[-suffix_length,-1]}
+
+        echo "${prefix}...${suffix}"
+    fi
 }
 
-setopt promptsubst
 
-# Allow exported PS1 variable to override default prompt.
-if ! env | grep -q '^PS1='; then
-  PS1='${SSH_CONNECTION+"%{$fg_bold[green]%}%n@%m:"}%{$fg_bold[blue]%}%c%{$reset_color%}$(git_prompt_info) %# '
-fi
+PROMPT='%{$fg_bold[green]%}%n@%m %{$fg_bold[magenta]%}%* %{$fg_bold[blue]%}$(shortened_pwd) %{$reset_color%}$ '
