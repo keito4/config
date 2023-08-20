@@ -2,7 +2,7 @@
   "name": "lib",
   "dependencies": {
     "@types/node": {
-      "version": "20.4.10",
+      "version": "20.5.1",
       "overridden": false
     },
     "aicommits": {
@@ -18,7 +18,7 @@
       "overridden": false
     },
     "firebase-tools": {
-      "version": "12.4.7",
+      "version": "12.4.8",
       "overridden": false
     },
     "fs": {
@@ -34,7 +34,7 @@
       "overridden": false
     },
     "prettier": {
-      "version": "3.0.1",
+      "version": "3.0.2",
       "overridden": false
     },
     "ts-node": {
