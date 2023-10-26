@@ -33,7 +33,7 @@ if [[ $OS = "linux" ]]; then
 	brew bundle --file "$REPO_PATH/brew/LinuxBrewfile"
 elif [[ $OS = "darwin" ]]; then
 	brew bundle --file "$REPO_PATH/brew/MacOSBrewfile"
-	cat "$REPO_PATH/vscode/extensions.txt" | xargs -I@ code --install-extension @
+	cat "$REPO_PATH/vscode/extensions.txt" | xargs -I@ cursor --install-extension @
 	op inject --in-file "$REPO_PATH/.zsh/configs/pre/.env.secret.template" --out-file "$REPO_PATH/.zsh/configs/pre/.env.secret"
 fi
 

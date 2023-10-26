@@ -2,6 +2,9 @@
 source <(kubectl completion zsh)
 # <<<<  kubectl command completion (end)
 
+# >>>> supabase command completion (start)
+source <(supabase completion zsh)
+# <<<<  supabase command completion (end)
 
 # >>>> 1password command completion (start)
 eval "$(op completion zsh)"; compdef _op op

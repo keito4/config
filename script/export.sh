@@ -11,7 +11,7 @@ fi
 
 # Export settings for the specific OS
 if [[ $OS = "darwin" ]]; then
-	code --list-extensions > "$REPO_PATH/vscode/extensions.txt"
+	cursor --list-extensions > "$REPO_PATH/vscode/extensions.txt"
 fi
 
 if [[ $OS = "linux" ]]; then

@@ -6,6 +6,7 @@ bung87.vscode-gemfile
 christian-kohler.npm-intellisense
 dbaeumer.vscode-eslint
 denoland.vscode-deno
+eamodio.gitlens
 EditorConfig.EditorConfig
 esbenp.prettier-vscode
 figma.figma-vscode-extension
@@ -49,10 +50,10 @@ peterj.proto
 PKief.material-icon-theme
 qezhu.gitlink
 quicktype.quicktype
-rebornix.ruby
 redhat.vscode-yaml
 ritwickdey.LiveServer
 shd101wyy.markdown-preview-enhanced
+Shopify.ruby-lsp
 sianglim.slim
 sryze.uridecode
 steoates.autoimport
@@ -60,7 +61,7 @@ streetsidesoftware.code-spell-checker
 toba.vsfire
 tomoki1207.vscode-input-sequence
 Vue.volar
-wingrunr21.vscode-ruby
+withfig.fig
 wmaurer.change-case
 wmontalvo.vsc-meta-snippet
 zxh404.vscode-proto3
