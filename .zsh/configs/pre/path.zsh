@@ -17,5 +17,6 @@ PATH="/opt/homebrew/opt/php@7.4/bin:$PATH"
 PATH="/opt/homebrew/opt/php@7.4/sbin:$PATH"
 
 PATH="$HOME/.deno/bin:$PATH"
+PATH="$HOME/flutter/bin:$PATH"
 
 export -U PATH

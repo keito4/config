@@ -1,4 +1,6 @@
+FaroSystemAppender constructor
 1Password.op-vscode
+4ops.terraform
 antfu.unocss
 bradlc.vscode-tailwindcss
 bung87.rails
@@ -40,18 +42,18 @@ ms-toolsai.jupyter-renderers
 ms-toolsai.vscode-jupyter-cell-tags
 ms-toolsai.vscode-jupyter-slideshow
 ms-vscode-remote.remote-containers
-ms-vscode-remote.remote-ssh
 ms-vscode-remote.remote-ssh-edit
 ms-vscode-remote.remote-wsl
-ms-vscode.remote-explorer
 ms-vsliveshare.vsliveshare
 naumovs.color-highlight
 peterj.proto
 PKief.material-icon-theme
 qezhu.gitlink
 quicktype.quicktype
+rebornix.ruby
 redhat.vscode-yaml
 ritwickdey.LiveServer
+Shan.code-settings-sync
 shd101wyy.markdown-preview-enhanced
 Shopify.ruby-lsp
 sianglim.slim
@@ -61,6 +63,7 @@ streetsidesoftware.code-spell-checker
 toba.vsfire
 tomoki1207.vscode-input-sequence
 Vue.volar
+wingrunr21.vscode-ruby
 withfig.fig
 wmaurer.change-case
 wmontalvo.vsc-meta-snippet
