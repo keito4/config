@@ -6,6 +6,8 @@ bradlc.vscode-tailwindcss
 bung87.rails
 bung87.vscode-gemfile
 christian-kohler.npm-intellisense
+Dart-Code.dart-code
+Dart-Code.flutter
 dbaeumer.vscode-eslint
 denoland.vscode-deno
 eamodio.gitlens
@@ -28,7 +30,7 @@ lokalise.i18n-ally
 mechatroner.rainbow-csv
 mhutchie.git-graph
 mikestead.dotenv
-miroreo.replit
+mquandalle.graphql
 ms-azuretools.vscode-docker
 MS-CEINTL.vscode-language-pack-ja
 ms-kubernetes-tools.vscode-kubernetes-tools
@@ -48,7 +50,7 @@ ms-vsliveshare.vsliveshare
 naumovs.color-highlight
 peterj.proto
 PKief.material-icon-theme
-qezhu.gitlink
+Prisma.prisma
 quicktype.quicktype
 rebornix.ruby
 redhat.vscode-yaml
@@ -62,9 +64,6 @@ steoates.autoimport
 streetsidesoftware.code-spell-checker
 toba.vsfire
 tomoki1207.vscode-input-sequence
-Vue.volar
 wingrunr21.vscode-ruby
-withfig.fig
 wmaurer.change-case
-wmontalvo.vsc-meta-snippet
 zxh404.vscode-proto3
