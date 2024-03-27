@@ -1,0 +1,45 @@
+{
+  "name": "lib",
+  "dependencies": {
+    "@types/node": {
+      "version": "20.11.17",
+      "overridden": false
+    },
+    "aicommits": {
+      "version": "1.11.0",
+      "overridden": false
+    },
+    "corepack": {
+      "version": "0.24.1",
+      "overridden": false
+    },
+    "eslint": {
+      "version": "8.56.0",
+      "overridden": false
+    },
+    "firebase-tools": {
+      "version": "13.2.1",
+      "overridden": false
+    },
+    "fs": {
+      "version": "0.0.1-security",
+      "overridden": false
+    },
+    "npm": {
+      "version": "10.4.0",
+      "overridden": false
+    },
+    "pbjs": {
+      "version": "0.0.14",
+      "overridden": false
+    },
+    "prettier": {
+      "version": "3.2.5",
+      "overridden": false
+    },
+    "ts-node": {
+      "version": "10.9.2",
+      "overridden": false
+    }
+  }
+}
