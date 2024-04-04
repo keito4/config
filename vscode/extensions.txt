@@ -4,6 +4,7 @@ FaroSystemAppender constructor
 amazonwebservices.codewhisperer-for-command-line-companion
 antfu.unocss
 betajob.modulestf
+bierner.markdown-mermaid
 bradlc.vscode-tailwindcss
 bung87.rails
 bung87.vscode-gemfile
