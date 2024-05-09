@@ -1,0 +1,35 @@
+function init_terraform() {
+  mkdir -p terraform
+  cd terraform
+
+  # ルートディレクトリ内のファイル
+  touch README.md
+
+  # 環境ディレクトリの作成
+  mkdir -p environments/dev
+  mkdir -p environments/prod
+
+  # dev環境内のファイル
+  touch environments/dev/main.tf
+  touch environments/dev/outputs.tf
+  touch environments/dev/terraform.tfvars
+  touch environments/dev/terraform.tfvars.template
+  touch environments/dev/variables.tf
+
+  # prod環境内のファイル
+  touch environments/prod/main.tf
+  touch environments/prod/outputs.tf
+  touch environments/prod/terraform.tfvars
+  touch environments/prod/terraform.tfvars.template
+  touch environments/prod/variables.tf
+
+  # モジュールディレクトリの作成
+  mkdir -p modules/template
+
+  # templateモジュール内のファイル
+  touch modules/template/main.tf
+  touch modules/template/outputs.tf
+  touch modules/template/variables.tf
+
+  echo "構造が作成されました。"
+}
