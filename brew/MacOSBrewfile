@@ -78,6 +78,7 @@ brew "python@3.10"
 brew "ruby-build"
 brew "rbenv"
 brew "rust"
+brew "six", link: false
 brew "terraform"
 brew "tig"
 brew "translate-shell"

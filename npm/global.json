@@ -6,7 +6,7 @@
       "overridden": false
     },
     "@types/node": {
-      "version": "20.12.11",
+      "version": "20.12.12",
       "overridden": false
     },
     "aicommits": {
@@ -14,23 +14,27 @@
       "overridden": false
     },
     "corepack": {
-      "version": "0.28.0",
+      "version": "0.28.1",
       "overridden": false
     },
     "eslint": {
-      "version": "9.2.0",
+      "version": "9.3.0",
       "overridden": false
     },
     "firebase-tools": {
-      "version": "13.8.1",
+      "version": "13.9.0",
       "overridden": false
     },
     "fs": {
       "version": "0.0.1-security",
       "overridden": false
     },
+    "npm-check-updates": {
+      "version": "16.14.20",
+      "overridden": false
+    },
     "npm": {
-      "version": "10.7.0",
+      "version": "10.8.0",
       "overridden": false
     },
     "pbjs": {
