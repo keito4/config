@@ -6,7 +6,7 @@
       "overridden": false
     },
     "@types/node": {
-      "version": "20.12.12",
+      "version": "20.14.2",
       "overridden": false
     },
     "aicommits": {
@@ -14,15 +14,15 @@
       "overridden": false
     },
     "corepack": {
-      "version": "0.28.1",
+      "version": "0.28.2",
       "overridden": false
     },
     "eslint": {
-      "version": "9.3.0",
+      "version": "9.4.0",
       "overridden": false
     },
     "firebase-tools": {
-      "version": "13.9.0",
+      "version": "13.11.2",
       "overridden": false
     },
     "fs": {
@@ -34,7 +34,7 @@
       "overridden": false
     },
     "npm": {
-      "version": "10.8.0",
+      "version": "10.8.1",
       "overridden": false
     },
     "pbjs": {
@@ -42,7 +42,7 @@
       "overridden": false
     },
     "prettier": {
-      "version": "3.2.5",
+      "version": "3.3.1",
       "overridden": false
     },
     "ts-node": {
