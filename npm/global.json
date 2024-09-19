@@ -1,12 +1,16 @@
 {
   "name": "lib",
   "dependencies": {
+    "@google/clasp": {
+      "version": "2.4.2",
+      "overridden": false
+    },
     "@openapitools/openapi-generator-cli": {
-      "version": "2.13.4",
+      "version": "2.13.5",
       "overridden": false
     },
     "@types/node": {
-      "version": "20.14.10",
+      "version": "22.5.0",
       "overridden": false
     },
     "aicommits": {
@@ -14,15 +18,15 @@
       "overridden": false
     },
     "corepack": {
-      "version": "0.28.2",
+      "version": "0.20.0",
       "overridden": false
     },
     "eslint": {
-      "version": "9.7.0",
+      "version": "8.57.0",
       "overridden": false
     },
     "firebase-tools": {
-      "version": "13.13.2",
+      "version": "13.15.4",
       "overridden": false
     },
     "fs": {
@@ -42,11 +46,19 @@
       "overridden": false
     },
     "prettier": {
-      "version": "3.3.2",
+      "version": "3.3.3",
+      "overridden": false
+    },
+    "serverless": {
+      "version": "4.2.4",
       "overridden": false
     },
     "ts-node": {
       "version": "10.9.2",
+      "overridden": false
+    },
+    "typescript": {
+      "version": "5.5.4",
       "overridden": false
     }
   }
