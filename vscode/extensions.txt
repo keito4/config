@@ -2,6 +2,7 @@
 4ops.terraform
 amazonwebservices.codewhisperer-for-command-line-companion
 antfu.unocss
+anysphere.pyright
 betajob.modulestf
 bierner.markdown-mermaid
 bradlc.vscode-tailwindcss
@@ -19,8 +20,6 @@ figma.figma-vscode-extension
 firsttris.vscode-jest-runner
 formulahendry.auto-rename-tag
 formulahendry.code-runner
-github.copilot
-github.copilot-chat
 github.vscode-github-actions
 golang.go
 ibm.output-colorizer
@@ -29,6 +28,7 @@ jebbs.plantuml
 jithurjacob.nbpreviewer
 kangping.protobuf
 lokalise.i18n-ally
+marp-team.marp-vscode
 mechatroner.rainbow-csv
 mhutchie.git-graph
 mikestead.dotenv
@@ -66,7 +66,7 @@ quicktype.quicktype
 rebornix.ruby
 redhat.vscode-yaml
 ritwickdey.liveserver
-saoudrizwan.claude-dev
+rooveterinaryinc.roo-cline
 shan.code-settings-sync
 shd101wyy.markdown-preview-enhanced
 shopify.ruby-lsp
