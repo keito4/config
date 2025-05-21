@@ -6,7 +6,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 
 ## Directory Structure
 
-- `docker`: Contains a Dockerfile and docker-compose file for setting up a Docker-based development environment using the `codercom/code-server` image.
+- `docker`: Contains a Dockerfile and docker-compose file for setting up a Docker-based development environment using the `codercom/code-server` image. Set the `CODE_SERVER_PASSWORD` environment variable to control the login password.
 - `kubernetes`: Contains files for setting up a Kubernetes cluster using Vagrant, including a Vagrantfile, scripts for the master and worker nodes, and a script for fetching GKE credentials.
 - `script`: Contains scripts for exporting configuration settings from a system to this repository (`export.sh`), importing configuration settings from this repository to a system (`import.sh`), and checking for changes and making a commit (`commit_changes.sh`).
 - `.zsh`, `git`, `macOS`, `.vscode`, `linux`, `vscode`, `npm`, `brew`, `dot`: These directories contain various configuration files and settings for different tools and systems.
@@ -17,7 +17,7 @@ Before using these configuration settings, you should review them and adjust as 
 
 ### Importing Configuration Settings
 
-Run the `import.sh` script to import the configuration settings to a system. Depending on the operating system, it performs the following actions:
+Set the `REPO_PATH` environment variable to this repository's root and run the `import.sh` script to import configuration settings. Depending on the operating system, it performs the following actions:
 
 - Installs packages listed in a Brewfile.
 - Installs VS Code extensions listed in a specific file.
@@ -26,7 +26,7 @@ Run the `import.sh` script to import the configuration settings to a system. Dep
 
 ### Exporting Configuration Settings
 
-Run the `export.sh` script to export the configuration settings from a system to this repository. Depending on the operating system, it performs the following actions:
+Ensure `REPO_PATH` points to the repository and run the `export.sh` script to capture the current machine's configuration. Depending on the operating system, it performs the following actions:
 
 - Writes the list of installed VS Code extensions to a file.
 - Dumps the list of installed Brew packages to a Brewfile.
@@ -34,7 +34,7 @@ Run the `export.sh` script to export the configuration settings from a system to
 
 ### Checking for Changes
 
-Run the `commit_changes.sh` script to check if there are any changes in the repository. If there are changes, it stages all of them and makes a commit.
+Run the `commit_changes.sh` script with `REPO_PATH` set to this repository to check for local modifications. If there are changes, it stages all of them and makes a commit.
 
 ## Glossary
 
