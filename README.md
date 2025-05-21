@@ -10,6 +10,8 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 - `kubernetes`: Contains files for setting up a Kubernetes cluster using Vagrant, including a Vagrantfile, scripts for the master and worker nodes, and a script for fetching GKE credentials.
 - `script`: Contains scripts for exporting configuration settings from a system to this repository (`export.sh`), importing configuration settings from this repository to a system (`import.sh`), and checking for changes and making a commit (`commit_changes.sh`).
 - `.zsh`, `git`, `macOS`, `.vscode`, `linux`, `vscode`, `npm`, `brew`, `dot`: These directories contain various configuration files and settings for different tools and systems.
+- `.devcontainer`: Provides a reusable devcontainer configuration and feature for applying these settings automatically.
+- GitHub Actions builds the `docker/Dockerfile` and publishes the image to GitHub Container Registry.
 
 ## Usage
 
@@ -35,6 +37,10 @@ Ensure `REPO_PATH` points to the repository and run the `export.sh` script to ca
 ### Checking for Changes
 
 Run the `commit_changes.sh` script with `REPO_PATH` set to this repository to check for local modifications. If there are changes, it stages all of them and makes a commit.
+
+### Devcontainer
+
+The `.devcontainer` directory provides a base configuration for VS Code Dev Containers. Include it in a project or reference the feature directly to automatically apply the settings in this repository when the container is built.
 
 ## Glossary
 

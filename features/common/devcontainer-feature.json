@@ -1,0 +1,6 @@
+{
+    "id": "config-base",
+    "version": "0.1.0",
+    "name": "Config Base",
+    "description": "Applies common configuration from this repository inside a dev container."
+}
