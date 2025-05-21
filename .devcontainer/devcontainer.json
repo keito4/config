@@ -1,0 +1,7 @@
+{
+    "name": "Config Base Container",
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "features": {
+        "../features/common": {}
+    }
+}
