@@ -1,5 +1,11 @@
 #!/bin/zsh
 
+# Ensure REPO_PATH exists
+if [[ -z "$REPO_PATH" ]]; then
+    REPO_PATH=$(pwd)
+fi
+mkdir -p "$REPO_PATH/brew" "$REPO_PATH/vscode" "$REPO_PATH/git" "$REPO_PATH/dot" "$REPO_PATH/npm" "$REPO_PATH/.zsh"
+
 # Determine the OS
 if [[ $(uname) = "Linux" ]]; then
 	OS=linux

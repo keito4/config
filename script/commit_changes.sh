@@ -1,7 +1,15 @@
 #!/bin/bash
 
 function check_and_commit() {
-    cd $REPO_PATH
+    if [[ -z "$REPO_PATH" ]]; then
+        echo "REPO_PATH is not set" >&2
+        return 1
+    fi
+    if [[ ! -d "$REPO_PATH" ]]; then
+        echo "Directory $REPO_PATH does not exist" >&2
+        return 1
+    fi
+    cd "$REPO_PATH" || return 1
 
     bash ./script/export.sh
 

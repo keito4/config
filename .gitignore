@@ -1,0 +1,21 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Node modules and logs
+node_modules/
+npm-debug.log
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Editor directories
+.vscode/
+.idea/
+
+# Supabase temporary files
+supabase/.temp/
+
+# Other
+*.swp
