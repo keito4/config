@@ -1,0 +1,6 @@
+{
+    "id": "config-base",
+    "version": "0.2.0",
+    "name": "Config Base",
+    "description": "Copies shell functions and Git config from this repository without installing heavy dependencies."
+}
