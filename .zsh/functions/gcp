@@ -1,0 +1,4 @@
+google() {
+  cfg=$(gcloud config configurations list --format='value(name)' | peco)
+  [ -n "$cfg" ] && gcloud config configurations activate "$cfg"
+}
