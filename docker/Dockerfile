@@ -14,9 +14,9 @@ RUN curl -L https://dl.google.com/go/go$GO_VERSION.linux-arm64.tar.gz -o /tmp/go
   && sudo tar -C /usr/local/ -xzf /tmp/go.tar.gz \
   && rm /tmp/go.tar.gz
 
-ADD ./zsh /home/coder/.zsh
-ADD ./sh/.zprofile /home/coder/.zprofile
-ADD ./sh/.zshrc /home/coder/.zshrc
+ADD ./.zsh /home/coder/.zsh
+ADD ./dot/.zprofile /home/coder/.zprofile
+ADD ./dot/.zshrc /home/coder/.zshrc
 
 RUN curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-370.0.0-linux-arm.tar.gz \
   && tar -zxvf google-cloud-sdk-370.0.0-linux-arm.tar.gz \
@@ -45,6 +45,5 @@ RUN mkdir -p /home/coder/.local/share/code-server/User
 WORKDIR /home/coder/develop
 
 ADD . /home/coder/config
-ADD ./vscode/settings.json /home/coder/.local/share/code-server/User/settings.json
-ADD ./vscode/keybindings.json /home/coder/.local/share/code-server/User/keybindings.json
+ADD ./.vscode/settings.json /home/coder/.local/share/code-server/User/settings.json
 
