@@ -8,6 +8,6 @@
       },
       "ghcr.io/devcontainers/features/common-utils:2": {}
     },
-    "postCreateCommand": "cd /workspaces/config && ./script/import.sh",
+    "postCreateCommand": "cd /workspaces/config && chmod +x script/import.sh && ./script/import.sh",
     "remoteUser": "vscode"
   }

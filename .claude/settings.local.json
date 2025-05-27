@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(devcontainer build:*)"
+      "Bash(devcontainer build:*)",
+      "Bash(ls:*)",
+      "Bash(chmod:*)",
+      "Bash(find:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

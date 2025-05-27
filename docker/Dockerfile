@@ -16,4 +16,7 @@ WORKDIR /home/coder/develop
 
 ADD . /home/coder/config
 
+# Make all shell scripts executable
+RUN find /home/coder/config -name "*.sh" -type f -exec chmod +x {} +
+
 RUN /home/coder/config/script/import.sh
