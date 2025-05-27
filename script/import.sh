@@ -81,7 +81,11 @@ if [[ -f /.dockerenv ]] || [[ ! -z "${REMOTE_CONTAINERS}" ]] || [[ ! -z "${CODES
     # Set git user configuration explicitly
     git config --global user.name "keito4"
     git config --global user.email "newton30000@gmail.com"
-    
+
+    # Remove all problematic github: URL aliases for devcontainer
+    git config --global --remove-section url."github:" 2>/dev/null || true
+    git config --global --unset-all url."github:".insteadof 2>/dev/null || true
+
     # Install 1password CLI if not available
     if ! command -v op >/dev/null 2>&1; then
         echo "Installing 1Password CLI..."
@@ -89,7 +93,7 @@ if [[ -f /.dockerenv ]] || [[ ! -z "${REMOTE_CONTAINERS}" ]] || [[ ! -z "${CODES
         sudo dpkg -i /tmp/1password-cli.deb
         rm /tmp/1password-cli.deb
     fi
-    
+
     # Check if op-ssh-sign is available after installation
     if command -v op >/dev/null 2>&1; then
         # Update the gpg.ssh.program path to use 1password-cli
