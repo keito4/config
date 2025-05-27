@@ -1,0 +1,89 @@
+# Devcontainer-specific .zshrc configuration
+
+# Oh My Zsh configuration
+export ZSH="$HOME/.oh-my-zsh"
+
+# Enable plugins
+plugins=(
+  git
+  zsh-autosuggestions
+)
+
+# Load Oh My Zsh
+if [[ -f $ZSH/oh-my-zsh.sh ]]; then
+  source $ZSH/oh-my-zsh.sh
+fi
+
+# Linux Homebrew setup
+if [[ $(uname) = "Linux" ]] && [[ -d /home/linuxbrew/.linuxbrew ]]; then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
+# Load custom functions
+if [[ -d ~/.zsh/functions ]]; then
+  for function in ~/.zsh/functions/*; do
+    if [[ -f "$function" ]]; then
+      source "$function"
+    fi
+  done
+fi
+
+# Load custom configurations
+_load_settings() {
+  _dir="$1"
+  if [ -d "$_dir" ]; then
+    # Load pre configurations
+    if [ -d "$_dir/pre" ]; then
+      for config in "$_dir"/pre/*(N-.); do
+        . "$config"
+      done
+    fi
+
+    # Load main configurations
+    for config in "$_dir"/**/*(N-.); do
+      case "$config" in
+        "$_dir"/(pre|post)/*|*.zwc)
+          ;;
+        *)
+          . "$config"
+          ;;
+      esac
+    done
+
+    # Load post configurations
+    if [ -d "$_dir/post" ]; then
+      for config in "$_dir"/post/*; do
+        . "$config"
+      done
+    fi
+  fi
+}
+
+# Load all custom settings
+if [[ -d ~/.zsh/configs ]]; then
+  _load_settings "$HOME/.zsh/configs"
+fi
+
+# Set proper PATH for devcontainer
+export PATH="$HOME/.local/bin:$PATH"
+
+# Enable color support
+export CLICOLOR=1
+export LSCOLORS=ExFxBxDxCxegedabagacad
+
+# History configuration
+HISTFILE=~/.zsh_history
+HISTSIZE=10000
+SAVEHIST=10000
+setopt HIST_IGNORE_DUPS
+setopt SHARE_HISTORY
+
+# Completion options
+setopt AUTO_CD
+setopt AUTO_PUSHD
+setopt PUSHD_IGNORE_DUPS
+setopt COMPLETE_IN_WORD
+setopt NO_BEEP
+
+# Set default editor
+export EDITOR='vim'

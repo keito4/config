@@ -34,6 +34,11 @@ if [[ ! -d ~/.oh-my-zsh ]]; then
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 fi
 
+# Install zsh-autosuggestions plugin if not already installed
+if [[ ! -d ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions ]]; then
+        git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+fi
+
 # Import settings for the specific OS
 if [[ $OS = "linux" ]]; then
 	if type brew >/dev/null 2>&1; then
@@ -54,8 +59,16 @@ fi
 # Import general settings
 cp -r -f "$REPO_PATH/.zsh" ~/
 cp "$REPO_PATH/dot/.zprofile" ~/
-cp "$REPO_PATH/dot/.zshrc" ~/
+
+# Use devcontainer-specific .zshrc if in container environment
+if [[ -f /.dockerenv ]] || [[ ! -z "${REMOTE_CONTAINERS}" ]] || [[ ! -z "${CODESPACES}" ]]; then
+    cp "$REPO_PATH/dot/.zshrc.devcontainer" ~/.zshrc
+else
+    cp "$REPO_PATH/dot/.zshrc" ~/
+fi
+
 cp "$REPO_PATH/dot/.rubocop.yml" ~/
+cp -r -f "$REPO_PATH/dot/.peco" ~/
 cp -r -f "$REPO_PATH/git" ~/
 
 if type jq >/dev/null 2>&1 && type npm >/dev/null 2>&1; then

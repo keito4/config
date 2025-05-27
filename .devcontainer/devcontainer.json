@@ -8,6 +8,20 @@
       },
       "ghcr.io/devcontainers/features/common-utils:2": {}
     },
-    "postCreateCommand": "cd /workspaces/config && chmod +x script/import.sh && ./script/import.sh",
-    "remoteUser": "vscode"
+    "postCreateCommand": "cd /workspaces/config && chmod +x script/import.sh && ./script/import.sh && sudo chsh -s $(which zsh) vscode",
+    "postStartCommand": "zsh -c 'source ~/.zshrc'",
+    "remoteUser": "vscode",
+    "customizations": {
+      "vscode": {
+        "settings": {
+          "terminal.integrated.defaultProfile.linux": "zsh",
+          "terminal.integrated.profiles.linux": {
+            "zsh": {
+              "path": "/usr/bin/zsh",
+              "args": ["-l"]
+            }
+          }
+        }
+      }
+    }
   }
