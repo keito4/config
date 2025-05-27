@@ -71,6 +71,36 @@ cp "$REPO_PATH/dot/.rubocop.yml" ~/
 cp -r -f "$REPO_PATH/dot/.peco" ~/
 cp -r -f "$REPO_PATH/git" ~/
 
+# Configure git settings
+cp "$REPO_PATH/git/gitconfig" ~/.gitconfig
+cp "$REPO_PATH/git/gitignore" ~/.gitignore
+cp "$REPO_PATH/git/gitattributes" ~/.gitattributes
+
+# In devcontainer, update gitconfig to use 1password-cli instead of macOS app
+if [[ -f /.dockerenv ]] || [[ ! -z "${REMOTE_CONTAINERS}" ]] || [[ ! -z "${CODESPACES}" ]]; then
+    # Set git user configuration explicitly
+    git config --global user.name "keito4"
+    git config --global user.email "newton30000@gmail.com"
+    
+    # Install 1password CLI if not available
+    if ! command -v op >/dev/null 2>&1; then
+        echo "Installing 1Password CLI..."
+        curl -sS https://downloads.1password.com/linux/debian/amd64/stable/1password-cli-amd64-latest.deb -o /tmp/1password-cli.deb
+        sudo dpkg -i /tmp/1password-cli.deb
+        rm /tmp/1password-cli.deb
+    fi
+    
+    # Check if op-ssh-sign is available after installation
+    if command -v op >/dev/null 2>&1; then
+        # Update the gpg.ssh.program path to use 1password-cli
+        git config --global gpg.ssh.program "op-ssh-sign"
+        echo "1Password SSH signing configured"
+    else
+        echo "Warning: 1Password CLI installation failed, disabling GPG signing"
+        git config --global commit.gpgsign false
+    fi
+fi
+
 if type jq >/dev/null 2>&1 && type npm >/dev/null 2>&1; then
 	npm install -g $(jq -r '.dependencies | keys | .[]' "$REPO_PATH/npm/global.json")
 fi

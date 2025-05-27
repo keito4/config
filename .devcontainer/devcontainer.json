@@ -8,6 +8,16 @@
       },
       "ghcr.io/devcontainers/features/common-utils:2": {}
     },
+    "mounts": [
+      {
+        "source": "${localEnv:HOME}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock",
+        "target": "/home/vscode/.1password/agent.sock",
+        "type": "bind"
+      }
+    ],
+    "remoteEnv": {
+      "SSH_AUTH_SOCK": "/home/vscode/.1password/agent.sock"
+    },
     "postCreateCommand": "cd /workspaces/config && chmod +x script/import.sh && ./script/import.sh && sudo chsh -s $(which zsh) vscode",
     "postStartCommand": "zsh -c 'source ~/.zshrc'",
     "remoteUser": "vscode",
