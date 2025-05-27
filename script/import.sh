@@ -1,8 +1,8 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
 # Determine the OS
 if [[ $(uname) = "Linux" ]]; then
-	OS=linux
+        OS=linux
 elif [[ $(uname) = "Darwin" ]]; then
 	OS=darwin
 else
@@ -10,9 +10,17 @@ else
 	exit 1
 fi
 
+# If running inside a Docker container, suppress prompts during installs
+if [[ -f /.dockerenv ]]; then
+        export NONINTERACTIVE=1
+        export RUNZSH=no
+        export CHSH=no
+        export KEEP_ZSHRC=yes
+fi
+
 # install Homebrew if brew is not installed
 if ! type brew >/dev/null 2>&1; then
-	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/null
 fi
 
 # if REPO_PATH is not set, set it to the current directory
@@ -22,7 +30,8 @@ fi
 
 # Install oh-my-zsh if not already installed
 if [[ ! -d ~/.oh-my-zsh ]]; then
-	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+        env RUNZSH=${RUNZSH:-no} CHSH=${CHSH:-no} KEEP_ZSHRC=${KEEP_ZSHRC:-yes} \
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 fi
 
 # Import settings for the specific OS

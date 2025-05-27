@@ -2,6 +2,12 @@
     "name": "Config Base Container",
     "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
     "features": {
-        "../features/common": {}
-    }
-}
+      "./features/common": {},
+      "ghcr.io/devcontainers/features/node:1": {
+        "version": "lts"
+      },
+      "ghcr.io/devcontainers/features/common-utils:2": {}
+    },
+    "postCreateCommand": "cd /workspaces/config && ./script/import.sh",
+    "remoteUser": "vscode"
+  }
