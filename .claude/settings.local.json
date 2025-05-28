@@ -5,7 +5,10 @@
       "Bash(ls:*)",
       "Bash(chmod:*)",
       "Bash(find:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(docker build:*)",
+      "Bash(timeout 300 docker build -f .devcontainer/Dockerfile .)"
     ],
     "deny": []
   }

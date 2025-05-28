@@ -1,6 +1,26 @@
 {
-    "id": "config-base",
-    "version": "0.1.0",
-    "name": "Config Base",
-    "description": "Applies common configuration from this repository inside a dev container."
+  "id": "common",
+  "version": "1.0.0",
+  "name": "Common Development Setup",
+  "description": "Installs common development functions and configures development environment scripts",
+  "options": {
+    "installFunctions": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install common functions and helpers"
+    },
+    "setupScripts": {
+      "type": "boolean", 
+      "default": true,
+      "description": "Setup and configure development scripts"
+    },
+    "repoPath": {
+      "type": "string",
+      "default": "/workspaces/config",
+      "description": "Path to the config repository"
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/meaningful-ooo/devcontainer-features/homebrew"
+  ]
 }
