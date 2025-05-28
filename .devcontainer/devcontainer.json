@@ -1,7 +1,7 @@
 {
   "name": "Config Base Container",
   "build": {
-    "dockerfile": "Dockerfile"
+    "dockerfile": "Dockerfile",
   },
   "features": {
     "./features/common": {},
