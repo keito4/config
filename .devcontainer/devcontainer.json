@@ -1,37 +1,39 @@
 {
-    "name": "Config Base Container",
-    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-    "features": {
-      "./features/common": {},
-      "ghcr.io/devcontainers/features/node:1": {
-        "version": "lts"
-      },
-      "ghcr.io/devcontainers/features/common-utils:2": {}
+  "name": "Config Base Container",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "./features/common": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
     },
-    "mounts": [
-      {
-        "source": "${localEnv:HOME}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock",
-        "target": "/home/vscode/.1password/agent.sock",
-        "type": "bind"
-      }
-    ],
-    "remoteEnv": {
-      "SSH_AUTH_SOCK": "/home/vscode/.1password/agent.sock"
-    },
-    "postCreateCommand": "cd /workspaces/config && chmod +x script/import.sh && ./script/import.sh && sudo chsh -s $(which zsh) vscode",
-    "postStartCommand": "zsh -c 'source ~/.zshrc'",
-    "remoteUser": "vscode",
-    "customizations": {
-      "vscode": {
-        "settings": {
-          "terminal.integrated.defaultProfile.linux": "zsh",
-          "terminal.integrated.profiles.linux": {
-            "zsh": {
-              "path": "/usr/bin/zsh",
-              "args": ["-l"]
-            }
+    "ghcr.io/devcontainers/features/common-utils:2": {}
+  },
+  "mounts": [
+    {
+      "source": "${localEnv:HOME}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock",
+      "target": "/home/vscode/.1password/agent.sock",
+      "type": "bind"
+    }
+  ],
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/home/vscode/.1password/agent.sock"
+  },
+  "postCreateCommand": "cd /workspaces/config && chmod +x script/import.sh && ./script/import.sh && sudo chsh -s $(which zsh) vscode",
+  "postStartCommand": "zsh -c 'source ~/.zshrc'",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/usr/bin/zsh",
+            "args": ["-l"]
           }
         }
       }
     }
   }
+}
