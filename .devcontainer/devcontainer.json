@@ -25,7 +25,7 @@
   "remoteEnv": {
     "SSH_AUTH_SOCK": "/home/vscode/.1password/agent.sock"
   },
-  // "postStartCommand": "zsh -c 'eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" && source ~/.zshrc'",
+  "postCreateCommand": "zsh -c 'eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" && source ~/.zshrc'",
   "remoteUser": "vscode",
   "customizations": {
     "vscode": {
