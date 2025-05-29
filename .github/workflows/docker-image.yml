@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - '.devcontainer/**'
+      - '.devcontainer/**'        # devcontainer.json / features 等
       - 'features/**'
       - '.github/workflows/devcontainer-image.yml'
   workflow_dispatch:
@@ -13,24 +13,42 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
+      contents: read          # ソース読み取り
+      packages: write         # GHCR へ push
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v2
-      - uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: devcontainers/ci@v0.3
-        with:
-          imageName: ghcr.io/${{ github.repository_owner }}/config-base
-          platforms: linux/amd64,linux/arm64
-          push: true
-      - run: |
-          docker run --rm ghcr.io/${{ github.repository_owner }}/config-base:latest bash -lc 'brew --version; terraform --version; jq --version' > devcontainer-info.txt
-      - uses: actions/upload-artifact@v3
-        with:
-          name: devcontainer-info
-          path: devcontainer-info.txt
+    # ① ソース取得
+    - uses: actions/checkout@v4
+
+    # ② QEMU + Buildx **←ここが抜けている**
+    - uses: docker/setup-qemu-action@v2
+    - uses: docker/setup-buildx-action@v2   # ★ 追加必須
+
+    # ③ GHCR にログイン
+    - uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # ④ DevContainer をビルドして GHCR へ push
+    - name: Pre-build Dev Container image
+      uses: devcontainers/ci@v0.3
+      with:
+        imageName: ghcr.io/${{ github.repository_owner }}/config-base
+        platforms: linux/amd64,linux/arm64
+        push: always             # 成功時は必ず push
+        runCmd: echo done        # runCmd は必須入力  [oai_citation:0‡GitHub](https://github.com/devcontainers/ci?utm_source=chatgpt.com)
+
+    # ⑤ イメージ内容を確認して出力
+    - name: Export tool versions
+      run: |
+        docker run --rm ghcr.io/${{ github.repository_owner }}/config-base:latest \
+          bash -lc 'brew --version; terraform --version; jq --version' \
+          > devcontainer-info.txt
+
+    # ⑥ アーティファクトとして保存
+    - uses: actions/upload-artifact@v3
+      with:
+        name: devcontainer-info
+        path: devcontainer-info.txt
