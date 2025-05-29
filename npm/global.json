@@ -5,19 +5,6 @@
       "version": "0.2.46",
       "overridden": false
     },
-    "corepack": {
-      "version": "0.25.2",
-      "overridden": false
-    },
-    "mcp-framework": {
-      "version": "0.1.12",
-      "overridden": false
-    },
-    "notionmodelsync": {
-      "version": "1.1.7",
-      "resolved": "file:../../../../../../develop/github.com/keito4/notion_orm",
-      "overridden": false
-    },
     "npm": {
       "version": "10.5.0",
       "overridden": false

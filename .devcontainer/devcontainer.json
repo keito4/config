@@ -3,11 +3,7 @@
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
     "ghcr.io/devcontainers-extra/features/homebrew-package:1": {},
-    "./features/common": {
-      "installFunctions": true,
-      "setupScripts": true,
-      "repoPath": "/workspaces/config"
-    },
+    "./features/common": {},
     "ghcr.io/itsmechlark/features/1password:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/terraform:1": {},
