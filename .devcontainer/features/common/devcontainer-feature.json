@@ -5,5 +5,9 @@
   "description": "Installs common development functions and configures development environment scripts",
   "installsAfter": [
     "ghcr.io/meaningful-ooo/devcontainer-features/homebrew"
-  ]
+  ],
+  "options": {},
+  "init": true,
+  "entrypoint": "/bin/sh",
+  "args": ["-c", "sh .devcontainer/features/common/install.sh"]
 }
