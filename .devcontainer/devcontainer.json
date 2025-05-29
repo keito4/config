@@ -15,9 +15,6 @@
     "ghcr.io/devcontainers-extra/features/zsh-plugins:0": {},
     "ghcr.io/devcontainers-extra/features/kubectl-asdf:2": {}
   },
-  "build": {
-    "cacheFrom": "mcr.microsoft.com/devcontainers/base:ubuntu"
-  },
   "mounts": [
     {
       "source": "${localEnv:HOME}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock",
