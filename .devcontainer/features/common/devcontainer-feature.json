@@ -4,10 +4,9 @@
   "name": "Common Development Setup",
   "description": "Installs common development functions and configures development environment scripts",
   "installsAfter": [
-    "ghcr.io/meaningful-ooo/devcontainer-features/homebrew"
+    "ghcr.io/meaningful-ooo/devcontainer-features/homebrew",
+    "ghcr.io/devcontainers-extra/features/zsh-plugins:0",
+    "ghcr.io/eitsupi/devcontainer-features/jq-likes:2"
   ],
-  "options": {},
-  "init": true,
-  "entrypoint": "/bin/sh",
-  "args": ["-c", "sh .devcontainer/features/common/install.sh"]
+  "options": {}
 }
