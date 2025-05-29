@@ -1,0 +1,8 @@
+# devcontainer build cache configuration
+# This file is used to improve build performance by caching layers
+
+# Enable Docker BuildKit for better caching
+DOCKER_BUILDKIT=1
+
+# Set cache mount points for common directories
+CACHE_DIRS="/tmp/.npm-cache:/home/linuxbrew/.linuxbrew/var/cache"
