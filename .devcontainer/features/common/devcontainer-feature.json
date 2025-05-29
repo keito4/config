@@ -6,8 +6,5 @@
   "installsAfter": [
     "ghcr.io/meaningful-ooo/devcontainer-features/homebrew"
   ],
-  "options": {},
-  "init": true,
-  "entrypoint": "/bin/sh",
-  "args": ["-c", "sh .devcontainer/features/common/install.sh"]
+  "options": {}
 }
