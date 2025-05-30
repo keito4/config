@@ -1,24 +1,25 @@
 #!/usr/bin/env bash
 [ -n "${ZSH_VERSION-}" ] && emulate -L sh
-set -eu
-if (set -o 2>/dev/null | grep -q pipefail); then
-  set -o pipefail
-fi
+set -euo pipefail
 
 echo "Starting common feature installation..."
 echo "Current working directory: $(pwd)"
 echo "User: $(whoami)"
 echo "Home directory: $HOME"
 
+# npm が無ければ終了
 if ! command -v npm >/dev/null 2>&1; then
   echo "npm not found, skipping npm package installation."
   exit 0
 fi
 
-NPM_CACHE_DIR="/tmp/.npm-cache"
+# npm キャッシュ
+NPM_CACHE_DIR="$HOME/.npm-cache"
 mkdir -p "$NPM_CACHE_DIR"
-npm config set cache "$NPM_CACHE_DIR" --global
+[ -w "$NPM_CACHE_DIR" ] || chown -R "$(id -u):$(id -g)" "$NPM_CACHE_DIR" || true
+export NPM_CONFIG_CACHE="$NPM_CACHE_DIR"
 
+# global.json の探索
 GLOBAL_JSON_PATHS=(
   "/workspaces/*/npm/global.json"
   "/workspace/npm/global.json"
@@ -27,16 +28,20 @@ GLOBAL_JSON_PATHS=(
 )
 
 GLOBAL_JSON_FILE=""
-for path in "${GLOBAL_JSON_PATHS[@]}"; do
-  if [[ "$path" == *"*"* ]]; then
-    found_file=$(find / -path "$path" -type f 2>/dev/null | head -n 1)
-    if [ -n "$found_file" ]; then
-      GLOBAL_JSON_FILE="$found_file"
-      echo "Found npm/global.json at: $GLOBAL_JSON_FILE"
-      break
+
+for pattern in "${GLOBAL_JSON_PATHS[@]}"; do
+  if [[ "$pattern" == *"*"* ]]; then
+    # /workspaces が無い場合はスキップ
+    if [ -d /workspaces ]; then
+      found=$(find /workspaces -path "$pattern" -type f -print -quit 2>/dev/null || true)
+      if [ -n "$found" ]; then
+        GLOBAL_JSON_FILE="$found"
+        echo "Found npm/global.json at: $GLOBAL_JSON_FILE"
+        break
+      fi
     fi
-  elif [ -f "$path" ]; then
-    GLOBAL_JSON_FILE="$path"
+  elif [ -f "$pattern" ]; then
+    GLOBAL_JSON_FILE="$pattern"
     echo "Found npm/global.json at: $GLOBAL_JSON_FILE"
     break
   fi
@@ -49,10 +54,10 @@ if [ -z "$GLOBAL_JSON_FILE" ]; then
   exit 0
 fi
 
-packages=$(jq -r '.dependencies | keys[]' "$GLOBAL_JSON_FILE" 2>/dev/null || echo "")
+packages=$(jq -r '.dependencies | keys[]' "$GLOBAL_JSON_FILE" 2>/dev/null || true)
 if [ -n "$packages" ]; then
   echo "Installing npm packages: $packages"
-  npm install -g $packages --prefer-offline --no-audit --no-fund
+  npm install -g $packages --prefer-offline --no-audit --no-fund --location=user
 else
   echo "No packages found in global.json dependencies"
 fi
