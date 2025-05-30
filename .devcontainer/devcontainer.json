@@ -12,6 +12,7 @@
     "ghcr.io/devcontainers/features/aws-cli:1": {},
     "ghcr.io/devcontainers-community/npm-features/prettier:1": {},
     "ghcr.io/devcontainers-extra/features/supabase-cli:1": {},
+    "ghcr.io/nils-geistmann/devcontainers-features/zsh:0": {},
     "ghcr.io/devcontainers-extra/features/zsh-plugins:0": {},
     "ghcr.io/devcontainers-extra/features/kubectl-asdf:2": {},
     "ghcr.io/dhoeric/features/act:1": {}
@@ -20,7 +21,6 @@
     "HOMEBREW_NO_AUTO_UPDATE": "1"
   },
   "overrideCommand": false,
-  "postCreateCommand": "zsh -c 'eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" && source ~/.zshrc'",
   "updateRemoteUserUID": false,
   "customizations": {
     "vscode": {
