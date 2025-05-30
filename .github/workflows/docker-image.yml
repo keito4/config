@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read          # ソース読み取り
+      contents: write          # ソース読み取り
       packages: write         # GHCR へ push
 
     steps:
