@@ -5,8 +5,10 @@
   "description": "Installs common development functions and configures development environment scripts",
   "installsAfter": [
     "ghcr.io/meaningful-ooo/devcontainer-features/homebrew",
+    "ghcr.io/nils-geistmann/devcontainers-features/zsh:0",
     "ghcr.io/devcontainers-extra/features/zsh-plugins:0",
-    "ghcr.io/eitsupi/devcontainer-features/jq-likes:2"
+    "ghcr.io/eitsupi/devcontainer-features/jq-likes:2",
+    "ghcr.io/devcontainers-extra/features/kubectl-asdf:2"
   ],
   "options": {}
 }

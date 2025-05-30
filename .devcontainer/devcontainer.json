@@ -20,7 +20,7 @@
   "remoteEnv": {
     "HOMEBREW_NO_AUTO_UPDATE": "1"
   },
-  "overrideCommand": false,
+  "overrideCommand": true,
   "updateRemoteUserUID": false,
   "customizations": {
     "vscode": {
