@@ -21,7 +21,7 @@
   },
   "overrideCommand": false,
   "postCreateCommand": "zsh -c 'eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" && source ~/.zshrc'",
-  "remoteUser": "vscode",
+  "updateRemoteUserUID": false,
   "customizations": {
     "vscode": {
       "settings": {
