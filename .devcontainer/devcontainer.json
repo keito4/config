@@ -13,18 +13,13 @@
     "ghcr.io/devcontainers-community/npm-features/prettier:1": {},
     "ghcr.io/devcontainers-extra/features/supabase-cli:1": {},
     "ghcr.io/devcontainers-extra/features/zsh-plugins:0": {},
-    "ghcr.io/devcontainers-extra/features/kubectl-asdf:2": {}
+    "ghcr.io/devcontainers-extra/features/kubectl-asdf:2": {},
+    "ghcr.io/dhoeric/features/act:1": {}
   },
-  "mounts": [
-    {
-      "source": "${localEnv:HOME}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock",
-      "target": "/home/vscode/.1password/agent.sock",
-      "type": "bind"
-    }
-  ],
   "remoteEnv": {
-    "SSH_AUTH_SOCK": "/home/vscode/.1password/agent.sock"
+    "HOMEBREW_NO_AUTO_UPDATE": "1"
   },
+  "overrideCommand": false,
   "postCreateCommand": "zsh -c 'eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" && source ~/.zshrc'",
   "remoteUser": "vscode",
   "customizations": {
@@ -32,7 +27,12 @@
       "settings": {
         "terminal.integrated.defaultProfile.linux": "zsh",
         "terminal.integrated.profiles.linux": {
-          "zsh": { "path": "/usr/bin/zsh", "args": ["-l"] }
+          "zsh": {
+            "path": "/usr/bin/zsh",
+            "args": [
+              "-l"
+            ]
+          }
         }
       }
     }
