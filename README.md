@@ -42,6 +42,31 @@ Run the `commit_changes.sh` script with `REPO_PATH` set to this repository to ch
 
 The `.devcontainer` directory provides a base configuration for VS Code Dev Containers. Include it in a project or reference the feature directly to automatically apply the settings in this repository when the container is built.
 
+#### Versioning
+
+The devcontainer images are released with semantic versioning. Use the following commands to create version tags:
+
+```bash
+# Create a patch version (1.0.0 -> 1.0.1)
+make version-patch
+
+# Create a minor version (1.0.0 -> 1.1.0)
+make version-minor
+
+# Create a major version (1.0.0 -> 2.0.0)
+make version-major
+
+# Preview next version without creating tag
+make version-dry-run
+```
+
+After creating a tag, push it to trigger the Docker image build:
+```bash
+git push origin v1.0.1
+```
+
+For detailed information about the versioning system, see [.devcontainer/VERSIONING.md](.devcontainer/VERSIONING.md).
+
 ## Glossary
 
 - Docker: An open-source platform used for automating the deployment, scaling, and management of applications.
