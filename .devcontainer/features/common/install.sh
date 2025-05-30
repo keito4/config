@@ -57,7 +57,7 @@ fi
 packages=$(jq -r '.dependencies | keys[]' "$GLOBAL_JSON_FILE" 2>/dev/null || true)
 if [ -n "$packages" ]; then
   echo "Installing npm packages: $packages"
-  npm install -g $packages --prefer-offline --no-audit --no-fund --location=user
+  npm install -g $packages --prefer-offline --no-audit --no-fund
 else
   echo "No packages found in global.json dependencies"
 fi
