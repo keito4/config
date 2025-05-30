@@ -13,11 +13,21 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 0
 fi
 
-# npm キャッシュ
+# npm設定とキャッシュディレクトリ
 NPM_CACHE_DIR="$HOME/.npm-cache"
-mkdir -p "$NPM_CACHE_DIR"
+NPM_GLOBAL_DIR="$HOME/.npm-global"
+mkdir -p "$NPM_CACHE_DIR" "$NPM_GLOBAL_DIR"
+
+# ディレクトリの権限確認と修正
 [ -w "$NPM_CACHE_DIR" ] || chown -R "$(id -u):$(id -g)" "$NPM_CACHE_DIR" || true
+[ -w "$NPM_GLOBAL_DIR" ] || chown -R "$(id -u):$(id -g)" "$NPM_GLOBAL_DIR" || true
+
+# npm設定
 export NPM_CONFIG_CACHE="$NPM_CACHE_DIR"
+export NPM_CONFIG_PREFIX="$NPM_GLOBAL_DIR"
+
+# グローバルパッケージのbinディレクトリをPATHに追加（後で.bashrcや.zshrcで設定される）
+echo "NPM global bin directory: $NPM_GLOBAL_DIR/bin"
 
 # global.json の探索
 GLOBAL_JSON_PATHS=(
@@ -57,7 +67,23 @@ fi
 packages=$(jq -r '.dependencies | keys[]' "$GLOBAL_JSON_FILE" 2>/dev/null || true)
 if [ -n "$packages" ]; then
   echo "Installing npm packages: $packages"
-  npm install -g $packages --prefer-offline --no-audit --no-fund --location=user
+  
+  # パッケージを一つずつインストール
+  while IFS= read -r package; do
+    if [ -n "$package" ]; then
+      echo "Installing package: $package"
+      npm install -g "$package" --prefer-offline --no-audit --no-fund
+      if [ $? -eq 0 ]; then
+        echo "✓ Successfully installed: $package"
+      else
+        echo "✗ Failed to install: $package"
+      fi
+    fi
+  done <<< "$packages"
+  
+  # インストール結果の確認
+  echo "Verifying installed packages:"
+  npm list -g --depth=0 2>/dev/null || true
 else
   echo "No packages found in global.json dependencies"
 fi

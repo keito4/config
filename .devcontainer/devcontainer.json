@@ -20,6 +20,7 @@
   "remoteEnv": {
     "HOMEBREW_NO_AUTO_UPDATE": "1"
   },
+  "postCreateCommand": "cp /workspaces/config/dot/.zshrc.devcontainer ~/.zshrc && echo 'Devcontainer .zshrc configured' || echo 'Failed to copy .zshrc'",
   "overrideCommand": true,
   "updateRemoteUserUID": false,
   "customizations": {

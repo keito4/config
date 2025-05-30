@@ -67,6 +67,11 @@ fi
 # Set proper PATH for devcontainer
 export PATH="$HOME/.local/bin:$PATH"
 
+# NPM global packages support
+if [[ -d "$HOME/.npm-global/bin" ]]; then
+  export PATH="$HOME/.npm-global/bin:$PATH"
+fi
+
 # Enable color support
 export CLICOLOR=1
 export LSCOLORS=ExFxBxDxCxegedabagacad
