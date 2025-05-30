@@ -48,7 +48,7 @@ jobs:
           > devcontainer-info.txt
 
     # ⑥ アーティファクトとして保存
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: devcontainer-info
         path: devcontainer-info.txt
