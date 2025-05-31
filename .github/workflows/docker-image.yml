@@ -3,10 +3,6 @@ name: Build and Release DevContainer Image
 on:
   push:
     branches: [ main ]
-    paths:
-      - '.devcontainer/**'        # devcontainer.json / features 等
-      - 'features/**'
-      - '.github/workflows/devcontainer-image.yml'
   workflow_dispatch:
 
 jobs:
@@ -38,10 +34,10 @@ jobs:
       run: |
         npm install --save-dev semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/github @semantic-release/exec
         npx semantic-release --dry-run > semantic-output.txt 2>&1 || true
-        
+
         # 新しいバージョンを抽出
         NEW_VERSION=$(grep -oP 'Published release \K[0-9]+\.[0-9]+\.[0-9]+' semantic-output.txt || echo "")
-        
+
         if [ -z "$NEW_VERSION" ]; then
           echo "No release needed based on commits"
           echo "skip_release=true" >> $GITHUB_OUTPUT
@@ -55,7 +51,7 @@ jobs:
     # ④ QEMU + Buildx
     - uses: docker/setup-qemu-action@v2
       if: steps.semantic.outputs.skip_release != 'true'
-    
+
     - uses: docker/setup-buildx-action@v2
       if: steps.semantic.outputs.skip_release != 'true'
 

@@ -6,11 +6,18 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 
 ## Directory Structure
 
-- `docker`: Contains a Dockerfile and docker-compose file for setting up a Docker-based development environment using the `codercom/code-server` image. Set the `CODE_SERVER_PASSWORD` environment variable to control the login password.
-- `kubernetes`: Contains files for setting up a Kubernetes cluster using Vagrant, including a Vagrantfile, scripts for the master and worker nodes, and a script for fetching GKE credentials.
-- `script`: Contains scripts for exporting configuration settings from a system to this repository (`export.sh`), importing configuration settings from this repository to a system (`import.sh`), and checking for changes and making a commit (`commit_changes.sh`).
-- `.zsh`, `git`, `macOS`, `.vscode`, `linux`, `vscode`, `npm`, `brew`, `dot`: These directories contain various configuration files and settings for different tools and systems.
-- `.devcontainer`: Provides a reusable devcontainer configuration and feature for applying these settings automatically.
+- `.devcontainer/`: Provides a reusable devcontainer configuration and feature for applying these settings automatically in VS Code Dev Containers.
+- `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations.
+- `docker/`: Contains a Dockerfile and docker-compose file for setting up a Docker-based development environment.
+- `dot/`: Contains dotfiles and configuration files that are typically placed in the home directory.
+- `git/`: Contains Git configuration files including gitconfig, gitignore, and modular configuration files in the `gitconfig.d/` subdirectory.
+- `kubernetes/`: Contains files for setting up a Kubernetes cluster using Vagrant, including a Vagrantfile, scripts for the master and worker nodes, and a script for fetching GKE credentials.
+- `linux/`: Contains Linux-specific setup scripts for 1Password, Brew, Kubernetes, NordVPN, and Ubuntu-specific configurations.
+- `macOS/`: Contains macOS-specific configuration files including Brewfile and system preferences scripts.
+- `npm/`: Contains npm global package configuration.
+- `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), and version management (`version.sh`).
+- `supabase/`: Contains Supabase-related configuration and documentation.
+- `vscode/`: Contains Visual Studio Code configuration including extensions list, color themes, and documentation.
 - GitHub Actions builds the `docker/Dockerfile` and publishes the image to GitHub Container Registry.
 
 ## Usage
