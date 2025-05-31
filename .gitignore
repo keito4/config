@@ -17,5 +17,11 @@ __pycache__/
 # Supabase temporary files
 supabase/.temp/
 
+# Environment files - SECURITY: Never commit actual credentials
+.env
+.env.local
+.env.production
+.env.staging
+
 # Other
 *.swp

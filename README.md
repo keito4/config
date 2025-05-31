@@ -20,6 +20,18 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 - `vscode/`: Contains Visual Studio Code configuration including extensions list, color themes, and documentation.
 - GitHub Actions builds the `docker/Dockerfile` and publishes the image to GitHub Container Registry.
 
+## 🔒 Security
+
+**IMPORTANT**: This repository has been updated to improve security by removing hardcoded credentials.
+
+Before using these configuration settings:
+1. Review the `SECURITY.md` file for detailed security guidelines
+2. Copy `.env.example` to `.env` and set your actual values
+3. Never commit real credentials to version control
+4. Use environment variables or secret management tools (like 1Password)
+
+For detailed security instructions, see [SECURITY.md](SECURITY.md).
+
 ## Usage
 
 Before using these configuration settings, you should review them and adjust as necessary for your specific environment and preferences. For credentials, we use environment variables managed by 1Password.

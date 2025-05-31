@@ -8,11 +8,17 @@ services:
     shm_size: '2gb'
     container_name: code-server
     environment:
-      # Set CODE_SERVER_PASSWORD in your shell to change the default password
-      PASSWORD: ${CODE_SERVER_PASSWORD:-changeme}
+      # SECURITY: Set CODE_SERVER_PASSWORD environment variable before starting
+      # Example: export CODE_SERVER_PASSWORD="your-secure-password"
+      # Do not use the default password 'changeme' in production
+      PASSWORD: ${CODE_SERVER_PASSWORD:?CODE_SERVER_PASSWORD environment variable must be set}
     ports:
       - 8080:8080
     volumes:
       - ~/.gitconfig:/home/coder/.gitconfig
-      - ~/.ssh:/home/coder/.ssh
+      # SECURITY: Mount SSH keys selectively instead of entire ~/.ssh directory
+      # Uncomment and modify as needed:
+      # - ~/.ssh/id_rsa.pub:/home/coder/.ssh/id_rsa.pub:ro
+      # - ~/.ssh/config:/home/coder/.ssh/config:ro
+      # Alternative: Use SSH agent forwarding instead of mounting keys
       - ../volume/extensions:/home/coder/.local/share/code-server/extensions
