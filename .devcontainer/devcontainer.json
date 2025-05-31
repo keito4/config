@@ -17,7 +17,11 @@
     "ghcr.io/devcontainers-extra/features/supabase-cli:1": {},
     "ghcr.io/nils-geistmann/devcontainers-features/zsh:0": {},
     "ghcr.io/devcontainers-extra/features/zsh-plugins:0": {},
-    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "1.28",
+      "helm": "3.12",
+      "minikube": "none"
+    },
     "ghcr.io/dhoeric/features/act:1": {}
   },
   "remoteEnv": {
