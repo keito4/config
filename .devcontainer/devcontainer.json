@@ -1,10 +1,13 @@
 {
   "name": "Config Base Container",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
   "features": {
     "ghcr.io/devcontainers-extra/features/homebrew-package:1": {},
     "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
-    "./features/common": {},
+    "ghcr.io/devcontainers/features/node:1": {},
     "ghcr.io/itsmechlark/features/1password:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/terraform:1": {},
@@ -14,14 +17,19 @@
     "ghcr.io/devcontainers-extra/features/supabase-cli:1": {},
     "ghcr.io/nils-geistmann/devcontainers-features/zsh:0": {},
     "ghcr.io/devcontainers-extra/features/zsh-plugins:0": {},
-    "ghcr.io/devcontainers-extra/features/kubectl-asdf:2": {},
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
     "ghcr.io/dhoeric/features/act:1": {}
   },
   "remoteEnv": {
-    "HOMEBREW_NO_AUTO_UPDATE": "1"
+    "HOMEBREW_NO_AUTO_UPDATE": "1",
+    "GH_TOKEN": "${localEnv:GH_TOKEN}",
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
   },
   "overrideCommand": true,
   "updateRemoteUserUID": false,
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
+  ],
   "customizations": {
     "vscode": {
       "settings": {
