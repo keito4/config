@@ -15,7 +15,7 @@
       "Bash(grep:*)",
       "Bash(gh pr create:*)",
       "Bash(npm install:*)",
-      "Bash(npx husky init:*)"
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
