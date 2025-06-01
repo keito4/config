@@ -48,5 +48,6 @@
         }
       }
     }
-  }
+  },
+  "postCreateCommand": "npm ci && npm run prepare && cp -r /tmp/.husky /workspaces/config/ && cp /tmp/commitlint.config.js /workspaces/config/"
 }
