@@ -15,7 +15,10 @@
       "Bash(grep:*)",
       "Bash(gh pr create:*)",
       "Bash(npm install:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(gh auth:*)",
+      "Bash(brew bundle:*)"
     ],
     "deny": []
   }
