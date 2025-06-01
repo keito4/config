@@ -2,97 +2,85 @@ name: Build and Release DevContainer Image
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write          # ソース読み取り & リリース作成
-      packages: write         # GHCR へ push
-      issues: write           # semantic-release が issue にコメント
-      pull-requests: write    # semantic-release が PR にコメント
+      contents: write
+      packages: write
+      issues: write
+      pull-requests: write
 
     steps:
-    # ① ソース取得
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # semantic-release のため全履歴が必要
-        persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
-    # ② Node.js セットアップ (semantic-release用)
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-    # ③ semantic-release を実行してバージョンを決定
-    - name: Semantic Release
-      id: semantic
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        npm install --save-dev semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/github @semantic-release/exec
-        npx semantic-release --dry-run > semantic-output.txt 2>&1 || true
+      - name: Semantic Release
+        id: semantic
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm install --save-dev semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/github @semantic-release/exec
+          npx semantic-release --dry-run > semantic-output.txt 2>&1 || true
+          NEW_VERSION=$(grep -oP 'Published release \K[0-9]+\.[0-9]+\.[0-9]+' semantic-output.txt || echo "")
+          if [ -z "$NEW_VERSION" ]; then
+            echo "skip_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "version_tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "skip_release=false" >> $GITHUB_OUTPUT
+          fi
 
-        # 新しいバージョンを抽出
-        NEW_VERSION=$(grep -oP 'Published release \K[0-9]+\.[0-9]+\.[0-9]+' semantic-output.txt || echo "")
+      - name: Prepare bind mounts
+        if: steps.semantic.outputs.skip_release != 'true'
+        run: mkdir -p "$HOME/.claude"
 
-        if [ -z "$NEW_VERSION" ]; then
-          echo "No release needed based on commits"
-          echo "skip_release=true" >> $GITHUB_OUTPUT
-        else
-          echo "New version will be: $NEW_VERSION"
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "version_tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "skip_release=false" >> $GITHUB_OUTPUT
-        fi
+      - uses: docker/setup-qemu-action@v2
+        if: steps.semantic.outputs.skip_release != 'true'
 
-    # ④ QEMU + Buildx
-    - uses: docker/setup-qemu-action@v2
-      if: steps.semantic.outputs.skip_release != 'true'
+      - uses: docker/setup-buildx-action@v2
+        if: steps.semantic.outputs.skip_release != 'true'
 
-    - uses: docker/setup-buildx-action@v2
-      if: steps.semantic.outputs.skip_release != 'true'
+      - uses: docker/login-action@v2
+        if: steps.semantic.outputs.skip_release != 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    # ⑤ GHCR にログイン
-    - uses: docker/login-action@v2
-      if: steps.semantic.outputs.skip_release != 'true'
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pre-build Dev Container image
+        if: steps.semantic.outputs.skip_release != 'true'
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: ghcr.io/${{ github.repository_owner }}/config-base
+          imageTag: ${{ steps.semantic.outputs.version }},latest
+          platform: linux/amd64,linux/arm64
+          push: always
+          runCmd: echo done
 
-    # ⑥ DevContainer をビルドして GHCR へ push
-    - name: Pre-build Dev Container image
-      if: steps.semantic.outputs.skip_release != 'true'
-      uses: devcontainers/ci@v0.3
-      with:
-        imageName: ghcr.io/${{ github.repository_owner }}/config-base
-        imageTag: ${{ steps.semantic.outputs.version }},latest
-        platform: linux/amd64,linux/arm64
-        push: always
-        runCmd: echo done
+      - name: Export tool versions
+        if: steps.semantic.outputs.skip_release != 'true'
+        run: |
+          docker run --rm ghcr.io/${{ github.repository_owner }}/config-base:latest bash -lc 'brew --version; terraform --version; jq --version' > devcontainer-info.txt
 
-    # ⑦ イメージ内容を確認して出力
-    - name: Export tool versions
-      if: steps.semantic.outputs.skip_release != 'true'
-      run: |
-        docker run --rm ghcr.io/${{ github.repository_owner }}/config-base:latest \
-          bash -lc 'brew --version; terraform --version; jq --version' \
-          > devcontainer-info.txt
+      - uses: actions/upload-artifact@v4
+        if: steps.semantic.outputs.skip_release != 'true'
+        with:
+          name: devcontainer-info
+          path: devcontainer-info.txt
 
-    # ⑧ アーティファクトとして保存
-    - uses: actions/upload-artifact@v4
-      if: steps.semantic.outputs.skip_release != 'true'
-      with:
-        name: devcontainer-info
-        path: devcontainer-info.txt
-
-    # ⑨ semantic-release で正式にリリース
-    - name: Create Release
-      if: steps.semantic.outputs.skip_release != 'true'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        npx semantic-release
+      - name: Create Release
+        if: steps.semantic.outputs.skip_release != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx semantic-release
