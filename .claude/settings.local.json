@@ -12,7 +12,10 @@
       "Bash(git push:*)",
       "Bash(gh issue view:*)",
       "Bash(git checkout:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(gh pr create:*)",
+      "Bash(npm install:*)",
+      "Bash(npx husky init:*)"
     ],
     "deny": []
   }
