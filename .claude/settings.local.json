@@ -18,7 +18,9 @@
       "Bash(git commit:*)",
       "Bash(git config:*)",
       "Bash(gh auth:*)",
-      "Bash(brew bundle:*)"
+      "Bash(brew bundle:*)",
+      "mcp__slack__slack_list_channels",
+      "mcp__slack__slack_post_message"
     ],
     "deny": []
   }
