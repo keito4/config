@@ -18,8 +18,8 @@ module.exports = {
         'revert'
       ]
     ],
-    'subject-max-length': [2, 'always', 72],
-    'header-max-length': [2, 'always', 72],
+    'subject-max-length': [2, 'always', 140],
+    'header-max-length': [2, 'always', 140],
     'subject-case': [0]
   }
 };

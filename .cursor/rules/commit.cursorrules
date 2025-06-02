@@ -1,0 +1,8 @@
+{
+  "commit_message": [
+    "Conventional Commits を使用する: <type>(<scope>): <subject>",
+    "type は feat / fix / docs / refactor など",
+    "タイトルは 50 文字以内、日本語で現在形",
+    "本文は 72 文字幅でラップし、なぜよりも何を優先して書く"
+  ]
+}
