@@ -12,9 +12,7 @@
     },
     "ghcr.io/itsmechlark/features/1password:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/git:1": {
-      "ppa": true
-    },
+    "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/terraform:1": {},
     "ghcr.io/dhoeric/features/google-cloud-cli:1": {},
     "ghcr.io/devcontainers/features/aws-cli:1": {},
@@ -29,9 +27,7 @@
     "ghcr.io/dhoeric/features/act:1": {}
   },
   "remoteEnv": {
-    "HOMEBREW_NO_AUTO_UPDATE": "1",
-    "GH_TOKEN": "${localEnv:GH_TOKEN}",
-    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
+    "HOMEBREW_NO_AUTO_UPDATE": "1"
   },
   "overrideCommand": true,
   "updateRemoteUserUID": false,
