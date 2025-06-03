@@ -1,53 +1,33 @@
 {
-  "name": "Config Base Container",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
+  "name": "Personal Config Development",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bullseye",
   "features": {
-    "ghcr.io/devcontainers-extra/features/homebrew-package:1": {},
-    "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
-    "ghcr.io/devcontainers/features/node:1": {},
-    "ghcr.io/itsmechlark/features/1password:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/terraform:1": {},
-    "ghcr.io/dhoeric/features/google-cloud-cli:1": {},
-    "ghcr.io/devcontainers/features/aws-cli:1": {},
-    "ghcr.io/devcontainers-community/npm-features/prettier:1": {},
-    "ghcr.io/devcontainers-extra/features/supabase-cli:1": {},
-    "ghcr.io/nils-geistmann/devcontainers-features/zsh:0": {},
-    "ghcr.io/devcontainers-extra/features/zsh-plugins:0": {},
-    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
-      "version": "1.28",
-      "helm": "none",
-      "minikube": "none"
+    "ghcr.io/devcontainers/features/node:1": {
+      "nodeGypDependencies": true,
+      "version": "20"
     },
-    "ghcr.io/dhoeric/features/act:1": {}
+    "ghcr.io/devcontainers-contrib/features/pnpm:2": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "ppa": true,
+      "version": "latest"
+    }
   },
-  "remoteEnv": {
-    "HOMEBREW_NO_AUTO_UPDATE": "1",
-    "GH_TOKEN": "${localEnv:GH_TOKEN}",
-    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
-  },
-  "overrideCommand": true,
-  "updateRemoteUserUID": false,
-  "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
-  ],
   "customizations": {
     "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-json",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next"
+      ],
       "settings": {
-        "terminal.integrated.defaultProfile.linux": "zsh",
-        "terminal.integrated.profiles.linux": {
-          "zsh": {
-            "path": "/usr/bin/zsh",
-            "args": [
-              "-l"
-            ]
-          }
-        }
+        "typescript.preferences.npmrc": ".npmrc",
+        "npm.packageManager": "pnpm"
       }
     }
   },
-  "postCreateCommand": "sudo chown -R vscode:vscode /workspaces/config && npm ci && npm run prepare && cp -r /tmp/.husky /workspaces/config/ && cp /tmp/commitlint.config.js /workspaces/config/"
+  "postCreateCommand": "pnpm install",
+  "remoteUser": "node"
 }
