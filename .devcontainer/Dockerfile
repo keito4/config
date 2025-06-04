@@ -4,6 +4,9 @@ RUN apt-get update && apt-get install -y curl git \
  && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
  && apt-get install -y nodejs
 
+# Install pnpm
+RUN npm install -g pnpm
+
 RUN npm install -g typescript eslint @anthropic-ai/claude-code
 
 # Husky用の設定
