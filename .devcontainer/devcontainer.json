@@ -17,8 +17,6 @@
     "ghcr.io/dhoeric/features/google-cloud-cli:1": {},
     "ghcr.io/devcontainers/features/aws-cli:1": {},
     "ghcr.io/devcontainers-community/npm-features/prettier:1": {},
-    "ghcr.io/nils-geistmann/devcontainers-features/zsh:0": {},
-    "ghcr.io/devcontainers-extra/features/zsh-plugins:0": {},
     "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
       "version": "1.28",
       "helm": "none",
@@ -42,16 +40,7 @@
         "mblode.pretty-formatter"
       ],
       "settings": {
-        "npm.packageManager": "pnpm",
-        "terminal.integrated.defaultProfile.linux": "zsh",
-        "terminal.integrated.profiles.linux": {
-          "zsh": {
-            "path": "/usr/bin/zsh",
-            "args": [
-              "-l"
-            ]
-          }
-        }
+        "npm.packageManager": "pnpm"
       }
     }
   },
