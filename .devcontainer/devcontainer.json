@@ -24,7 +24,8 @@
     "ghcr.io/dhoeric/features/act:1": {}
   },
   "remoteEnv": {
-    "HOMEBREW_NO_AUTO_UPDATE": "1"
+    "HOMEBREW_NO_AUTO_UPDATE": "1",
+    "SHELL": "/bin/bash"
   },
   "overrideCommand": true,
   "updateRemoteUserUID": false,
@@ -46,5 +47,5 @@
       }
     }
   },
-  "postCreateCommand": "sudo chown -R vscode:vscode /workspaces/config && mkdir -p /home/vscode/.claude /home/vscode/.cursor && npm ci && npm run prepare && pnpm add -g supabase && cp -r /tmp/.husky /workspaces/config/ && cp /tmp/commitlint.config.js /workspaces/config/"
+  "postCreateCommand": "sudo chown -R vscode:vscode /workspaces/config && npm ci && npm run prepare && cp -r /tmp/.husky /workspaces/config/ && cp /tmp/commitlint.config.js /workspaces/config/"
 }

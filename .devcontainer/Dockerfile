@@ -1,13 +1,49 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu
 
-RUN apt-get update && apt-get install -y curl git \
+RUN apt-get update && apt-get install -y curl git alsa-utils sox \
  && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
  && apt-get install -y nodejs
 
 # Install pnpm
 RUN npm install -g pnpm
 
+# Setup pnpm for vscode user and install global packages
+USER vscode
+ENV SHELL=/bin/bash
+ENV PNPM_HOME="/home/vscode/.local/share/pnpm"
+ENV PATH="${PNPM_HOME}:${PATH}"
+RUN bash -c "pnpm setup" \
+ && echo "export PNPM_HOME=\"/home/vscode/.local/share/pnpm\"" >> /home/vscode/.bashrc \
+ && echo "export PATH=\"\$PNPM_HOME:\$PATH\"" >> /home/vscode/.bashrc \
+ && bash -c "source /home/vscode/.bashrc && pnpm add -g supabase"
+
+# Switch back to root for remaining operations
+USER root
+
+# Install global packages
 RUN npm install -g typescript eslint @anthropic-ai/claude-code
+
+# afplayの代替として、playコマンドを使用できるようにalias設定
+RUN echo "alias afplay='play'" >> /home/vscode/.bashrc
+
+# Git aliases for common commands
+RUN echo "alias gco='git checkout'" >> /home/vscode/.bashrc \
+ && echo "alias gst='git status'" >> /home/vscode/.bashrc \
+ && echo "alias gad='git add'" >> /home/vscode/.bashrc \
+ && echo "alias gcm='git commit -m'" >> /home/vscode/.bashrc \
+ && echo "alias gps='git push'" >> /home/vscode/.bashrc \
+ && echo "alias gpl='git pull'" >> /home/vscode/.bashrc
+
+# Setup directories
+RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor \
+ && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor
+
+# Change default shell to bash
+RUN chsh -s /bin/bash vscode
+
+# Setup .bash_profile
+RUN echo 'source ~/.bashrc' >> /home/vscode/.bash_profile \
+ && chown vscode:vscode /home/vscode/.bash_profile
 
 # Husky用の設定
 COPY package.json package-lock.json /tmp/
