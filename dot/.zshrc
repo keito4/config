@@ -1,23 +1,12 @@
 # Amazon Q pre block. Keep at the top of this file.
 [[ -f "${HOME}/Library/Application Support/amazon-q/shell/zshrc.pre.zsh" ]] && builtin source "${HOME}/Library/Application Support/amazon-q/shell/zshrc.pre.zsh"
+
 # タイミング計測を有効にする変数（デフォルトは false）
 ENABLE_TIMING=${ENABLE_TIMING:-false}
 
 if [ "$ENABLE_TIMING" = true ]; then
   typeset -F script_start_time
   script_start_time=$EPOCHREALTIME
-fi
-
-
-# Amazon Q pre block. Keep at the top of this file.
-if [ "$ENABLE_TIMING" = true ]; then
-  float start_time_amazon_pre=$EPOCHREALTIME
-fi
-
-if [ "$ENABLE_TIMING" = true ]; then
-  float end_time_amazon_pre=$EPOCHREALTIME
-  elapsed_time_amazon_pre=$(( end_time_amazon_pre - start_time_amazon_pre ))
-  echo "Time for Amazon Q pre block: $elapsed_time_amazon_pre seconds"
 fi
 
 export ZSH="$HOME/.oh-my-zsh"
@@ -139,13 +128,27 @@ if [ "$ENABLE_TIMING" = true ]; then
   echo "Time for Amazon Q post block: $elapsed_time_amazon_post seconds"
 fi
 
-# Amazon Q post block. Keep at the bottom of this file.
-[[ -f "${HOME}/Library/Application Support/amazon-q/shell/zshrc.post.zsh" ]] && builtin source "${HOME}/Library/Application Support/amazon-q/shell/zshrc.post.zsh"
-
 # pnpm
-export PNPM_HOME="/Users/keito/Library/pnpm"
+export PNPM_HOME="$HOME/Library/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+# Amazon Q post block. Keep at the bottom of this file.
+[[ -f "${HOME}/Library/Application Support/amazon-q/shell/zshrc.post.zsh" ]] && builtin source "${HOME}/Library/Application Support/amazon-q/shell/zshrc.post.zsh"
+
+# Added by Windsurf
+export PATH="$HOME/.codeium/windsurf/bin:$PATH"
+
+### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
+export PATH="$HOME/.rd/bin:$PATH"
+### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:$HOME/.lmstudio/bin"
+# End of LM Studio CLI section
+
+
+[[ "$TERM_PROGRAM" == "kiro" ]] && . "$(kiro --locate-shell-integration-path zsh)"

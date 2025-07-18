@@ -2,11 +2,23 @@
   "name": "lib",
   "dependencies": {
     "@anthropic-ai/claude-code": {
-      "version": "0.2.46",
+      "version": "1.0.53",
+      "overridden": false
+    },
+    "@leonardsellem/n8n-mcp-server": {
+      "version": "0.1.8",
+      "overridden": false
+    },
+    "corepack": {
+      "version": "0.33.0",
+      "overridden": false
+    },
+    "mcp-remote": {
+      "version": "0.1.18",
       "overridden": false
     },
     "npm": {
-      "version": "10.5.0",
+      "version": "11.4.2",
       "overridden": false
     }
   }
