@@ -7,18 +7,20 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 ## Directory Structure
 
 - `.devcontainer/`: Provides a reusable devcontainer configuration and feature for applying these settings automatically in VS Code Dev Containers.
+- `.claude/`: Contains Claude Code configuration files, settings, and audio notification files.
+- `.cursor/`: Contains Cursor IDE configuration rules and settings.
+- `.github/`: Contains GitHub Actions workflows for automated Docker image building and Claude Code integration.
+- `.husky/`: Contains Git hooks for commit message validation and pre-commit checks.
+- `.vscode/`: Contains Visual Studio Code workspace settings and configuration.
+- `.zsh/`: Contains Zsh shell configuration files, functions, and custom scripts.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations.
-- `docker/`: Contains a Dockerfile and docker-compose file for setting up a Docker-based development environment.
-- `dot/`: Contains dotfiles and configuration files that are typically placed in the home directory.
+- `credentials/`: Contains templates and documentation for managing environment variables and secrets via 1Password.
+- `dot/`: Contains dotfiles and configuration files that are typically placed in the home directory (zsh, ruby, etc.).
 - `git/`: Contains Git configuration files including gitconfig, gitignore, and modular configuration files in the `gitconfig.d/` subdirectory.
-- `kubernetes/`: Contains files for setting up a Kubernetes cluster using Vagrant, including a Vagrantfile, scripts for the master and worker nodes, and a script for fetching GKE credentials.
-- `linux/`: Contains Linux-specific setup scripts for 1Password, Brew, Kubernetes, NordVPN, and Ubuntu-specific configurations.
-- `macOS/`: Contains macOS-specific configuration files including Brewfile and system preferences scripts.
 - `npm/`: Contains npm global package configuration.
-- `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), and version management (`version.sh`).
+- `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), version management (`version.sh`), credential management, and brew dependency analysis.
 - `supabase/`: Contains Supabase-related configuration and documentation.
-- `vscode/`: Contains Visual Studio Code configuration including extensions list, color themes, and documentation.
-- GitHub Actions builds the `docker/Dockerfile` and publishes the image to GitHub Container Registry.
+- `vscode/`: Contains Visual Studio Code configuration including extensions list and documentation.
 
 ## Usage
 
@@ -51,7 +53,7 @@ The `.devcontainer` directory provides a base configuration for VS Code Dev Cont
 
 #### Versioning
 
-The devcontainer images are released with semantic versioning. Use the following commands to create version tags:
+The devcontainer images are built automatically on pushes to main. You can also create manual version tags:
 
 ```bash
 # Create a patch version (1.0.0 -> 1.0.1)
@@ -67,7 +69,7 @@ make version-major
 make version-dry-run
 ```
 
-After creating a tag, push it to trigger the Docker image build:
+After creating a tag, push it to trigger a tagged Docker image build:
 ```bash
 git push origin v1.0.1
 ```
