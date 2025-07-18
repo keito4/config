@@ -19,3 +19,9 @@ supabase/.temp/
 
 # Other
 *.swp
+
+# Credentials
+credentials/*.env
+credentials/secrets/
+.env.secret
+.zsh/configs/pre/.env.secret

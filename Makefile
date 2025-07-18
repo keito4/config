@@ -1,4 +1,4 @@
-.PHONY: act-list act-run version-patch version-minor version-major version-dry-run
+.PHONY: act-list act-run version-patch version-minor version-major version-dry-run credentials clean-credentials list-credentials
 
 # GitHub Actionsのワークフロー一覧を表示
 act-list:
@@ -28,3 +28,15 @@ version-major:
 
 version-dry-run:
 	./script/version.sh --dry-run
+
+# Credential management
+credentials: ## Fetch credentials from 1Password
+	@echo "Fetching credentials from 1Password..."
+	@./script/credentials.sh fetch
+
+clean-credentials: ## Clean up credential files
+	@echo "Cleaning up credential files..."
+	@./script/credentials.sh clean
+
+list-credentials: ## List available credential templates
+	@./script/credentials.sh list
