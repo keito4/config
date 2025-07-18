@@ -2,7 +2,7 @@
   "name": "lib",
   "dependencies": {
     "@anthropic-ai/claude-code": {
-      "version": "1.0.53",
+      "version": "1.0.55",
       "overridden": false
     },
     "@leonardsellem/n8n-mcp-server": {

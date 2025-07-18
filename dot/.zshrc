@@ -1,12 +1,23 @@
 # Amazon Q pre block. Keep at the top of this file.
 [[ -f "${HOME}/Library/Application Support/amazon-q/shell/zshrc.pre.zsh" ]] && builtin source "${HOME}/Library/Application Support/amazon-q/shell/zshrc.pre.zsh"
-
 # タイミング計測を有効にする変数（デフォルトは false）
 ENABLE_TIMING=${ENABLE_TIMING:-false}
 
 if [ "$ENABLE_TIMING" = true ]; then
   typeset -F script_start_time
   script_start_time=$EPOCHREALTIME
+fi
+
+
+# Amazon Q pre block. Keep at the top of this file.
+if [ "$ENABLE_TIMING" = true ]; then
+  float start_time_amazon_pre=$EPOCHREALTIME
+fi
+
+if [ "$ENABLE_TIMING" = true ]; then
+  float end_time_amazon_pre=$EPOCHREALTIME
+  elapsed_time_amazon_pre=$(( end_time_amazon_pre - start_time_amazon_pre ))
+  echo "Time for Amazon Q pre block: $elapsed_time_amazon_pre seconds"
 fi
 
 export ZSH="$HOME/.oh-my-zsh"

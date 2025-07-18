@@ -1,0 +1,54 @@
+# Categorized Homebrew packages without dependencies
+# Generated on #午後
+# This file contains only packages that were explicitly installed
+# and are not dependencies of other packages
+
+# Taps
+tap "1password/tap"
+tap "agrinman/tap"
+tap "atomicjar/tap"
+tap "clintmod/formulas"
+tap "elastic/tap"
+tap "homebrew/bundle"
+tap "homebrew/services"
+tap "jmhobbs/tools"
+tap "koekeishiya/formulae"
+tap "mongodb/brew"
+tap "oven-sh/bun"
+tap "pulumi/tap"
+tap "sqldef/sqldef"
+tap "supabase/tap"
+tap "ynqa/tap"
+tap "yukiarrr/tap"
+
+# === FORMULAE ===
+
+# Development Tools
+brew "deno"
+brew "gh"
+brew "ghq"
+brew "git"
+brew "openjdk"
+brew "pipenv"
+
+# Cloud & DevOps
+brew "aws-sam-cli"
+brew "aws-sso-util"
+brew "awscli"
+brew "azure-cli"
+brew "docker"
+brew "helm"
+brew "sops"
+brew "terraform"
+brew "tfenv"
+
+
+# === CASKS ===
+
+# Development Tools
+cask "cursor"
+cask "orbstack"
+cask "rancher"
+cask "tableplus"
+cask "visual-studio-code"
+
