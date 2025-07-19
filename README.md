@@ -20,6 +20,32 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 - `vscode/`: Contains Visual Studio Code configuration including extensions list, color themes, and documentation.
 - GitHub Actions builds the `docker/Dockerfile` and publishes the image to GitHub Container Registry.
 
+## Security
+
+This repository follows security best practices to protect sensitive information:
+
+### Credential Management
+- **No hardcoded credentials**: Personal information like email addresses and SSH keys are not stored in configuration files
+- **Environment variables**: Sensitive data is managed through environment variables and templates
+- **1Password integration**: Use `script/credentials.sh` for secure credential management via 1Password CLI
+- **Secure file permissions**: Generated credential files are automatically set to 600 permissions
+
+### Git Configuration Security
+The `git/gitconfig` file uses commented placeholders instead of hardcoded values. Configure your Git settings securely with:
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
+```
+
+### Setup Instructions
+1. Copy the environment template: `cp .env.example .env`
+2. Configure Git settings using the commands above
+3. Use the credentials script for 1Password integration: `./script/credentials.sh fetch`
+
+For detailed security guidelines, see [SECURITY.md](SECURITY.md).
+
 ## Usage
 
 Before using these configuration settings, you should review them and adjust as necessary for your specific environment and preferences. For credentials, we use environment variables managed by 1Password.
