@@ -1,7 +1,10 @@
 [user]
-	name = keito4
-	email = newton30000@gmail.com
-	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEjwgFFPN4bpVDsDwcnbSMuX8qFH8Fgf0ugK3mUEa4I3
+	# Configure with: git config --global user.name "Your Name"
+	# name = 
+	# Configure with: git config --global user.email "your.email@example.com"
+	# email = 
+	# Configure with: git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
+	# signingkey = 
 
 [url "https://github.com/"]
     insteadOf = git@github.com:
