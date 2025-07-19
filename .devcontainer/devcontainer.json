@@ -29,7 +29,7 @@
   },
   "overrideCommand": true,
   "updateRemoteUserUID": false,
-  "initializeCommand": "mkdir -p ~/.claude ~/.cursor",
+  "initializeCommand": "./script/devcontainer-init.sh",
   "mounts": [
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.cursor,target=/home/vscode/.cursor,type=bind,consistency=cached",
