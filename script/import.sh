@@ -1,5 +1,7 @@
 #!/usr/bin/env zsh
 
+set -euo pipefail
+
 # Determine the OS
 if [[ $(uname) = "Linux" ]]; then
         OS=linux
@@ -24,9 +26,7 @@ if ! type brew >/dev/null 2>&1; then
 fi
 
 # if REPO_PATH is not set, set it to the current directory
-if [[ -z $REPO_PATH ]]; then
-	REPO_PATH=$(pwd)
-fi
+REPO_PATH="${REPO_PATH:-$(pwd)}"
 
 # Install oh-my-zsh if not already installed
 if [[ ! -d ~/.oh-my-zsh ]]; then

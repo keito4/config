@@ -1,9 +1,9 @@
 #!/usr/bin/env zsh
 
+set -euo pipefail
+
 # Ensure REPO_PATH exists
-if [[ -z "$REPO_PATH" ]]; then
-    REPO_PATH=$(pwd)
-fi
+REPO_PATH="${REPO_PATH:-$(pwd)}"
 mkdir -p "$REPO_PATH/brew" "$REPO_PATH/vscode" "$REPO_PATH/git" "$REPO_PATH/dot" "$REPO_PATH/npm" "$REPO_PATH/.zsh"
 
 # Determine the OS

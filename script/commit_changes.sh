@@ -1,7 +1,9 @@
 #!/bin/bash
 
+set -euo pipefail
+
 function check_and_commit() {
-    if [[ -z "$REPO_PATH" ]]; then
+    if [[ -z "${REPO_PATH:-}" ]]; then
         echo "REPO_PATH is not set" >&2
         return 1
     fi
@@ -13,7 +15,7 @@ function check_and_commit() {
 
     bash ./script/export.sh
 
-    if [[ `git status --porcelain` ]]; then
+    if [[ $(git status --porcelain) ]]; then
         git add .
         aicommits --all
     fi
