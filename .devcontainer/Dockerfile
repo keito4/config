@@ -48,5 +48,4 @@ RUN echo 'source ~/.bashrc' >> /home/vscode/.bash_profile \
 # Husky用の設定
 COPY package.json package-lock.json /tmp/
 COPY .husky /tmp/.husky/
-COPY commitlint.config.js /tmp/
 RUN cd /tmp && npm ci && npm run prepare || true
