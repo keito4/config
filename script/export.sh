@@ -4,7 +4,7 @@ set -euo pipefail
 
 # Ensure REPO_PATH exists
 REPO_PATH="${REPO_PATH:-$(pwd)}"
-mkdir -p "$REPO_PATH/brew" "$REPO_PATH/vscode" "$REPO_PATH/git" "$REPO_PATH/dot" "$REPO_PATH/npm" "$REPO_PATH/.zsh"
+mkdir -p "$REPO_PATH/brew" "$REPO_PATH/vscode" "$REPO_PATH/git" "$REPO_PATH/npm" "$REPO_PATH/.zsh"
 
 # Determine the OS
 if [[ $(uname) = "Linux" ]]; then
@@ -43,16 +43,6 @@ fi
 [[ -f ~/.gitconfig ]] && cat ~/.gitconfig > "$REPO_PATH/git/gitconfig"
 [[ -f ~/.gitignore ]] && cat ~/.gitignore > "$REPO_PATH/git/gitignore"
 [[ -f ~/.gitattributes ]] && cat ~/.gitattributes > "$REPO_PATH/git/gitattributes"
-[[ -f ~/.zprofile ]] && cat ~/.zprofile > "$REPO_PATH/dot/.zprofile"
-
-# Export appropriate .zshrc based on environment
-if [[ $IS_DEVCONTAINER = true ]]; then
-    [[ -f ~/.zshrc ]] && cat ~/.zshrc > "$REPO_PATH/dot/.zshrc.devcontainer"
-else
-    [[ -f ~/.zshrc ]] && cat ~/.zshrc > "$REPO_PATH/dot/.zshrc"
-fi
-
-[[ -f ~/.rubocop.yml ]] && cat ~/.rubocop.yml > "$REPO_PATH/dot/.rubocop.yml"
 [[ -d ~/.zsh ]] && cp -r -f ~/.zsh "$REPO_PATH"
 
 # Export npm packages (only if npm is available)
