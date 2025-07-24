@@ -79,13 +79,6 @@ fetch_all_credentials() {
             inject_template "$template" "$output"
         fi
     done
-    
-    # Also process the legacy template if it exists
-    if [[ -f "$REPO_ROOT/.zsh/configs/pre/.env.secret.template" ]]; then
-        print_warning "Legacy template found, processing..."
-        inject_template "$REPO_ROOT/.zsh/configs/pre/.env.secret.template" \
-                       "$REPO_ROOT/.zsh/configs/pre/.env.secret"
-    fi
 }
 
 clean_credentials() {
@@ -93,9 +86,6 @@ clean_credentials() {
     
     # Remove generated credential files
     find "$CREDENTIALS_DIR" -name "*.env" -not -name "*.template" -delete
-    
-    # Remove legacy secret file
-    rm -f "$REPO_ROOT/.zsh/configs/pre/.env.secret"
     
     print_success "Credential files cleaned up"
 }

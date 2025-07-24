@@ -51,24 +51,10 @@ elif [[ $OS = "darwin" ]]; then
 	if type code >/dev/null 2>&1; then
 		cat "$REPO_PATH/vscode/extensions.txt" | xargs -L1 cursor --install-extension
 	fi
-	if type op >/dev/null 2>&1; then
-		op inject --in-file "$REPO_PATH/.zsh/configs/pre/.env.secret.template" --out-file "$REPO_PATH/.zsh/configs/pre/.env.secret"
-	fi
 fi
 
 # Import general settings
 cp -r -f "$REPO_PATH/.zsh" ~/
-cp "$REPO_PATH/dot/.zprofile" ~/
-
-# Use devcontainer-specific .zshrc if in container environment
-if [[ -f /.dockerenv ]] || [[ ! -z "${REMOTE_CONTAINERS}" ]] || [[ ! -z "${CODESPACES}" ]]; then
-    cp "$REPO_PATH/dot/.zshrc.devcontainer" ~/.zshrc
-else
-    cp "$REPO_PATH/dot/.zshrc" ~/
-fi
-
-cp "$REPO_PATH/dot/.rubocop.yml" ~/
-cp -r -f "$REPO_PATH/dot/.peco" ~/
 cp -r -f "$REPO_PATH/git" ~/
 
 # Configure git settings
