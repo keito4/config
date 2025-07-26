@@ -38,6 +38,9 @@ RUN echo "alias gco='git checkout'" >> /home/vscode/.bashrc \
 RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor \
  && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor
 
+# Copy default Claude settings
+COPY --chown=vscode:vscode .devcontainer/claude-settings.json /home/vscode/.claude/settings.json
+
 # Change default shell to bash
 RUN chsh -s /bin/bash vscode
 
@@ -48,5 +51,4 @@ RUN echo 'source ~/.bashrc' >> /home/vscode/.bash_profile \
 # Husky用の設定
 COPY package.json package-lock.json /tmp/
 COPY .husky /tmp/.husky/
-COPY commitlint.config.js /tmp/
 RUN cd /tmp && npm ci && npm run prepare || true
