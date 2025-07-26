@@ -38,6 +38,9 @@ RUN echo "alias gco='git checkout'" >> /home/vscode/.bashrc \
 RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor \
  && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor
 
+# Copy default Claude settings
+COPY --chown=vscode:vscode .devcontainer/claude-settings.json /home/vscode/.claude/settings.json
+
 # Change default shell to bash
 RUN chsh -s /bin/bash vscode
 

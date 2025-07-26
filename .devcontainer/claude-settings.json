@@ -1,0 +1,45 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh repo view:*)",
+
+      "Bash(kubectl get:*)",
+      "Bash(kubectl describe:*)",
+      "Bash(kubectl logs:*)",
+      "Bash(kubectl top:*)",
+      "Bash(kubectl wait:*)",
+      "Bash(kubectl rollout status:*)",
+
+      "Bash(helm list:*)",
+      "Bash(helm status:*)",
+
+      "Bash(gcloud container operations list:*)",
+
+      "Bash(DISPLAY=:99 xwininfo -root -tree)",
+      "Bash(DISPLAY=:99 xrandr)",
+
+      "Bash(supabase status:*)",
+      "Bash(claude config get:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.n8n.io)",
+      "WebFetch(domain:community.n8n.io)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:www.green-japan.com)"
+    ],
+    "deny": []
+  }
+}
