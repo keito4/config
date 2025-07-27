@@ -8,7 +8,8 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
-- `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory.
+- `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory.  
+- `.devcontainer/`: Contains shared DevContainer configuration files, including Docker setup, versioning documentation, and task completion notification scripts for development environment containerization.
 - `git/`: Contains Git configuration files including gitconfig, gitignore, and modular configuration files in the `gitconfig.d/` subdirectory.
 - `npm/`: Contains npm global package configuration.
 - `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), credential management (`credentials.sh`), Homebrew dependency management (`brew-deps.sh`), and version management (`version.sh`).
@@ -117,14 +118,45 @@ make brew-deps pkg=<package>
 make brew-uses pkg=<package>
 ```
 
-#### GitHub Actions Local Testing
-```bash
-# List available workflows
-make act-list
+### DevContainer Support
 
-# Run a specific workflow locally
-make act-run workflow=<workflow-name>
+This repository includes shared DevContainer configuration for consistent development environments across projects.
+
+#### Features
+- **Shared configuration**: Reusable DevContainer setup that can be referenced from other repositories
+- **Automated setup**: Automatically applies repository configurations via `script/import.sh` when container starts
+- **Semantic versioning**: Support for versioned DevContainer images using git tags
+- **Task notifications**: Bell notification system for task completion feedback
+
+#### Usage
+Reference the shared DevContainer configuration in your project's `devcontainer.json`:
+
+```jsonc
+{
+  "features": {
+    "../features/common": {}
+  }
+}
 ```
+
+#### Versioning
+Create versioned releases of the DevContainer image:
+
+```bash
+# Create a patch version (1.0.0 -> 1.0.1)
+make version-patch
+
+# Create a minor version (1.0.0 -> 1.1.0)  
+make version-minor
+
+# Create a major version (1.0.0 -> 2.0.0)
+make version-major
+
+# Preview next version without creating tag
+make version-dry-run
+```
+
+For detailed DevContainer versioning information, see [.devcontainer/VERSIONING.md](.devcontainer/VERSIONING.md).
 
 ### Automated Releases
 
@@ -142,6 +174,7 @@ Releases are automatically created when changes are pushed to the main branch.
 - **Homebrew (Brew)**: A package manager for macOS and Linux that allows easy installation and management of software packages.
 - **Brewfile**: A file format used by Homebrew to declare and install packages in a reproducible way.
 - **1Password**: A password manager that securely stores credentials, with CLI integration for automated credential management.
+- **DevContainer**: A containerized development environment that provides consistent tooling and configurations across different machines and platforms.
 - **Git**: A distributed version control system for tracking changes in source code during software development.
 - **npm**: The default package manager for the JavaScript runtime environment Node.js.
 - **Visual Studio Code**: A free source-code editor made by Microsoft for Windows, Linux, and macOS.
