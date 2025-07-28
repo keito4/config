@@ -8,13 +8,14 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
-- `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory.  
+- `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory.
 - `.devcontainer/`: Contains shared DevContainer configuration files, including Docker setup, versioning documentation, and task completion notification scripts for development environment containerization.
 - `git/`: Contains Git configuration files including gitconfig, gitignore, and modular configuration files in the `gitconfig.d/` subdirectory.
 - `npm/`: Contains npm global package configuration.
 - `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), credential management (`credentials.sh`), Homebrew dependency management (`brew-deps.sh`), and version management (`version.sh`).
 - `supabase/`: Contains Supabase-related configuration and documentation.
 - `vscode/`: Contains Visual Studio Code configuration including extensions list and installation documentation.
+- `.claude/`: Contains Claude AI development guidelines and quality standards, including conversation guidelines and development philosophy documentation.
 
 ## Security
 
@@ -181,6 +182,7 @@ Releases are automatically created when changes are pushed to the main branch.
 - **Supabase**: An open-source Firebase alternative providing backend-as-a-service features.
 - **Semantic Release**: Automated version management and release process based on commit messages.
 - **GitHub Actions**: CI/CD platform integrated with GitHub for automating workflows.
+- **Claude**: AI assistant with development guidelines and quality standards defined in the `.claude/` directory.
 
 ## Disclaimer
 

@@ -17,8 +17,6 @@
 	attributesfile = ~/.gitattributes
 	editor = emacs -nw
 
-[url "https://github.com/"]
-	insteadOf = git@github.com:
 [credential "https://github.com"]
 	helper =
 	helper = !/opt/homebrew/bin/gh auth git-credential
