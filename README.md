@@ -14,6 +14,8 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 - `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), credential management (`credentials.sh`), Homebrew dependency management (`brew-deps.sh`), and version management (`version.sh`).
 - `supabase/`: Contains Supabase-related configuration and documentation.
 - `vscode/`: Contains Visual Studio Code configuration including extensions list and installation documentation.
+- `.devcontainer/`: Contains DevContainer configuration for consistent development environments, including Docker setup and feature installation scripts.
+- `.claude/`: Contains Claude AI development guidelines and quality standards, including conversation guidelines and development philosophy documentation.
 
 ## Security
 
@@ -126,13 +128,35 @@ make act-list
 make act-run workflow=<workflow-name>
 ```
 
+### DevContainer Support
+
+This repository includes DevContainer configuration for consistent development environments:
+
+#### Usage
+```bash
+# Open in VS Code with DevContainer
+code .
+# Then use "Dev Containers: Reopen in Container" from command palette
+
+# Or clone and open directly in DevContainer
+gh repo clone keito4/config
+cd config
+code .
+```
+
+#### Features
+- Automated setup via `script/import.sh` 
+- Pre-configured development tools
+- Consistent environment across different machines
+- Automatic credential and extension setup
+
 ### Automated Releases
 
 This repository uses semantic-release for automated version management and releases based on commit messages. Follow conventional commit format:
 
 - `feat:` - New features (minor version bump)
 - `fix:` - Bug fixes (patch version bump)
-- `BREAKING CHANGE:` - Breaking changes (major version bump)
+- `BREAKING CHANGE:` - Breaking changes (major version bump)  
 - `docs:`, `style:`, `refactor:`, `test:`, `chore:` - No version bump
 
 Releases are automatically created when changes are pushed to the main branch.
@@ -148,6 +172,8 @@ Releases are automatically created when changes are pushed to the main branch.
 - **Supabase**: An open-source Firebase alternative providing backend-as-a-service features.
 - **Semantic Release**: Automated version management and release process based on commit messages.
 - **GitHub Actions**: CI/CD platform integrated with GitHub for automating workflows.
+- **DevContainer**: A development container configuration that provides a consistent development environment using Docker.
+- **Claude**: AI assistant with development guidelines and quality standards defined in the `.claude/` directory.
 
 ## Disclaimer
 
