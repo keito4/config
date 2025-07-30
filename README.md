@@ -9,13 +9,11 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
 - `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory.
-- `.devcontainer/`: Contains shared DevContainer configuration files, including Docker setup, versioning documentation, and task completion notification scripts for development environment containerization.
 - `git/`: Contains Git configuration files including gitconfig, gitignore, and modular configuration files in the `gitconfig.d/` subdirectory.
 - `npm/`: Contains npm global package configuration.
 - `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), credential management (`credentials.sh`), Homebrew dependency management (`brew-deps.sh`), and version management (`version.sh`).
 - `supabase/`: Contains Supabase-related configuration and documentation.
 - `vscode/`: Contains Visual Studio Code configuration including extensions list and installation documentation.
-- `.claude/`: Contains Claude AI development guidelines and quality standards, including conversation guidelines and development philosophy documentation.
 
 ## Security
 
@@ -119,46 +117,6 @@ make brew-deps pkg=<package>
 make brew-uses pkg=<package>
 ```
 
-### DevContainer Support
-
-This repository includes shared DevContainer configuration for consistent development environments across projects.
-
-#### Features
-- **Shared configuration**: Reusable DevContainer setup that can be referenced from other repositories
-- **Automated setup**: Automatically applies repository configurations via `script/import.sh` when container starts
-- **Semantic versioning**: Support for versioned DevContainer images using git tags
-- **Task notifications**: Bell notification system for task completion feedback
-
-#### Usage
-Reference the shared DevContainer configuration in your project's `devcontainer.json`:
-
-```jsonc
-{
-  "features": {
-    "../features/common": {}
-  }
-}
-```
-
-#### Versioning
-Create versioned releases of the DevContainer image:
-
-```bash
-# Create a patch version (1.0.0 -> 1.0.1)
-make version-patch
-
-# Create a minor version (1.0.0 -> 1.1.0)  
-make version-minor
-
-# Create a major version (1.0.0 -> 2.0.0)
-make version-major
-
-# Preview next version without creating tag
-make version-dry-run
-```
-
-For detailed DevContainer versioning information, see [.devcontainer/VERSIONING.md](.devcontainer/VERSIONING.md).
-
 ### Automated Releases
 
 This repository uses semantic-release for automated version management and releases based on commit messages. Follow conventional commit format:
@@ -182,7 +140,6 @@ Releases are automatically created when changes are pushed to the main branch.
 - **Supabase**: An open-source Firebase alternative providing backend-as-a-service features.
 - **Semantic Release**: Automated version management and release process based on commit messages.
 - **GitHub Actions**: CI/CD platform integrated with GitHub for automating workflows.
-- **Claude**: AI assistant with development guidelines and quality standards defined in the `.claude/` directory.
 
 ## Disclaimer
 

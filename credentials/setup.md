@@ -21,13 +21,6 @@
 
 ### アイテムの作成例
 
-#### GitHub
-- アイテム名: `GitHub`
-- フィールド:
-  - `personal_access_token`: GitHubのPAT
-  - `npm_token`: npm公開用トークン
-  - `rubygems_token`: RubyGems用トークン
-
 #### AWS
 - アイテム名: `AWS`
 - フィールド:
@@ -35,10 +28,10 @@
   - `AWS_SECRET_ACCESS_KEY`: シークレットアクセスキー
   - `AWS_REGION`: デフォルトリージョン
 
-#### OpenAI
-- アイテム名: `OpenAI`
+#### その他のクレデンシャル
+- アイテム名: `Simple`
 - フィールド:
-  - `api_key`: OpenAI APIキー
+  - 簡単な環境変数のテンプレート用
 
 ## 使用方法
 
