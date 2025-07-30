@@ -7,11 +7,10 @@
 ```
 credentials/
 ├── README.md              # このファイル
+├── setup.md              # 詳細なセットアップガイド
 ├── templates/             # 各種サービスのテンプレート
-│   ├── aws.env.template
-│   ├── github.env.template
-│   ├── npm.env.template
-│   └── general.env.template
+│   ├── aws.env.template   # AWS認証情報用テンプレート
+│   └── simple.env.template # 汎用環境変数テンプレート
 └── .gitignore            # 生成されたファイルを無視
 ```
 
