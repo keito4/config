@@ -41,6 +41,9 @@ RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor \
 # Copy default Claude settings
 COPY --chown=vscode:vscode .devcontainer/claude-settings.json /home/vscode/.claude/settings.json
 
+# Copy Claude commands
+COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
+
 # Change default shell to bash
 RUN chsh -s /bin/bash vscode
 
