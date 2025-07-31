@@ -11,8 +11,7 @@ brew/
 ├── LinuxBrewfile              # Linux用の全パッケージ
 ├── LinuxBrewfile.lock.json    # ロックファイル
 ├── StandaloneBrewfile         # 依存関係のないパッケージのみ（自動生成）
-├── CategorizedBrewfile        # カテゴリ別に整理されたスタンドアロンパッケージ（自動生成）
-└── NoDependencyBrewfile       # レガシー：依存関係のないパッケージリスト
+└── CategorizedBrewfile        # カテゴリ別に整理されたスタンドアロンパッケージ（自動生成）
 ```
 
 ## 使用方法
