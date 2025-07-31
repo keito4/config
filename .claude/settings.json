@@ -93,7 +93,6 @@
       "Bash(git pull:*)",
       "Bash(git reset:*)",
       "Bash(git cherry-pick:*)",
-      "Bash(afplay:*)",
       "mcp__github__create_pull_request",
       "mcp__github__get_issue",
       "mcp__github__add_issue_comment",
@@ -102,5 +101,21 @@
       "mcp__devinwiki__ask_question"
     ],
     "deny": []
+  },
+  "env": {
+    "CLAUDE_CODE_PROJECT_NAME": "keito4/config"
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl -X POST http://host.docker.internal:5678/webhook/notify -H \\\"Content-Type: application/json\\\" -d '{\\\"project_name\\\":\\\"keito4/config\\\",\\\"task_name\\\":\\\"${CLAUDE_TASK}\\\",\\\"request_detail\\\":\\\"${CLAUDE_REQUEST}\\\"}'"
+          }
+        ]
+      }
+    ]
   }
 }
