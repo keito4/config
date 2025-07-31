@@ -60,11 +60,6 @@
 Lint → Test → Build → SCA → Deploy:Stg → E2E → Deploy:Prod
 デプロイは Blue-Green もしくは Canary + Auto-Rollback を推奨。
 
-### 2.5 タスク終了時
-
-- `afplay ./audio.mp3` を実行し、タスクが完了したことを知らせてください。
-
-
 ---
 
 ## 3. AI Prompt Design Baseline

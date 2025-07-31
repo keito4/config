@@ -23,9 +23,6 @@ USER root
 # Install global packages
 RUN npm install -g typescript eslint @anthropic-ai/claude-code
 
-# afplayの代替として、playコマンドを使用できるようにalias設定
-RUN echo "alias afplay='play'" >> /home/vscode/.bashrc
-
 # Git aliases for common commands
 RUN echo "alias gco='git checkout'" >> /home/vscode/.bashrc \
  && echo "alias gst='git status'" >> /home/vscode/.bashrc \
@@ -43,6 +40,9 @@ COPY --chown=vscode:vscode .devcontainer/claude-settings.json /home/vscode/.clau
 
 # Copy Claude commands
 COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
+
+# Copy Claude agents
+COPY --chown=vscode:vscode .claude/agents /home/vscode/.claude/agents
 
 # Change default shell to bash
 RUN chsh -s /bin/bash vscode
