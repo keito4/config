@@ -34,8 +34,6 @@ if type brew >/dev/null 2>&1 && [[ $IS_DEVCONTAINER = false ]]; then
 		brew bundle dump --file "$REPO_PATH/brew/LinuxBrewfile" --force --all
 	elif [[ $OS = "darwin" ]]; then
 		brew bundle dump --file "$REPO_PATH/brew/MacOSBrewfile" --force --all
-		echo "" > "$REPO_PATH/brew/NoDependencyBrewfile"
-		brew list | xargs -P`expr $(sysctl -n hw.ncpu) - 1` -I{} sh -c "brew uses --installed {} | wc -l | xargs -I{count} sh -c 'test {count} -eq 0 && echo {} >> $REPO_PATH/brew/NoDependencyBrewfile'"
 	fi
 fi
 
