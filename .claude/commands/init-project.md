@@ -60,3 +60,4 @@ npm ci && npm run prepare
 - `~/.claude.json`: Claude設定ファイル
 - `~/.gitconfig`: Git設定
 - `~/.gitignore`: Git ignore設定
+- `~/.config/gh/hosts.yml`: GitHub CLIの設定
