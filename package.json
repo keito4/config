@@ -8,6 +8,8 @@
     "url": "https://github.com/keito4/config.git"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@semantic-release/commit-analyzer": "^13.0.0",
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/github": "^11.0.0",
