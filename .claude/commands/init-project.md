@@ -61,3 +61,41 @@ npm ci && npm run prepare
 - `~/.gitconfig`: Git設定
 - `~/.gitignore`: Git ignore設定
 - `~/.config/gh/hosts.yml`: GitHub CLIの設定
+
+## 推奨Git設定
+
+### Commitlint設定（日本語対応）
+
+プロジェクトで日本語のコミットメッセージを使用する場合、`commitlint.config.js`に以下の設定を推奨します：
+
+```javascript
+module.exports = {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'subject-case': [0], // 日本語対応のため無効化
+    'subject-empty': [2, 'never'],
+    'type-empty': [2, 'never'],
+    'scope-empty': [0]
+  }
+};
+```
+
+この設定により、日本語のコミットメッセージでも`subject-case`エラーが発生しなくなります。
+
+### Conventional Commits
+
+以下の形式でコミットメッセージを記述します：
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+- **type**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`など
+- **scope**: 変更の影響範囲（オプション）
+- **subject**: 変更内容の要約（日本語可）
+- **body**: 詳細な説明（オプション）
+- **footer**: Breaking Changeやissue参照（オプション）
