@@ -8,6 +8,9 @@
 
 このプロジェクトは`.devcontainer/devcontainer.json`に定義されたDevContainerで開発することを前提としています。
 
+すでに初期化されており、このコマンドが実行されている場合には、以下の内容を踏まえプロジェクト特有のfeaturesを追加/その他の設定の追加をしてください。
+プロジェクトの実際の要件を確認して、必要なfeaturesのみを含むように設定してください。
+
 #### 推奨されるFeatures
 
 - **Node.js & pnpm**: プロジェクトのパッケージ管理
@@ -55,3 +58,5 @@ npm ci && npm run prepare
 - `~/.claude`: Claude設定
 - `~/.cursor`: Cursor設定
 - `~/.claude.json`: Claude設定ファイル
+- `~/.gitconfig`: Git設定
+- `~/.gitignore`: Git ignore設定
