@@ -24,7 +24,8 @@
       "mcp__filesystem__list_allowed_directories",
       "Bash(claude config get:*)",
       "Bash(bash:*)",
-      "Bash(./script/export.sh:*)"
+      "Bash(./script/export.sh:*)",
+      "Bash(git fetch:*)"
     ],
     "deny": []
   }
