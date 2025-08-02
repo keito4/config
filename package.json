@@ -7,6 +7,17 @@
     "type": "git",
     "url": "https://github.com/keito4/config.git"
   },
+  "scripts": {
+    "dev": "echo 'No dev server configured'",
+    "build": "echo 'No build process configured'",
+    "test": "echo 'No tests configured'",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "npm run lint -- --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "echo 'No TypeScript configured'",
+    "prepare": "husky"
+  },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
@@ -14,7 +25,13 @@
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/github": "^11.0.0",
     "@semantic-release/release-notes-generator": "^14.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.19.0",
+    "@typescript-eslint/parser": "^8.19.0",
     "conventional-changelog-conventionalcommits": "^9.0.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.4.2",
     "semantic-release": "^24.2.0"
   }
 }

@@ -25,7 +25,9 @@
       "Bash(claude config get:*)",
       "Bash(bash:*)",
       "Bash(./script/export.sh:*)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(npx husky init:*)",
+      "Bash(npx husky add:*)"
     ],
     "deny": []
   }

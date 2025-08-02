@@ -13,7 +13,8 @@
 
 #### 推奨されるFeatures
 
-- **Node.js & pnpm**: プロジェクトのパッケージ管理
+- **Node.js**: フロントエンド開発
+- **pnpm**: パッケージ管理("ghcr.io/devcontainers-extra/features/pnpm:2")
 - **GitHub CLI (gh)**: PR作成やGitHub操作
 - **Git**: バージョン管理
 - **Terraform**: インフラ管理
@@ -22,8 +23,12 @@
 - **kubectl**: Kubernetes操作
 - **act**: GitHub Actionsのローカル実行
 - **Homebrew**: 追加パッケージの管理
-- **jq-likes**: JSON/YAML処理ツール
+- **jq-likes**: JSON/YAML処理ツール("ghcr.io/eitsupi/devcontainer-features/jq-likes:2")
 - **1Password CLI**: セキュアな認証情報管理
+
+https://containers.dev/features
+
+上記で存在の確認をしてから導入するようにしてください。
 
 ### DevContainerのカスタマイズ
 
@@ -55,9 +60,6 @@ npm ci && npm run prepare
 
 ホストマシンの以下のディレクトリがコンテナにマウントされます：
 
-- `~/.claude`: Claude設定
-- `~/.cursor`: Cursor設定
-- `~/.claude.json`: Claude設定ファイル
 - `~/.gitconfig`: Git設定
 - `~/.gitignore`: Git ignore設定
 - `~/.config/gh/hosts.yml`: GitHub CLIの設定

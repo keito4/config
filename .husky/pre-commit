@@ -1,1 +1,1 @@
-# Add any pre-commit checks here if needed
+npm run lint
