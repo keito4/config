@@ -3,6 +3,7 @@
 ## 前提条件
 
 1. 1Password CLIのインストール
+
    ```bash
    brew install --cask 1password-cli
    ```
@@ -22,6 +23,7 @@
 ### アイテムの作成例
 
 #### AWS
+
 - アイテム名: `AWS`
 - フィールド:
   - `AWS_ACCESS_KEY_ID`: アクセスキーID
@@ -29,6 +31,7 @@
   - `AWS_REGION`: デフォルトリージョン
 
 #### その他のクレデンシャル
+
 - アイテム名: `Simple`
 - フィールド:
   - 簡単な環境変数のテンプレート用
@@ -78,19 +81,23 @@ done
 ## トラブルシューティング
 
 ### op: command not found
+
 ```bash
 brew install --cask 1password-cli
 ```
 
 ### Not signed in to 1Password
+
 ```bash
 op signin
 ```
 
 ### Template not found
+
 テンプレートファイルが`credentials/templates/`に存在することを確認
 
 ### Permission denied
+
 ```bash
 chmod +x script/credentials.sh
 ```

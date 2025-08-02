@@ -5,6 +5,7 @@ This document explains how to implement semantic versioning for the devcontainer
 ## Current Issue
 
 Currently, all devcontainer images are tagged as `latest` only. This makes it difficult to:
+
 - Track which version of the devcontainer you're using
 - Roll back to previous versions if needed
 - Understand what changes were made between versions
@@ -14,6 +15,7 @@ Currently, all devcontainer images are tagged as `latest` only. This makes it di
 ### 1. Use Git Tags for Versioning
 
 Create git tags following semantic versioning (semver) format:
+
 - `v1.0.0` - Major version for breaking changes
 - `v1.1.0` - Minor version for new features
 - `v1.0.1` - Patch version for bug fixes
@@ -26,7 +28,7 @@ Use the provided `script/version.sh` to easily create version tags:
 # Bump patch version (1.0.0 -> 1.0.1)
 ./script/version.sh --type patch
 
-# Bump minor version (1.0.0 -> 1.1.0)  
+# Bump minor version (1.0.0 -> 1.1.0)
 ./script/version.sh --type minor
 
 # Bump major version (1.0.0 -> 2.0.0)
@@ -47,11 +49,12 @@ The `.github/workflows/docker-image.yml` workflow needs to be updated to:
 #### Required Changes to `.github/workflows/docker-image.yml`:
 
 **Add tag trigger:**
+
 ```yaml
 on:
   push:
-    branches: [ main ]
-    tags: [ 'v*' ]  # Trigger on version tags
+    branches: [main]
+    tags: ['v*'] # Trigger on version tags
     paths:
       - '.devcontainer/**'
       - 'features/**'
@@ -59,6 +62,7 @@ on:
 ```
 
 **Add version extraction step:**
+
 ```yaml
 - name: Extract version
   id: version
@@ -73,6 +77,7 @@ on:
 ```
 
 **Update devcontainer build step:**
+
 ```yaml
 - name: Pre-build Dev Container image
   uses: devcontainers/ci@v0.3
@@ -85,6 +90,7 @@ on:
 ```
 
 **Add latest tag for version releases:**
+
 ```yaml
 - name: Tag as latest (for version tags)
   if: startsWith(github.ref, 'refs/tags/v')

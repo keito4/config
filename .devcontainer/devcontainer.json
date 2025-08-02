@@ -37,11 +37,7 @@
   ],
   "customizations": {
     "vscode": {
-      "extensions": [
-        "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint",
-        "mblode.pretty-formatter"
-      ],
+      "extensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint", "mblode.pretty-formatter"],
       "settings": {
         "npm.packageManager": "pnpm"
       }

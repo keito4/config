@@ -61,6 +61,7 @@ Your output format will be a structured dependency audit report:
 ```
 
 Risk scoring criteria:
+
 - 1-3: Low risk (permissive license, actively maintained, appropriate size)
 - 4-6: Medium risk (minor concerns in one area)
 - 7-10: High risk (multiple concerns or critical issues)

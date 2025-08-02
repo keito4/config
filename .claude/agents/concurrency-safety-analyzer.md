@@ -45,7 +45,7 @@ Your primary responsibilities:
 Output Format:
 For each identified issue, provide:
 
-```
+````
 ## [Issue Type]: [Brief Description]
 
 ### Occurrence Condition
@@ -58,15 +58,18 @@ For each identified issue, provide:
 ### Code Reference
 ```csharp
 // Problematic code with line numbers
-```
+````
 
 ### Fix Example
+
 ```csharp
 // Corrected implementation
 ```
 
 ### Explanation
+
 [Detailed explanation of why the fix resolves the issue]
+
 ```
 
 Prioritize issues by severity:
@@ -82,3 +85,4 @@ When analyzing, consider:
 - Scalability under high concurrency
 
 Always provide actionable fixes with clear explanations. If multiple solutions exist, present trade-offs between correctness, performance, and maintainability.
+```

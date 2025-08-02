@@ -77,8 +77,8 @@ module.exports = {
     'subject-case': [0], // 日本語対応のため無効化
     'subject-empty': [2, 'never'],
     'type-empty': [2, 'never'],
-    'scope-empty': [0]
-  }
+    'scope-empty': [0],
+  },
 };
 ```
 
@@ -109,22 +109,20 @@ module.exports = {
 コードの品質と一貫性を保つため、以下の設定を推奨します：
 
 #### `.eslintrc.js`
+
 ```javascript
 module.exports = {
-  extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'prettier'
-  ],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint'],
   rules: {
     // プロジェクト固有のルールを追加
-  }
+  },
 };
 ```
 
 #### `.prettierrc`
+
 ```json
 {
   "semi": true,
@@ -234,6 +232,7 @@ yarn-error.log*
 ### VSCode推奨設定
 
 `.vscode/settings.json`:
+
 ```json
 {
   "editor.formatOnSave": true,
@@ -245,13 +244,10 @@ yarn-error.log*
 ```
 
 `.vscode/extensions.json`:
+
 ```json
 {
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
-    "ms-vscode.vscode-typescript-next"
-  ]
+  "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "ms-vscode.vscode-typescript-next"]
 }
 ```
 
