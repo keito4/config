@@ -7,16 +7,18 @@ CI失敗時の対応手順を提供し、24時間以内修正ルールを遵守�
 ## 実行手順
 
 1. **CIエラーの特定**
+
    ```bash
    # GitHub Actionsのログを確認
    gh run list --limit 5
    gh run view <run-id>
-   
+
    # 失敗したジョブの詳細を確認
    gh run view <run-id> --log-failed
    ```
 
 2. **エラータイプの分類**
+
    ```bash
    echo "エラータイプを確認:"
    echo "1. テスト失敗"
@@ -27,6 +29,7 @@ CI失敗時の対応手順を提供し、24時間以内修正ルールを遵守�
    ```
 
 3. **ローカルでの再現**
+
    ```bash
    # CI環境と同じコマンドを実行
    npm ci
@@ -36,31 +39,35 @@ CI失敗時の対応手順を提供し、24時間以内修正ルールを遵守�
    ```
 
 4. **修正の実施**
-   
+
    ### テスト失敗の場合
+
    ```bash
    # 失敗したテストを特定
    npm run test -- --verbose
    # 修正後、再度テスト
    npm run test -- --watch
    ```
-   
+
    ### Lintエラーの場合
+
    ```bash
    # 自動修正を試す
    npm run lint -- --fix
    npm run format:fix
    ```
-   
+
    ### ビルドエラーの場合
+
    ```bash
    # キャッシュをクリア
    rm -rf node_modules package-lock.json
    npm install
    npm run build
    ```
-   
+
    ### セキュリティ問題の場合
+
    ```bash
    # 脆弱性を修正
    npm audit fix
@@ -69,19 +76,21 @@ CI失敗時の対応手順を提供し、24時間以内修正ルールを遵守�
    ```
 
 5. **修正の確認とプッシュ**
+
    ```bash
    # ローカルでCIと同じチェックを実行
    npm run ci:check
-   
+
    # 修正をコミット
    git add .
    git commit -m "fix: CIエラーを修正 (#<issue-number>)"
-   
+
    # プッシュ
    git push
    ```
 
 6. **CIの再実行を確認**
+
    ```bash
    # CIがグリーンになるまでモニタリング
    gh run watch
@@ -107,16 +116,19 @@ CI失敗時の対応手順を提供し、24時間以内修正ルールを遵守�
 ## トラブルシューティング
 
 ### 24時間以内に修正できない場合
+
 1. Ownerにエスカレーション
 2. 一時的なワークアラウンドを検討
 3. RevertしてCIをグリーンにし、後日修正
 
 ### ローカルで再現しない場合
+
 1. CI環境との差分を確認（Nodeバージョン、環境変数等）
 2. DockerでCI環境を再現
 3. CIのキャッシュをクリア
 
 ### 繰り返しCIが失敗する場合
+
 1. Flakyテストの可能性を確認
 2. テストの安定性を改善（タイムアウト設定、非同期処理の改善）
 3. CIパイプラインのリトライ設定を追加

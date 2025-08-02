@@ -56,12 +56,13 @@ Provide your analysis as a Markdown table with the following structure:
 ```markdown
 ## Performance Analysis Report
 
-| Code Location | Issue | Expected Impact | Recommendation | Priority |
-|---------------|-------|-----------------|----------------|----------|
+| Code Location         | Issue                        | Expected Impact              | Recommendation          | Priority        |
+| --------------------- | ---------------------------- | ---------------------------- | ----------------------- | --------------- |
 | MethodName:LineNumber | Specific problem description | Complexity/Memory/I/O impact | Concrete fix suggestion | High/Medium/Low |
 ```
 
 Include:
+
 - Specific line numbers or method names
 - Clear description of the performance issue
 - Quantified impact where possible (e.g., "O(n²) complexity for n=1000 items")

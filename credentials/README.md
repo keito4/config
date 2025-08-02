@@ -17,11 +17,13 @@ credentials/
 ## 使用方法
 
 1. 1Password CLIがインストールされていることを確認
+
    ```bash
    brew install --cask 1password-cli
    ```
 
 2. 1Passwordにサインイン
+
    ```bash
    op signin
    ```

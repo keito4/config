@@ -58,6 +58,7 @@ This extensions list can be used as part of the repository's import script (`../
 ### `code` Command Not Found
 
 Add VS Code to your PATH:
+
 - **macOS**: `Command + Shift + P` → "Shell Command: Install 'code' command in PATH"
 - **Windows**: Ensure VS Code installation directory is in your system PATH
 - **Linux**: The `code` command should be available after installation via package manager

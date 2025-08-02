@@ -7,6 +7,7 @@ Pull Request作成時の手順とチェックリストを提供し、Git Workflo
 ## 実行手順
 
 1. **ブランチの確認**
+
    ```bash
    # ブランチ名が規約に沿っているか確認
    git branch --show-current
@@ -14,24 +15,27 @@ Pull Request作成時の手順とチェックリストを提供し、Git Workflo
    ```
 
 2. **変更内容の確認**
+
    ```bash
    # 変更ファイル数の確認
    git diff --name-only origin/master | wc -l
-   
+
    # 変更行数の確認
    git diff --shortstat origin/master
-   
+
    # ファイルごとの変更行数
    git diff --stat origin/master
    ```
 
 3. **コミットメッセージの確認**
+
    ```bash
    # Conventional Commitsに沿っているか確認
    git log --oneline origin/master..HEAD
    ```
 
 4. **品質チェックの実行**
+
    ```bash
    # テストと品質チェックを実行
    npm run test:all
@@ -39,6 +43,7 @@ Pull Request作成時の手順とチェックリストを提供し、Git Workflo
    ```
 
 5. **PR作成前の最終チェック**
+
    ```bash
    # チェックリストを確認
    echo "☑︎ 変更ファイル数が25以下"
@@ -69,15 +74,18 @@ Pull Request作成時の手順とチェックリストを提供し、Git Workflo
 ## トラブルシューティング
 
 ### 変更が大きすぎる場合
+
 1. 機能を分割し、複数のPRに分ける
 2. リファクタリングと機能追加を別PRにする
 3. 大きなファイルを小さなモジュールに分割
 
 ### Issueがリンクされない場合
+
 1. `gh issue create` でIssueを作成
 2. PRタイトルまたは本文に `Closes #<issue-number>` を追加
 
 ### テストが失敗する場合
+
 1. `npm run test:all` で詳細を確認
 2. 失敗しているテストを修正
 3. テストが不足している場合は追加

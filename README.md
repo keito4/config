@@ -20,12 +20,14 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 This repository follows security best practices to protect sensitive information:
 
 ### Credential Management
+
 - **No hardcoded credentials**: Personal information like email addresses and SSH keys are not stored in configuration files
 - **Environment variables**: Sensitive data is managed through environment variables and templates
 - **1Password integration**: Use `script/credentials.sh` for secure credential management via 1Password CLI
 - **Secure file permissions**: Generated credential files are automatically set to 600 permissions
 
 ### Git Configuration Security
+
 The `git/gitconfig` file uses commented placeholders instead of hardcoded values. Configure your Git settings securely with:
 
 ```bash
@@ -35,6 +37,7 @@ git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
 ```
 
 ### Setup Instructions
+
 1. Configure Git settings using the commands above
 2. Install 1Password CLI: `brew install --cask 1password-cli`
 3. Sign in to 1Password: `op signin`
@@ -73,6 +76,7 @@ Run the `commit_changes.sh` script with `REPO_PATH` set to this repository to ch
 The repository includes a Makefile with various utility commands:
 
 #### Version Management
+
 ```bash
 # Create a patch version (1.0.0 -> 1.0.1)
 make version-patch
@@ -88,6 +92,7 @@ make version-dry-run
 ```
 
 #### Credential Management
+
 ```bash
 # Fetch credentials from 1Password
 make credentials
@@ -100,6 +105,7 @@ make list-credentials
 ```
 
 #### Homebrew Package Management
+
 ```bash
 # List packages without dependencies (standalone packages)
 make brew-leaves

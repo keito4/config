@@ -55,28 +55,31 @@ make brew-uses pkg=openssl
 ## 推奨ワークフロー
 
 1. **新しいマシンのセットアップ時**
+
    ```bash
    # 基本的なパッケージのみインストール
    brew bundle --file=brew/StandaloneBrewfile
    ```
 
 2. **パッケージの整理時**
+
    ```bash
    # 現在の状態を確認
    make brew-categorized
-   
+
    # 不要なパッケージを削除
    brew uninstall <package>
-   
+
    # Brewfileを再生成
    make brew-generate
    ```
 
 3. **定期的なメンテナンス**
+
    ```bash
    # 全体の状態をエクスポート
    ./script/export.sh
-   
+
    # スタンドアロンパッケージを更新
    make brew-generate
    ```
@@ -86,6 +89,7 @@ make brew-uses pkg=openssl
 生成されるCategorizedBrewfileでは、パッケージが以下のカテゴリに分類されます：
 
 ### Formulae（コマンドラインツール）
+
 - **Development Tools**: プログラミング言語、ビルドツール
 - **Cloud & DevOps**: クラウドCLI、インフラ管理ツール
 - **Database & Backend**: データベースクライアント、バックエンドツール
@@ -94,6 +98,7 @@ make brew-uses pkg=openssl
 - **Fun & Misc**: エンターテインメント系ツール
 
 ### Casks（GUIアプリケーション）
+
 - **Development Tools**: IDE、開発支援ツール
 - **Communication**: チャット、ビデオ会議
 - **Productivity**: 生産性向上ツール

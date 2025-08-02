@@ -13,7 +13,8 @@
 
 #### 推奨されるFeatures
 
-- **Node.js & pnpm**: プロジェクトのパッケージ管理
+- **Node.js**: フロントエンド開発
+- **pnpm**: パッケージ管理("ghcr.io/devcontainers-extra/features/pnpm:2")
 - **GitHub CLI (gh)**: PR作成やGitHub操作
 - **Git**: バージョン管理
 - **Terraform**: インフラ管理
@@ -22,8 +23,12 @@
 - **kubectl**: Kubernetes操作
 - **act**: GitHub Actionsのローカル実行
 - **Homebrew**: 追加パッケージの管理
-- **jq-likes**: JSON/YAML処理ツール
+- **jq-likes**: JSON/YAML処理ツール("ghcr.io/eitsupi/devcontainer-features/jq-likes:2")
 - **1Password CLI**: セキュアな認証情報管理
+
+https://containers.dev/features
+
+上記で存在の確認をしてから導入するようにしてください。
 
 ### DevContainerのカスタマイズ
 
@@ -55,9 +60,6 @@ npm ci && npm run prepare
 
 ホストマシンの以下のディレクトリがコンテナにマウントされます：
 
-- `~/.claude`: Claude設定
-- `~/.cursor`: Cursor設定
-- `~/.claude.json`: Claude設定ファイル
 - `~/.gitconfig`: Git設定
 - `~/.gitignore`: Git ignore設定
 - `~/.config/gh/hosts.yml`: GitHub CLIの設定
@@ -75,8 +77,8 @@ module.exports = {
     'subject-case': [0], // 日本語対応のため無効化
     'subject-empty': [2, 'never'],
     'type-empty': [2, 'never'],
-    'scope-empty': [0]
-  }
+    'scope-empty': [0],
+  },
 };
 ```
 
@@ -107,22 +109,20 @@ module.exports = {
 コードの品質と一貫性を保つため、以下の設定を推奨します：
 
 #### `.eslintrc.js`
+
 ```javascript
 module.exports = {
-  extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'prettier'
-  ],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint'],
   rules: {
     // プロジェクト固有のルールを追加
-  }
+  },
 };
 ```
 
 #### `.prettierrc`
+
 ```json
 {
   "semi": true,
@@ -232,6 +232,7 @@ yarn-error.log*
 ### VSCode推奨設定
 
 `.vscode/settings.json`:
+
 ```json
 {
   "editor.formatOnSave": true,
@@ -243,12 +244,22 @@ yarn-error.log*
 ```
 
 `.vscode/extensions.json`:
+
 ```json
 {
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
-    "ms-vscode.vscode-typescript-next"
+  "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "ms-vscode.vscode-typescript-next"]
+}
+```
+
+### mounts推奨設定
+
+```json
+{
+  "mounts": [
+    "source=${localEnv:HOME}/.cursor,target=/home/vscode/.cursor,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.claude/.credentials.json,target=/home/vscode/.claude/.credentials.json,type=bind,consistency=cached"
   ]
 }
 ```
