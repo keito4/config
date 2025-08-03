@@ -5,16 +5,19 @@
 This repository implements comprehensive development quality standards and AI-assisted workflows. See `.claude/CLAUDE.md` for detailed guidelines including:
 
 ### Code Quality Requirements
+
 - **Test-Driven Development (TDD)**: Red → Green → Refactor methodology with 70%+ line coverage requirement
 - **Static Quality Gates**: Automated linting, formatting, security analysis, and license checking
 - **Git Workflow**: Conventional commits, branch naming conventions, and pull request requirements
 
 ### AI Prompt Design Guidelines
+
 - Structured approach for requirements definition, implementation, and bug reporting
 - Clear separation between requirements gathering and code generation phases
 - Emphasis on test-first development practices
 
 ### Definition of Ready/Done Criteria
+
 - **Ready**: Acceptance criteria defined, dependencies resolved
 - **Done**: Quality gates passed, documentation updated, monitoring stable, release notes complete
 
@@ -29,6 +32,7 @@ Claude is configured to send notifications to the Slack workspace when tasks are
 ## Specialized Agents
 
 The `.claude/agents/` directory contains specialized AI agents for:
+
 - Architecture validation (DDD, Clean Architecture, Hexagonal Architecture)
 - Accessibility and design validation
 - Concurrency safety analysis
@@ -40,6 +44,7 @@ The `.claude/agents/` directory contains specialized AI agents for:
 ## Custom Commands
 
 The `.claude/commands/` directory provides pre-configured commands for:
+
 - Code coverage checking
 - CI/CD troubleshooting
 - Project initialization

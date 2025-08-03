@@ -11,6 +11,7 @@ This directory contains Visual Studio Code configuration files and scripts for m
 ## DevContainer Integration
 
 This repository includes DevContainer support with automatic VS Code setup:
+
 - Extensions are automatically installed when the DevContainer starts
 - Workspace settings are pre-configured for consistent development experience
 - See `.devcontainer/README.md` for more details

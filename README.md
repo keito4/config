@@ -130,11 +130,13 @@ make brew-uses pkg=<package>
 This repository includes comprehensive GitHub Actions workflows and development tooling:
 
 #### GitHub Actions Workflows
+
 - **CI Pipeline** (`.github/workflows/ci.yml`): Automated testing, linting, and quality checks
 - **Claude Code Integration** (`.github/workflows/claude.yml`): AI-assisted code review and issue management
 - **Docker Image Build** (`.github/workflows/docker-image.yml`): Containerized build and deployment pipeline
 
 #### Development Quality Tools
+
 - **ESLint**: JavaScript/TypeScript linting with customizable rules
 - **Prettier**: Code formatting with consistent style enforcement
 - **Husky**: Git hooks for pre-commit and commit-msg validation
@@ -142,7 +144,9 @@ This repository includes comprehensive GitHub Actions workflows and development 
 - **semantic-release**: Automated version management and releases
 
 #### DevContainer Support
+
 The repository includes a complete DevContainer setup (`.devcontainer/`) that provides:
+
 - Consistent development environment across different machines
 - Pre-configured tools and extensions
 - Automatic import of configuration settings on container startup
