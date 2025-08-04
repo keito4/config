@@ -10,7 +10,16 @@
   "scripts": {
     "dev": "echo 'No dev server configured'",
     "build": "echo 'No build process configured'",
-    "test": "echo 'No tests configured'",
+    "test": "cd test && ./run-tests.sh",
+    "test:shell": "cd test && ./run-tests.sh",
+    "test:verbose": "cd test && ./run-tests.sh --verbose",
+    "test:coverage": "cd test && ./run-tests.sh | grep -q 'Coverage meets 70% threshold'",
+    "test:claude": "node .claude/tests/run-all-tests.js",
+    "test:claude:agents": "node .claude/tests/validate-agents.js",
+    "test:claude:commands": "node .claude/tests/validate-commands.js",
+    "test:claude:verbose": "node .claude/tests/run-all-tests.js --verbose",
+    "test:claude:coverage": "node .claude/tests/run-all-tests.js --output",
+    "validate:claude": "npm run test:claude:agents && npm run test:claude:commands",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write .",
@@ -31,6 +40,7 @@
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "husky": "^9.1.7",
+    "js-yaml": "^4.1.0",
     "prettier": "^3.4.2",
     "semantic-release": "^24.2.0"
   }

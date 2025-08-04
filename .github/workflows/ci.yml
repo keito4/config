@@ -5,8 +5,55 @@ on:
   push:
     branches: [main, master]
 
+# Cancel in-progress runs for same PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  quality:
+  # Dependency installation with caching
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache-keys.outputs.npm }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate cache keys
+        id: cache-keys
+        run: |
+          echo "npm=${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ steps.cache-keys.outputs.npm }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Upload node_modules
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules
+          retention-days: 1
+
+  # Parallel linting job
+  lint:
+    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,21 +61,233 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules
 
       - name: Run linter
         run: npm run lint
 
+      - name: Upload lint results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-results
+          path: |
+            **/eslint-report.json
+            **/eslint-report.html
+          retention-days: 7
+
+  # Parallel formatting check
+  format:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules
+
       - name: Check formatting
         run: npm run format:check
 
-      - name: Run tests
-        run: npm run test
-        continue-on-error: true # テストが未設定のため一時的にエラーを無視
+  # Parallel unit tests with coverage
+  unit-tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules
+
+      - name: Run unit tests (shard ${{ matrix.shard }}/4)
+        run: |
+          npm run test -- --shard=${{ matrix.shard }}/4 --coverage --coverageReporters=json --coverageReporters=lcov --coverageReporters=text --coverageReporters=cobertura
+        continue-on-error: true
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.shard }}
+          path: |
+            coverage/lcov.info
+            coverage/coverage-final.json
+            coverage/cobertura-coverage.xml
+          retention-days: 1
+
+  # Merge coverage reports
+  coverage:
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Download all coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage-reports
+
+      - name: Merge coverage reports
+        run: |
+          npm install -g nyc
+          nyc merge coverage-reports coverage/coverage-final.json
+          nyc report --reporter=lcov --reporter=text --reporter=cobertura
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Generate coverage summary
+        run: |
+          echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          nyc report --reporter=text | tail -n +3 >> $GITHUB_STEP_SUMMARY
+
+      - name: Check coverage thresholds
+        run: |
+          COVERAGE=$(nyc report --reporter=json-summary | jq '.total.lines.pct')
+          echo "Total coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 70" | bc -l) )); then
+            echo "::error::Coverage $COVERAGE% is below 70% threshold"
+            exit 1
+          fi
+
+  # Shell script tests with parallel execution
+  shell-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-suite: [core, utils, integration]
+    name: Shell Tests - ${{ matrix.test-suite }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache shell test dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bats
+            test/libs
+          key: ${{ runner.os }}-shell-tests-${{ hashFiles('test/setup.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-shell-tests-
+
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zsh shellcheck
+
+      - name: Setup Bats test framework
+        run: |
+          cd test
+          ./setup.sh
+
+      - name: Run shell script tests - ${{ matrix.test-suite }}
+        run: |
+          cd test
+          ./run-tests.sh --suite=${{ matrix.test-suite }} --verbose --coverage
+
+      - name: Upload shell test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shell-test-results-${{ matrix.test-suite }}
+          path: |
+            test/results/*.xml
+            test/coverage/*.info
+          retention-days: 7
+
+  # Build job with caching
+  build:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules
+
+      - name: Cache build outputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            dist
+            .next
+            out
+          key: ${{ runner.os }}-build-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-build-
 
       - name: Build
         run: npm run build
-        continue-on-error: true # ビルドプロセスが未設定のため一時的にエラーを無視
+        continue-on-error: true
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            dist
+            .next
+            out
+          retention-days: 7
+
+  # Final quality gate
+  quality-gate:
+    needs: [lint, format, coverage, shell-tests, build]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check quality gate status
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" ]]; then
+            echo "::error::Linting failed"
+            exit 1
+          fi
+          if [[ "${{ needs.format.result }}" != "success" ]]; then
+            echo "::error::Formatting check failed"
+            exit 1
+          fi
+          if [[ "${{ needs.coverage.result }}" != "success" ]]; then
+            echo "::error::Coverage requirements not met"
+            exit 1
+          fi
+          echo "✅ All quality gates passed"

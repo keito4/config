@@ -10,6 +10,8 @@ node_modules/
 # Testing
 coverage/
 .nyc_output/
+test/bats-libs/
+test/mocks/
 
 # Production
 build/
