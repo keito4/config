@@ -1,0 +1,23 @@
+# ShellCheck configuration file
+# https://www.shellcheck.net/wiki/Ignore
+
+# Set shell dialect
+shell=bash
+
+# Enable all optional checks
+enable=all
+
+# Disable specific checks that may not apply
+disable=SC2312  # Consider invoking this command separately to avoid masking its return value
+disable=SC1091  # Not following sourced files
+
+# Set minimum severity level (error, warning, info, style)
+severity=warning
+
+# External sources directory
+source-path=script/lib
+
+# Exclude paths
+exclude=node_modules
+exclude=.git
+exclude=test/bats-libs
