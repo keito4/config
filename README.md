@@ -6,9 +6,11 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 
 ## Directory Structure
 
+- `.claude/`: Claude Code configuration directory containing specialized agents, commands, and development quality standards for AI-assisted development workflows.
+- `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
-- `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory.
+- `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory, including Zsh configuration with comprehensive aliases, functions, and environment setup.
 - `git/`: Contains Git configuration files including gitconfig, gitignore, and modular configuration files in the `gitconfig.d/` subdirectory.
 - `npm/`: Contains npm global package configuration.
 - `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), credential management (`credentials.sh`), Homebrew dependency management (`brew-deps.sh`), and version management (`version.sh`).
@@ -123,6 +125,32 @@ make brew-deps pkg=<package>
 make brew-uses pkg=<package>
 ```
 
+### CI/CD and Development Workflow
+
+This repository includes comprehensive GitHub Actions workflows and development tooling:
+
+#### GitHub Actions Workflows
+
+- **CI Pipeline** (`.github/workflows/ci.yml`): Automated testing, linting, and quality checks
+- **Claude Code Integration** (`.github/workflows/claude.yml`): AI-assisted code review and issue management
+- **Docker Image Build** (`.github/workflows/docker-image.yml`): Containerized build and deployment pipeline
+
+#### Development Quality Tools
+
+- **ESLint**: JavaScript/TypeScript linting with customizable rules
+- **Prettier**: Code formatting with consistent style enforcement
+- **Husky**: Git hooks for pre-commit and commit-msg validation
+- **Commitlint**: Enforces conventional commit message format
+- **semantic-release**: Automated version management and releases
+
+#### DevContainer Support
+
+The repository includes a complete DevContainer setup (`.devcontainer/`) that provides:
+
+- Consistent development environment across different machines
+- Pre-configured tools and extensions
+- Automatic import of configuration settings on container startup
+
 ### Automated Releases
 
 This repository uses semantic-release for automated version management and releases based on commit messages. Follow conventional commit format:
@@ -139,13 +167,18 @@ Releases are automatically created when changes are pushed to the main branch.
 - **Homebrew (Brew)**: A package manager for macOS and Linux that allows easy installation and management of software packages.
 - **Brewfile**: A file format used by Homebrew to declare and install packages in a reproducible way.
 - **1Password**: A password manager that securely stores credentials, with CLI integration for automated credential management.
+- **Claude Code**: AI-powered development assistant with specialized agents for code review, architecture validation, and quality analysis.
 - **DevContainer**: A containerized development environment that provides consistent tooling and configurations across different machines and platforms.
+- **ESLint**: A static analysis tool for identifying problematic patterns in JavaScript/TypeScript code.
 - **Git**: A distributed version control system for tracking changes in source code during software development.
-- **npm**: The default package manager for the JavaScript runtime environment Node.js.
-- **Visual Studio Code**: A free source-code editor made by Microsoft for Windows, Linux, and macOS.
-- **Supabase**: An open-source Firebase alternative providing backend-as-a-service features.
-- **Semantic Release**: Automated version management and release process based on commit messages.
 - **GitHub Actions**: CI/CD platform integrated with GitHub for automating workflows.
+- **Husky**: Git hooks tool that enables running scripts at various Git lifecycle events.
+- **npm**: The default package manager for the JavaScript runtime environment Node.js.
+- **Prettier**: An opinionated code formatter that enforces consistent code style.
+- **Semantic Release**: Automated version management and release process based on commit messages.
+- **Supabase**: An open-source Firebase alternative providing backend-as-a-service features.
+- **Visual Studio Code**: A free source-code editor made by Microsoft for Windows, Linux, and macOS.
+- **Zsh**: An extended Unix shell with advanced features for interactive use and scripting.
 
 ## Disclaimer
 
