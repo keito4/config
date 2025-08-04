@@ -44,7 +44,7 @@ if [ -z "$PR_NUMBER" ]; then
     # 現在のブランチから PR を特定
     CURRENT_BRANCH=$(git branch --show-current)
     PR_NUMBER=$(gh pr list --head "$CURRENT_BRANCH" --json number -q '.[0].number' || echo "")
-    
+
     if [ -z "$PR_NUMBER" ]; then
         log_error "No PR found for current branch. Specify PR_NUMBER environment variable."
         exit 1
@@ -69,26 +69,26 @@ cat "$TEMP_DIR/pr_data.json" | jq -r '.reviews[] | select(.author.login == "code
 
 ### 2. フィードバックのパースと分類
 
-```bash
+````bash
 # フィードバックを解析するNode.jsスクリプト
 cat << 'EOF' > "$TEMP_DIR/parse_feedback.js"
 const fs = require('fs');
 
 function parseFeedback(content) {
     const issues = [];
-    
+
     // Actionable commentsを抽出
     const actionableRegex = /\*\*([^*]+)\*\*\s*\n([^*]+?)(?=\n\*\*|\n---|\Z)/gs;
     const matches = content.matchAll(actionableRegex);
-    
+
     for (const match of matches) {
         const title = match[1].trim();
         const description = match[2].trim();
-        
+
         // 優先度を判定
         let priority = 'low';
         let category = 'enhancement';
-        
+
         if (title.match(/security|vulnerability|injection|auth/i)) {
             priority = 'critical';
             category = 'security';
@@ -105,15 +105,15 @@ function parseFeedback(content) {
             priority = 'low';
             category = 'tech-debt';
         }
-        
+
         // 自動修正可能かを判定
         const autoFixable = checkAutoFixable(title, description);
-        
+
         // ファイルと行番号を抽出
         const fileMatch = description.match(/`([^`]+\.(?:md|js|ts|json|yml|yaml))(?::(\d+))?`/);
         const file = fileMatch ? fileMatch[1] : null;
         const line = fileMatch ? fileMatch[2] : null;
-        
+
         issues.push({
             title,
             description,
@@ -125,17 +125,17 @@ function parseFeedback(content) {
             suggestedFix: extractSuggestedFix(description)
         });
     }
-    
+
     // Nitpick commentsも処理
     const nitpickRegex = /`(\d+)-(\d+)`:\s*\*\*([^*]+)\*\*\s*\n([^`]+)/gs;
     const nitpicks = content.matchAll(nitpickRegex);
-    
+
     for (const match of nitpicks) {
         const lineStart = match[1];
         const lineEnd = match[2];
         const title = match[3].trim();
         const description = match[4].trim();
-        
+
         issues.push({
             title,
             description,
@@ -146,7 +146,7 @@ function parseFeedback(content) {
             file: extractFileFromContext(content, match.index)
         });
     }
-    
+
     return issues;
 }
 
@@ -160,8 +160,8 @@ function checkAutoFixable(title, description) {
         /remove.*unused/i,
         /replace.*with/i
     ];
-    
-    return autoFixPatterns.some(pattern => 
+
+    return autoFixPatterns.some(pattern =>
         title.match(pattern) || description.match(pattern)
     );
 }
@@ -209,7 +209,7 @@ else
     log_warning "No CodeRabbit comments found"
     echo "[]" > "$TEMP_DIR/issues.json"
 fi
-```
+````
 
 ### 3. 自動修正の実行
 
@@ -217,19 +217,19 @@ fi
 # 自動修正可能な項目を処理
 if [ "$AUTO_FIX" = "true" ] && [ "$DRY_RUN" != "true" ]; then
     log_info "Attempting automatic fixes..."
-    
+
     # 修正用ブランチを作成
     FIX_BRANCH="fix/coderabbit-feedback-$(date +%Y%m%d-%H%M%S)"
     git checkout -b "$FIX_BRANCH"
-    
+
     # 各自動修正可能な項目を処理
     cat "$TEMP_DIR/issues.json" | jq -c '.[] | select(.autoFixable == true)' | while read -r issue; do
         title=$(echo "$issue" | jq -r '.title')
         file=$(echo "$issue" | jq -r '.file // ""')
         suggested_fix=$(echo "$issue" | jq -r '.suggestedFix // ""')
-        
+
         log_action "Auto-fixing: $title"
-        
+
         case "$title" in
             *"Prettier"*|*"formatting"*)
                 log_info "Running Prettier..."
@@ -239,7 +239,7 @@ if [ "$AUTO_FIX" = "true" ] && [ "$DRY_RUN" != "true" ]; then
                     npm run format 2>/dev/null || true
                 fi
                 ;;
-                
+
             *"unused import"*|*"unused variable"*)
                 log_info "Running ESLint with auto-fix..."
                 if [ -n "$file" ]; then
@@ -248,7 +248,7 @@ if [ "$AUTO_FIX" = "true" ] && [ "$DRY_RUN" != "true" ]; then
                     npm run lint:fix 2>/dev/null || true
                 fi
                 ;;
-                
+
             *"dependency"*|*"update"*)
                 log_info "Updating dependencies..."
                 package=$(echo "$title" | grep -oE '[a-z@/-]+@[0-9.]+' | cut -d@ -f1 || echo "")
@@ -256,7 +256,7 @@ if [ "$AUTO_FIX" = "true" ] && [ "$DRY_RUN" != "true" ]; then
                     npm update "$package" 2>/dev/null || true
                 fi
                 ;;
-                
+
             *"bc dependency"*|*"bc command"*)
                 log_info "Replacing bc with pure bash arithmetic..."
                 if [ -n "$file" ]; then
@@ -265,7 +265,7 @@ if [ "$AUTO_FIX" = "true" ] && [ "$DRY_RUN" != "true" ]; then
                     sed -i 's/\$(\([^)]*\) | bc)/\$((\1))/g' "$file"
                 fi
                 ;;
-                
+
             *"ripgrep"*|*"rg command"*)
                 log_info "Adding ripgrep installation check..."
                 if [ -n "$file" ]; then
@@ -289,7 +289,7 @@ INSTALL_CHECK
                     sed -i '3r '"$TEMP_DIR/rg_check.txt" "$file"
                 fi
                 ;;
-                
+
             *)
                 if [ -n "$suggested_fix" ] && [ -n "$file" ]; then
                     log_info "Applying suggested fix to $file"
@@ -299,7 +299,7 @@ INSTALL_CHECK
                 ;;
         esac
     done
-    
+
     # 変更をコミット
     if [ -n "$(git status --porcelain)" ]; then
         git add -A
@@ -311,9 +311,9 @@ INSTALL_CHECK
 - Enhanced CI/CD compatibility
 
 Ref: PR #$PR_NUMBER"
-        
+
         log_success "Automatic fixes applied and committed"
-        
+
         # PRを作成
         git push -u origin "$FIX_BRANCH"
         gh pr create \
@@ -344,7 +344,7 @@ fi
 # 自動修正できない項目をIssue化
 if [ "$CREATE_ISSUES" = "true" ] && [ "$DRY_RUN" != "true" ]; then
     log_info "Creating issues for items requiring manual intervention..."
-    
+
     # 優先度の閾値を適用
     case "$PRIORITY_THRESHOLD" in
         "critical")
@@ -363,7 +363,7 @@ if [ "$CREATE_ISSUES" = "true" ] && [ "$DRY_RUN" != "true" ]; then
             min_priority=2
             ;;
     esac
-    
+
     # 各項目に対してIssueを作成
     cat "$TEMP_DIR/issues.json" | jq -c '.[] | select(.autoFixable != true)' | while read -r issue; do
         title=$(echo "$issue" | jq -r '.title')
@@ -371,7 +371,7 @@ if [ "$CREATE_ISSUES" = "true" ] && [ "$DRY_RUN" != "true" ]; then
         priority=$(echo "$issue" | jq -r '.priority')
         category=$(echo "$issue" | jq -r '.category')
         file=$(echo "$issue" | jq -r '.file // "N/A"')
-        
+
         # 優先度チェック
         priority_num=$(case "$priority" in
             critical) echo 0 ;;
@@ -379,19 +379,19 @@ if [ "$CREATE_ISSUES" = "true" ] && [ "$DRY_RUN" != "true" ]; then
             medium) echo 2 ;;
             low) echo 3 ;;
         esac)
-        
+
         if [ "$priority_num" -gt "$min_priority" ]; then
             log_info "Skipping low priority issue: $title"
             continue
         fi
-        
+
         # 重複チェック
         existing=$(gh issue list --search "$title" --json number | jq 'length')
         if [ "$existing" -gt 0 ]; then
             log_warning "Issue already exists: $title"
             continue
         fi
-        
+
         # Issueの優先度に応じた絵文字
         case "$priority" in
             critical)
@@ -407,7 +407,7 @@ if [ "$CREATE_ISSUES" = "true" ] && [ "$DRY_RUN" != "true" ]; then
                 emoji="💭"
                 ;;
         esac
-        
+
         # Issue本文の作成
         ISSUE_BODY="## $emoji CodeRabbit Feedback
 
@@ -434,17 +434,17 @@ This issue was identified by CodeRabbit during the review of PR #$PR_NUMBER and 
 
 ---
 *Created by review-feedback-processor*"
-        
+
         # Issueを作成
         log_action "Creating issue: $title"
-        
+
         gh issue create \
             --title "$emoji $title" \
             --body "$ISSUE_BODY" \
             --label "$category,from-review" \
             2>/dev/null || log_warning "Failed to create issue: $title"
     done
-    
+
     log_success "Issues created for manual items"
 fi
 ```
@@ -482,14 +482,14 @@ $(cat "$TEMP_DIR/issues.json" | jq -r '
 ## Category Distribution
 
 $(cat "$TEMP_DIR/issues.json" | jq -r '
-    group_by(.category) | 
-    map("- " + .[0].category + ": " + (length | tostring)) | 
+    group_by(.category) |
+    map("- " + .[0].category + ": " + (length | tostring)) |
     .[]
 ')
 
 ## Detailed Items
 
-$(cat "$TEMP_DIR/issues.json" | jq -r '.[] | 
+$(cat "$TEMP_DIR/issues.json" | jq -r '.[] |
     "### " + .title + "\n" +
     "- Priority: " + .priority + "\n" +
     "- Category: " + .category + "\n" +
@@ -568,15 +568,14 @@ jobs:
       (github.event.review && github.event.review.user.login == 'coderabbitai') ||
       (github.event.comment && github.event.comment.user.login == 'coderabbitai')
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          
+
       - name: Process Review Feedback
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -605,9 +604,9 @@ sed -i "s/coderabbitai/$REVIEWER_LOGIN/g" "$TEMP_DIR/parse_feedback.js"
 ```javascript
 // 特定のフォーマットに対応
 function parseCustomFormat(content) {
-    // カスタムパースロジック
-    const customRegex = /YOUR_PATTERN_HERE/g;
-    // ...
+  // カスタムパースロジック
+  const customRegex = /YOUR_PATTERN_HERE/g;
+  // ...
 }
 ```
 
