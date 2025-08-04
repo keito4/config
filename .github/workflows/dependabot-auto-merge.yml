@@ -1,0 +1,196 @@
+name: Dependabot Auto-Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_review:
+    types: [submitted]
+  status: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  # Check if PR is from Dependabot and eligible for auto-merge
+  dependabot-check:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    outputs:
+      update-type: ${{ steps.metadata.outputs.update-type }}
+      dependency-type: ${{ steps.metadata.outputs.dependency-type }}
+      package-ecosystem: ${{ steps.metadata.outputs.package-ecosystem }}
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Check update type
+        run: |
+          echo "Update type: ${{ steps.metadata.outputs.update-type }}"
+          echo "Dependency type: ${{ steps.metadata.outputs.dependency-type }}"
+          echo "Package ecosystem: ${{ steps.metadata.outputs.package-ecosystem }}"
+
+  # Run security and quality checks
+  security-checks:
+    needs: dependabot-check
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security audit
+        id: audit
+        run: |
+          npm audit --json > audit-results.json || true
+          CRITICAL=$(cat audit-results.json | jq '.metadata.vulnerabilities.critical // 0')
+          HIGH=$(cat audit-results.json | jq '.metadata.vulnerabilities.high // 0')
+          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high=$HIGH" >> $GITHUB_OUTPUT
+          
+          if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+            echo "❌ Security vulnerabilities found: Critical=$CRITICAL, High=$HIGH"
+            exit 1
+          else
+            echo "✅ No critical or high vulnerabilities found"
+          fi
+
+      - name: Run tests
+        run: npm test
+        continue-on-error: true
+
+      - name: Check licenses
+        run: |
+          npx license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;WTFPL;Python-2.0;MPL-2.0;0BSD' --excludePrivatePackages
+
+  # Auto-approve safe updates
+  auto-approve:
+    needs: [dependabot-check, security-checks]
+    runs-on: ubuntu-latest
+    if: |
+      github.actor == 'dependabot[bot]' &&
+      (needs.dependabot-check.outputs.update-type == 'version-update:semver-patch' ||
+       needs.dependabot-check.outputs.update-type == 'version-update:semver-minor')
+    steps:
+      - name: Auto-approve PR
+        uses: hmarr/auto-approve-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add auto-merge label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['auto-merge']
+            });
+
+  # Auto-merge approved PRs
+  auto-merge:
+    needs: [dependabot-check, security-checks, auto-approve]
+    runs-on: ubuntu-latest
+    if: |
+      github.actor == 'dependabot[bot]' &&
+      (needs.dependabot-check.outputs.update-type == 'version-update:semver-patch' ||
+       needs.dependabot-check.outputs.update-type == 'version-update:semver-minor')
+    steps:
+      - name: Enable auto-merge
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const updateType = '${{ needs.dependabot-check.outputs.update-type }}';
+            const packageEcosystem = '${{ needs.dependabot-check.outputs.package-ecosystem }}';
+            
+            const comment = `## 🤖 Dependabot Auto-Merge
+            
+            This PR has been automatically approved and will be merged once all checks pass.
+            
+            **Details:**
+            - Update type: ${updateType}
+            - Package ecosystem: ${packageEcosystem}
+            - Security checks: ✅ Passed
+            - License checks: ✅ Passed
+            
+            The PR will be automatically merged using squash merge strategy.`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+  # Handle major updates differently
+  major-update-notification:
+    needs: dependabot-check
+    runs-on: ubuntu-latest
+    if: |
+      github.actor == 'dependabot[bot]' &&
+      needs.dependabot-check.outputs.update-type == 'version-update:semver-major'
+    steps:
+      - name: Comment on major update
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `## ⚠️ Major Version Update Detected
+            
+            This PR contains a major version update which may include breaking changes.
+            
+            **Manual review required:**
+            - Check the changelog for breaking changes
+            - Review migration guide if available
+            - Test thoroughly before merging
+            - Update code if necessary to accommodate breaking changes
+            
+            This PR will **not** be auto-merged and requires manual approval.`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+      - name: Add review-needed label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['review-needed', 'major-update']
+            });
+
+      - name: Request review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              reviewers: ['keito4']
+            });

@@ -1,0 +1,131 @@
+# Dependabot configuration for automated dependency updates
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    assignees:
+      - "keito4"
+    reviewers:
+      - "keito4"
+    labels:
+      - "dependencies"
+      - "npm"
+      - "automated"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    pull-request-branch-name:
+      separator: "/"
+    rebase-strategy: "auto"
+    versioning-strategy: "increase"
+    groups:
+      # Group all minor and patch updates together
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group all ESLint-related packages
+      eslint:
+        patterns:
+          - "eslint*"
+          - "@typescript-eslint/*"
+      # Group all testing-related packages
+      testing:
+        patterns:
+          - "jest*"
+          - "@testing-library/*"
+          - "vitest*"
+      # Group all Prettier-related packages
+      prettier:
+        patterns:
+          - "prettier*"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    assignees:
+      - "keito4"
+    reviewers:
+      - "keito4"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    pull-request-branch-name:
+      separator: "/"
+    groups:
+      # Group all actions updates together
+      actions:
+        patterns:
+          - "*"
+
+  # Enable version updates for Docker
+  - package-ecosystem: "docker"
+    directory: "/.devcontainer"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    assignees:
+      - "keito4"
+    reviewers:
+      - "keito4"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "automated"
+    commit-message:
+      prefix: "build"
+      include: "scope"
+    pull-request-branch-name:
+      separator: "/"
+
+  # Enable version updates for Terraform (if used)
+  - package-ecosystem: "terraform"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    assignees:
+      - "keito4"
+    reviewers:
+      - "keito4"
+    labels:
+      - "dependencies"
+      - "terraform"
+      - "automated"
+    commit-message:
+      prefix: "build"
+      include: "scope"
+    pull-request-branch-name:
+      separator: "/"
+
+# Security updates are handled separately and have priority
+# They are automatically created for vulnerable dependencies
+# regardless of the schedule configuration above

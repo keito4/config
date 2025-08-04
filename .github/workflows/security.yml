@@ -1,0 +1,379 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    # Run security scans daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+# Cancel in-progress runs for same PR/branch
+concurrency:
+  group: security-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Static Application Security Testing (SAST)
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['javascript', 'typescript']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  # Secret scanning with multiple tools
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: GitGuardian scan
+        uses: GitGuardian/ggshield-action@v1
+        if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+        env:
+          GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
+          GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
+          GITHUB_PULL_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+        continue-on-error: true
+
+  # Dependency vulnerability scanning
+  dependency-check:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache dependency check data
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/.cache/owasp-dependency-check
+            dependency-check-data
+          key: ${{ runner.os }}-dependency-check-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-dependency-check-
+
+      - name: Run npm audit
+        run: |
+          npm audit --json > npm-audit.json || true
+          npm audit fix --dry-run --json > npm-audit-fix.json || true
+
+      - name: Upload npm audit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-results
+          path: |
+            npm-audit.json
+            npm-audit-fix.json
+          retention-days: 30
+
+      - name: OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'config'
+          path: '.'
+          format: 'ALL'
+          args: >
+            --enableRetired
+            --enableExperimental
+            --nvdApiKey "${{ secrets.NVD_API_KEY }}"
+
+      - name: Upload OWASP results
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-results
+          path: reports/
+          retention-days: 30
+
+      - name: Snyk Security Scan
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --json-file-output=snyk-results.json
+
+      - name: Upload Snyk results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-results
+          path: snyk-results.json
+          retention-days: 30
+
+  # License compliance checking
+  license-check:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install license checker
+        run: npm install -g license-checker
+
+      - name: Check licenses
+        run: |
+          # Define prohibited licenses
+          PROHIBITED_LICENSES="GPL,AGPL,LGPL,SSPL,Commons-Clause"
+          
+          # Run license check and save results
+          license-checker --json --out licenses.json
+          
+          # Check for prohibited licenses
+          echo "Checking for prohibited licenses: $PROHIBITED_LICENSES"
+          
+          # Parse and check licenses
+          node -e "
+          const licenses = require('./licenses.json');
+          const prohibited = '$PROHIBITED_LICENSES'.split(',');
+          let hasProhibited = false;
+          
+          for (const [pkg, info] of Object.entries(licenses)) {
+            if (info.licenses) {
+              const licenseList = Array.isArray(info.licenses) ? info.licenses : [info.licenses];
+              for (const license of licenseList) {
+                for (const prohib of prohibited) {
+                  if (license.includes(prohib)) {
+                    console.error(\`❌ Prohibited license found: \${pkg} - \${license}\`);
+                    hasProhibited = true;
+                  }
+                }
+              }
+            }
+          }
+          
+          if (hasProhibited) {
+            process.exit(1);
+          } else {
+            console.log('✅ No prohibited licenses found');
+          }
+          "
+
+      - name: Generate license report
+        run: |
+          license-checker --summary --out license-summary.txt
+          license-checker --csv --out license-report.csv
+
+      - name: Upload license reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-reports
+          path: |
+            licenses.json
+            license-summary.txt
+            license-report.csv
+          retention-days: 30
+
+  # SBOM (Software Bill of Materials) generation
+  sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate SBOM using Syft
+        uses: anchore/sbom-action@v0
+        with:
+          format: spdx-json
+          output-file: sbom-spdx.json
+
+      - name: Generate CycloneDX SBOM
+        uses: CycloneDX/gh-node-module-generatebom@v1
+        with:
+          output: sbom-cyclonedx.json
+
+      - name: Upload SBOM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-reports
+          path: |
+            sbom-spdx.json
+            sbom-cyclonedx.json
+          retention-days: 30
+
+  # Infrastructure as Code (IaC) scanning
+  iac-scan:
+    name: IaC Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkov IaC Scan
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          quiet: false
+          soft_fail: true
+          framework: all
+          output_format: sarif
+          output_file_path: checkov.sarif
+          skip_check: CKV_DOCKER_2,CKV_DOCKER_3
+
+      - name: Upload Checkov results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: checkov.sarif
+
+      - name: Terrascan IaC scan
+        uses: tenable/terrascan-action@main
+        with:
+          iac_type: 'docker'
+          iac_dir: '.'
+          sarif_upload: true
+        continue-on-error: true
+
+  # Container scanning (if Dockerfile exists)
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    if: hashFiles('.devcontainer/Dockerfile') != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build container for scanning
+        run: |
+          docker build -t local-scan:latest -f .devcontainer/Dockerfile .
+
+      - name: Run Trivy container scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: local-scan:latest
+          format: 'sarif'
+          output: 'trivy-container.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          scanners: 'vuln,misconfig,secret'
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-container.sarif'
+
+      - name: Grype container scan
+        uses: anchore/scan-action@v3
+        with:
+          image: local-scan:latest
+          output-format: sarif
+          fail-build: false
+
+      - name: Upload Grype results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+
+  # Security report summary
+  security-summary:
+    name: Security Summary Report
+    needs: [codeql, secret-scan, dependency-check, license-check, sbom, iac-scan, container-scan]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: security-artifacts
+
+      - name: Generate security summary
+        run: |
+          echo "# Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Scan Type | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| CodeQL SAST | ${{ needs.codeql.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret Scanning | ${{ needs.secret-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Check | ${{ needs.dependency-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| License Compliance | ${{ needs.license-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SBOM Generation | ${{ needs.sbom.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| IaC Scanning | ${{ needs.iac-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Container Scanning | ${{ needs.container-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "Security scan artifacts have been uploaded and are available for download." >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment PR with security status
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const summary = `## 🔒 Security Scan Results
+            
+            | Scan Type | Status |
+            |-----------|--------|
+            | CodeQL SAST | ${{ needs.codeql.result }} |
+            | Secret Scanning | ${{ needs.secret-scan.result }} |
+            | Dependency Check | ${{ needs.dependency-check.result }} |
+            | License Compliance | ${{ needs.license-check.result }} |
+            | SBOM Generation | ${{ needs.sbom.result }} |
+            | IaC Scanning | ${{ needs.iac-scan.result }} |
+            | Container Scanning | ${{ needs.container-scan.result }} |
+            
+            View full details in the [Actions tab](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });

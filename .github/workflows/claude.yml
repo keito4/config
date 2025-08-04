@@ -15,6 +15,11 @@ permissions:
   issues: write
   pull-requests: write
 
+# Cancel in-progress runs for same issue/PR
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   claude:
     if: |
@@ -29,9 +34,23 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Cache Claude dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/claude
+            ~/.npm
+          key: ${{ runner.os }}-claude-${{ hashFiles('.claude/**') }}
+          restore-keys: |
+            ${{ runner.os }}-claude-
+
       - name: Run Claude Code
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           allowed_tools: 'Bash'
+        env:
+          # Performance optimizations
+          NODE_OPTIONS: '--max-old-space-size=4096'
+          CLAUDE_TIMEOUT: '600000'
