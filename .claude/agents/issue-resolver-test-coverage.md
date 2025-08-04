@@ -27,13 +27,13 @@ cat low_coverage_files.txt
 echo "=== Generating test files ==="
 find . -name "*.ts" -o -name "*.js" -not -path "*/node_modules/*" -not -path "*/test/*" | while read -r file; do
     test_file="${file%.*}.test.${file##*.}"
-    
+
     if [ ! -f "$test_file" ]; then
         echo "Creating test for $file"
-        
+
         # ファイルの構造を分析
         functions=$(grep -E "^export (async )?function|^export const.*=" "$file" | sed 's/export.*function //;s/export const //;s/=.*//' | tr -d ' ')
-        
+
         # テストテンプレートを生成
         cat << EOF > "$test_file"
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
@@ -41,7 +41,7 @@ import * as module from './${file##*/}';
 
 describe('${file##*/}', () => {
 EOF
-        
+
         # 各関数に対してテストケースを生成
         echo "$functions" | while read -r func; do
             cat << EOF >> "$test_file"
@@ -49,21 +49,21 @@ EOF
     it('should handle valid input', () => {
       // Arrange
       const input = {}; // TODO: Add valid input
-      
+
       // Act
       const result = module.${func}(input);
-      
+
       // Assert
       expect(result).toBeDefined();
       // TODO: Add specific assertions
     });
-    
+
     it('should handle edge cases', () => {
       // Test null/undefined inputs
       expect(() => module.${func}(null)).not.toThrow();
       expect(() => module.${func}(undefined)).not.toThrow();
     });
-    
+
     it('should handle errors gracefully', () => {
       // TODO: Add error case testing
     });
@@ -71,7 +71,7 @@ EOF
 
 EOF
         done
-        
+
         echo "});" >> "$test_file"
     fi
 done
@@ -88,7 +88,7 @@ critical_files=$(find . -path "*/services/*" -o -path "*/utils/*" -o -path "*/co
 
 for file in $critical_files; do
     test_file="${file%.*}.test.${file##*.}"
-    
+
     # テストケースを充実させる
     cat << 'EOF' >> enhance_tests.js
 const fs = require('fs');
@@ -96,18 +96,18 @@ const path = require('path');
 
 function enhanceTestFile(testFile, sourceFile) {
   const source = fs.readFileSync(sourceFile, 'utf8');
-  
+
   // 関数のパラメータを分析
   const functionRegex = /function\s+(\w+)\s*\(([^)]*)\)/g;
   const arrowFuncRegex = /const\s+(\w+)\s*=\s*\(([^)]*)\)\s*=>/g;
-  
+
   let testCases = [];
-  
+
   // パラメータに基づいてテストケースを生成
   [...source.matchAll(functionRegex), ...source.matchAll(arrowFuncRegex)].forEach(match => {
     const funcName = match[1];
     const params = match[2].split(',').map(p => p.trim());
-    
+
     // 境界値テスト
     testCases.push(`
     it('should handle boundary values for ${funcName}', () => {
@@ -115,7 +115,7 @@ function enhanceTestFile(testFile, sourceFile) {
       expect(() => module.${funcName}(${generateBoundaryValue(p)})).not.toThrow();
       `).join('')}
     });`);
-    
+
     // パフォーマンステスト
     if (funcName.includes('sort') || funcName.includes('search')) {
       testCases.push(`
@@ -127,7 +127,7 @@ function enhanceTestFile(testFile, sourceFile) {
     });`);
     }
   });
-  
+
   return testCases.join('\n');
 }
 
@@ -165,22 +165,22 @@ import app from '../../src/app';
 
 describe('API Integration Tests', () => {
   let server;
-  
+
   beforeAll(() => {
     server = app.listen(0);
   });
-  
+
   afterAll((done) => {
     server.close(done);
   });
-  
+
   describe('Health Check', () => {
     it('should return 200 OK', async () => {
       const response = await request(server).get('/health');
       expect(response.status).toBe(200);
     });
   });
-  
+
   describe('Main API Endpoints', () => {
     // 各エンドポイントのテスト
     const endpoints = [
@@ -189,7 +189,7 @@ describe('API Integration Tests', () => {
       { method: 'PUT', path: '/api/users/1', body: { name: 'Updated' }, expectedStatus: 200 },
       { method: 'DELETE', path: '/api/users/1', expectedStatus: 204 },
     ];
-    
+
     endpoints.forEach(({ method, path, body, expectedStatus }) => {
       it(`${method} ${path} should return ${expectedStatus}`, async () => {
         const req = request(server)[method.toLowerCase()](path);
@@ -199,13 +199,13 @@ describe('API Integration Tests', () => {
       });
     });
   });
-  
+
   describe('Error Handling', () => {
     it('should handle 404 for unknown routes', async () => {
       const response = await request(server).get('/unknown');
       expect(response.status).toBe(404);
     });
-    
+
     it('should handle malformed requests', async () => {
       const response = await request(server)
         .post('/api/users')
@@ -252,31 +252,31 @@ test.describe('User Journey', () => {
     // ホームページへアクセス
     await page.goto('/');
     await expect(page).toHaveTitle(/Home/);
-    
+
     // ログイン
     await page.click('text=Login');
     await page.fill('input[name="email"]', 'test@example.com');
     await page.fill('input[name="password"]', 'password');
     await page.click('button[type="submit"]');
-    
+
     // ダッシュボードの確認
     await expect(page).toHaveURL('/dashboard');
     await expect(page.locator('h1')).toContainText('Dashboard');
-    
+
     // 主要機能のテスト
     await page.click('text=Create New');
     await page.fill('input[name="title"]', 'Test Item');
     await page.click('text=Save');
-    
+
     // 作成されたアイテムの確認
     await expect(page.locator('text=Test Item')).toBeVisible();
-    
+
     // クリーンアップ
     await page.click('text=Delete');
     await page.click('text=Confirm');
     await expect(page.locator('text=Test Item')).not.toBeVisible();
   });
-  
+
   test('should handle errors gracefully', async ({ page }) => {
     // ネットワークエラーのシミュレーション
     await page.route('**/api/*', route => route.abort());
@@ -301,10 +301,10 @@ echo "Current coverage: ${coverage_pct}%"
 # 70%未満の場合、追加テストを生成
 if (( $(echo "$coverage_pct < 70" | bc -l) )); then
     echo "Coverage below 70%, generating additional tests..."
-    
+
     # カバーされていない行を特定
     npx nyc report --reporter=json-summary
-    
+
     # 追加テストの生成
     # ...
 fi
@@ -337,7 +337,7 @@ This PR significantly improves test coverage across the codebase.
 
 ## Tests Added
 - Unit tests: $(find . -name "*.test.*" | wc -l) files
-- Integration tests: $(find test/integration -name "*.test.*" | wc -l) files  
+- Integration tests: $(find test/integration -name "*.test.*" | wc -l) files
 - E2E tests: $(find test/e2e -name "*.spec.*" | wc -l) files
 
 ## Testing Strategy

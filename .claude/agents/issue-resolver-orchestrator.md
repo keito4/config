@@ -57,7 +57,7 @@ issues.forEach(issue => {
     const title = issue.title.toLowerCase();
     const labels = issue.labels.map(l => l.name.toLowerCase());
     const body = (issue.body || '').toLowerCase();
-    
+
     // ラベルベースの分類
     if (labels.includes('security') || labels.includes('critical')) {
         categorizedIssues.security.push(issue);
@@ -132,23 +132,23 @@ cat categorized_issues.json | jq -c '.[]' | while read -r issue; do
     issue_number=$(echo "$issue" | jq -r '.number')
     issue_title=$(echo "$issue" | jq -r '.title')
     issue_category=$(echo "$issue" | jq -r '.category')
-    
+
     echo -e "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "Processing Issue #$issue_number: $issue_title"
     echo "Category: $issue_category"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
+
     # ブランチ作成
     branch_name="fix/issue-${issue_number}-$(echo "$issue_category" | tr '[:upper:]' '[:lower:]')"
-    
+
     # 既存のブランチをチェック
     if git show-ref --verify --quiet "refs/heads/$branch_name"; then
         echo "⚠️  Branch $branch_name already exists, skipping..."
         continue
     fi
-    
+
     git checkout -b "$branch_name"
-    
+
     # カテゴリに応じたエージェントを実行
     case "$issue_category" in
         "security")
@@ -188,11 +188,11 @@ cat categorized_issues.json | jq -c '.[]' | while read -r issue; do
             AGENT_EXIT_CODE=1
             ;;
     esac
-    
+
     # エージェントの実行結果を確認
     if [ $AGENT_EXIT_CODE -eq 0 ]; then
         echo "✅ Agent completed successfully"
-        
+
         # 変更があるか確認
         if [ -n "$(git status --porcelain)" ]; then
             # コミットとPR作成
@@ -205,9 +205,9 @@ Category: $issue_category
 Automated resolution by Issue Resolver Orchestrator
 
 Closes #$issue_number"
-            
+
             git push -u origin "$branch_name"
-            
+
             # PR作成
             PR_BODY=$(cat << EOF
 ## 🤖 Automated Issue Resolution
@@ -234,15 +234,15 @@ This PR was created by the Issue Resolver Orchestrator using the $issue_category
 *Generated at $(date)*
 EOF
 )
-            
+
             gh pr create \
                 --title "🤖 Auto-fix: $issue_title (#$issue_number)" \
                 --body "$PR_BODY" \
                 --label "automated,$issue_category" \
                 --assignee "@me"
-            
+
             echo "✅ PR created successfully"
-            
+
             # ログに記録
             echo "[$(date)] Successfully resolved Issue #$issue_number" >> "$LOG_FILE"
         else
@@ -254,11 +254,11 @@ EOF
         echo "❌ Agent failed or skipped"
         git checkout main
         git branch -D "$branch_name" 2>/dev/null
-        
+
         # ログに記録
         echo "[$(date)] Failed to resolve Issue #$issue_number" >> "$LOG_FILE"
     fi
-    
+
     # メインブランチに戻る
     git checkout main
 done
@@ -322,7 +322,7 @@ const slackMessage = {
             type: "section",
             text: {
                 type: "mrkdwn",
-                text: "*Categories Processed:*\n" + 
+                text: "*Categories Processed:*\n" +
                     Object.entries(
                         categorizedIssues.reduce((acc, issue) => {
                             acc[issue.category] = (acc[issue.category] || 0) + 1;
@@ -335,7 +335,7 @@ const slackMessage = {
             type: "section",
             text: {
                 type: "mrkdwn",
-                text: "*Recent PRs Created:*\n" + 
+                text: "*Recent PRs Created:*\n" +
                     prs.slice(0, 3).map(pr => `• <${pr.url}|#${pr.number}: ${pr.title}>`).join('\n')
             }
         },
@@ -433,29 +433,29 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-      
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: |
           npm ci
           npm install -g license-checker depcheck
-      
+
       - name: Configure Git
         run: |
           git config user.name "Issue Resolver Bot"
           git config user.email "bot@example.com"
-      
+
       - name: Run Issue Resolver Orchestrator
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -463,7 +463,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           bash .claude/agents/issue-resolver-orchestrator.md
-      
+
       - name: Upload execution report
         uses: actions/upload-artifact@v3
         with:
@@ -471,7 +471,7 @@ jobs:
           path: |
             resolution_report.json
             resolution_logs/
-      
+
       - name: Create summary
         if: always()
         run: |

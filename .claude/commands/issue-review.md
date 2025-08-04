@@ -179,7 +179,7 @@ GitHub Actionsで定期実行する場合:
 name: Weekly Issue Review
 on:
   schedule:
-    - cron: '0 9 * * 1'  # 毎週月曜日9時
+    - cron: '0 9 * * 1' # 毎週月曜日9時
   workflow_dispatch:
 
 jobs:

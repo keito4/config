@@ -264,7 +264,7 @@ mkdir -p docs/api
 # Express.jsアプリケーションの場合
 if grep -q "express" package.json 2>/dev/null; then
     npm install --save-dev swagger-jsdoc swagger-ui-express
-    
+
     cat << 'EOF' > swagger.config.js
 const swaggerJsdoc = require('swagger-jsdoc');
 
@@ -302,10 +302,10 @@ const path = require('path');
 
 function addSwaggerComments(filePath) {
   let content = fs.readFileSync(filePath, 'utf8');
-  
+
   // router.get, post, put, delete パターンを検索
   const routeRegex = /router\.(get|post|put|delete)\(['"]([^'"]+)['"]/g;
-  
+
   content = content.replace(routeRegex, (match, method, path) => {
     const swaggerComment = `
 /**
@@ -327,13 +327,13 @@ function addSwaggerComments(filePath) {
 ${match}`;
     return swaggerComment;
   });
-  
+
   fs.writeFileSync(filePath, content);
 }
 
 addSwaggerComments(process.argv[2]);
 EOF
-        
+
         node add-swagger-comments.js "$file"
     done
 fi
@@ -394,29 +394,29 @@ echo "=== Adding code documentation ==="
 # JavaScriptファイルにJSDocを追加
 find . -name "*.js" -o -name "*.ts" -not -path "*/node_modules/*" | while read -r file; do
     echo "Adding documentation to $file"
-    
+
     cat << 'EOF' > add-jsdoc.js
 const fs = require('fs');
 const path = require('path');
 
 function addJSDoc(filePath) {
   let content = fs.readFileSync(filePath, 'utf8');
-  
+
   // 関数定義を検索
   const functionRegex = /^(export\s+)?(async\s+)?function\s+(\w+)\s*\(([^)]*)\)/gm;
-  
+
   content = content.replace(functionRegex, (match, exportKeyword, asyncKeyword, funcName, params) => {
     // 既にコメントがある場合はスキップ
     if (content.includes(`@function ${funcName}`)) {
       return match;
     }
-    
+
     const paramList = params.split(',').map(p => p.trim()).filter(p => p);
     const paramDocs = paramList.map(p => {
       const paramName = p.split('=')[0].trim();
       return ` * @param {*} ${paramName} - Description`;
     }).join('\n');
-    
+
     const jsDoc = `/**
  * @function ${funcName}
  * @description Description of ${funcName}
@@ -424,33 +424,33 @@ ${paramDocs}
  * @returns {*} Description of return value
  */
 ${match}`;
-    
+
     return jsDoc;
   });
-  
+
   // クラス定義を検索
   const classRegex = /^(export\s+)?class\s+(\w+)/gm;
-  
+
   content = content.replace(classRegex, (match, exportKeyword, className) => {
     if (content.includes(`@class ${className}`)) {
       return match;
     }
-    
+
     const classDoc = `/**
  * @class ${className}
  * @description Description of ${className}
  */
 ${match}`;
-    
+
     return classDoc;
   });
-  
+
   fs.writeFileSync(filePath, content);
 }
 
 addJSDoc(process.argv[2]);
 EOF
-    
+
     node add-jsdoc.js "$file"
 done
 
@@ -463,7 +463,7 @@ fi
 
 ### 4. アーキテクチャドキュメントの生成
 
-```bash
+````bash
 # アーキテクチャ図とドキュメントの生成
 echo "=== Creating architecture documentation ==="
 
@@ -484,20 +484,20 @@ graph TB
         UI[User Interface]
         State[State Management]
     end
-    
+
     subgraph "Backend"
         API[API Gateway]
         Auth[Authentication]
         BL[Business Logic]
         Cache[Cache Layer]
     end
-    
+
     subgraph "Data Layer"
         DB[(Database)]
         Redis[(Redis Cache)]
         S3[Object Storage]
     end
-    
+
     UI --> API
     API --> Auth
     API --> BL
@@ -505,27 +505,31 @@ graph TB
     Cache --> Redis
     BL --> DB
     BL --> S3
-```
+````
 
 ## Components
 
 ### Frontend Layer
+
 - **Technology**: React/Vue/Angular
 - **State Management**: Redux/Vuex/NgRx
 - **Styling**: CSS Modules/Styled Components
 
 ### API Layer
+
 - **Framework**: Express.js/Fastify
 - **Authentication**: JWT/OAuth2
 - **Rate Limiting**: express-rate-limit
 - **Validation**: express-validator
 
 ### Business Logic Layer
+
 - **Services**: Domain-specific business logic
 - **Models**: Data models and schemas
 - **Utils**: Shared utilities and helpers
 
 ### Data Layer
+
 - **Primary Database**: PostgreSQL/MySQL/MongoDB
 - **Caching**: Redis
 - **File Storage**: AWS S3/Local filesystem
@@ -560,12 +564,14 @@ graph TB
 - Centralized logging with ELK stack
 - Error tracking with Sentry
 - Performance monitoring with New Relic
-EOF
+  EOF
 
 # ADR (Architecture Decision Records) の作成
+
 mkdir -p docs/adr
 
 cat << 'EOF' > docs/adr/0001-record-architecture-decisions.md
+
 # 1. Record Architecture Decisions
 
 Date: $(date +%Y-%m-%d)
@@ -587,8 +593,9 @@ We will use Architecture Decision Records, as described by Michael Nygard.
 - Architectural decisions will be documented and easily accessible
 - Future developers will understand the reasoning behind decisions
 - Changes to architecture will be tracked over time
-EOF
-```
+  EOF
+
+````
 
 ### 5. 開発者ガイドの作成
 
@@ -627,7 +634,8 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 2. Create a new branch from `main`
    ```bash
    git checkout -b feature/your-feature-name
-   ```
+````
+
 3. Make your changes following our coding standards
 4. Write tests for your changes
 5. Ensure all tests pass
@@ -713,7 +721,9 @@ Feel free to open an issue or reach out to the maintainers.
 EOF
 
 # Code of Conduct の作成
+
 cat << 'EOF' > CODE_OF_CONDUCT.md
+
 # Code of Conduct
 
 ## Our Pledge
@@ -746,7 +756,8 @@ All complaints will be reviewed and investigated promptly and fairly.
 
 This Code of Conduct is adapted from the Contributor Covenant, version 2.0.
 EOF
-```
+
+````
 
 ### 6. 変更履歴の生成
 
@@ -792,7 +803,7 @@ EOF
 if command -v conventional-changelog &> /dev/null; then
     conventional-changelog -p angular -i CHANGELOG.md -s
 fi
-```
+````
 
 ### 7. PRの作成
 

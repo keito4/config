@@ -16,7 +16,7 @@ rg "TODO|FIXME|HACK|XXX" --type-add 'code:*.{js,ts,jsx,tsx,py,go,rs,java,cs}' -t
 # 各TODOを処理
 while IFS=: read -r file line content; do
     echo "Processing: $file:$line"
-    
+
     # TODOの内容を分析
     if echo "$content" | grep -q "deprecated"; then
         # 非推奨コードの更新
@@ -47,11 +47,11 @@ find . -name "*.ts" -o -name "*.js" -o -name "*.tsx" -o -name "*.jsx" | while re
     lines=$(wc -l < "$file")
     if [ "$lines" -gt 300 ]; then
         echo "Refactoring $file ($lines lines)"
-        
+
         # ファイルの構造を分析
         # 関数を抽出
         grep -n "^function\|^const.*=.*=>\|^export" "$file" | head -20
-        
+
         # モジュールに分割する提案
         cat << EOF > "refactor_plan_$(basename $file).md"
 # Refactoring Plan for $file
@@ -68,7 +68,7 @@ find . -name "*.ts" -o -name "*.js" -o -name "*.tsx" -o -name "*.jsx" | while re
 
 ## Implementation:
 EOF
-        
+
         # 実際のリファクタリング実行
         # 例: 大きな関数を分割
         # 例: 共通ロジックを抽出

@@ -25,7 +25,7 @@ gitleaks detect --source . --report-path gitleaks-report.json
 if [ -f "gitleaks-report.json" ]; then
     cat gitleaks-report.json | jq -r '.[] | "\(.file):\(.line): \(.rule)"' | while IFS=: read -r file line rule; do
         echo "Found secret in $file at line $line (Rule: $rule)"
-        
+
         # 環境変数に置き換え
         case "$rule" in
             *api*key*)
@@ -41,10 +41,10 @@ if [ -f "gitleaks-report.json" ]; then
                 var_name="SECRET_$(echo $file | tr '/.a-z' '_A-Z')"
                 ;;
         esac
-        
+
         # ファイルを更新
         sed -i "${line}s/=.*/= process.env.${var_name};/" "$file"
-        
+
         # .env.exampleに追加
         echo "${var_name}=your_${rule}_here" >> .env.example
     done
@@ -67,30 +67,30 @@ echo "=== Fixing dependency vulnerabilities ==="
 if [ -f "package.json" ]; then
     # 脆弱性の詳細レポート
     npm audit --json > npm-audit.json
-    
+
     # 自動修正可能な脆弱性を修正
     npm audit fix
-    
+
     # 破壊的変更が必要な場合の処理
     high_vulns=$(cat npm-audit.json | jq '.metadata.vulnerabilities.high')
     critical_vulns=$(cat npm-audit.json | jq '.metadata.vulnerabilities.critical')
-    
+
     if [ "$high_vulns" -gt 0 ] || [ "$critical_vulns" -gt 0 ]; then
         echo "High/Critical vulnerabilities found, attempting force fix..."
-        
+
         # バックアップ作成
         cp package.json package.json.backup
         cp package-lock.json package-lock.json.backup
-        
+
         # 強制修正
         npm audit fix --force
-        
+
         # テスト実行
         if ! npm test; then
             echo "Tests failed after force fix, reverting..."
             mv package.json.backup package.json
             mv package-lock.json.backup package-lock.json
-            
+
             # 手動での依存関係更新
             cat npm-audit.json | jq -r '.advisories | to_entries[] | .value.module_name' | sort -u | while read -r module; do
                 echo "Updating $module to latest secure version..."
@@ -104,12 +104,12 @@ fi
 if [ -f "requirements.txt" ]; then
     pip install safety
     safety check --json > safety-report.json
-    
+
     # 脆弱なパッケージの更新
     cat safety-report.json | jq -r '.vulnerabilities[].package_name' | while read -r pkg; do
         pip install --upgrade "$pkg"
     done
-    
+
     # requirements.txtの更新
     pip freeze > requirements.txt
 fi
@@ -124,7 +124,7 @@ echo "=== Adding security headers ==="
 # Express.jsの場合
 if grep -q "express" package.json 2>/dev/null; then
     npm install helmet
-    
+
     # helmetの実装を追加
     cat << 'EOF' > security-middleware.js
 const helmet = require('helmet');
@@ -146,7 +146,7 @@ module.exports = function securityMiddleware(app) {
       preload: true,
     },
   }));
-  
+
   // Additional security measures
   app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -248,10 +248,10 @@ function generateSecureToken(payload) {
     issuer: 'your-app',
     audience: 'your-app-users',
   });
-  
+
   // Add refresh token
   const refreshToken = crypto.randomBytes(64).toString('hex');
-  
+
   return { token, refreshToken };
 }
 
@@ -263,12 +263,12 @@ function validateToken(token) {
       issuer: 'your-app',
       audience: 'your-app-users',
     });
-    
+
     // Additional validation
     if (!decoded.userId || !decoded.exp) {
       throw new Error('Invalid token structure');
     }
-    
+
     return decoded;
   } catch (error) {
     throw new Error('Invalid or expired token');
@@ -287,10 +287,10 @@ function createSession(userId, token, refreshToken) {
     createdAt: Date.now(),
     lastActivity: Date.now(),
   });
-  
+
   // Clean old sessions
   setTimeout(() => sessions.delete(sessionId), 3600000); // 1 hour
-  
+
   return sessionId;
 }
 
@@ -313,7 +313,7 @@ echo "=== Preventing SQL injection ==="
 rg "query\(.*\+.*\)" --type js --type ts | while read -r line; do
     file=$(echo "$line" | cut -d: -f1)
     echo "Found potential SQL injection in $file"
-    
+
     # パラメータ化クエリに変換
     # 例: query("SELECT * FROM users WHERE id = " + id)
     # → query("SELECT * FROM users WHERE id = ?", [id])
@@ -331,7 +331,7 @@ async function secureQuery(sql, params) {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
   });
-  
+
   try {
     // Always use parameterized queries
     const [results] = await connection.execute(sql, params);
@@ -376,62 +376,62 @@ describe('Security Tests', () => {
       const response = await request(app)
         .post('/api/search')
         .send({ query: maliciousInput });
-      
+
       expect(response.status).toBe(400);
       expect(response.body).not.toContain('DROP TABLE');
     });
-    
+
     it('should reject XSS attempts', async () => {
       const xssPayload = '<script>alert("XSS")</script>';
       const response = await request(app)
         .post('/api/comment')
         .send({ text: xssPayload });
-      
+
       expect(response.status).toBe(400);
       expect(response.text).not.toContain('<script>');
     });
-    
+
     it('should enforce rate limiting', async () => {
-      const requests = Array(101).fill().map(() => 
+      const requests = Array(101).fill().map(() =>
         request(app).get('/api/data')
       );
-      
+
       const responses = await Promise.all(requests);
       const tooManyRequests = responses.filter(r => r.status === 429);
-      
+
       expect(tooManyRequests.length).toBeGreaterThan(0);
     });
   });
-  
+
   describe('Authentication', () => {
     it('should not expose sensitive data in errors', async () => {
       const response = await request(app)
         .post('/api/login')
         .send({ email: 'test@test.com', password: 'wrong' });
-      
+
       expect(response.body).not.toContain('password');
       expect(response.body).not.toContain('database');
       expect(response.body).not.toContain('stack');
     });
-    
+
     it('should require strong passwords', async () => {
       const weakPasswords = ['123456', 'password', 'abc123'];
-      
+
       for (const password of weakPasswords) {
         const response = await request(app)
           .post('/api/register')
           .send({ email: 'test@test.com', password });
-        
+
         expect(response.status).toBe(400);
         expect(response.body.error).toContain('password');
       }
     });
   });
-  
+
   describe('Security Headers', () => {
     it('should set security headers', async () => {
       const response = await request(app).get('/');
-      
+
       expect(response.headers['x-content-type-options']).toBe('nosniff');
       expect(response.headers['x-frame-options']).toBeDefined();
       expect(response.headers['x-xss-protection']).toBeDefined();
