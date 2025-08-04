@@ -6,7 +6,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 
 ## Directory Structure
 
-- `.claude/`: Claude Code configuration directory containing specialized agents, commands, and development quality standards for AI-assisted development workflows.
+- `.claude/`: Claude Code configuration directory containing specialized agents, commands, and development quality standards for AI-assisted development workflows. See [Claude Configuration Guide](#claude-configuration) for details.
 - `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
@@ -161,6 +161,70 @@ This repository uses semantic-release for automated version management and relea
 - `docs:`, `style:`, `refactor:`, `test:`, `chore:` - No version bump
 
 Releases are automatically created when changes are pushed to the main branch.
+
+## Claude Configuration
+
+The `.claude/` directory contains comprehensive AI-assisted development tools and workflows:
+
+### Specialized Agents (13 total)
+
+Claude agents are AI personalities specialized in specific validation and analysis tasks:
+
+- **Architecture Validation**: DDD, Clean Architecture, Hexagonal Architecture compliance
+- **Quality Analysis**: Test coverage, performance, code quality metrics
+- **Security Auditing**: Vulnerability scanning, dependency auditing
+- **Documentation**: Consistency checking, generation, and validation
+- **Issue Resolution**: Specialized agents for different types of issues
+
+See [Agent Documentation](.claude/agents/README.md) for detailed information.
+
+### Pre-configured Commands (11 total)
+
+Commands automate common development workflows:
+
+- **Development**: `pr`, `pr-create`, `init-project`
+- **Quality**: `quality-check`, `check-coverage`, `test-all`
+- **Maintenance**: `fix-ci`, `update-deps`, `security-review`
+- **Issues**: `issue-create`, `issue-review`
+
+See [Command Documentation](.claude/commands/README.md) for usage details.
+
+### Testing Claude Configurations
+
+```bash
+# Run all Claude configuration tests
+npm run test:claude
+
+# Validate agent configurations
+node .claude/tests/validate-agents.js
+
+# Validate command configurations
+node .claude/tests/validate-commands.js
+
+# Run with verbose output
+npm run test:claude -- --verbose
+```
+
+See [Test Documentation](.claude/tests/README.md) for the complete testing guide.
+
+### Using Claude in Your Workflow
+
+1. **For Pull Requests**: Use the `pr` command for automated multi-agent review
+2. **For Quality Checks**: Run `quality-check` for comprehensive analysis
+3. **For Architecture Review**: Use `ddd-architecture-validator` agent
+4. **For Security Audits**: Execute `security-review` command
+
+Example:
+```bash
+# Create a PR with comprehensive review
+Claude, use the pr command to create a pull request
+
+# Run quality checks
+Claude, perform a quality-check on the codebase
+
+# Validate architecture
+Claude, use the ddd-architecture-validator to review my changes
+```
 
 ## Glossary
 
