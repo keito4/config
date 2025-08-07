@@ -5,16 +5,10 @@ This directory contains Visual Studio Code configuration files and scripts for m
 ## Files
 
 - `extensions.txt`: List of VS Code extensions to be installed
-- `../vscode/extensions.json`: VS Code workspace extension recommendations
-- `../vscode/settings.json`: VS Code workspace settings
 
 ## DevContainer Integration
 
-This repository includes DevContainer support with automatic VS Code setup:
-
-- Extensions are automatically installed when the DevContainer starts
-- Workspace settings are pre-configured for consistent development experience
-- See `.devcontainer/README.md` for more details
+This repository can be configured with DevContainer support for automatic VS Code setup when a DevContainer configuration is added.
 
 ## Installation
 
