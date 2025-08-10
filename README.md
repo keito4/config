@@ -6,7 +6,10 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 
 ## Directory Structure
 
-- `.claude/`: Claude Code configuration directory containing specialized agents, commands, and development quality standards for AI-assisted development workflows.
+- `.claude/`: Comprehensive Claude Code configuration directory with:
+  - **13 specialized AI agents**: Architecture validation (DDD, Clean Architecture), accessibility & design validation, concurrency safety analysis, documentation consistency checking, dependency auditing, performance analysis, testability & coverage analysis, and issue resolution workflows
+  - **13 automated commands**: Code coverage checking, CI/CD troubleshooting, project initialization, pull request creation, quality checks, security reviews, test execution, and dependency updates
+  - **Development quality standards**: Japanese-language guidelines for TDD methodology, static quality gates, Git workflow conventions, and AI-assisted development practices
 - `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
@@ -150,6 +153,8 @@ The repository includes a complete DevContainer setup (`.devcontainer/`) that pr
 - Consistent development environment across different machines
 - Pre-configured tools and extensions
 - Automatic import of configuration settings on container startup
+- Integrated Claude Code configuration with specialized agents and commands
+- Bell notification system for development workflow events
 
 ### Automated Releases
 
@@ -161,6 +166,53 @@ This repository uses semantic-release for automated version management and relea
 - `docs:`, `style:`, `refactor:`, `test:`, `chore:` - No version bump
 
 Releases are automatically created when changes are pushed to the main branch.
+
+### AI-Assisted Development Workflows
+
+This repository includes comprehensive Claude Code configuration for AI-assisted development:
+
+#### Specialized AI Agents
+
+The `.claude/agents/` directory provides 13 specialized agents:
+
+- **Architecture & Code Quality**
+  - `ddd-architecture-validator.md`: Validates Domain-Driven Design, Clean Architecture, and Hexagonal Architecture principles
+  - `performance-analyzer.md`: Analyzes performance implications of code changes, particularly C#/.NET applications
+  - `concurrency-safety-analyzer.md`: Reviews async/await patterns and thread safety in C# code
+  - `testability-coverage-analyzer.md`: Evaluates testability and test coverage of new or modified code
+
+- **Documentation & Consistency**
+  - `docs-consistency-checker.md`: Ensures documentation consistency across README, ADR, XML comments, and OpenAPI specs
+  - `accessibility-design-validator.md`: Validates accessibility compliance and design consistency in frontend code
+
+- **Dependencies & Security**
+  - `nuget-dependency-auditor.md`: Audits NuGet dependencies for licensing, maintenance, and architectural alignment
+  - `issue-resolver-security.md`: Automated security analysis and vulnerability resolution
+  - `issue-resolver-dependencies.md`: Comprehensive dependency management and conflict resolution
+
+- **Issue Resolution Workflow**
+  - `issue-resolver-orchestrator.md`: Coordinated multi-agent issue resolution workflow
+  - `issue-resolver-code-quality.md`: Automated code quality analysis and improvement
+  - `issue-resolver-documentation.md`: Documentation generation and maintenance
+  - `issue-resolver-test-coverage.md`: Test coverage analysis and improvement suggestions
+
+#### Automated Commands
+
+The `.claude/commands/` directory provides 13 pre-configured commands:
+
+- **Quality & Testing**: `check-coverage.md`, `quality-check.md`, `test-all.md`
+- **Project Management**: `init-project.md`, `issue-auto-resolve.md`, `issue-create.md`, `issue-review.md`
+- **Pull Request Workflow**: `pr-create.md`, `pr.md`, `review-feedback-processor.md`
+- **CI/CD & Maintenance**: `fix-ci.md`, `security-review.md`, `update-deps.md`
+
+#### Development Quality Standards
+
+The `.claude/CLAUDE.md` file defines organization-wide development standards in Japanese:
+
+- **Test-Driven Development (TDD)**: Red → Green → Refactor methodology with 70%+ line coverage requirement
+- **Static Quality Gates**: Automated linting, formatting, security analysis, and license checking
+- **Git Workflow**: Conventional commits, branch naming conventions, and pull request requirements
+- **AI Prompt Design Guidelines**: Structured approach for requirements definition and implementation
 
 ## Glossary
 
