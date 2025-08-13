@@ -28,7 +28,8 @@
       "Bash(git fetch:*)",
       "Bash(npx husky init:*)",
       "Bash(npx husky add:*)",
-      "Bash(cursor-agent:*)"
+      "Bash(cursor-agent:*)",
+      "Bash(npx prettier:*)"
     ],
     "deny": []
   }
