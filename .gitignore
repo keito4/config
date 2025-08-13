@@ -48,7 +48,8 @@ credentials/secrets/
 .env*.local
 .zsh/configs/pre/.env.secret
 
-# Test artifacts
+# Test artifacts and libraries
+test/bats-libs/
 test/**/*.log
 report.log
 
