@@ -30,6 +30,7 @@ __pycache__/
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+.vscode/*.log
 .idea/
 *.swp
 *.swo
@@ -46,3 +47,11 @@ credentials/secrets/
 .env.secret
 .env*.local
 .zsh/configs/pre/.env.secret
+
+# Test artifacts and libraries
+test/bats-libs/
+test/**/*.log
+report.log
+
+# Claude settings (local overrides)
+.claude/settings.local.json
