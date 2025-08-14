@@ -1,7 +1,5 @@
 module.exports = {
-  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
-  parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint'],
+  extends: ['eslint:recommended', 'prettier'],
   env: {
     browser: true,
     es2021: true,
@@ -13,8 +11,7 @@ module.exports = {
   },
   rules: {
     // プロジェクト固有のルールを追加
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': [
+    'no-unused-vars': [
       'error',
       {
         argsIgnorePattern: '^_',
