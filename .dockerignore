@@ -4,51 +4,39 @@ Thumbs.db
 
 # Dependencies
 node_modules/
-.pnp
-.pnp.js
 
 # Testing
 coverage/
 .nyc_output/
 
-# Production
+# Build artifacts
 build/
 dist/
 out/
 
-# Node/NPM
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
-*.local
-
-# Python caches
-__pycache__/
-*.pyc
 
 # Editor directories
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
-.vscode/*.log
 .idea/
 *.swp
 *.swo
 
-# TypeScript
-*.tsbuildinfo
+# Git
+.git/
+.gitignore
 
-# Supabase temporary files
-supabase/.temp/
+# Credentials and secrets
+credentials/
+.env*
+**/*.env
 
-# Credentials
-credentials/*.env
-credentials/secrets/
-.env.secret
-.env*.local
-.zsh/configs/pre/.env.secret
-
-# Test artifacts and libraries
+# Test artifacts
 test/bats-libs/
 test/**/*.log
 report.log
@@ -58,3 +46,9 @@ report.log
 
 # MCP configuration
 .mcp.json
+
+# GitHub workflows and docs
+.github/
+README.md
+CHANGELOG.md
+LICENSE

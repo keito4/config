@@ -53,3 +53,36 @@ The `.claude/commands/` directory provides pre-configured commands for:
 - Security reviews
 - Test execution
 - Dependency updates
+
+## Technical Assistance with o3 MCP
+
+When encountering technical challenges, unresolved errors, or implementation roadblocks during development, consult o3 MCP in English for advanced problem-solving assistance. o3 MCP specializes in:
+
+- Complex debugging scenarios
+- Architecture design decisions
+- Performance optimization strategies
+- Advanced algorithm implementation
+- Error resolution and root cause analysis
+
+### Usage Guidelines
+
+1. **When to consult o3 MCP**:
+   - Stuck on implementation details
+   - Encountering persistent errors
+   - Need architectural guidance
+   - Performance bottlenecks
+   - Complex algorithm design
+
+2. **How to engage**:
+   - Formulate your question in English
+   - Provide relevant context and error messages
+   - Include code snippets if applicable
+   - Specify what solutions you've already attempted
+
+3. **Example consultation format**:
+   ```
+   I'm encountering [specific issue] while implementing [feature/functionality].
+   Error message: [exact error]
+   What I've tried: [attempted solutions]
+   Context: [relevant code or architecture details]
+   ```
