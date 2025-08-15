@@ -29,16 +29,18 @@ This command helps you create pull requests following our development standards 
 ### Pre-PR Checklist
 
 1. **Branch Verification**
+
    ```bash
    # Check branch name follows convention: feat|fix|chore/<issue#>-slug
    git branch --show-current
    ```
 
 2. **Change Size Verification**
+
    ```bash
    # Verify file count ≤ 25
    git diff --name-only origin/main | wc -l
-   
+
    # Verify diff ≤ 400 lines per file
    git diff --shortstat origin/main
    git diff --stat origin/main
@@ -57,14 +59,14 @@ This command helps you create pull requests following our development standards 
 ### Creating the PR
 
 1. **Prepare PR Description**
-   
+
    Follow the template in `.github/pull_request_template.md`
 
 2. **Create Draft PR**
 
    ```bash
    # Basic command structure
-   gh pr create --draft --title "✨(scope): Your descriptive title" --body "Your PR description" --base main 
+   gh pr create --draft --title "✨(scope): Your descriptive title" --body "Your PR description" --base main
    ```
 
    For complex PR descriptions with proper formatting:
@@ -95,6 +97,7 @@ After committing, perform comprehensive code review using these specialized agen
 ## Best Practices
 
 ### PR Title Format
+
 Use conventional commit format with emojis:
 
 - Always include an appropriate emoji at the beginning
@@ -105,10 +108,12 @@ Use conventional commit format with emojis:
   - `📝(readme): Update installation instructions`
 
 ### Branch Management
+
 - If on main branch, create new branch before committing
 - Follow naming convention: `feat|fix|chore/<issue#>-slug`
 
 ### Description Template
+
 Always use our PR template structure from `.github/pull_request_template.md`:
 
 - Keep all section headers exactly as they appear
@@ -116,12 +121,14 @@ Always use our PR template structure from `.github/pull_request_template.md`:
 - Include all template sections (mark as "N/A" if not applicable)
 
 ### Draft vs Ready
+
 - Start as draft when work is in progress (`--draft` flag)
 - Convert to ready for review when complete: `gh pr ready`
 
 ## Size Guidelines
 
 ### Acceptable Limits
+
 - ✅ File count ≤ 25
 - ✅ Each file diff ≤ 400 lines
 - ✅ Linked Issue required
@@ -129,6 +136,7 @@ Always use our PR template structure from `.github/pull_request_template.md`:
 - ✅ Quality gates pass
 
 ### When Changes Are Too Large
+
 1. Split functionality into multiple PRs
 2. Separate refactoring from feature additions
 3. Break large files into smaller modules
@@ -161,20 +169,24 @@ gh pr merge <PR-NUMBER> --squash
 ## Troubleshooting
 
 ### When Changes Are Too Large
+
 1. Split features into multiple PRs
 2. Separate refactoring from new features
 3. Break large files into smaller modules
 
 ### When Issue Isn't Linked
+
 1. Create issue: `gh issue create`
 2. Add `Closes #<issue-number>` to PR title/body
 
 ### When Tests Fail
+
 1. Run `npm run test:all` for details
 2. Fix failing tests
 3. Add missing tests if needed
 
 ### When Quality Gates Fail
+
 1. Fix linting: `npm run lint -- --fix`
 2. Fix vulnerabilities: `npm audit fix`
 3. Update documentation as needed
@@ -182,7 +194,7 @@ gh pr merge <PR-NUMBER> --squash
 ## Success Criteria
 
 - ✅ File count ≤ 25
-- ✅ Each file diff ≤ 400 lines  
+- ✅ Each file diff ≤ 400 lines
 - ✅ Issue linked
 - ✅ All tests green
 - ✅ Quality gates pass
