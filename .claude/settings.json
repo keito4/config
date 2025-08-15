@@ -103,7 +103,10 @@
     "deny": []
   },
   "env": {
-    "CLAUDE_CODE_PROJECT_NAME": "keito4/config"
+    "CLAUDE_CODE_PROJECT_NAME": "keito4/config",
+    "BASH_DEFAULT_TIMEOUT_MS": "300000",
+    "BASH_MAX_TIMEOUT_MS": "1200000",
+    "MAX_THINKING_TOKENS": "31999"
   },
   "hooks": {
     "Stop": [
