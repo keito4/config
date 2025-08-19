@@ -8,7 +8,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 
 - `.claude/`: Comprehensive Claude Code configuration directory with:
   - **13 specialized AI agents**: Architecture validation (DDD, Clean Architecture), accessibility & design validation, concurrency safety analysis, documentation consistency checking, dependency auditing, performance analysis, testability & coverage analysis, and issue resolution workflows
-  - **13 automated commands**: Code coverage checking, CI/CD troubleshooting, project initialization, pull request creation, quality checks, security reviews, test execution, and dependency updates
+  - **14 automated commands**: Code coverage checking, CI/CD troubleshooting, project initialization, pull request creation, quality checks, security reviews, test execution, dependency updates, and n8n MCP integration setup
   - **Development quality standards**: Japanese-language guidelines for TDD methodology, static quality gates, Git workflow conventions, and AI-assisted development practices
 - `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
@@ -198,12 +198,13 @@ The `.claude/agents/` directory provides 13 specialized agents:
 
 #### Automated Commands
 
-The `.claude/commands/` directory provides 13 pre-configured commands:
+The `.claude/commands/` directory provides 14 pre-configured commands:
 
 - **Quality & Testing**: `check-coverage.md`, `quality-check.md`, `test-all.md`
 - **Project Management**: `init-project.md`, `issue-auto-resolve.md`, `issue-create.md`, `issue-review.md`
 - **Pull Request Workflow**: `pr-create.md`, `pr.md`, `review-feedback-processor.md`
 - **CI/CD & Maintenance**: `fix-ci.md`, `security-review.md`, `update-deps.md`
+- **Integration Setup**: `n8n-mcp-setup.md`
 
 #### Development Quality Standards
 
