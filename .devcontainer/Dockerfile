@@ -21,7 +21,7 @@ RUN bash -c "pnpm setup" \
 USER root
 
 # Install global packages
-RUN npm install -g typescript eslint @anthropic-ai/claude-code @openai/codex
+RUN npm install -g typescript eslint @anthropic-ai/claude-code @openai/codex vercel
 
 # Install Cursor Agent
 USER vscode
@@ -38,11 +38,14 @@ RUN echo "alias gco='git checkout'" >> /home/vscode/.bashrc \
  && echo "alias gpl='git pull'" >> /home/vscode/.bashrc
 
 # Setup directories
-RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai \
- && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai
+RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex \
+ && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex
 
 # Copy default Claude settings
 COPY --chown=vscode:vscode .devcontainer/claude-settings.json /home/vscode/.claude/settings.json
+
+# Copy Codex configuration
+COPY --chown=vscode:vscode .devcontainer/codex-config.json /home/vscode/.codex/config.json
 
 # Copy Claude commands
 COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
