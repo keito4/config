@@ -48,6 +48,15 @@ credentials/secrets/
 .env*.local
 .zsh/configs/pre/.env.secret
 
+# Gemini CLI
+.geminirc
+.gemini-api-key
+gemini-credentials.json
+.gemini-cache/
+.gemini-history.json
+.gemini.log
+.gemini.log.*
+
 # Test artifacts and libraries
 test/bats-libs/
 test/**/*.log

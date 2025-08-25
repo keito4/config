@@ -215,6 +215,59 @@ The `.claude/CLAUDE.md` file defines organization-wide development standards in 
 - **Git Workflow**: Conventional commits, branch naming conventions, and pull request requirements
 - **AI Prompt Design Guidelines**: Structured approach for requirements definition and implementation
 
+### Gemini CLI Integration
+
+This repository includes support for Google's Gemini AI through the Gemini CLI tool, providing an alternative AI assistant for development tasks.
+
+#### Setup
+
+1. **Install Gemini CLI**:
+
+   ```bash
+   # Run the setup script
+   ./script/gemini-setup.sh
+
+   # Or install manually
+   npm install -g @google/generative-ai-cli
+   # or
+   pip install google-generativeai-cli
+   ```
+
+2. **Configure API Key**:
+   - Obtain your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Set the environment variable: `export GEMINI_API_KEY="your-api-key"`
+   - Or use 1Password integration with the provided template
+
+3. **Configuration**:
+   - Copy `.geminirc.example` to `.geminirc` and customize settings
+   - Configure model preferences, temperature, and safety settings
+
+#### Features
+
+- **Code Generation**: Generate code snippets and implementations
+- **Code Review**: AI-powered code review and suggestions
+- **Documentation**: Automatic documentation generation
+- **Debugging**: Error analysis and debugging assistance
+- **Multi-Model Support**: Access to Gemini Pro, Gemini Ultra, and other models
+
+#### Usage Examples
+
+```bash
+# Generate code
+gemini generate "Create a REST API endpoint"
+
+# Review code
+gemini review src/main.js
+
+# Explain code
+gemini explain complex-function.py
+
+# Debug errors
+gemini debug "Error message here"
+```
+
+For detailed configuration and usage instructions, see the [Gemini CLI section in CLAUDE.md](./CLAUDE.md#gemini-cli-integration).
+
 ## Glossary
 
 - **Homebrew (Brew)**: A package manager for macOS and Linux that allows easy installation and management of software packages.

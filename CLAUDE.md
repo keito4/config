@@ -149,3 +149,132 @@ When encountering technical challenges, unresolved errors, or implementation roa
    What I've tried: [attempted solutions]
    Context: [relevant code or architecture details]
    ```
+
+## Gemini CLI Integration
+
+This repository supports integration with Google's Gemini AI through the Gemini CLI tool, providing an alternative AI assistant for development tasks.
+
+### Features
+
+- **Code Generation**: Generate code snippets and complete implementations
+- **Code Review**: AI-powered code review and suggestions
+- **Documentation**: Automatic documentation generation
+- **Debugging Assistance**: Help with error analysis and debugging
+- **Multi-Model Support**: Access to Gemini Pro, Gemini Ultra, and other models
+
+### Installation
+
+1. **Install Gemini CLI**:
+
+   ```bash
+   npm install -g @google/generative-ai-cli
+   # or
+   pip install google-generativeai-cli
+   ```
+
+2. **Configure API Key**:
+   ```bash
+   export GEMINI_API_KEY="your-api-key-here"
+   # or add to your shell profile
+   echo 'export GEMINI_API_KEY="your-api-key-here"' >> ~/.bashrc
+   ```
+
+### Usage
+
+1. **Basic Commands**:
+
+   ```bash
+   # Generate code
+   gemini generate "Create a REST API endpoint for user authentication"
+
+   # Review code
+   gemini review path/to/file.js
+
+   # Explain code
+   gemini explain path/to/complex-function.py
+
+   # Debug error
+   gemini debug "TypeError: Cannot read property 'x' of undefined"
+   ```
+
+2. **Integration with Development Workflow**:
+
+   ```bash
+   # Use with git hooks
+   gemini review --pre-commit
+
+   # CI/CD integration
+   gemini analyze --output=report.json
+
+   # Documentation generation
+   gemini docs --format=markdown src/
+   ```
+
+3. **Model Selection**:
+   ```bash
+   # Use specific model
+   gemini --model=gemini-pro generate "Complex algorithm implementation"
+   gemini --model=gemini-ultra review src/
+   ```
+
+### Configuration Options
+
+Create a `.geminirc` file in the project root (copy from `.geminirc.example`):
+
+```json
+{
+  "defaultModel": "gemini-1.5-pro",
+  "models": {
+    "gemini-1.5-pro": { "temperature": 0.7, "maxTokens": 8192 },
+    "gemini-1.5-flash": { "temperature": 0.5, "maxTokens": 4096 }
+  },
+  "contexts": {
+    "development": { "model": "gemini-1.5-pro", "temperature": 0.5 },
+    "review": { "model": "gemini-1.5-flash", "temperature": 0.3 },
+    "testing": { "model": "gemini-1.5-pro", "temperature": 0.3 },
+    "documentation": { "model": "gemini-1.5-flash", "temperature": 0.4 }
+  }
+}
+```
+
+#### Available Models
+
+- **gemini-1.5-pro**: Latest and most capable model with 8K token context
+- **gemini-1.5-flash**: Fast and efficient model for quick tasks
+- **gemini-pro**: Standard model for general use
+- **gemini-pro-vision**: Multi-modal model for image analysis
+
+#### Context-Based Usage
+
+```bash
+# Use specific context for different tasks
+gemini generate --context=development "Create a REST API"
+gemini review --context=review src/main.js
+gemini test --context=testing src/functions.js
+gemini docs --context=documentation src/
+```
+
+### Best Practices
+
+1. **Complementary Usage**: Use Gemini CLI alongside Claude for diverse perspectives
+2. **Model Selection**: Choose appropriate models based on task complexity
+3. **Context Management**: Provide clear context and examples for better results
+4. **Security**: Never expose API keys in code or version control
+5. **Rate Limiting**: Be aware of API rate limits and quotas
+
+### Comparison with Claude
+
+| Feature          | Claude               | Gemini              |
+| ---------------- | -------------------- | ------------------- |
+| Code Generation  | ✅ Comprehensive     | ✅ Fast iteration   |
+| Context Window   | Large                | Variable by model   |
+| Language Support | All major languages  | All major languages |
+| Integration      | MCP Protocol         | REST API            |
+| Specialization   | Development workflow | Multi-purpose       |
+
+### Troubleshooting
+
+- **API Key Issues**: Ensure `GEMINI_API_KEY` is properly set
+- **Rate Limits**: Implement exponential backoff for API calls
+- **Model Availability**: Check regional availability of specific models
+- **Network Issues**: Configure proxy settings if behind corporate firewall

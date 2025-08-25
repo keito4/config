@@ -1,0 +1,234 @@
+{
+  "defaultModel": "gemini-1.5-pro",
+  "models": {
+    "gemini-1.5-pro": {
+      "temperature": 0.7,
+      "maxTokens": 8192,
+      "topP": 0.95,
+      "topK": 40
+    },
+    "gemini-1.5-flash": {
+      "temperature": 0.5,
+      "maxTokens": 4096,
+      "topP": 0.9,
+      "topK": 32
+    },
+    "gemini-pro": {
+      "temperature": 0.7,
+      "maxTokens": 2048,
+      "topP": 0.9,
+      "topK": 32
+    },
+    "gemini-pro-vision": {
+      "temperature": 0.7,
+      "maxTokens": 2048,
+      "topP": 0.9,
+      "topK": 32
+    }
+  },
+  "api": {
+    "endpoint": "https://generativelanguage.googleapis.com/v1",
+    "timeout": 30000,
+    "retryConfig": {
+      "maxRetries": 3,
+      "retryDelay": 1000,
+      "maxRetryDelay": 10000,
+      "backoffFactor": 2
+    }
+  },
+  "safety": {
+    "harmCategories": {
+      "HARM_CATEGORY_HATE_SPEECH": "BLOCK_MEDIUM_AND_ABOVE",
+      "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_MEDIUM_AND_ABOVE",
+      "HARM_CATEGORY_HARASSMENT": "BLOCK_MEDIUM_AND_ABOVE",
+      "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_MEDIUM_AND_ABOVE"
+    }
+  },
+  "cache": {
+    "enabled": true,
+    "ttl": 3600,
+    "maxSize": 100,
+    "directory": ".gemini-cache"
+  },
+  "output": {
+    "format": "markdown",
+    "colorize": true,
+    "verbose": false,
+    "saveHistory": true,
+    "historyFile": ".gemini-history.json",
+    "maxHistorySize": 100
+  },
+  "contexts": {
+    "development": {
+      "model": "gemini-1.5-pro",
+      "temperature": 0.5,
+      "maxTokens": 8192,
+      "systemPrompt": "You are an expert software developer. Focus on writing clean, maintainable, and efficient code following best practices."
+    },
+    "creative": {
+      "model": "gemini-1.5-pro",
+      "temperature": 0.9,
+      "maxTokens": 4096,
+      "systemPrompt": "You are a creative assistant. Think outside the box and provide innovative solutions."
+    },
+    "review": {
+      "model": "gemini-1.5-flash",
+      "temperature": 0.3,
+      "maxTokens": 4096,
+      "systemPrompt": "You are a code reviewer. Focus on finding bugs, security issues, performance problems, and suggesting improvements."
+    },
+    "documentation": {
+      "model": "gemini-1.5-flash",
+      "temperature": 0.4,
+      "maxTokens": 4096,
+      "systemPrompt": "You are a technical writer. Create clear, comprehensive, and well-structured documentation."
+    },
+    "testing": {
+      "model": "gemini-1.5-pro",
+      "temperature": 0.3,
+      "maxTokens": 8192,
+      "systemPrompt": "You are a QA engineer. Write comprehensive test cases, identify edge cases, and ensure code quality."
+    },
+    "refactoring": {
+      "model": "gemini-1.5-pro",
+      "temperature": 0.4,
+      "maxTokens": 8192,
+      "systemPrompt": "You are a refactoring expert. Improve code structure, reduce complexity, and enhance maintainability without changing functionality."
+    }
+  },
+  "projectTypes": {
+    "typescript": {
+      "language": "typescript",
+      "linter": "eslint",
+      "formatter": "prettier",
+      "testFramework": "jest",
+      "buildTool": "tsc"
+    },
+    "javascript": {
+      "language": "javascript",
+      "linter": "eslint",
+      "formatter": "prettier",
+      "testFramework": "jest",
+      "buildTool": "webpack"
+    },
+    "python": {
+      "language": "python",
+      "linter": "pylint",
+      "formatter": "black",
+      "testFramework": "pytest",
+      "buildTool": "setuptools"
+    },
+    "go": {
+      "language": "go",
+      "linter": "golangci-lint",
+      "formatter": "gofmt",
+      "testFramework": "testing",
+      "buildTool": "go build"
+    },
+    "rust": {
+      "language": "rust",
+      "linter": "clippy",
+      "formatter": "rustfmt",
+      "testFramework": "cargo test",
+      "buildTool": "cargo"
+    }
+  },
+  "templates": {
+    "codeGeneration": "Generate {{language}} code that: {{requirements}}. Follow {{style}} style guide.",
+    "codeReview": "Review this {{language}} code for: bugs, security issues, performance, best practices, and readability.",
+    "documentation": "Create {{format}} documentation for: {{subject}}. Include examples and edge cases.",
+    "testing": "Write {{framework}} tests for: {{code}}. Cover edge cases and error scenarios.",
+    "debugging": "Debug this error: {{error}}. Context: {{context}}. Suggest fixes and preventive measures.",
+    "explanation": "Explain this {{language}} code in detail: {{code}}. Focus on logic flow and design decisions."
+  },
+  "hooks": {
+    "pre-commit": {
+      "enabled": true,
+      "commands": [
+        "gemini review --staged --context=review",
+        "gemini test --staged --context=testing"
+      ]
+    },
+    "pre-push": {
+      "enabled": false,
+      "commands": [
+        "gemini review --all --context=review",
+        "gemini security-check --all"
+      ]
+    },
+    "post-merge": {
+      "enabled": false,
+      "commands": [
+        "gemini changelog --since=last-tag"
+      ]
+    }
+  },
+  "integrations": {
+    "vscode": {
+      "enabled": true,
+      "shortcuts": {
+        "generate": "ctrl+shift+g",
+        "review": "ctrl+shift+r",
+        "explain": "ctrl+shift+e",
+        "refactor": "ctrl+shift+f",
+        "test": "ctrl+shift+t"
+      },
+      "autoComplete": {
+        "enabled": true,
+        "delay": 500,
+        "minCharacters": 3
+      }
+    },
+    "github": {
+      "enabled": true,
+      "autoReview": true,
+      "commentOnPR": false,
+      "labelSuggestions": true,
+      "commitMessageSuggestions": true
+    },
+    "gitlab": {
+      "enabled": false,
+      "autoReview": false,
+      "commentOnMR": false
+    },
+    "jira": {
+      "enabled": false,
+      "autoCreateTickets": false,
+      "linkIssues": true
+    }
+  },
+  "logging": {
+    "level": "info",
+    "file": ".gemini.log",
+    "maxFileSize": "10MB",
+    "maxFiles": 5,
+    "format": "json"
+  },
+  "experimental": {
+    "multiModalInput": true,
+    "codeExecution": false,
+    "functionCalling": true,
+    "streaming": true,
+    "parallelRequests": false
+  },
+  "customCommands": {
+    "optimize": {
+      "description": "Optimize code for performance",
+      "model": "gemini-1.5-pro",
+      "temperature": 0.4,
+      "prompt": "Optimize this code for performance while maintaining readability"
+    },
+    "security": {
+      "description": "Security vulnerability scan",
+      "model": "gemini-1.5-pro",
+      "temperature": 0.2,
+      "prompt": "Analyze this code for security vulnerabilities and suggest fixes"
+    },
+    "accessibility": {
+      "description": "Check accessibility compliance",
+      "model": "gemini-1.5-flash",
+      "temperature": 0.3,
+      "prompt": "Review this code for WCAG accessibility compliance"
+    }
+  }
+}
