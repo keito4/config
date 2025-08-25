@@ -1,1 +1,13 @@
+#!/usr/bin/env sh
+set -e
+
+echo "[pre-commit] Running format check..."
+npm run format:check
+
+echo "[pre-commit] Running ESLint..."
 npm run lint
+
+echo "[pre-commit] Running tests..."
+npm test
+
+echo "[pre-commit] All checks passed. Proceeding with commit."
