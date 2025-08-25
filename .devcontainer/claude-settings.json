@@ -6,10 +6,34 @@
       "Bash(find:*)",
       "Bash(grep:*)",
       "Bash(rg:*)",
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(chmod:*)",
+      "Bash(curl:*)",
+      "Bash(true)",
+      "Bash(node:*)",
+
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git fetch:*)",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(git rm:*)",
 
       "Bash(gh issue list:*)",
       "Bash(gh issue view:*)",
       "Bash(gh repo view:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh run list:*)",
 
       "Bash(kubectl get:*)",
       "Bash(kubectl describe:*)",
@@ -23,23 +47,23 @@
 
       "Bash(gcloud container operations list:*)",
 
-      "Bash(DISPLAY=:99 xwininfo -root -tree)",
-      "Bash(DISPLAY=:99 xrandr)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run format:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run ci:check:*)",
+      "Bash(npx:*)",
+      "Bash(wscat:*)",
 
-      "Bash(supabase status:*)",
-      "Bash(claude config get:*)",
-      "Bash(git status:*)",
-      "Bash(git diff:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-
+      "WebSearch",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:docs.n8n.io)",
-      "WebFetch(domain:community.n8n.io)",
-      "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:www.green-japan.com)"
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
-    "deny": []
+    "deny": [],
+    "ask": []
   }
 }
