@@ -21,7 +21,7 @@ RUN bash -c "pnpm setup" \
 USER root
 
 # Install global packages
-RUN npm install -g typescript eslint @anthropic-ai/claude-code @openai/codex
+RUN npm install -g typescript eslint @anthropic-ai/claude-code @openai/codex vercel
 
 # Install Cursor Agent
 USER vscode
