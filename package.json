@@ -12,6 +12,8 @@
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "test": "echo 'No tests configured' && exit 0",
+    "build": "echo 'No build step configured' && exit 0",
     "prepare": "husky"
   },
   "devDependencies": {
