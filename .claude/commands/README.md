@@ -7,22 +7,28 @@ This directory contains 14 pre-configured commands that provide automated workfl
 ### Quality & Testing
 
 #### `check-coverage.md`
+
 **Purpose**: Analyzes test coverage reports and identifies areas needing attention
 **Triggers**:
+
 - Coverage drops below configured thresholds
 - New code additions without corresponding tests
 - Manual coverage analysis requests
 
 #### `quality-check.md`
+
 **Purpose**: Runs comprehensive code quality analysis including linting, formatting, and static analysis
 **Triggers**:
+
 - Pre-commit hooks
 - Pull request creation
 - Manual quality validation requests
 
 #### `test-all.md`
+
 **Purpose**: Executes complete test suite with proper reporting and failure analysis
 **Triggers**:
+
 - Major code changes
 - Release preparation
 - CI/CD pipeline integration
@@ -30,32 +36,40 @@ This directory contains 14 pre-configured commands that provide automated workfl
 ### Project Management
 
 #### `init-project.md`
+
 **Purpose**: Sets up new projects with standardized structure, tools, and configurations
 **Features**:
+
 - Dependency management setup
 - CI/CD pipeline configuration
 - Quality gate establishment
 - Documentation templates
 
 #### `issue-auto-resolve.md`
+
 **Purpose**: Automated issue analysis and resolution using specialized agents
 **Capabilities**:
+
 - Issue classification and priority assessment
 - Automated fix generation for common problems
 - Multi-agent coordination for complex issues
 - Solution validation and testing
 
 #### `issue-create.md`
+
 **Purpose**: Creates well-structured GitHub issues with proper templates and metadata
 **Features**:
+
 - Issue template selection
 - Automatic labeling and assignment
 - Related issue linking
 - Priority and milestone setting
 
 #### `issue-review.md`
+
 **Purpose**: Reviews existing issues for completeness, priority, and actionability
 **Functions**:
+
 - Issue triage and categorization
 - Duplicate detection and consolidation
 - Priority reassessment
@@ -64,16 +78,20 @@ This directory contains 14 pre-configured commands that provide automated workfl
 ### Pull Request Workflow
 
 #### `pr.md`
+
 **Purpose**: Comprehensive pull request analysis and preparation
 **Features**:
+
 - Automated PR description generation
 - Change impact analysis
 - Reviewer suggestion based on code ownership
 - Merge readiness assessment
 
 #### `review-feedback-processor.md`
+
 **Purpose**: Processes and responds to code review feedback systematically
 **Capabilities**:
+
 - Feedback categorization and prioritization
 - Automated response generation
 - Code change suggestions
@@ -82,24 +100,30 @@ This directory contains 14 pre-configured commands that provide automated workfl
 ### CI/CD & Maintenance
 
 #### `fix-ci.md`
+
 **Purpose**: Diagnoses and resolves continuous integration pipeline failures
 **Diagnostic Areas**:
+
 - Build failures and dependency issues
 - Test failures and environment problems
 - Deployment issues and configuration errors
 - Performance bottlenecks and resource constraints
 
 #### `security-review.md`
+
 **Purpose**: Conducts comprehensive security analysis of code changes
 **Security Checks**:
+
 - Vulnerability scanning and assessment
 - Authentication and authorization validation
 - Data protection compliance
 - Security best practices enforcement
 
 #### `update-deps.md`
+
 **Purpose**: Manages dependency updates with safety checks and compatibility validation
 **Features**:
+
 - Automated dependency analysis
 - Breaking change detection
 - Security vulnerability assessment
@@ -108,16 +132,20 @@ This directory contains 14 pre-configured commands that provide automated workfl
 ### Integration & Automation
 
 #### `n8n-mcp-setup.md`
+
 **Purpose**: Configures n8n workflows with Model Context Protocol (MCP) integration
 **Setup Areas**:
+
 - Workflow automation configuration
 - API endpoint integration
 - Event trigger setup
 - Data flow optimization
 
 #### `commit.md`
+
 **Purpose**: Ensures commit message quality and conventional commit compliance
 **Validation**:
+
 - Conventional commit format enforcement
 - Commit message clarity and completeness
 - Change scope validation
@@ -126,6 +154,7 @@ This directory contains 14 pre-configured commands that provide automated workfl
 ## Command Usage
 
 ### Direct Invocation
+
 Commands can be invoked directly in Claude interactions:
 
 ```
@@ -136,6 +165,7 @@ Commands can be invoked directly in Claude interactions:
 ```
 
 ### Automatic Triggers
+
 Commands are automatically triggered by:
 
 - **Repository Events**: Push, PR creation, issue updates
@@ -144,6 +174,7 @@ Commands are automatically triggered by:
 - **Context Patterns**: Specific file changes, error patterns, user actions
 
 ### Workflow Integration
+
 Commands integrate with development workflows through:
 
 - **GitHub Actions**: Automated execution in CI/CD pipelines
@@ -154,20 +185,26 @@ Commands integrate with development workflows through:
 ## Command Configuration
 
 ### Global Settings
+
 Command behavior is configured in:
+
 - `.claude/settings.json`: Global command preferences and thresholds
 - `.claude/CLAUDE.md`: Quality standards and workflow requirements
 - Repository-specific overrides in individual command files
 
 ### Environment Variables
+
 Commands support customization through environment variables:
+
 - `CLAUDE_COVERAGE_THRESHOLD`: Test coverage requirements
 - `CLAUDE_SECURITY_LEVEL`: Security analysis strictness
 - `CLAUDE_CI_TIMEOUT`: CI operation timeout limits
 - `CLAUDE_REVIEWER_COUNT`: Required reviewer count for PRs
 
 ### Quality Gates
+
 Commands enforce quality standards through:
+
 - **Coverage Requirements**: 70%+ line coverage for all repositories
 - **Security Standards**: Critical vulnerability blocking
 - **Performance Thresholds**: Response time and resource usage limits
@@ -178,12 +215,14 @@ Commands enforce quality standards through:
 ### For Development Teams
 
 #### Command Usage
+
 - **Use specific commands** for targeted analysis and fixes
 - **Combine commands** for comprehensive workflows
 - **Monitor command results** and act on recommendations
 - **Customize thresholds** based on project requirements
 
 #### Integration Strategies
+
 - **Incorporate in CI/CD** for automated quality assurance
 - **Use in code reviews** for consistent feedback
 - **Schedule regular maintenance** commands for proactive management
@@ -192,12 +231,14 @@ Commands enforce quality standards through:
 ### For Project Maintainers
 
 #### Configuration Management
+
 - **Set appropriate thresholds** for quality gates
 - **Customize command behavior** for technology stack
 - **Monitor command performance** and effectiveness
 - **Update configurations** based on team feedback
 
 #### Workflow Optimization
+
 - **Identify bottlenecks** in development processes
 - **Automate repetitive tasks** with command workflows
 - **Measure improvement** in code quality and velocity
@@ -206,6 +247,7 @@ Commands enforce quality standards through:
 ## Advanced Usage
 
 ### Command Chaining
+
 Commands can be chained for complex workflows:
 
 ```
@@ -214,6 +256,7 @@ Commands can be chained for complex workflows:
 ```
 
 ### Conditional Execution
+
 Commands support conditional execution based on context:
 
 ```
@@ -223,6 +266,7 @@ Commands support conditional execution based on context:
 ```
 
 ### Custom Workflows
+
 Create custom workflows by combining commands:
 
 ```yaml
@@ -238,14 +282,18 @@ Create custom workflows by combining commands:
 ## Monitoring and Analytics
 
 ### Command Performance
+
 Monitor command effectiveness through:
+
 - **Execution time** and resource usage
 - **Success rates** and failure patterns
 - **Code quality improvements** over time
 - **Developer productivity** metrics
 
 ### Quality Trends
+
 Track quality improvements through:
+
 - **Coverage trend** analysis
 - **Security vulnerability** reduction
 - **CI/CD reliability** improvements
@@ -254,6 +302,7 @@ Track quality improvements through:
 ## Troubleshooting
 
 ### Command Failures
+
 If commands fail or produce unexpected results:
 
 1. **Check prerequisites** (dependencies, permissions, environment)
@@ -263,6 +312,7 @@ If commands fail or produce unexpected results:
 5. **Update command definitions** if necessary
 
 ### Performance Issues
+
 If commands are slow or timing out:
 
 1. **Review scope** and reduce if necessary
@@ -272,6 +322,7 @@ If commands are slow or timing out:
 5. **Monitor API rate limits** and usage
 
 ### Integration Problems
+
 If commands don't integrate properly with workflows:
 
 1. **Verify trigger configurations** and event handling
