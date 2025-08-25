@@ -1,1 +1,5 @@
-npx commitlint --edit $1
+#!/usr/bin/env sh
+set -e
+
+echo "[commit-msg] Linting commit message..."
+npx commitlint --edit "$1"
