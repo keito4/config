@@ -64,6 +64,7 @@
       "Bash(yarn:*)",
       "Bash(pip:*)",
       "Bash(poetry:*)",
+      "Bash(python:*)",
       "Bash(docker:*)",
       "Bash(docker-compose:*)",
       "Bash(kubectl:*)",
@@ -88,19 +89,25 @@
       "Bash(git checkout:*)",
       "Bash(git add:*)",
       "Bash(git push:*)",
-      "Bash(git checkout:*)",
       "Bash(git remote set-url:*)",
       "Bash(git pull:*)",
       "Bash(git reset:*)",
       "Bash(git cherry-pick:*)",
+      "Bash(git fetch:*)",
+      "Bash(git restore:*)",
+      "Bash(git merge:*)",
+      "Bash(true)",
+      "Bash(rm:*)",
       "mcp__github__create_pull_request",
       "mcp__github__get_issue",
       "mcp__github__add_issue_comment",
       "mcp__github__get_issue_comments",
       "mcp__devinwiki__read_wiki_contents",
-      "mcp__devinwiki__ask_question"
+      "mcp__devinwiki__ask_question",
+      "mcp__ide__getDiagnostics"
     ],
-    "deny": []
+    "deny": [],
+    "ask": []
   },
   "env": {
     "CLAUDE_CODE_PROJECT_NAME": "keito4/config",
