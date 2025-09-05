@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu
 
+# Install dependencies and Node.js using official binaries
 RUN apt-get update && apt-get install -y \
     curl \
     git \
@@ -11,13 +12,16 @@ RUN apt-get update && apt-get install -y \
     libasound2-dev \
     ca-certificates \
     gnupg \
- && mkdir -p /etc/apt/keyrings \
- && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
- && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
- && apt-get update \
- && apt-get install -y nodejs \
+    wget \
+    xz-utils \
  && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/* \
+ && NODE_VERSION=v20.18.1 \
+ && NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/arm64/arm64/') \
+ && wget -q https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
+ && tar -xJf node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz -C /usr/local --strip-components=1 \
+ && rm node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
+ && ln -s /usr/local/bin/node /usr/local/bin/nodejs
 
 RUN npm install -g pnpm
 
