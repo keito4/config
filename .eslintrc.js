@@ -1,23 +1,17 @@
 module.exports = {
-  extends: ['eslint:recommended', 'prettier'],
   env: {
-    browser: true,
-    es2021: true,
     node: true,
+    jest: true,
+    es2022: true,
   },
+  extends: ['eslint:recommended', 'prettier'],
   parserOptions: {
-    ecmaVersion: 'latest',
+    ecmaVersion: 2022,
     sourceType: 'module',
   },
   rules: {
-    // プロジェクト固有のルールを追加
-    'no-unused-vars': [
-      'error',
-      {
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_',
-      },
-    ],
+    'no-console': 'off',
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
   },
-  ignorePatterns: ['node_modules/', 'dist/', 'build/', 'coverage/', '*.config.js', '.devcontainer/'],
+  ignorePatterns: ['node_modules/', 'dist/', 'coverage/', '*.min.js'],
 };

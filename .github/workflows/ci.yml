@@ -27,8 +27,9 @@ jobs:
 
       - name: Run tests
         run: npm run test
-        continue-on-error: true # テストが未設定のため一時的にエラーを無視
 
       - name: Build
         run: npm run build
-        continue-on-error: true # ビルドプロセスが未設定のため一時的にエラーを無視
+
+      - name: Validate configuration
+        run: npm run validate
