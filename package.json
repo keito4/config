@@ -24,6 +24,7 @@
     "@commitlint/config-conventional": "^19.8.1",
     "@semantic-release/commit-analyzer": "^13.0.0",
     "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/github": "^10.3.5",
     "@semantic-release/release-notes-generator": "^14.0.1",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
