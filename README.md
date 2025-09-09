@@ -17,7 +17,6 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 - `git/`: Contains Git configuration files including gitconfig, gitignore, and modular configuration files in the `gitconfig.d/` subdirectory.
 - `npm/`: Contains npm global package configuration.
 - `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), credential management (`credentials.sh`), Homebrew dependency management (`brew-deps.sh`), and version management (`version.sh`).
-- `supabase/`: Contains Supabase-related configuration and documentation.
 - `vscode/`: Contains Visual Studio Code configuration including extensions list and installation documentation.
 
 ## Security
@@ -229,7 +228,6 @@ The `.claude/CLAUDE.md` file defines organization-wide development standards in 
 - **npm**: The default package manager for the JavaScript runtime environment Node.js.
 - **Prettier**: An opinionated code formatter that enforces consistent code style.
 - **Semantic Release**: Automated version management and release process based on commit messages.
-- **Supabase**: An open-source Firebase alternative providing backend-as-a-service features.
 - **Visual Studio Code**: A free source-code editor made by Microsoft for Windows, Linux, and macOS.
 - **Zsh**: An extended Unix shell with advanced features for interactive use and scripting.
 
