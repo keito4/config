@@ -60,11 +60,12 @@ cp -r -f "$REPO_PATH/git" ~/
 # Configure git settings
 cp "$REPO_PATH/git/gitconfig" ~/.gitconfig
 cp "$REPO_PATH/git/gitignore" ~/.gitignore
-cp "$REPO_PATH/git/gitattributes" ~/.gitattributes
 
 # In devcontainer, update gitconfig to use 1password-cli instead of macOS app
 if [[ -f /.dockerenv ]] || [[ ! -z "${REMOTE_CONTAINERS}" ]] || [[ ! -z "${CODESPACES}" ]]; then
     # Set git user configuration explicitly
+    # TODO: These values should be parameterized or set via environment variables
+    # for better security and reusability across different users
     git config --global user.name "keito4"
     git config --global user.email "newton30000@gmail.com"
 

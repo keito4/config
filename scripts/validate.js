@@ -63,7 +63,7 @@ class ConfigValidator {
     this.log('Validating Git configuration...');
 
     const gitDir = path.join(this.repoPath, 'git');
-    const requiredFiles = ['gitconfig', 'gitignore', 'gitattributes'];
+    const requiredFiles = ['gitconfig', 'gitignore'];
 
     requiredFiles.forEach((file) => {
       const filePath = path.join(gitDir, file);

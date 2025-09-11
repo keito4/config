@@ -50,7 +50,6 @@ class ConfigBuilder {
       'package.json',
       'git/gitconfig',
       'git/gitignore',
-      'git/gitattributes',
       'brew/LinuxBrewfile',
       'brew/MacOSBrewfile',
       'brew/StandaloneBrewfile',

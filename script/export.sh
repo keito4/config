@@ -40,7 +40,6 @@ fi
 # Export general settings (only if files exist)
 [[ -f ~/.gitconfig ]] && cat ~/.gitconfig > "$REPO_PATH/git/gitconfig"
 [[ -f ~/.gitignore ]] && cat ~/.gitignore > "$REPO_PATH/git/gitignore"
-[[ -f ~/.gitattributes ]] && cat ~/.gitattributes > "$REPO_PATH/git/gitattributes"
 [[ -d ~/.zsh ]] && cp -r -f ~/.zsh "$REPO_PATH"
 
 # Export npm packages (only if npm is available)
