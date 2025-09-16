@@ -10,6 +10,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
   - **13 specialized AI agents**: Architecture validation (DDD, Clean Architecture), accessibility & design validation, concurrency safety analysis, documentation consistency checking, dependency auditing, performance analysis, testability & coverage analysis, and issue resolution workflows
   - **14 automated commands**: Code coverage checking, CI/CD troubleshooting, project initialization, pull request creation, quality checks, security reviews, test execution, dependency updates, and n8n MCP integration setup
   - **Development quality standards**: Japanese-language guidelines for TDD methodology, static quality gates, Git workflow conventions, and AI-assisted development practices
+- `.codex/`: Codex CLI mirror of the Claude configuration with migrated prompts in `prompts/` and `config.toml` defining matching MCP servers plus desktop notifications
 - `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
