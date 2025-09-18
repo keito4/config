@@ -180,8 +180,6 @@ generate_categorized_brewfile() {
         done || true
         echo ""
         
-        # Continue with other categories...
-        
         echo ""
         echo "# === CASKS ==="
         echo ""
@@ -192,8 +190,6 @@ generate_categorized_brewfile() {
             echo "cask \"$c\""
         done || true
         echo ""
-        
-        # Continue with other cask categories...
         
     } > "$output"
     

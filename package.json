@@ -16,8 +16,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "build": "node scripts/build.js",
-    "validate": "node scripts/validate.js",
-    "prepare": "husky"
+    "validate": "node scripts/validate.js"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
@@ -26,7 +25,6 @@
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/github": "^10.3.5",
     "@semantic-release/release-notes-generator": "^14.0.1",
-    "conventional-changelog-conventionalcommits": "^8.0.0",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "husky": "^9.1.7",
