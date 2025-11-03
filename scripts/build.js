@@ -231,9 +231,13 @@ class ConfigBuilder {
     this.validateScripts();
     this.validateSecurity();
 
-    // Run quality checks
-    this.runLinting();
-    this.runTests();
+    // Run quality checks (skip in CI; handled by workflow)
+    if (process.env.CI) {
+      this.log('CI detected: skipping lint/tests in build (handled in workflow)');
+    } else {
+      this.runLinting();
+      this.runTests();
+    }
 
     // Create build artifacts
     this.createBuildArtifacts();

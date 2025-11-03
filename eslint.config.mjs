@@ -39,7 +39,14 @@ export default [
     },
   },
 
+  // テストコード用のオーバーライド
+  {
+    files: ['test/**/*.js'],
+    rules: {
+      'no-unused-vars': 'off',
+    },
+  },
+
   // Prettier 連携（競合するスタイル系ルールを無効化）
   prettier,
 ];
-

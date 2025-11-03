@@ -16,9 +16,10 @@
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "jest --runInBand",
+    "test": "jest --ci --maxWorkers=50%",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test:coverage": "jest --ci --coverage --maxWorkers=50%",
+    "test:quick": "jest --ci --maxWorkers=50% --bail --passWithNoTests --changedSince=HEAD",
     "build": "node scripts/build.js",
     "validate": "node scripts/validate.js",
     "prepare": "husky"
