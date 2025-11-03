@@ -7,7 +7,18 @@ npm run format:check
 echo "[pre-commit] Running ESLint..."
 npm run lint
 
-echo "[pre-commit] Running tests (quick)..."
-npm run test:quick
+echo "[pre-commit] Running tests (related to staged changes)..."
+# 変更されたファイル一覧（ステージ済み）
+STAGED_FILES=$(git diff --name-only --cached)
+
+# JS/JSX のみを対象にする（必要に応じて拡張子を追加）
+JS_CHANGED=$(echo "$STAGED_FILES" | grep -E '\\.(js|jsx)$' || true)
+
+if [ -z "$JS_CHANGED" ]; then
+  echo "[pre-commit] No JS changes detected; skipping Jest."
+else
+  # 変更に関連するテストのみを実行
+  npx jest --ci --bail --maxWorkers=50% --passWithNoTests --findRelatedTests $JS_CHANGED
+fi
 
 echo "[pre-commit] All checks passed. Proceeding with commit."
