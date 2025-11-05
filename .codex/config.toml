@@ -9,8 +9,3 @@ command = "npx"
 args = ["o3-search-mcp"]
 # Set OPENAI_API_KEY via environment to avoid committing secrets
 env = { OPENAI_API_KEY = "", SEARCH_CONTEXT_SIZE = "medium", REASONING_EFFORT = "medium" }
-
-[mcp_servers.playwright]
-command = "npx"
-args = ["-y", "@playwright/mcp"]
-
