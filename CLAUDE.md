@@ -115,8 +115,6 @@ The repository includes comprehensive automated workflows for continuous integra
 - **Container Registry**: Published DevContainer images at `ghcr.io/keito4/config-base`
 - **Semantic Releases**: Automatic GitHub releases with generated release notes
 
-For detailed workflow documentation, see [.github/workflows/README.md](.github/workflows/README.md).
-
 ## Technical Assistance with o3 MCP
 
 When encountering technical challenges, unresolved errors, or implementation roadblocks during development, consult o3 MCP in English for advanced problem-solving assistance. o3 MCP specializes in:
