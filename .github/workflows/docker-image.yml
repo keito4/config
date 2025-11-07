@@ -4,6 +4,21 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      release_mode:
+        description: 'auto = semantic-release (default). Select patch/minor/major/custom to force a manual release when needed.'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+          - custom
+      custom_version:
+        description: 'Custom version used when release_mode=custom (example: 1.2.3)'
+        required: false
 
 jobs:
   build-and-release:
@@ -23,11 +38,49 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Determine manual release version
+        id: manual_release
+        if: github.event_name == 'workflow_dispatch' && inputs.release_mode != 'auto'
+        run: |
+          CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          CURRENT_VERSION=${CURRENT_TAG#v}
+          MODE="${{ inputs.release_mode }}"
+          CUSTOM_VERSION="${{ inputs.custom_version }}"
+
+          bump_version() {
+            local mode=$1
+            local version=$2
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$version"
+            case "$mode" in
+              major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+              patch) PATCH=$((PATCH+1)) ;;
+              *) echo "Unknown release mode: $mode" >&2; exit 1 ;;
+            esac
+            echo "$MAJOR.$MINOR.$PATCH"
+          }
+
+          if [ "$MODE" = "custom" ]; then
+            if [ -z "$CUSTOM_VERSION" ]; then
+              echo "::error::custom_version is required when release_mode=custom"
+              exit 1
+            fi
+            NEW_VERSION="$CUSTOM_VERSION"
+          else
+            NEW_VERSION=$(bump_version "$MODE" "$CURRENT_VERSION")
+          fi
+
+          echo "Manual release version: $NEW_VERSION (from $CURRENT_TAG)"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "version_tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "skip_release=false" >> $GITHUB_OUTPUT
+
       - name: Install dependencies
         run: npm ci
 
       - name: Semantic Release Dry Run
         id: semantic
+        if: github.event_name != 'workflow_dispatch' || inputs.release_mode == 'auto'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -44,34 +97,53 @@ jobs:
             echo "skip_release=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Resolve release outputs
+        id: release
+        run: |
+          if [ -n "${{ steps.manual_release.outputs.version }}" ]; then
+            echo "version=${{ steps.manual_release.outputs.version }}" >> $GITHUB_OUTPUT
+            echo "version_tag=${{ steps.manual_release.outputs.version_tag }}" >> $GITHUB_OUTPUT
+            echo "skip_release=${{ steps.manual_release.outputs.skip_release }}" >> $GITHUB_OUTPUT
+          else
+            if [ -n "${{ steps.semantic.outputs.version }}" ]; then
+              echo "version=${{ steps.semantic.outputs.version }}" >> $GITHUB_OUTPUT
+              echo "version_tag=${{ steps.semantic.outputs.version_tag }}" >> $GITHUB_OUTPUT
+            fi
+            if [ -n "${{ steps.semantic.outputs.skip_release }}" ]; then
+              echo "skip_release=${{ steps.semantic.outputs.skip_release }}" >> $GITHUB_OUTPUT
+            else
+              echo "skip_release=true" >> $GITHUB_OUTPUT
+            fi
+          fi
+
       - name: Fix workspace permissions
-        if: steps.semantic.outputs.skip_release != 'true'
+        if: steps.release.outputs.skip_release != 'true'
         run: sudo chown -R $(id -u):$(id -g) "$GITHUB_WORKSPACE"
 
       - uses: docker/setup-qemu-action@v2
-        if: steps.semantic.outputs.skip_release != 'true'
+        if: steps.release.outputs.skip_release != 'true'
 
       - uses: docker/setup-buildx-action@v2
-        if: steps.semantic.outputs.skip_release != 'true'
+        if: steps.release.outputs.skip_release != 'true'
         with:
           driver-opts: image=moby/buildkit:latest
 
       - uses: docker/login-action@v2
-        if: steps.semantic.outputs.skip_release != 'true'
+        if: steps.release.outputs.skip_release != 'true'
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push image with cache
-        if: steps.semantic.outputs.skip_release != 'true'
+        if: steps.release.outputs.skip_release != 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
           file: .devcontainer/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/config-base:${{ steps.semantic.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/config-base:${{ steps.release.outputs.version }}
             ghcr.io/${{ github.repository_owner }}/config-base:latest
           platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/config-base:cache
@@ -79,20 +151,50 @@ jobs:
           no-cache: true
 
       - name: Export tool versions
-        if: steps.semantic.outputs.skip_release != 'true'
+        if: steps.release.outputs.skip_release != 'true'
         working-directory: ${{ github.workspace }}
         run: |
           docker run --rm -v "$PWD":/workspace -w /workspace ghcr.io/${{ github.repository_owner }}/config-base:latest bash -lc 'brew --version; terraform --version; jq --version > devcontainer-info.txt'
 
       - uses: actions/upload-artifact@v4
-        if: steps.semantic.outputs.skip_release != 'true'
+        if: steps.release.outputs.skip_release != 'true'
         with:
           name: devcontainer-info
           path: devcontainer-info.txt
 
       - name: Create Release
-        if: steps.semantic.outputs.skip_release != 'true'
+        if: steps.release.outputs.skip_release != 'true' && (github.event_name != 'workflow_dispatch' || inputs.release_mode == 'auto')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npx semantic-release --no-ci
+
+      - name: Create Manual Release
+        if: steps.release.outputs.skip_release != 'true' && github.event_name == 'workflow_dispatch' && inputs.release_mode != 'auto'
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          TAG: ${{ steps.release.outputs.version_tag }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists"
+          else
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin "$TAG"
+          fi
+
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || echo "")
+          if [ -n "$PREVIOUS_TAG" ]; then
+            RELEASE_NOTES=$(git log --pretty=format:"- %s" "$PREVIOUS_TAG".."$TAG")
+          else
+            RELEASE_NOTES="Manual release $TAG"
+          fi
+
+          gh release create "$TAG" \
+            --title "Release $TAG" \
+            --notes "$RELEASE_NOTES" \
+            --target main
