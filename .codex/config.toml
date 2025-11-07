@@ -1,5 +1,12 @@
 notify = ["bash", "-lc", "afplay /System/Library/Sounds/Glass.aiff"]
 
+[features]
+rmcp_client = true
+
+[mcp_servers.aws-docs]
+command = "uvx"
+args = ["awslabs.aws-documentation-mcp-server@latest"]
+
 [mcp_servers.playwright]
 command = "npx"
 args = ["@playwright/mcp@latest"]
@@ -7,5 +14,31 @@ args = ["@playwright/mcp@latest"]
 [mcp_servers.o3]
 command = "npx"
 args = ["o3-search-mcp"]
-# Set OPENAI_API_KEY via environment to avoid committing secrets
-env = { OPENAI_API_KEY = "", SEARCH_CONTEXT_SIZE = "medium", REASONING_EFFORT = "medium" }
+env = { OPENAI_API_KEY = "${OPENAI_API_KEY}", SEARCH_CONTEXT_SIZE = "medium", REASONING_EFFORT = "medium" }
+
+[mcp_servers.supabase]
+url = "https://mcp.supabase.com/mcp"
+
+[mcp_servers.supabase.http_headers]
+Authorization = "Bearer ${SUPABASE_MCP_TOKEN}"
+
+[mcp_servers.vercel]
+url = "https://mcp.vercel.com"
+
+[mcp_servers.vercel.http_headers]
+Authorization = "Bearer ${VERCEL_MCP_TOKEN}"
+
+[mcp_servers.github]
+url = "https://api.githubcopilot.com/mcp/"
+
+[mcp_servers.github.http_headers]
+Authorization = "Bearer ${GITHUB_COPILOT_MCP_TOKEN}"
+
+[projects."/workspaces/cyber_ace_1on1"]
+trust_level = "trusted"
+
+[projects."/workspaces/n8n_custom_node"]
+trust_level = "trusted"
+
+[projects."/Users/keito4/develop/github.com/keito4/config"]
+trust_level = "trusted"

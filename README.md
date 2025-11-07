@@ -10,10 +10,15 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
   - **13 specialized AI agents**: Architecture validation (DDD, Clean Architecture), accessibility & design validation, concurrency safety analysis, documentation consistency checking, dependency auditing, performance analysis, testability & coverage analysis, and issue resolution workflows
   - **14 automated commands**: Code coverage checking, CI/CD troubleshooting, project initialization, pull request creation, quality checks, security reviews, test execution, dependency updates, and n8n MCP integration setup
   - **Development quality standards**: Japanese-language guidelines for TDD methodology, static quality gates, Git workflow conventions, and AI-assisted development practices
-- `.codex/`: Codex CLI mirror of the Claude configuration with migrated prompts in `prompts/` and `config.toml` defining matching MCP servers plus desktop notifications
+- `.codex/`: Codex CLI configuration and agent distribution system with:
+  - **Agent Settings**: Centralized configuration for 13 specialized AI agents in `agents/AGENTS.md`
+  - **Distribution Scripts**: Automated setup (`setup-agents.sh`), validation (`validate-agents.sh`), and synchronization (`sync-agents.sh`) tools
+  - **MCP Integration**: Configuration in `config.toml` for Model Context Protocol servers including Playwright and o3 search
+  - **Prompt Library**: Migrated prompts in `prompts/` directory with setup guides and automation workflows
 - `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
+- `docs/`: CLI tool setup guides (Japanese) for installing and configuring auxiliary tooling such as CodeRabbit CLI.
 - `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory, including Zsh configuration with comprehensive aliases, functions, and environment setup.
 - `git/`: Contains Git configuration files including gitconfig, gitignore, and modular configuration files in the `gitconfig.d/` subdirectory.
 - `npm/`: Contains npm global package configuration.
@@ -75,6 +80,87 @@ Ensure `REPO_PATH` points to the repository and run the `export.sh` script to ca
 ### Checking for Changes
 
 Run the `commit_changes.sh` script with `REPO_PATH` set to this repository to check for local modifications. If there are changes, it stages all of them and makes a commit.
+
+### Claude Agent Configuration Setup
+
+The `.codex/` directory contains a comprehensive agent distribution system for Claude Code. To set up the specialized agents on your system:
+
+#### Initial Setup
+
+```bash
+# Navigate to the repository root
+cd /path/to/config
+
+# Run the setup script to install agent configurations
+bash .codex/setup-agents.sh
+
+# Optional: Force overwrite existing configurations
+bash .codex/setup-agents.sh --force
+```
+
+#### Validation and Maintenance
+
+```bash
+# Validate your agent configuration
+bash ~/.codex/scripts/validate-agents.sh
+
+# Run validation with detailed output
+bash ~/.codex/scripts/validate-agents.sh --verbose
+
+# Automatically fix detected issues
+bash ~/.codex/scripts/validate-agents.sh --fix
+
+# Check for configuration synchronization
+bash ~/.codex/scripts/sync-agents.sh
+
+# Perform dry-run sync check (no changes made)
+bash ~/.codex/scripts/sync-agents.sh --dry-run
+
+# Auto-update configurations when changes detected
+bash ~/.codex/scripts/sync-agents.sh --update
+```
+
+#### Using the Agents
+
+Once installed, you can use the specialized agents in Claude Code:
+
+```bash
+# Architecture validation
+@claude ddd-architecture-validator エージェントでこのドメインモデルをレビューしてください
+
+# Performance analysis
+@claude performance-analyzer エージェントでこのコードの最適化を分析してください
+
+# Security review
+@claude issue-resolver-security エージェントでセキュリティ問題を確認してください
+
+# Test coverage analysis
+@claude testability-coverage-analyzer エージェントでテストカバレッジを評価してください
+```
+
+#### Configuration Files
+
+- **`~/.codex/agents/AGENTS.md`**: Complete agent documentation and usage instructions
+- **`~/.codex/config.json`**: Claude Code model configuration
+- **`~/.codex/config.toml`**: MCP server integration settings (Playwright browser automation, o3 search, and other MCP services)
+- **`~/.codex/scripts/`**: Maintenance and validation scripts
+
+For detailed information about each agent and their capabilities, see the generated `~/.codex/agents/AGENTS.md` file after setup.
+
+### Secure MCP Credential Configuration
+
+The Dev Container loads an environment file from your host machine to avoid committing API tokens. Create `${HOME}/.devcontainer.env` (ignored by Git) with the required secrets:
+
+```bash
+cat <<'EOF' > ~/.devcontainer.env
+SUPABASE_MCP_TOKEN=your_supabase_token
+VERCEL_MCP_TOKEN=your_vercel_token
+GITHUB_COPILOT_MCP_TOKEN=your_github_copilot_token
+OPENAI_API_KEY=your_openai_api_key
+EOF
+```
+
+These variables are injected into the container via `runArgs` and referenced in `.codex/config.toml` for MCP server headers (e.g., `Authorization = "Bearer ${SUPABASE_MCP_TOKEN}"`). Update the file locally whenever tokens rotate; no repository changes are required.
 
 ### Available Commands
 
@@ -215,12 +301,61 @@ The `.claude/CLAUDE.md` file defines organization-wide development standards in 
 - **Git Workflow**: Conventional commits, branch naming conventions, and pull request requirements
 - **AI Prompt Design Guidelines**: Structured approach for requirements definition and implementation
 
+#### Technical Assistance with o3 MCP
+
+When encountering technical challenges, unresolved errors, or implementation roadblocks during development, consult o3 MCP (integrated via Model Context Protocol) for advanced problem-solving assistance. o3 MCP specializes in:
+
+- Complex debugging scenarios and error resolution
+- Architecture design decisions and pattern recommendations
+- Performance optimization strategies
+- Advanced algorithm implementation
+- Real-time web search for latest documentation and solutions
+- Root cause analysis for persistent issues
+
+**Usage Guidelines:**
+
+1. **When to consult o3 MCP**:
+   - Stuck on complex implementation details
+   - Encountering persistent errors or bugs
+   - Need architectural guidance or design review
+   - Performance bottlenecks requiring optimization
+   - Complex algorithm design and implementation
+
+2. **Integration with Claude Code**:
+   - o3 MCP is accessible through Claude Code's MCP integration
+   - Formulate questions in English for optimal results
+   - Include relevant context, error messages, and code snippets
+   - Specify what solutions you've already attempted
+
+3. **Example consultation**:
+   ```
+   @claude Use o3 MCP to help debug this async/await deadlock issue
+   @claude Consult o3 MCP for optimizing this database query performance
+   @claude Ask o3 MCP about best practices for implementing this design pattern
+   ```
+
+#### Slack Notifications Integration
+
+The repository includes automated Slack notifications for development workflow events:
+
+- **Task Completion Notifications**: Claude Code automatically sends notifications to Slack when tasks are completed
+- **CI/CD Pipeline Status**: Integration with GitHub Actions for build and deployment status updates
+- **Error Alerts**: Critical errors and CI failures trigger immediate Slack notifications to #ci-alerts channel
+- **MCP Integration**: Uses Model Context Protocol (MCP) for seamless Slack workspace integration
+
+**Configuration Requirements:**
+
+- Slack workspace with MCP integration enabled
+- Appropriate channel permissions for bot posting
+- Environment variables configured for Slack API access
+
 ## Glossary
 
 - **Homebrew (Brew)**: A package manager for macOS and Linux that allows easy installation and management of software packages.
 - **Brewfile**: A file format used by Homebrew to declare and install packages in a reproducible way.
 - **1Password**: A password manager that securely stores credentials, with CLI integration for automated credential management.
 - **Claude Code**: AI-powered development assistant with specialized agents for code review, architecture validation, and quality analysis.
+- **MCP (Model Context Protocol)**: Integration protocol enabling Claude Code to interact with external services like Slack, o3 search, and Playwright automation.
 - **DevContainer**: A containerized development environment that provides consistent tooling and configurations across different machines and platforms.
 - **ESLint**: A static analysis tool for identifying problematic patterns in JavaScript/TypeScript code.
 - **Git**: A distributed version control system for tracking changes in source code during software development.
