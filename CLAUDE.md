@@ -9,6 +9,7 @@ This repository implements comprehensive development quality standards and AI-as
 - **Test-Driven Development (TDD)**: Red → Green → Refactor methodology with 70%+ line coverage requirement
 - **Static Quality Gates**: Automated linting, formatting, security analysis, and license checking
 - **Git Workflow**: Conventional commits, branch naming conventions, and pull request requirements
+- **Release Types Required for Tooling Changes**: Commits that touch `.codex/**`, `.devcontainer/codex*`, `package*.json`, or `npm/global.json` must use release-triggering types (`feat` / `fix` / `perf` / `revert` / `docs`). commitlint blocks `chore`など非リリース型のメッセージを防止し、semantic-release の自動リリースと整合させます。
 
 ### AI Prompt Design Guidelines
 
