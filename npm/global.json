@@ -9,6 +9,10 @@
       "version": "0.1.8",
       "overridden": false
     },
+    "@openai/codex": {
+      "version": "0.57.0",
+      "overridden": false
+    },
     "corepack": {
       "version": "0.34.3",
       "overridden": false
