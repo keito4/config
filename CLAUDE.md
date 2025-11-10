@@ -103,6 +103,7 @@ The repository includes comprehensive automated workflows for continuous integra
 
 - **CI Pipeline** (`.github/workflows/ci.yml`): Code quality validation with linting, formatting, testing, and building
 - **DevContainer Build** (`.github/workflows/docker-image.yml`): Automated container image building with semantic versioning and multi-platform support
+- **Library Auto-Update** (`.github/workflows/update-libraries.yml`): Scheduled execution of `npm run update:libs` that opens a pull request when dependencies or Codex/Claude tooling change
 
 ### AI-Assisted Development
 
