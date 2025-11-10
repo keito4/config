@@ -22,7 +22,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 - `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory, including Zsh configuration with comprehensive aliases, functions, and environment setup.
 - `git/`: Contains Git configuration files including gitconfig, gitignore, and modular configuration files in the `gitconfig.d/` subdirectory.
 - `npm/`: Contains npm global package configuration.
-- `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), credential management (`credentials.sh`), Homebrew dependency management (`brew-deps.sh`), and version management (`version.sh`).
+- `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), credential management (`credentials.sh`), Homebrew dependency management (`brew-deps.sh`), semantic versioning (`version.sh`), and automated library updates for Codex/Claude Code tooling (`update-libraries.sh`).
 - `vscode/`: Contains Visual Studio Code configuration including extensions list and installation documentation.
 
 ## Security
@@ -80,6 +80,13 @@ Ensure `REPO_PATH` points to the repository and run the `export.sh` script to ca
 ### Checking for Changes
 
 Run the `commit_changes.sh` script with `REPO_PATH` set to this repository to check for local modifications. If there are changes, it stages all of them and makes a commit.
+
+### Updating Codex & Claude Tooling
+
+- Run `npm run update:libs` (wrapper for `script/update-libraries.sh`) to refresh npm devDependencies together with Codex/Claude Code CLI definitions captured in `npm/global.json`.
+- The script performs `npm-check-updates`, `npm install`, rebuilds the `dist/` artifacts, and re-synchronizes global CLI versions via `npm view <package> version`.
+- Packages that currently require newer Node.js releases (`semantic-release`, `@semantic-release/github`) are excluded by default. Override the exclusion list with `UPDATE_LIBS_REJECT="pkg1,pkg2" npm run update:libs` when you are ready to bump them.
+- `.github/workflows/update-libraries.yml` executes the same script weekly and opens a PR whenever it produces changes, ensuring Codex/Claude Code tooling stays current without manual effort.
 
 ### Claude Agent Configuration Setup
 
@@ -223,6 +230,7 @@ This repository includes comprehensive GitHub Actions workflows and development 
 - **CI Pipeline** (`.github/workflows/ci.yml`): Automated testing, linting, and quality checks
 - **Claude Code Integration** (`.github/workflows/claude.yml`): AI-assisted code review and issue management
 - **Docker Image Build** (`.github/workflows/docker-image.yml`): Containerized build and deployment pipeline
+- **Library Auto-Update** (`.github/workflows/update-libraries.yml`): Scheduled Codex/Claude tooling refresh that raises a PR when `npm run update:libs` produces changes
 
 #### Development Quality Tools
 
