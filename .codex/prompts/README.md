@@ -119,6 +119,33 @@ This directory contains 14 pre-configured commands that provide automated workfl
 - Data protection compliance
 - Security best practices enforcement
 
+#### `next-security:deps-scan.md`
+
+**Purpose**: Runs a least-privilege dependency vulnerability sweep for Next.js apps  
+**Features**:
+
+- `npm audit --omit dev`, `npm outdated` などでクリティカル/ハイの脆弱性と主要パッケージの遅延を検出
+- セキュリティ関連 ESLint / lint プラグインのバージョン健全性を確認
+- 重大度別のサマリーと対応計画テンプレを出力
+
+#### `next-security:config-audit.md`
+
+**Purpose**: Static audit of `next.config.*`, middleware, and build output  
+**Checks**:
+
+- HSTS, CSP, Permissions-Policy, images.domains、環境変数公開設定
+- `next-safe-middleware` / `helmet` 適用状況と matcher の網羅性
+- `npm run lint / type-check / build` を実行し、警告や設定不備を収集
+
+#### `next-security:authz-review.md`
+
+**Purpose**: Reviews authentication & authorization flows (RBAC/ABAC) in Next.js  
+**Highlights**:
+
+- Middleware / API Routes / Server Actions がロールや権限を強制しているか検証
+- NextAuth/Lucia のセッション設定、Cookie、CSRF 対策の棚卸し
+- ロール×リソース表とギャップ修正アクションをレポート化
+
 #### `update-deps.md`
 
 **Purpose**: Manages dependency updates with safety checks and compatibility validation
