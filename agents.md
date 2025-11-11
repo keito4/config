@@ -27,6 +27,21 @@
 | `next-security:authz-review` | RBAC/ABAC、セッション、Server Actions の権限確認                               |
 | `refactor:*` シリーズ        | `refactor:decouple`, `refactor:simplify` など、実装改善ガイド                  |
 
+## MCP ツール一覧
+
+`.codex/config.toml` では以下の MCP サーバーが事前登録されており、Claude に「◯◯ MCP を使って … して」と依頼すると明示的に呼び出せます。
+
+| サーバー ID | 依頼テンプレート例 | 主な用途 |
+| ----------- | ------------------ | -------- |
+| `aws-docs`  | `@claude aws-docs MCP で CloudFront Functions の制約を調べてください` | 公式 AWS ドキュメント検索。サービス仕様や制限の引用に利用 |
+| `playwright` | `@claude playwright MCP を使って e2e テストのスクリーンショットを取って` | Playwright ランタイムを用いたブラウザ操作や UI リグレッション検証 |
+| `o3`        | `@claude o3 MCP で "<キーワード>" を深掘り調査し、根拠付きでまとめて` | OpenAI o3 Search を用いた高度な調査・根拠集約 |
+| `supabase`  | `@claude supabase MCP 経由で プロジェクト <ID> のテーブル定義を教えて` | Supabase プロジェクトの API/DB 操作、メタデータ確認 |
+| `vercel`    | `@claude vercel MCP で デプロイ <deploymentId> のログを要約して` | Vercel プロジェクトのデプロイ履歴やログ調査 |
+| `github`    | `@claude github MCP を使って issue #123 のコメント履歴を取得して` | GitHub Copilot MCP 経由で Issue/PR/Discussion 情報を取得 |
+
+> 各ツールは `OPENAI_API_KEY`, `SUPABASE_MCP_TOKEN`, `VERCEL_MCP_TOKEN`, `GITHUB_COPILOT_MCP_TOKEN` など `~/.devcontainer.env` から供給されるトークンで認証されます。リクエスト時にどの MCP を使うか明示することで、必要最小限の権限で安全に自動化できます。
+
 ## 利用ガイド
 
 1. **タスクの種類を判定**: 設計・品質は Claude エージェント、具体的変更や検証は Codex コマンドを優先

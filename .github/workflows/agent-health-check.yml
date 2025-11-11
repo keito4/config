@@ -1,0 +1,39 @@
+name: Agent Health Check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Claude/Codex assets
+        run: bash .codex/setup-agents.sh --force
+
+      - name: Validate installed assets
+        run: |
+          mkdir -p reports
+          "$HOME/.codex/scripts/validate-agents.sh" --repo "$GITHUB_WORKSPACE" --verbose | tee reports/agent-health-report.md
+
+      - name: Summarize sync status
+        if: ${{ always() }}
+        run: |
+          mkdir -p reports
+          "$HOME/.codex/scripts/sync-agents.sh" --repo "$GITHUB_WORKSPACE" --dry-run | tee -a reports/agent-health-report.md
+
+      - name: Publish health report
+        if: ${{ always() }}
+        run: cat reports/agent-health-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload health report artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-health-report
+          path: reports/agent-health-report.md

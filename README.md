@@ -232,6 +232,7 @@ This repository includes comprehensive GitHub Actions workflows and development 
 - **Claude Code Integration** (`.github/workflows/claude.yml`): AI-assisted code review and issue management
 - **Docker Image Build** (`.github/workflows/docker-image.yml`): Containerized build and deployment pipeline
 - **Library Auto-Update** (`.github/workflows/update-libraries.yml`): Scheduled Codex/Claude tooling refresh that raises a PR when `npm run update:libs` produces changes
+- **Agent Health Check** (`.github/workflows/agent-health-check.yml`): Nightly drift detection that runs `.codex/setup-agents.sh`, `validate-agents.sh`, and `sync-agents.sh --dry-run`, publishing a Markdown report to the workflow summary and as an artifact
 
 #### Development Quality Tools
 
