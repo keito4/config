@@ -5,6 +5,7 @@ Tracked with `.codex/prompts/refactor:decouple.md`. Each issue captures one deco
 ---
 
 ## Issue 1: Consolidate OS adapters for import/export
+
 - **Files**: `script/import.sh:5-54`, `script/export.sh:9-38`
 - **Coupling problem**: Both scripts inline the same OS detection, Homebrew/VSC installs, and environment toggles. This hardwires the scripts to macOS/Linux specifics and makes it impossible to reuse the logic (e.g., for Windows or future package managers) without copying and editing shell blocks.
 - **Plan**:
@@ -16,6 +17,7 @@ Tracked with `.codex/prompts/refactor:decouple.md`. Each issue captures one deco
 ---
 
 ## Issue 2: Isolate DevContainer-specific git/1Password setup
+
 - **File**: `script/import.sh:65-91`
 - **Coupling problem**: DevContainer detection, git config overrides, and the Linux-specific 1Password CLI installation are embedded directly inside the main import routine. That couples workstation bootstrap with a single credential provider and prevents reuse from other environments (Codespaces, GitHub Actions) that might need a different secret backend.
 - **Plan**:
@@ -27,6 +29,7 @@ Tracked with `.codex/prompts/refactor:decouple.md`. Each issue captures one deco
 ---
 
 ## Issue 3: Share validation modules between build and validate scripts
+
 - **Files**: `scripts/build.js:46-218`, `scripts/validate.js:23-205`
 - **Coupling problem**: `ConfigBuilder` reimplements configuration, script, and security validators that already exist in `ConfigValidator`. Both classes depend on the same file layout but cannot reuse logic because everything is embedded in monolithic methods, leading to drift and duplicated bug fixes.
 - **Plan**:
@@ -38,6 +41,7 @@ Tracked with `.codex/prompts/refactor:decouple.md`. Each issue captures one deco
 ---
 
 ## Issue 4: Abstract credential backend in credentials script
+
 - **File**: `script/credentials.sh:3-127`
 - **Coupling problem**: The credential workflow assumes the presence of the 1Password CLI (`op`), hardcodes install instructions, and calls `op inject` directly. No other secret manager (sops, env files, AWS Secrets Manager) can reuse the flow, and the script exits if `op` is missing even when another backend could satisfy the request.
 - **Plan**:
@@ -49,6 +53,7 @@ Tracked with `.codex/prompts/refactor:decouple.md`. Each issue captures one deco
 ---
 
 ## Issue 5: Data-drive brew category definitions
+
 - **File**: `script/brew-deps.sh:50-198`
 - **Coupling problem**: Category membership for formulae/casks is encoded inside large `grep -E` expressions. Any change to categories requires editing and redeploying the script, and there is no way to reuse the taxonomy from other tooling (e.g., generating docs). The script is tightly coupled to Brew CLI output parsing rules.
 - **Plan**:
