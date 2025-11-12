@@ -18,6 +18,7 @@
 
 ## 手順（最小リスク）
 
+0. 関心が混在している箇所を全体から洗い出し、5件の単位でGitHub Issueを作成してからリファクタリングに着手（MCP経由を推奨）
 1. `refactor:reorganize`で入れ物（ディレクトリ/命名）を先に整える
 2. 純粋処理を`refactor:split`（extract-function/module）で分ける
 3. I/O/境界を`refactor:split-io-boundary`相当で退避
