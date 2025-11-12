@@ -15,7 +15,6 @@ describe('Configuration Validation', () => {
 
       // Validate required scripts
       expect(packageJson.scripts).toHaveProperty('test');
-      expect(packageJson.scripts).toHaveProperty('build');
       expect(packageJson.scripts).toHaveProperty('lint');
       expect(packageJson.scripts).toHaveProperty('format');
     });

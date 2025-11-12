@@ -28,15 +28,11 @@ Tracked with `.codex/prompts/refactor:decouple.md`. Each issue captures one deco
 
 ---
 
-## Issue 3: Share validation modules between build and validate scripts
+## Issue 3: ✅ Removed redundant Node build/validate scripts
 
-- **Files**: `scripts/build.js:46-218`, `scripts/validate.js:23-205`
-- **Coupling problem**: `ConfigBuilder` reimplements configuration, script, and security validators that already exist in `ConfigValidator`. Both classes depend on the same file layout but cannot reuse logic because everything is embedded in monolithic methods, leading to drift and duplicated bug fixes.
-- **Plan**:
-  1. Extract the validation rules into composable modules (e.g., `lib/validators/configFiles.js`, `lib/validators/security.js`) that expose pure functions returning findings.
-  2. Change both `ConfigBuilder` and `ConfigValidator` to compose these modules instead of maintaining their own copies.
-  3. Provide a lightweight registry so additional validators can be added without editing both entrypoints.
-- **Definition of Done**: There is a single source of truth for each validation rule, both CLI commands import it, and tests cover the shared modules.
+- **Status**: Completed by removing `scripts/build.js` and `scripts/validate.js`, along with their `npm` hooks and CI steps.
+- **Context**: The two files duplicated the Jest tests, re-running lint/test pipelines and generating unused `dist/` artifacts. Keeping both copies introduced maintenance overhead without delivering additional coverage.
+- **Follow-up**: Configuration verification now relies on the Jest suite plus shell scripts. No further action needed unless a new Node-based CLI is reintroduced.
 
 ---
 
