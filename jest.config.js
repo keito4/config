@@ -1,7 +1,7 @@
 module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/test/**/*.test.js', '**/test/**/*.spec.js'],
-  collectCoverageFrom: ['scripts/**/*.js', '!scripts/**/*.test.js', '!scripts/**/*.spec.js'],
+  collectCoverageFrom: ['script/**/*.js', '!script/**/*.test.js', '!script/**/*.spec.js'],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   coverageThreshold: {

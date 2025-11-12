@@ -11,14 +11,14 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
   - **14 automated commands**: Code coverage checking, CI/CD troubleshooting, project initialization, pull request creation, quality checks, security reviews, test execution, dependency updates, and n8n MCP integration setup
   - **Development quality standards**: Japanese-language guidelines for TDD methodology, static quality gates, Git workflow conventions, and AI-assisted development practices
 - `.codex/`: Codex CLI configuration and agent distribution system with:
-  - **Agent Settings**: Centralized configuration for 13 specialized AI agents in `agents/AGENTS.md`
+  - **Agent Settings**: Centralized configuration for 13 specialized AI agents in `AGENTS.md`
   - **Distribution Scripts**: Automated setup (`setup-agents.sh`), validation (`validate-agents.sh`), and synchronization (`sync-agents.sh`) tools
   - **MCP Integration**: Configuration in `config.toml` for Model Context Protocol servers including Playwright and o3 search
   - **Prompt Library**: Migrated prompts in `prompts/` directory with setup guides and automation workflows
 - `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
-- `docs/`: CLI tool setup guides (Japanese) for installing and configuring auxiliary tooling such as CodeRabbit CLI.
+- `issues/`: Templates and helper notes for managing known issues and troubleshooting steps.
 - `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory, including Zsh configuration with comprehensive aliases, functions, and environment setup.
 - `git/`: Contains Git configuration files including gitconfig, gitignore, and modular configuration files in the `gitconfig.d/` subdirectory.
 - `npm/`: Contains npm global package configuration.
@@ -148,12 +148,12 @@ Once installed, you can use the specialized agents in Claude Code:
 
 #### Configuration Files
 
-- **`~/.codex/agents/AGENTS.md`**: Complete agent documentation and usage instructions
+- **`AGENTS.md`**: Complete agent documentation and usage instructions（セットアップ後は `~/.codex/AGENTS.md` に同期）
 - **`~/.codex/config.json`**: Claude Code model configuration
 - **`~/.codex/config.toml`**: MCP server integration settings (Playwright browser automation, o3 search, and other MCP services)
 - **`~/.codex/scripts/`**: Maintenance and validation scripts
 
-For detailed information about each agent and their capabilities, see the generated `~/.codex/agents/AGENTS.md` file after setup.
+For detailed information about each agent and their capabilities, see `AGENTS.md`.
 
 ### Secure MCP Credential Configuration
 
