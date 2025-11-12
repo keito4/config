@@ -11,7 +11,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
   - **14 automated commands**: Code coverage checking, CI/CD troubleshooting, project initialization, pull request creation, quality checks, security reviews, test execution, dependency updates, and n8n MCP integration setup
   - **Development quality standards**: Japanese-language guidelines for TDD methodology, static quality gates, Git workflow conventions, and AI-assisted development practices
 - `.codex/`: Codex CLI configuration and agent distribution system with:
-  - **Agent Settings**: Centralized configuration for 13 specialized AI agents in `agents.md`
+  - **Agent Settings**: Centralized configuration for 13 specialized AI agents in `AGENTS.md`
   - **Distribution Scripts**: Automated setup (`setup-agents.sh`), validation (`validate-agents.sh`), and synchronization (`sync-agents.sh`) tools
   - **MCP Integration**: Configuration in `config.toml` for Model Context Protocol servers including Playwright and o3 search
   - **Prompt Library**: Migrated prompts in `prompts/` directory with setup guides and automation workflows
@@ -148,12 +148,12 @@ Once installed, you can use the specialized agents in Claude Code:
 
 #### Configuration Files
 
-- **`agents.md`**: Complete agent documentation and usage instructions（セットアップ後は `~/.codex/agents.md` に同期）
+- **`AGENTS.md`**: Complete agent documentation and usage instructions（セットアップ後は `~/.codex/AGENTS.md` に同期）
 - **`~/.codex/config.json`**: Claude Code model configuration
 - **`~/.codex/config.toml`**: MCP server integration settings (Playwright browser automation, o3 search, and other MCP services)
 - **`~/.codex/scripts/`**: Maintenance and validation scripts
 
-For detailed information about each agent and their capabilities, see `agents.md`.
+For detailed information about each agent and their capabilities, see `AGENTS.md`.
 
 ### Secure MCP Credential Configuration
 
