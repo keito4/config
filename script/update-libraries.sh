@@ -44,7 +44,8 @@ else
   log "Skipping global CLI manifest update (missing $GLOBAL_FILE or jq)"
 fi
 
-log "Running build pipeline (includes lint + tests)"
-npm run build
+log "Running verification pipeline (lint + tests)"
+npm run lint
+npm test
 
 log "Library update complete"
