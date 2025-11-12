@@ -16,6 +16,8 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="${0:A:h}"
 REPO_ROOT="${SCRIPT_DIR:h}"
 BREW_DIR="$REPO_ROOT/brew"
+CATEGORY_MANIFEST="$BREW_DIR/categories.json"
+CATEGORY_SCRIPT="$SCRIPT_DIR/lib/brew_categories.py"
 
 # Functions
 print_error() {
@@ -47,32 +49,29 @@ get_leaves() {
     brew leaves
 }
 
+ensure_category_assets() {
+    local ok=0
+    if ! command -v python3 >/dev/null 2>&1; then
+        print_warning "python3 is required for categorization but not installed"
+        ok=1
+    fi
+    if [[ ! -f "$CATEGORY_MANIFEST" ]]; then
+        print_warning "Category manifest not found at $CATEGORY_MANIFEST"
+        ok=1
+    fi
+    if [[ ! -f "$CATEGORY_SCRIPT" ]]; then
+        print_warning "Category helper script not found at $CATEGORY_SCRIPT"
+        ok=1
+    fi
+    [[ $ok -eq 0 ]]
+}
+
 get_leaves_with_categories() {
-    # Categorize leaves by type
-    local leaves=$(brew leaves)
-    
-    echo "=== Development Tools ==="
-    echo "$leaves" | grep -E '^(git|gh|ghq|act|cmake|go|rust|node|npm|yarn|bun|deno|rbenv|pyenv|pipenv|python@|php|openjdk|dotnet-sdk)$' || true
-    
-    echo -e "\n=== Cloud & DevOps ==="
-    echo "$leaves" | grep -E '^(awscli|aws-sam-cli|aws-sso-util|azure-cli|gcloud-cli|google-cloud-sdk|terraform|tfenv|helm|docker|kubernetes-cli|sops)$' || true
-    
-    echo -e "\n=== Database & Backend ==="
-    echo "$leaves" | grep -E '^(mysql-client|postgresql@|redis|mongodb|supabase)$' || true
-    
-    echo -e "\n=== Utilities ==="
-    echo "$leaves" | grep -E '^(jq|fzf|peco|tree|tig|translate-shell|terminal-notifier|coreutils|trash|mas|cliclick)$' || true
-    
-    echo -e "\n=== Media & Graphics ==="
-    echo "$leaves" | grep -E '^(ffmpeg|imagemagick|graphviz|poppler)$' || true
-    
-    echo -e "\n=== Fun & Misc ==="
-    echo "$leaves" | grep -E '^(cowsay|figlet|toilet|sl)$' || true
-    
-    echo -e "\n=== Uncategorized ==="
-    # Show remaining items
-    local categorized=$(echo "$leaves" | grep -E '^(git|gh|ghq|act|cmake|go|rust|node|npm|yarn|bun|deno|rbenv|pyenv|pipenv|python@|php|openjdk|dotnet-sdk|awscli|aws-sam-cli|aws-sso-util|azure-cli|gcloud-cli|google-cloud-sdk|terraform|tfenv|helm|docker|kubernetes-cli|sops|mysql-client|postgresql@|redis|mongodb|supabase|jq|fzf|peco|tree|tig|translate-shell|terminal-notifier|coreutils|trash|mas|cliclick|ffmpeg|imagemagick|graphviz|poppler|cowsay|figlet|toilet|sl)$' || true)
-    comm -23 <(echo "$leaves" | sort) <(echo "$categorized" | sort) || true
+    if ! ensure_category_assets; then
+        get_leaves
+        return
+    fi
+    brew leaves | python3 "$CATEGORY_SCRIPT" --manifest "$CATEGORY_MANIFEST" --type formulae --format human --label-uncategorized
 }
 
 get_cask_leaves() {
@@ -86,32 +85,11 @@ get_cask_leaves() {
 }
 
 get_cask_leaves_with_categories() {
-    local leaves=$(get_cask_leaves)
-    
-    echo "=== Development Tools ==="
-    echo "$leaves" | grep -E '^(visual-studio-code|cursor|tableplus|postman|orbstack|rancher|parallels-client)$' || true
-    
-    echo -e "\n=== Communication ==="
-    echo "$leaves" | grep -E '^(slack|discord|mattermost|zoom|messenger)$' || true
-    
-    echo -e "\n=== Productivity ==="
-    echo "$leaves" | grep -E '^(notion|notion-calendar|raycast|alfred|bettertouchtool|bartender|karabiner-elements)$' || true
-    
-    echo -e "\n=== Security & Privacy ==="
-    echo "$leaves" | grep -E '^(1password|1password-cli|authy|tailscale|tailscale-app)$' || true
-    
-    echo -e "\n=== AI Tools ==="
-    echo "$leaves" | grep -E '^(chatgpt|claude|cursor)$' || true
-    
-    echo -e "\n=== Utilities ==="
-    echo "$leaves" | grep -E '^(appcleaner|the-unarchiver|qblocker|dropbox|deepl|google-japanese-ime|blackhole-2ch)$' || true
-    
-    echo -e "\n=== Browsers ==="
-    echo "$leaves" | grep -E '^(arc|chrome|firefox|safari)$' || true
-    
-    echo -e "\n=== Uncategorized Casks ==="
-    local categorized=$(echo "$leaves" | grep -E '^(visual-studio-code|cursor|tableplus|postman|orbstack|rancher|parallels-client|slack|discord|mattermost|zoom|messenger|notion|notion-calendar|raycast|alfred|bettertouchtool|bartender|karabiner-elements|1password|1password-cli|authy|tailscale|tailscale-app|chatgpt|claude|appcleaner|the-unarchiver|qblocker|dropbox|deepl|google-japanese-ime|blackhole-2ch|arc|chrome|firefox|safari)$' || true)
-    comm -23 <(echo "$leaves" | sort) <(echo "$categorized" | sort) || true
+    if ! ensure_category_assets; then
+        get_cask_leaves
+        return
+    fi
+    get_cask_leaves | python3 "$CATEGORY_SCRIPT" --manifest "$CATEGORY_MANIFEST" --type casks --format human --label-uncategorized
 }
 
 generate_standalone_brewfile() {
@@ -148,7 +126,11 @@ generate_standalone_brewfile() {
 
 generate_categorized_brewfile() {
     local output="$BREW_DIR/CategorizedBrewfile"
-    
+    if ! ensure_category_assets; then
+        print_error "Cannot generate categorized Brewfile without category manifest"
+        exit 1
+    fi
+
     {
         echo "# Categorized Homebrew packages without dependencies"
         echo "# Generated on $(date)"
@@ -162,38 +144,12 @@ generate_categorized_brewfile() {
             echo "tap \"$tap\""
         done
         echo ""
-        
         echo "# === FORMULAE ==="
         echo ""
-        
-        # Development Tools
-        echo "# Development Tools"
-        get_leaves | grep -E '^(git|gh|ghq|act|cmake|go|rust|node|npm|yarn|bun|deno|rbenv|pyenv|pipenv|python@|php|openjdk|dotnet-sdk)$' | while read f; do
-            echo "brew \"$f\""
-        done || true
-        echo ""
-        
-        # Cloud & DevOps
-        echo "# Cloud & DevOps"
-        get_leaves | grep -E '^(awscli|aws-sam-cli|aws-sso-util|azure-cli|gcloud-cli|google-cloud-sdk|terraform|tfenv|helm|docker|kubernetes-cli|sops)$' | while read f; do
-            echo "brew \"$f\""
-        done || true
-        echo ""
-        
-        # Continue with other categories...
-        
-        echo ""
+        brew leaves | python3 "$CATEGORY_SCRIPT" --manifest "$CATEGORY_MANIFEST" --type formulae --format brew
         echo "# === CASKS ==="
         echo ""
-        
-        # Development Tools
-        echo "# Development Tools"
-        get_cask_leaves | grep -E '^(visual-studio-code|cursor|tableplus|postman|orbstack|rancher)$' | while read c; do
-            echo "cask \"$c\""
-        done || true
-        echo ""
-        
-        # Continue with other cask categories...
+        get_cask_leaves | python3 "$CATEGORY_SCRIPT" --manifest "$CATEGORY_MANIFEST" --type casks --format brew
         
     } > "$output"
     
