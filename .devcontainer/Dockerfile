@@ -43,7 +43,7 @@ RUN bash -c "pnpm setup" \
 
 USER root
 
-RUN npm install -g typescript eslint @anthropic-ai/claude-code@2.0.36 @openai/codex@0.57.0 vercel
+RUN npm install -g typescript eslint @anthropic-ai/claude-code@2.0.37 @openai/codex@0.58.0 vercel
 
 USER vscode
 RUN bash -lc "cargo install similarity-ts" || true \
