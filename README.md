@@ -293,13 +293,16 @@ The `.claude/agents/` directory provides 13 specialized agents:
 
 #### Automated Commands
 
-The `.claude/commands/` directory provides 14 pre-configured commands:
+The `.claude/commands/` directory provides 2 pre-configured commands, with additional automated prompts available in `.codex/prompts/` (11 prompts):
 
-- **Quality & Testing**: `check-coverage.md`, `quality-check.md`, `test-all.md`
-- **Project Management**: `init-project.md`, `issue-auto-resolve.md`, `issue-create.md`, `issue-review.md`
-- **Pull Request Workflow**: `pr-create.md`, `pr.md`, `review-feedback-processor.md`
-- **CI/CD & Maintenance**: `fix-ci.md`, `security-review.md`, `update-deps.md`
-- **Integration Setup**: `n8n-mcp-setup.md`
+- **Git Workflow**: `git-sync.md` - Comprehensive Git synchronization and branch management
+- **Development Environment**: `setup-husky.md` - Husky Git hooks configuration
+
+#### Additional Codex Prompts (`.codex/prompts/`)
+
+- **Security Analysis**: `next-security-check.md`, `next-security:deps-scan.md`, `next-security:config-audit.md`, `next-security:authz-review.md`
+- **Code Refactoring**: `refactor:decouple.md`, `refactor:dedupe.md`, `refactor:reorganize.md`, `refactor:simplify.md`, `refactor:split.md`
+- **Development Environment**: `git-sync.md` (also available via Codex), `setup-husky.md` (also available via Codex)
 
 #### Development Quality Standards
 

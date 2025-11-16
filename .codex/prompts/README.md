@@ -1,123 +1,119 @@
-# Claude Automated Commands
+# Codex Automated Prompts
 
-This directory contains 14 pre-configured commands that provide automated workflows for common development tasks. These commands can be invoked directly by Claude or triggered automatically based on repository events and context.
+This directory contains 11 pre-configured prompts that provide automated workflows for common development tasks. These prompts can be invoked directly by Codex CLI or triggered automatically based on repository events and context.
 
 ## Command Categories
 
 ### Quality & Testing
 
-#### `check-coverage.md`
+### Security Analysis
 
-**Purpose**: Analyzes test coverage reports and identifies areas needing attention
-**Triggers**:
+#### `next-security-check.md`
 
-- Coverage drops below configured thresholds
-- New code additions without corresponding tests
-- Manual coverage analysis requests
-
-#### `quality-check.md`
-
-**Purpose**: Runs comprehensive code quality analysis including linting, formatting, and static analysis
-**Triggers**:
-
-- Pre-commit hooks
-- Pull request creation
-- Manual quality validation requests
-
-#### `test-all.md`
-
-**Purpose**: Executes complete test suite with proper reporting and failure analysis
-**Triggers**:
-
-- Major code changes
-- Release preparation
-- CI/CD pipeline integration
-
-### Project Management
-
-#### `init-project.md`
-
-**Purpose**: Sets up new projects with standardized structure, tools, and configurations
+**Purpose**: Comprehensive security review for Next.js applications
 **Features**:
 
-- Dependency management setup
-- CI/CD pipeline configuration
-- Quality gate establishment
-- Documentation templates
+- Full security audit workflow
+- Dependency vulnerability scanning
+- Configuration security assessment
+- Authorization flow validation
 
-#### `issue-auto-resolve.md`
+#### `next-security:deps-scan.md`
 
-**Purpose**: Automated issue analysis and resolution using specialized agents
-**Capabilities**:
-
-- Issue classification and priority assessment
-- Automated fix generation for common problems
-- Multi-agent coordination for complex issues
-- Solution validation and testing
-
-#### `issue-create.md`
-
-**Purpose**: Creates well-structured GitHub issues with proper templates and metadata
+**Purpose**: Focused dependency vulnerability scanning for Next.js applications
 **Features**:
 
-- Issue template selection
-- Automatic labeling and assignment
-- Related issue linking
-- Priority and milestone setting
+- `npm audit --omit dev` execution for critical/high vulnerabilities
+- Major package delay detection via `npm outdated`
+- Security-related ESLint plugin version health checks
+- Severity-based summary and response plan templates
 
-#### `issue-review.md`
+#### `next-security:config-audit.md`
 
-**Purpose**: Reviews existing issues for completeness, priority, and actionability
-**Functions**:
+**Purpose**: Static audit of Next.js configuration files and build output
+**Checks**:
 
-- Issue triage and categorization
-- Duplicate detection and consolidation
-- Priority reassessment
-- Resolution pathway recommendations
+- HSTS, CSP, Permissions-Policy, images.domains, environment variable exposure settings
+- `next-safe-middleware` / `helmet` application status and matcher coverage
+- `npm run lint / type-check / build` execution to collect warnings and configuration issues
 
-### Pull Request Workflow
+#### `next-security:authz-review.md`
 
-#### `pr.md`
+**Purpose**: Reviews authentication and authorization flows (RBAC/ABAC) in Next.js applications
+**Highlights**:
 
-**Purpose**: Comprehensive pull request analysis and preparation
+- Verification that middleware/API routes/Server Actions enforce roles and permissions
+- NextAuth/Lucia session configuration, Cookie, and CSRF countermeasures inventory
+- Role × resource matrix and gap correction action reporting
+
+### Code Refactoring
+
+#### `refactor:decouple.md`
+
+**Purpose**: Guides decoupling of tightly coupled code components
+**Focus**:
+
+- Component dependency reduction
+- Interface-based design patterns
+- Separation of concerns improvement
+
+#### `refactor:dedupe.md`
+
+**Purpose**: Eliminates code duplication and consolidates redundant implementations
+**Focus**:
+
+- Duplicate code identification
+- Common utility extraction
+- Single source of truth establishment
+
+#### `refactor:reorganize.md`
+
+**Purpose**: Improves code organization and project structure
+**Focus**:
+
+- File and directory restructuring
+- Logical grouping of related functionality
+- Import path optimization
+
+#### `refactor:simplify.md`
+
+**Purpose**: Simplifies complex code structures and reduces cognitive load
+**Focus**:
+
+- Complex logic breakdown
+- Unnecessary abstraction removal
+- Code readability improvement
+
+#### `refactor:split.md`
+
+**Purpose**: Splits large files or functions into smaller, manageable pieces
+**Focus**:
+
+- Large file decomposition
+- Function size reduction
+- Modular design promotion
+
+### Development Environment
+
+#### `git-sync.md`
+
+**Purpose**: Provides comprehensive Git synchronization and branch management workflows
 **Features**:
 
-- Automated PR description generation
-- Change impact analysis
-- Reviewer suggestion based on code ownership
-- Merge readiness assessment
+- Branch synchronization with upstream
+- Conflict resolution guidance
+- Git workflow automation
+- Repository state validation
 
-#### `review-feedback-processor.md`
+#### `setup-husky.md`
 
-**Purpose**: Processes and responds to code review feedback systematically
-**Capabilities**:
+**Purpose**: Configures Husky Git hooks for automated code quality enforcement
+**Features**:
 
-- Feedback categorization and prioritization
-- Automated response generation
-- Code change suggestions
-- Discussion thread management
-
-### CI/CD & Maintenance
-
-#### `fix-ci.md`
-
-**Purpose**: Diagnoses and resolves continuous integration pipeline failures
-**Diagnostic Areas**:
-
-- Build failures and dependency issues
-- Test failures and environment problems
-- Deployment issues and configuration errors
-- Performance bottlenecks and resource constraints
-
-#### `security-review.md`
-
-**Purpose**: Conducts comprehensive security analysis of code changes
-**Security Checks**:
-
-- Vulnerability scanning and assessment
-- Authentication and authorization validation
-- Data protection compliance
-- Security best practices enforcement
+- Pre-commit hook setup
+- Commit message validation
+- Code quality gate enforcement
+- Development workflow integration
 
 #### `next-security:deps-scan.md`
 
@@ -146,37 +142,6 @@ This directory contains 14 pre-configured commands that provide automated workfl
 - NextAuth/Lucia のセッション設定、Cookie、CSRF 対策の棚卸し
 - ロール×リソース表とギャップ修正アクションをレポート化
 
-#### `update-deps.md`
-
-**Purpose**: Manages dependency updates with safety checks and compatibility validation
-**Features**:
-
-- Automated dependency analysis
-- Breaking change detection
-- Security vulnerability assessment
-- Update strategy recommendations
-
-### Integration & Automation
-
-#### `n8n-mcp-setup.md`
-
-**Purpose**: Configures n8n workflows with Model Context Protocol (MCP) integration
-**Setup Areas**:
-
-- Workflow automation configuration
-- API endpoint integration
-- Event trigger setup
-- Data flow optimization
-
-#### `commit.md`
-
-**Purpose**: Ensures commit message quality and conventional commit compliance
-**Validation**:
-
-- Conventional commit format enforcement
-- Commit message clarity and completeness
-- Change scope validation
-- Breaking change identification
 
 ## Command Usage
 
@@ -185,10 +150,10 @@ This directory contains 14 pre-configured commands that provide automated workfl
 Commands can be invoked directly in Claude interactions:
 
 ```
-@claude run the quality-check command on the current branch
-@claude execute check-coverage for the test suite
-@claude use fix-ci to diagnose the build failure
-@claude run issue-auto-resolve for issue #123
+codex run next-security-check
+codex execute refactor:decouple
+codex run next-security:deps-scan
+codex execute git-sync
 ```
 
 ### Automatic Triggers

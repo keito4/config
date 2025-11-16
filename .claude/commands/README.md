@@ -1,155 +1,40 @@
 # Claude Automated Commands
 
-This directory contains 14 pre-configured commands that provide automated workflows for common development tasks. These commands can be invoked directly by Claude or triggered automatically based on repository events and context.
+This directory contains 2 pre-configured commands that provide automated workflows for common development tasks. These commands can be invoked directly by Claude or triggered automatically based on repository events and context. Additional automated commands are available in the `.codex/prompts/` directory.
 
-## Command Categories
+## Available Commands
 
-### Quality & Testing
+### Git Workflow
 
-#### `check-coverage.md`
+#### `git-sync.md`
 
-**Purpose**: Analyzes test coverage reports and identifies areas needing attention
-**Triggers**:
-
-- Coverage drops below configured thresholds
-- New code additions without corresponding tests
-- Manual coverage analysis requests
-
-#### `quality-check.md`
-
-**Purpose**: Runs comprehensive code quality analysis including linting, formatting, and static analysis
-**Triggers**:
-
-- Pre-commit hooks
-- Pull request creation
-- Manual quality validation requests
-
-#### `test-all.md`
-
-**Purpose**: Executes complete test suite with proper reporting and failure analysis
-**Triggers**:
-
-- Major code changes
-- Release preparation
-- CI/CD pipeline integration
-
-### Project Management
-
-#### `init-project.md`
-
-**Purpose**: Sets up new projects with standardized structure, tools, and configurations
+**Purpose**: Provides comprehensive Git synchronization and branch management workflows
 **Features**:
 
-- Dependency management setup
-- CI/CD pipeline configuration
-- Quality gate establishment
-- Documentation templates
+- Branch synchronization with upstream
+- Conflict resolution guidance
+- Git workflow automation
+- Repository state validation
 
-#### `issue-auto-resolve.md`
+### Development Environment
 
-**Purpose**: Automated issue analysis and resolution using specialized agents
-**Capabilities**:
+#### `setup-husky.md`
 
-- Issue classification and priority assessment
-- Automated fix generation for common problems
-- Multi-agent coordination for complex issues
-- Solution validation and testing
-
-#### `issue-create.md`
-
-**Purpose**: Creates well-structured GitHub issues with proper templates and metadata
+**Purpose**: Configures Husky Git hooks for automated code quality enforcement
 **Features**:
 
-- Issue template selection
-- Automatic labeling and assignment
-- Related issue linking
-- Priority and milestone setting
+- Pre-commit hook setup
+- Commit message validation
+- Code quality gate enforcement
+- Development workflow integration
 
-#### `issue-review.md`
+## Additional Commands
 
-**Purpose**: Reviews existing issues for completeness, priority, and actionability
-**Functions**:
+For a comprehensive set of automated development commands, see the `.codex/prompts/` directory which contains 11 specialized prompts for:
 
-- Issue triage and categorization
-- Duplicate detection and consolidation
-- Priority reassessment
-- Resolution pathway recommendations
-
-### Pull Request Workflow
-
-#### `pr.md`
-
-**Purpose**: Comprehensive pull request analysis and preparation
-**Features**:
-
-- Automated PR description generation
-- Change impact analysis
-- Reviewer suggestion based on code ownership
-- Merge readiness assessment
-
-#### `review-feedback-processor.md`
-
-**Purpose**: Processes and responds to code review feedback systematically
-**Capabilities**:
-
-- Feedback categorization and prioritization
-- Automated response generation
-- Code change suggestions
-- Discussion thread management
-
-### CI/CD & Maintenance
-
-#### `fix-ci.md`
-
-**Purpose**: Diagnoses and resolves continuous integration pipeline failures
-**Diagnostic Areas**:
-
-- Build failures and dependency issues
-- Test failures and environment problems
-- Deployment issues and configuration errors
-- Performance bottlenecks and resource constraints
-
-#### `security-review.md`
-
-**Purpose**: Conducts comprehensive security analysis of code changes
-**Security Checks**:
-
-- Vulnerability scanning and assessment
-- Authentication and authorization validation
-- Data protection compliance
-- Security best practices enforcement
-
-#### `update-deps.md`
-
-**Purpose**: Manages dependency updates with safety checks and compatibility validation
-**Features**:
-
-- Automated dependency analysis
-- Breaking change detection
-- Security vulnerability assessment
-- Update strategy recommendations
-
-### Integration & Automation
-
-#### `n8n-mcp-setup.md`
-
-**Purpose**: Configures n8n workflows with Model Context Protocol (MCP) integration
-**Setup Areas**:
-
-- Workflow automation configuration
-- API endpoint integration
-- Event trigger setup
-- Data flow optimization
-
-#### `commit.md`
-
-**Purpose**: Ensures commit message quality and conventional commit compliance
-**Validation**:
-
-- Conventional commit format enforcement
-- Commit message clarity and completeness
-- Change scope validation
-- Breaking change identification
+- **Security Analysis**: Next.js security checks, dependency scanning, configuration auditing
+- **Code Refactoring**: Decoupling, deduplication, reorganization, simplification
+- **Git Operations**: Advanced Git workflows and synchronization
 
 ## Command Usage
 
@@ -158,10 +43,15 @@ This directory contains 14 pre-configured commands that provide automated workfl
 Commands can be invoked directly in Claude interactions:
 
 ```
-@claude run the quality-check command on the current branch
-@claude execute check-coverage for the test suite
-@claude use fix-ci to diagnose the build failure
-@claude run issue-auto-resolve for issue #123
+@claude run git-sync to synchronize the current branch
+@claude execute setup-husky to configure Git hooks
+```
+
+For additional commands available in `.codex/prompts/`:
+```
+@claude use next-security-check for comprehensive security analysis
+@claude run refactor:decouple to improve code organization
+@claude execute next-security:deps-scan for dependency vulnerability scanning
 ```
 
 ### Automatic Triggers
