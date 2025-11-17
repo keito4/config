@@ -48,6 +48,7 @@ Commands can be invoked directly in Claude interactions:
 ```
 
 For additional commands available in `.codex/prompts/`:
+
 ```
 @claude use next-security-check for comprehensive security analysis
 @claude run refactor:decouple to improve code organization

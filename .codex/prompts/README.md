@@ -142,7 +142,6 @@ This directory contains 11 pre-configured prompts that provide automated workflo
 - NextAuth/Lucia のセッション設定、Cookie、CSRF 対策の棚卸し
 - ロール×リソース表とギャップ修正アクションをレポート化
 
-
 ## Command Usage
 
 ### Direct Invocation
