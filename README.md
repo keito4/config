@@ -89,6 +89,13 @@ Run the `commit_changes.sh` script with `REPO_PATH` set to this repository to ch
 - `.github/workflows/update-libraries.yml` executes the same script weekly and opens a PR whenever it produces changes, ensuring Codex/Claude Code tooling stays current without manual effort.
 - Commits that touch release-critical files (`package*.json`, `npm/global.json`, `.devcontainer/codex*`, `.codex/**`) **must** use a release-triggering Conventional Commit type (`feat`, `fix`, `perf`, `revert`, or `docs`). Commitlint enforces this so semantic-release can publish automatically when tooling versions change.
 
+#### Global CLI version source of truth
+
+- `npm/global.json` is the single source of truth for both `@openai/codex` and `@anthropic-ai/claude-code` versions.
+- The DevContainer Dockerfile copies this file into the build context and reads the versions at build time, guaranteeing that `npm install -g ...` pins to the same versions used by local setups.
+- When bumping either CLI, update the version in `npm/global.json` (or run `npm run update:libs`) and rebuild the DevContainer image. No manual edits in `.devcontainer/Dockerfile` are required anymore.
+- Re-run `.codex/setup-agents.sh` or `~/.codex/scripts/sync-agents.sh --update` after rebuilding if you want the new CLI versions reflected in developer machines outside the container.
+
 ### Claude Agent Configuration Setup
 
 The `.codex/` directory contains a comprehensive agent distribution system for Claude Code. To set up the specialized agents on your system:

@@ -43,7 +43,14 @@ RUN bash -c "pnpm setup" \
 
 USER root
 
-RUN npm install -g typescript eslint @anthropic-ai/claude-code@2.0.37 @openai/codex@0.58.0 vercel
+COPY npm/global.json /tmp/npm-global.json
+
+RUN CLAUDE_CODE_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@anthropic-ai/claude-code'].version") \
+ && CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@openai/codex'].version") \
+ && npm install -g typescript eslint \
+    @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
+    @openai/codex@${CODEX_VERSION} \
+    vercel
 
 USER vscode
 RUN bash -lc "cargo install similarity-ts" || true \
