@@ -60,7 +60,7 @@ On container startup, the following configurations are automatically applied:
 The container includes comprehensive AI-assisted development capabilities:
 
 - **13 Specialized Agents**: Architecture validation, performance analysis, security review, accessibility validation, concurrency safety analysis, and more
-- **14 Automated Commands**: Quality checks, project initialization, CI/CD troubleshooting, dependency management, and PR workflows
+- **13 Automated Commands**: 2 Claude commands (git-sync, Husky setup) + 11 Codex prompts (security analysis, code refactoring, CI/CD troubleshooting, dependency management, and PR workflows)
 - **Quality Standards**: Japanese-language development guidelines with TDD methodology and static quality gates
 
 ## Container Versioning
