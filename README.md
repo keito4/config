@@ -8,7 +8,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 
 - `.claude/`: Comprehensive Claude Code configuration directory with:
   - **13 specialized AI agents**: Architecture validation (DDD, Clean Architecture), accessibility & design validation, concurrency safety analysis, documentation consistency checking, dependency auditing, performance analysis, testability & coverage analysis, and issue resolution workflows
-  - **14 automated commands**: Code coverage checking, CI/CD troubleshooting, project initialization, pull request creation, quality checks, security reviews, test execution, dependency updates, and n8n MCP integration setup
+  - **13 automated commands**: 2 Claude commands (git-sync, Husky setup) + 11 Codex prompts (security analysis, code refactoring, Next.js workflows, dependency management)
   - **Development quality standards**: Japanese-language guidelines for TDD methodology, static quality gates, Git workflow conventions, and AI-assisted development practices
 - `.codex/`: Codex CLI configuration and agent distribution system with:
   - **Agent Settings**: Centralized configuration for 13 specialized AI agents in `AGENTS.md`

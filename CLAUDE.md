@@ -63,7 +63,7 @@ For detailed information about each agent, see [.claude/agents/README.md](.claud
 
 ## Automated Commands
 
-The `.claude/commands/` directory provides 14 pre-configured commands organized by category:
+The `.claude/commands/` directory provides 2 pre-configured commands, with an additional 11 automated prompts available in `.codex/prompts/`, organized by category:
 
 ### Quality & Testing
 
