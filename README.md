@@ -6,15 +6,8 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 
 ## Directory Structure
 
-- `.claude/`: Comprehensive Claude Code configuration directory with:
-  - **13 specialized AI agents**: Architecture validation (DDD, Clean Architecture), accessibility & design validation, concurrency safety analysis, documentation consistency checking, dependency auditing, performance analysis, testability & coverage analysis, and issue resolution workflows
-  - **13 automated commands**: 2 Claude commands (git-sync, Husky setup) + 11 Codex prompts (security analysis, code refactoring, Next.js workflows, dependency management)
-  - **Development quality standards**: Japanese-language guidelines for TDD methodology, static quality gates, Git workflow conventions, and AI-assisted development practices
-- `.codex/`: Codex CLI configuration and agent distribution system with:
-  - **Agent Settings**: Centralized configuration for 13 specialized AI agents in `AGENTS.md`
-  - **Distribution Scripts**: Automated setup (`setup-agents.sh`), validation (`validate-agents.sh`), and synchronization (`sync-agents.sh`) tools
-  - **MCP Integration**: Configuration in `config.toml` for Model Context Protocol servers including Playwright and o3 search
-  - **Prompt Library**: Migrated prompts in `prompts/` directory with setup guides and automation workflows
+- `.claude/`: Claude Code configuration directory (currently empty after recent refactoring)
+- `.codex/`: Codex CLI configuration directory (currently empty after recent refactoring)
 - `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
@@ -94,73 +87,11 @@ Run the `commit_changes.sh` script with `REPO_PATH` set to this repository to ch
 - `npm/global.json` is the single source of truth for both `@openai/codex` and `@anthropic-ai/claude-code` versions.
 - The DevContainer Dockerfile copies this file into the build context and reads the versions at build time, guaranteeing that `npm install -g ...` pins to the same versions used by local setups.
 - When bumping either CLI, update the version in `npm/global.json` (or run `npm run update:libs`) and rebuild the DevContainer image. No manual edits in `.devcontainer/Dockerfile` are required anymore.
-- Re-run `.codex/setup-agents.sh` or `~/.codex/scripts/sync-agents.sh --update` after rebuilding if you want the new CLI versions reflected in developer machines outside the container.
+- Rebuild the DevContainer image after updating CLI versions to ensure consistency across environments.
 
-### Claude Agent Configuration Setup
+### Configuration Setup
 
-The `.codex/` directory contains a comprehensive agent distribution system for Claude Code. To set up the specialized agents on your system:
-
-#### Initial Setup
-
-```bash
-# Navigate to the repository root
-cd /path/to/config
-
-# Run the setup script to install agent configurations
-bash .codex/setup-agents.sh
-
-# Optional: Force overwrite existing configurations
-bash .codex/setup-agents.sh --force
-```
-
-#### Validation and Maintenance
-
-```bash
-# Validate your agent configuration
-bash ~/.codex/scripts/validate-agents.sh
-
-# Run validation with detailed output
-bash ~/.codex/scripts/validate-agents.sh --verbose
-
-# Automatically fix detected issues
-bash ~/.codex/scripts/validate-agents.sh --fix
-
-# Check for configuration synchronization
-bash ~/.codex/scripts/sync-agents.sh
-
-# Perform dry-run sync check (no changes made)
-bash ~/.codex/scripts/sync-agents.sh --dry-run
-
-# Auto-update configurations when changes detected
-bash ~/.codex/scripts/sync-agents.sh --update
-```
-
-#### Using the Agents
-
-Once installed, you can use the specialized agents in Claude Code:
-
-```bash
-# Architecture validation
-@claude ddd-architecture-validator エージェントでこのドメインモデルをレビューしてください
-
-# Performance analysis
-@claude performance-analyzer エージェントでこのコードの最適化を分析してください
-
-# Security review
-@claude issue-resolver-security エージェントでセキュリティ問題を確認してください
-
-# Test coverage analysis
-@claude testability-coverage-analyzer エージェントでテストカバレッジを評価してください
-```
-
-#### Configuration Files
-
-- **`AGENTS.md`**: Complete agent documentation and usage instructions（セットアップ後は `~/.codex/AGENTS.md` に同期）
-- **`~/.codex/config.json`**: Claude Code model configuration
-- **`~/.codex/config.toml`**: MCP server integration settings (Playwright browser automation, o3 search, and other MCP services)
-- **`~/.codex/scripts/`**: Maintenance and validation scripts
-
-For detailed information about each agent and their capabilities, see `AGENTS.md`.
+The repository provides standardized configuration files that can be imported to set up a consistent development environment. See the usage instructions below for importing and exporting configurations.
 
 ### Secure MCP Credential Configuration
 
@@ -271,49 +202,11 @@ Releases are automatically created when changes are pushed to the main branch.
 
 ### AI-Assisted Development Workflows
 
-This repository includes comprehensive Claude Code configuration for AI-assisted development:
-
-#### Specialized AI Agents
-
-The `.claude/agents/` directory provides 13 specialized agents:
-
-- **Architecture & Code Quality**
-  - `ddd-architecture-validator.md`: Validates Domain-Driven Design, Clean Architecture, and Hexagonal Architecture principles
-  - `performance-analyzer.md`: Analyzes performance implications of code changes, particularly C#/.NET applications
-  - `concurrency-safety-analyzer.md`: Reviews async/await patterns and thread safety in C# code
-  - `testability-coverage-analyzer.md`: Evaluates testability and test coverage of new or modified code
-
-- **Documentation & Consistency**
-  - `docs-consistency-checker.md`: Ensures documentation consistency across README, ADR, XML comments, and OpenAPI specs
-  - `accessibility-design-validator.md`: Validates accessibility compliance and design consistency in frontend code
-
-- **Dependencies & Security**
-  - `nuget-dependency-auditor.md`: Audits NuGet dependencies for licensing, maintenance, and architectural alignment
-  - `issue-resolver-security.md`: Automated security analysis and vulnerability resolution
-  - `issue-resolver-dependencies.md`: Comprehensive dependency management and conflict resolution
-
-- **Issue Resolution Workflow**
-  - `issue-resolver-orchestrator.md`: Coordinated multi-agent issue resolution workflow
-  - `issue-resolver-code-quality.md`: Automated code quality analysis and improvement
-  - `issue-resolver-documentation.md`: Documentation generation and maintenance
-  - `issue-resolver-test-coverage.md`: Test coverage analysis and improvement suggestions
-
-#### Automated Commands
-
-The `.claude/commands/` directory provides 2 pre-configured commands, with additional automated prompts available in `.codex/prompts/` (11 prompts):
-
-- **Git Workflow**: `git-sync.md` - Comprehensive Git synchronization and branch management
-- **Development Environment**: `setup-husky.md` - Husky Git hooks configuration
-
-#### Additional Codex Prompts (`.codex/prompts/`)
-
-- **Security Analysis**: `next-security-check.md`, `next-security:deps-scan.md`, `next-security:config-audit.md`, `next-security:authz-review.md`
-- **Code Refactoring**: `refactor:decouple.md`, `refactor:dedupe.md`, `refactor:reorganize.md`, `refactor:simplify.md`, `refactor:split.md`
-- **Development Environment**: `git-sync.md` (also available via Codex), `setup-husky.md` (also available via Codex)
+This repository supports AI-assisted development through Claude Code integration:
 
 #### Development Quality Standards
 
-The `.claude/CLAUDE.md` file defines organization-wide development standards in Japanese:
+The `CLAUDE.md` file defines organization-wide development standards in Japanese:
 
 - **Test-Driven Development (TDD)**: Red → Green → Refactor methodology with 70%+ line coverage requirement
 - **Static Quality Gates**: Automated linting, formatting, security analysis, and license checking

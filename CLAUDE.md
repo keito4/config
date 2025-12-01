@@ -2,7 +2,7 @@
 
 ## Development Quality Standards
 
-This repository implements comprehensive development quality standards and AI-assisted workflows. See `.claude/CLAUDE.md` for detailed guidelines including:
+This repository implements comprehensive development quality standards and AI-assisted workflows including:
 
 ### Code Quality Requirements
 
@@ -30,71 +30,9 @@ When completing tasks, Claude will automatically send a notification to Slack us
 
 Claude is configured to send notifications to the Slack workspace when tasks are completed. This uses the MCP (Model Context Protocol) Slack integration.
 
-## Specialized Agents
+## Development Tools & Automation
 
-The `.claude/agents/` directory contains 13 specialized AI agents organized into categories:
-
-### Architecture & Code Quality
-
-- **DDD Architecture Validator**: Domain-Driven Design and Clean Architecture validation
-- **Performance Analyzer**: C#/.NET performance analysis and optimization recommendations
-- **Concurrency Safety Analyzer**: Async/await patterns and thread safety review
-- **Testability Coverage Analyzer**: Test coverage analysis and improvement suggestions
-
-### Documentation & Consistency
-
-- **Documentation Consistency Checker**: README, ADR, XML comments, and OpenAPI spec validation
-- **Accessibility Design Validator**: WCAG compliance and frontend design consistency
-
-### Dependencies & Security
-
-- **NuGet Dependency Auditor**: Package licensing, maintenance, and architectural alignment
-
-### Issue Resolution Workflow
-
-- **Issue Resolver Orchestrator**: Multi-agent coordination for complex issues
-- **Issue Resolver Code Quality**: Automated code quality analysis and improvements
-- **Issue Resolver Dependencies**: Dependency management and conflict resolution
-- **Issue Resolver Documentation**: Documentation generation and maintenance
-- **Issue Resolver Security**: Security analysis and vulnerability resolution
-- **Issue Resolver Test Coverage**: Test coverage analysis and recommendations
-
-For detailed information about each agent, see [.claude/agents/README.md](.claude/agents/README.md).
-
-## Automated Commands
-
-The `.claude/commands/` directory provides 2 pre-configured commands, with an additional 11 automated prompts available in `.codex/prompts/`, organized by category:
-
-### Quality & Testing
-
-- **Check Coverage**: Test coverage analysis and reporting
-- **Quality Check**: Comprehensive code quality validation
-- **Test All**: Complete test suite execution with reporting
-
-### Project Management
-
-- **Init Project**: Standardized project setup and configuration
-- **Issue Auto Resolve**: Automated issue analysis and resolution
-- **Issue Create**: Well-structured GitHub issue creation
-- **Issue Review**: Issue triage and quality assessment
-
-### Pull Request Workflow
-
-- **PR**: Comprehensive pull request analysis and preparation
-- **Review Feedback Processor**: Systematic code review feedback handling
-
-### CI/CD & Maintenance
-
-- **Fix CI**: CI/CD pipeline failure diagnosis and resolution
-- **Security Review**: Comprehensive security analysis of changes
-- **Update Dependencies**: Safe dependency updates with compatibility validation
-
-### Integration & Automation
-
-- **N8N MCP Setup**: n8n workflow automation with MCP integration
-- **Commit**: Conventional commit compliance and message quality
-
-For detailed information about each command, see [.claude/commands/README.md](.claude/commands/README.md).
+This repository provides comprehensive development tooling through GitHub Actions workflows and automated scripts:
 
 ## GitHub Actions Integration
 
