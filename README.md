@@ -59,12 +59,17 @@ The `.claude/` directory contains Claude Code configuration that is partially ve
 - `commands/` - Custom slash commands available to all users
 - `agents/` - Specialized agent configurations
 - `hooks/` - Event-driven automation scripts
+- `plugins/config.json` - Custom plugin repository configuration
+- `plugins/known_marketplaces.json` - List of plugin marketplaces
 - `CLAUDE.md` - Global development standards and guidelines
 
 ### Local-Only Files (Git-Ignored)
 
 - `settings.local.json` - User-specific overrides (plugin preferences, local permissions)
 - `.credentials.json` - Sensitive authentication data
+- `plugins/installed_plugins.json` - Installed plugin metadata (environment-specific)
+- `plugins/marketplaces/` - Downloaded plugin files from marketplaces
+- `plugins/repos/` - Custom repository plugins
 - `debug/`, `file-history/`, `history.jsonl`, `plans/`, `projects/`, `session-env/`, `shell-snapshots/`, `statsig/`, `todos/` - Runtime and session data
 
 ### Synchronizing Configuration
@@ -75,6 +80,22 @@ To sync settings from `~/.claude/` to the repository:
 2. Copy new commands to `.claude/commands/` in this repository
 3. Update `settings.local.json` with personal plugin preferences (git-ignored)
 4. Commit shared configurations while keeping local overrides private
+
+### Plugin Management
+
+Plugin configuration is managed through two layers:
+
+1. **Marketplace Configuration** (version-controlled in `plugins/known_marketplaces.json`)
+   - Defines which plugin marketplaces to use
+   - Shared across all team members
+   - Examples: official Anthropic plugins, community repositories
+
+2. **Plugin Activation** (local-only in `settings.local.json`)
+   - Individual choice of which plugins to enable
+   - Environment-specific preferences
+   - Not committed to version control
+
+For detailed plugin management instructions, see [.claude/plugins/README.md](.claude/plugins/README.md).
 
 ## Usage
 

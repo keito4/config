@@ -3,3 +3,8 @@ statsig
 todos
 projects
 ide
+
+# Plugin runtime data (installed plugins and downloaded marketplaces)
+plugins/installed_plugins.json
+plugins/marketplaces/
+plugins/repos/
