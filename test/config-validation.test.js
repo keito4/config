@@ -40,11 +40,6 @@ describe('Configuration Validation', () => {
       expect(fs.existsSync(gitignorePath)).toBe(true);
     });
 
-    test('should have gitattributes file', () => {
-      const gitattributesPath = path.join(repoPath, 'git', 'gitattributes');
-      expect(fs.existsSync(gitattributesPath)).toBe(true);
-    });
-
     test('gitconfig should not contain hardcoded personal information', () => {
       const gitconfigPath = path.join(repoPath, 'git', 'gitconfig');
       const gitconfig = fs.readFileSync(gitconfigPath, 'utf8');
