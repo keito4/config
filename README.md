@@ -7,7 +7,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 ## Directory Structure
 
 - `.claude/`: Claude Code configuration directory containing settings, commands, agents, and hooks. User-specific settings like `settings.local.json` are git-ignored while shared configurations are version-controlled.
-- `.codex/`: Codex CLI configuration directory (currently empty after recent refactoring)
+- `.codex/`: Codex CLI configuration directory containing automated prompts and configuration for security analysis, refactoring, and development workflow automation
 - `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
