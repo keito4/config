@@ -1,4 +1,4 @@
-.PHONY: version-patch version-minor version-major version-dry-run credentials clean-credentials list-credentials brew-leaves brew-categorized brew-generate
+.PHONY: version-patch version-minor version-major version-dry-run credentials clean-credentials list-credentials brew-leaves brew-categorized brew-generate brew-deps brew-uses
 
 # Semantic versioning for devcontainer
 version-patch:
