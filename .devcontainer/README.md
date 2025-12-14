@@ -55,6 +55,19 @@ On container startup, the following configurations are automatically applied:
 - **Security**: 1Password CLI, credential management tools
 - **Quality Tools**: ESLint, Prettier, Husky, commitlint
 
+### Known Issues
+
+#### Node.js Version Compatibility
+
+**Current Status**: The container currently uses Node.js v20.x, but some dependencies require newer versions:
+
+- `semantic-release` (v25.0.2) requires Node.js ^22.14.0 || >= 24.10.0
+- This may cause warnings during `npm install` and potentially affect semantic release functionality
+
+**Workaround**: The current setup continues to work with warnings. Consider upgrading to Node.js 22+ when moving to production releases.
+
+**Resolution**: Future updates should upgrade the base Node.js version in `Dockerfile` (line 19) and ensure CI/CD workflows use compatible versions.
+
 ### Claude Code Integration
 
 The container includes comprehensive AI-assisted development capabilities:
