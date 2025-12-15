@@ -214,7 +214,7 @@ This repository includes comprehensive GitHub Actions workflows and development 
 
 #### GitHub Actions Workflows
 
-- **CI Pipeline** (`.github/workflows/ci.yml`): Automated testing, linting, and quality checks
+- **CI Pipeline** (`.github/workflows/ci.yml`): Automated testing, linting, and quality checks (uses Node.js 20)
 - **Claude Code Integration** (`.github/workflows/claude.yml`): AI-assisted code review and issue management
 - **Docker Image Build** (`.github/workflows/docker-image.yml`): Containerized build and deployment pipeline
 - **Library Auto-Update** (`.github/workflows/update-libraries.yml`): Scheduled Codex/Claude tooling refresh that raises a PR when `npm run update:libs` produces changes
@@ -247,6 +247,10 @@ This repository uses semantic-release for automated version management and relea
 - `docs:`, `style:`, `refactor:`, `test:`, `chore:` - No version bump
 
 Releases are automatically created when changes are pushed to the main branch.
+
+#### Compatibility Notes
+
+**Node.js Version Requirements**: The current semantic-release (v25.0.2) requires Node.js ^22.14.0 || >= 24.10.0, but the repository currently uses Node.js v20.x in development containers and CI. This produces warnings but continues to function. Consider upgrading Node.js versions for full compatibility.
 
 ### AI-Assisted Development Workflows
 
