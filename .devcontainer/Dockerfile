@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     xz-utils \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
- && NODE_VERSION=v20.18.1 \
+ && NODE_VERSION=v20.19.6 \
  && NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/arm64/arm64/') \
  && wget -q https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
  && tar -xJf node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz -C /usr/local --strip-components=1 \
