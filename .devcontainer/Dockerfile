@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     xz-utils \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
- && NODE_VERSION=v20.19.6 \
+ && NODE_VERSION=v22.14.0 \
  && NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/arm64/arm64/') \
  && wget -q https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
  && tar -xJf node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz -C /usr/local --strip-components=1 \
@@ -47,11 +47,9 @@ COPY npm/global.json /tmp/npm-global.json
 
 RUN CLAUDE_CODE_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@anthropic-ai/claude-code'].version") \
  && CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@openai/codex'].version") \
- && TYPESCRIPT_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript'].version") \
- && TSSERVER_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript-language-server'].version") \
  && npm install -g eslint \
-    typescript@${TYPESCRIPT_VERSION} \
-    typescript-language-server@${TSSERVER_VERSION} \
+    typescript \
+    typescript-language-server \
     @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
     @openai/codex@${CODEX_VERSION} \
     vercel
