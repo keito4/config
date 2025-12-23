@@ -31,12 +31,13 @@ fi
 # Git configuration (exclude personal information)
 if [[ -f ~/.gitconfig ]]; then
 	# Filter out user-specific information (name, email, signingkey) from [user] section
-	# Use sed to comment out sensitive fields in [user] section
+	# Replace actual values with commented placeholders to avoid committing personal info
 	sed -E '/^\[user\]/,/^\[/{
-		s/^[[:space:]]*(name)[[:space:]]*=.*$/	# \1 = # Configure with: git config --global user.name "Your Name"/
-		s/^[[:space:]]*(email)[[:space:]]*=.*$/	# \1 = # Configure with: git config --global user.email "your.email@example.com"/
-		s/^[[:space:]]*(signingkey)[[:space:]]*=.*$/	# \1 = # Configure with: git config --global user.signingkey "$(cat ~\/.ssh\/id_ed25519.pub)"/
+		s/^[[:space:]]*name[[:space:]]*=.*$/	# name = # Configure with: git config --global user.name "Your Name"/
+		s/^[[:space:]]*email[[:space:]]*=.*$/	# email = # Configure with: git config --global user.email "your.email@example.com"/
+		s/^[[:space:]]*signingkey[[:space:]]*=.*$/	# signingkey = # Configure with: git config --global user.signingkey "$(cat ~/.ssh\/id_ed25519.pub)"/
 	}' ~/.gitconfig > "$REPO_PATH/git/gitconfig"
+	echo "✅ gitconfig exported (personal info filtered)"
 fi
 [[ -f ~/.gitignore ]] && cat ~/.gitignore > "$REPO_PATH/git/gitignore"
 [[ -f ~/.gitattributes ]] && cat ~/.gitattributes > "$REPO_PATH/git/gitattributes"
@@ -49,7 +50,16 @@ fi
 
 # Export .zshrc but filter out sensitive environment variables
 if [[ -f ~/.zshrc ]]; then
-	grep -v -E 'export\s+(NPM_TOKEN|BUNDLE_RUBYGEMS__[A-Z_]*|[A-Z_]*TOKEN|[A-Z_]*SECRET|[A-Z_]*PASSWORD|[A-Z_]*API_KEY|[A-Z_]*CREDENTIAL)=' ~/.zshrc > "$REPO_PATH/dot/.zshrc" || cp ~/.zshrc "$REPO_PATH/dot/.zshrc"
+	# Check if .zshrc contains any credentials that need filtering
+	if grep -q -E 'export\s+(NPM_TOKEN|BUNDLE_RUBYGEMS__[A-Z_]*|[A-Z_]*TOKEN|[A-Z_]*SECRET|[A-Z_]*PASSWORD|[A-Z_]*API_KEY|[A-Z_]*CREDENTIAL)=' ~/.zshrc; then
+		# Filter out credential exports
+		grep -v -E 'export\s+(NPM_TOKEN|BUNDLE_RUBYGEMS__[A-Z_]*|[A-Z_]*TOKEN|[A-Z_]*SECRET|[A-Z_]*PASSWORD|[A-Z_]*API_KEY|[A-Z_]*CREDENTIAL)=' ~/.zshrc > "$REPO_PATH/dot/.zshrc"
+		echo "⚠️  .zshrc exported (credentials filtered)"
+	else
+		# No credentials found, safe to copy as-is
+		cp ~/.zshrc "$REPO_PATH/dot/.zshrc"
+		echo "✅ .zshrc exported (no credentials found)"
+	fi
 fi
 
 [[ -f ~/.zshrc.devcontainer ]] && cp ~/.zshrc.devcontainer "$REPO_PATH/dot/.zshrc.devcontainer"
@@ -74,15 +84,15 @@ if [[ -d ~/.claude ]]; then
 	# Copy commands, agents, hooks, plugins directories
 	if [[ -d ~/.claude/commands ]] && [[ -n "$(ls -A ~/.claude/commands 2>/dev/null)" ]]; then
 		mkdir -p "$REPO_PATH/.claude/commands"
-		cp -r ~/.claude/commands/* "$REPO_PATH/.claude/commands/" 2>/dev/null || true
+		cp -r ~/.claude/commands/* "$REPO_PATH/.claude/commands/" 2>/dev/null && echo "✅ Claude commands exported" || echo "⚠️  No commands found"
 	fi
 	if [[ -d ~/.claude/agents ]] && [[ -n "$(ls -A ~/.claude/agents 2>/dev/null)" ]]; then
 		mkdir -p "$REPO_PATH/.claude/agents"
-		cp -r ~/.claude/agents/* "$REPO_PATH/.claude/agents/" 2>/dev/null || true
+		cp -r ~/.claude/agents/* "$REPO_PATH/.claude/agents/" 2>/dev/null && echo "✅ Claude agents exported" || echo "⚠️  No agents found"
 	fi
 	if [[ -d ~/.claude/hooks ]] && [[ -n "$(ls -A ~/.claude/hooks 2>/dev/null)" ]]; then
 		mkdir -p "$REPO_PATH/.claude/hooks"
-		cp -r ~/.claude/hooks/* "$REPO_PATH/.claude/hooks/" 2>/dev/null || true
+		cp -r ~/.claude/hooks/* "$REPO_PATH/.claude/hooks/" 2>/dev/null && echo "✅ Claude hooks exported" || echo "⚠️  No hooks found"
 	fi
 
 	# Copy plugin configuration (not installed plugins or marketplace files)
