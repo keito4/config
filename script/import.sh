@@ -47,20 +47,66 @@ fi
 
 platform::run_task install_packages
 
-cp -r -f "$REPO_PATH/.zsh" ~/
-cp -r -f "$REPO_PATH/git" ~/
-cp "$REPO_PATH/git/gitconfig" ~/.gitconfig
-cp "$REPO_PATH/git/gitignore" ~/.gitignore
-cp "$REPO_PATH/git/gitattributes" ~/.gitattributes
+# Legacy .zsh directory
+[[ -d "$REPO_PATH/.zsh" ]] && cp -r -f "$REPO_PATH/.zsh" ~/
+
+# Git configuration
+[[ -d "$REPO_PATH/git" ]] && cp -r -f "$REPO_PATH/git" ~/
+[[ -f "$REPO_PATH/git/gitconfig" ]] && cp "$REPO_PATH/git/gitconfig" ~/.gitconfig
+[[ -f "$REPO_PATH/git/gitignore" ]] && cp "$REPO_PATH/git/gitignore" ~/.gitignore
+[[ -f "$REPO_PATH/git/gitattributes" ]] && cp "$REPO_PATH/git/gitattributes" ~/.gitattributes
+
+# Individual dotfiles
+[[ -f "$REPO_PATH/dot/.zprofile" ]] && cp "$REPO_PATH/dot/.zprofile" ~/.zprofile
+[[ -f "$REPO_PATH/dot/.zshrc" ]] && cp "$REPO_PATH/dot/.zshrc" ~/.zshrc
+[[ -f "$REPO_PATH/dot/.zshrc.devcontainer" ]] && cp "$REPO_PATH/dot/.zshrc.devcontainer" ~/.zshrc.devcontainer
+
+# Peco configuration
+if [[ -d "$REPO_PATH/dot/.peco" ]]; then
+	mkdir -p ~/.peco
+	cp -r "$REPO_PATH/dot/.peco"/* ~/.peco/
+fi
+
+# Claude Code shared configuration
+if [[ -d "$REPO_PATH/.claude" ]]; then
+	mkdir -p ~/.claude
+
+	# Copy shared settings (not settings.local.json)
+	[[ -f "$REPO_PATH/.claude/settings.json" ]] && cp "$REPO_PATH/.claude/settings.json" ~/.claude/settings.json
+	[[ -f "$REPO_PATH/.claude/CLAUDE.md" ]] && cp "$REPO_PATH/.claude/CLAUDE.md" ~/.claude/CLAUDE.md
+
+	# Copy commands, agents, hooks directories
+	if [[ -d "$REPO_PATH/.claude/commands" ]]; then
+		mkdir -p ~/.claude/commands
+		cp -r "$REPO_PATH/.claude/commands"/* ~/.claude/commands/ 2>/dev/null || true
+	fi
+	if [[ -d "$REPO_PATH/.claude/agents" ]]; then
+		mkdir -p ~/.claude/agents
+		cp -r "$REPO_PATH/.claude/agents"/* ~/.claude/agents/ 2>/dev/null || true
+	fi
+	if [[ -d "$REPO_PATH/.claude/hooks" ]]; then
+		mkdir -p ~/.claude/hooks
+		cp -r "$REPO_PATH/.claude/hooks"/* ~/.claude/hooks/ 2>/dev/null || true
+	fi
+
+	# Copy plugin configuration (not installed plugins)
+	if [[ -d "$REPO_PATH/.claude/plugins" ]]; then
+		mkdir -p ~/.claude/plugins
+		[[ -f "$REPO_PATH/.claude/plugins/config.json" ]] && cp "$REPO_PATH/.claude/plugins/config.json" ~/.claude/plugins/config.json
+		[[ -f "$REPO_PATH/.claude/plugins/known_marketplaces.json" ]] && cp "$REPO_PATH/.claude/plugins/known_marketplaces.json" ~/.claude/plugins/known_marketplaces.json
+	fi
+fi
 
 if devcontainer::is_active; then
 	devcontainer::bootstrap
 fi
 
+# npm global packages
 if type jq >/dev/null 2>&1 && type npm >/dev/null 2>&1; then
 	npm install -g $(jq -r '.dependencies | keys | .[]' "$REPO_PATH/npm/global.json")
 fi
 
+# Clone repositories using ghq
 if type gh >/dev/null 2>&1 && type ghq >/dev/null 2>&1; then
 	gh api user/repos | jq -r '.[].ssh_url' | xargs -L1 ghq get
 fi

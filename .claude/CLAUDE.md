@@ -82,3 +82,12 @@ Lint → Test → Build → SCA → Deploy:Stg → E2E → Deploy:Prod
   2. ドキュメント更新（README / API Spec / ADR）
   3. モニタリング閾値内で安定
   4. リリースノート記載
+
+## 5. 環境作成
+
+基本的にdevcontainerを使用する。
+またベースはghcr.io/keito4/config-base:1.0.13を使用する。
+
+## 6. デプロイ
+
+基本的にgithub actionsを使用する。
