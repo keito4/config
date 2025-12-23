@@ -47,7 +47,11 @@ COPY npm/global.json /tmp/npm-global.json
 
 RUN CLAUDE_CODE_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@anthropic-ai/claude-code'].version") \
  && CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@openai/codex'].version") \
- && npm install -g typescript eslint \
+ && TYPESCRIPT_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript'].version") \
+ && TSSERVER_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript-language-server'].version") \
+ && npm install -g eslint \
+    typescript@${TYPESCRIPT_VERSION} \
+    typescript-language-server@${TSSERVER_VERSION} \
     @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
     @openai/codex@${CODEX_VERSION} \
     vercel
@@ -72,6 +76,16 @@ COPY --chown=vscode:vscode .devcontainer/claude-settings.json /home/vscode/.clau
 COPY --chown=vscode:vscode .devcontainer/codex-config.json /home/vscode/.codex/config.json
 COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
 COPY --chown=vscode:vscode .claude/agents /home/vscode/.claude/agents
+COPY --chown=vscode:vscode .claude/hooks /home/vscode/.claude/hooks
+COPY --chown=vscode:vscode .claude/plugins/plugins.txt /home/vscode/.claude/plugins/plugins.txt
+COPY --chown=vscode:vscode script/install-claude-plugins.sh /tmp/install-claude-plugins.sh
+
+# Install Claude plugins using BuildKit secret
+# Build with: DOCKER_BUILDKIT=1 docker build --secret id=claude_credentials,src=$HOME/.claude/.credentials.json .
+USER vscode
+RUN --mount=type=secret,id=claude_credentials \
+    /tmp/install-claude-plugins.sh /home/vscode/.claude/plugins/plugins.txt || true
+USER root
 
 RUN chsh -s /bin/bash vscode
 

@@ -102,6 +102,48 @@ cp ~/.claude/plugins/known_marketplaces.json .claude/plugins/known_marketplaces.
 - `security-guidance@claude-code-plugins` - セキュリティガイダンス
 - `javascript-typescript@claude-code-workflows` - JS/TS開発ワークフロー
 
+## Docker ビルド時のプラグインインストール
+
+Docker イメージのビルド時にプラグインをインストールするには、BuildKit の secret 機能を使用します。
+
+### ビルドコマンド
+
+```bash
+# ANTHROPIC_API_KEY を環境変数として設定してビルド
+DOCKER_BUILDKIT=1 docker build \
+  --secret id=anthropic_api_key,env=ANTHROPIC_API_KEY \
+  -f .devcontainer/Dockerfile \
+  -t config-base .
+
+# または、ファイルから読み込む場合
+echo "your-api-key" > /tmp/anthropic_key
+DOCKER_BUILDKIT=1 docker build \
+  --secret id=anthropic_api_key,src=/tmp/anthropic_key \
+  -f .devcontainer/Dockerfile \
+  -t config-base .
+rm /tmp/anthropic_key
+```
+
+### セキュリティ
+
+- `--secret` を使用することで、API キーがイメージレイヤーに残りません
+- API キーを `--build-arg` で渡さないでください（履歴に残ります）
+- ビルド後、一時ファイルは必ず削除してください
+
+### API キーなしでビルド
+
+API キーを指定しない場合、プラグインのインストールはスキップされます：
+
+```bash
+docker build -f .devcontainer/Dockerfile -t config-base .
+```
+
+この場合、コンテナ起動後に手動でインストールできます：
+
+```bash
+make claude-plugins
+```
+
 ## トラブルシューティング
 
 ### プラグインが表示されない
