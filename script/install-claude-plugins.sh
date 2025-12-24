@@ -44,7 +44,23 @@ else
     exit 1
 fi
 
+echo "[INFO] マーケットプレイスを初期化中..."
+# known_marketplaces.jsonから必要なマーケットプレイスを追加
+if [[ -f "${CLAUDE_DIR}/plugins/known_marketplaces.json" ]]; then
+    echo "[INFO] known_marketplaces.jsonが見つかりました"
+
+    # 必須マーケットプレイスを追加
+    claude plugin add-marketplace anthropic/claude-code --name claude-code-plugins 2>&1 || echo "[WARN] claude-code-plugins already exists or failed to add"
+    claude plugin add-marketplace https://github.com/davila7/claude-code-templates.git --name claude-code-templates 2>&1 || echo "[WARN] claude-code-templates already exists or failed to add"
+    claude plugin add-marketplace wshobson/agents --name claude-code-workflows 2>&1 || echo "[WARN] claude-code-workflows already exists or failed to add"
+else
+    echo "[WARN] known_marketplaces.jsonが見つかりません"
+fi
+
 echo "[INFO] プラグインをインストール中..."
+echo "[DEBUG] Claude version: $(claude --version 2>&1 || echo 'not found')"
+echo "[DEBUG] Marketplaces directory: ${CLAUDE_DIR}/plugins/marketplaces"
+ls -la "${CLAUDE_DIR}/plugins/marketplaces" 2>/dev/null || echo "[WARN] Marketplaces directory not found"
 
 installed=0
 failed=0
@@ -59,11 +75,13 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 
     echo "[INFO]   インストール中: ${plugin}"
 
-    if claude plugin install "$plugin" 2>/dev/null; then
+    # エラー出力をキャプチャ
+    if output=$(claude plugin install "$plugin" 2>&1); then
         echo "[SUCCESS]   完了: ${plugin}"
         installed=$((installed + 1))
     else
-        echo "[WARN]   スキップまたは失敗: ${plugin}"
+        echo "[ERROR]   失敗: ${plugin}"
+        echo "[ERROR]   エラー詳細: ${output}"
         failed=$((failed + 1))
     fi
 done < "$PLUGINS_FILE"
