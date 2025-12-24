@@ -52,13 +52,30 @@ platform::run_task install_packages
 
 # Git configuration
 [[ -d "$REPO_PATH/git" ]] && cp -r -f "$REPO_PATH/git" ~/
-[[ -f "$REPO_PATH/git/gitconfig" ]] && cp "$REPO_PATH/git/gitconfig" ~/.gitconfig
+
+# Import gitconfig with warning about missing personal info
+if [[ -f "$REPO_PATH/git/gitconfig" ]]; then
+	cp "$REPO_PATH/git/gitconfig" ~/.gitconfig
+	echo "⚠️  注意: ~/.gitconfig に個人情報がコメントアウトされています"
+	echo "    以下のコマンドで設定してください:"
+	echo "    git config --global user.name \"Your Name\""
+	echo "    git config --global user.email \"your.email@example.com\""
+	echo "    git config --global user.signingkey \"\$(cat ~/.ssh/id_ed25519.pub)\""
+fi
+
 [[ -f "$REPO_PATH/git/gitignore" ]] && cp "$REPO_PATH/git/gitignore" ~/.gitignore
 [[ -f "$REPO_PATH/git/gitattributes" ]] && cp "$REPO_PATH/git/gitattributes" ~/.gitattributes
 
 # Individual dotfiles
 [[ -f "$REPO_PATH/dot/.zprofile" ]] && cp "$REPO_PATH/dot/.zprofile" ~/.zprofile
-[[ -f "$REPO_PATH/dot/.zshrc" ]] && cp "$REPO_PATH/dot/.zshrc" ~/.zshrc
+
+# Import .zshrc with warning about missing credentials
+if [[ -f "$REPO_PATH/dot/.zshrc" ]]; then
+	cp "$REPO_PATH/dot/.zshrc" ~/.zshrc
+	echo "⚠️  注意: ~/.zshrc にトークンがなくなっています"
+	echo "    トークンは ~/.zsh/configs/pre/.env.secret に設定してください"
+fi
+
 [[ -f "$REPO_PATH/dot/.zshrc.devcontainer" ]] && cp "$REPO_PATH/dot/.zshrc.devcontainer" ~/.zshrc.devcontainer
 
 # Peco configuration

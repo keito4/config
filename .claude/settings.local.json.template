@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "comment": "This is a template for local-only settings. Copy to settings.local.json and customize for your machine.",
+  "env": {
+    "CLAUDE_CODE_PROJECT_NAME": "your-project-name",
+    "BASH_DEFAULT_TIMEOUT_MS": "300000",
+    "BASH_MAX_TIMEOUT_MS": "1200000",
+    "MAX_THINKING_TOKENS": "31999"
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "comment": "Example hook: notify when task completes",
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Task completed: ${CLAUDE_TASK}'"
+          }
+        ]
+      }
+    ],
+    "comment_examples": {
+      "n8n_webhook": "curl -X POST http://host.docker.internal:5678/webhook/notify -H \"Content-Type: application/json\" -d '{\"project_name\":\"${CLAUDE_CODE_PROJECT_NAME}\",\"task_name\":\"${CLAUDE_TASK}\",\"request_detail\":\"${CLAUDE_REQUEST}\"}'",
+      "slack_notification": "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Task completed: ${CLAUDE_TASK}\"}' YOUR_SLACK_WEBHOOK_URL"
+    }
+  },
+  "permissions": {
+    "allow": [
+      "Add machine-specific permissions here"
+    ],
+    "deny": [
+      "Add machine-specific denials here"
+    ]
+  }
+}
