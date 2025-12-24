@@ -1,0 +1,93 @@
+name: Rebuild Docker Cache (Weekly)
+
+on:
+  schedule:
+    # 毎週日曜日 0:00 UTC (日本時間 9:00) にフルリビルド
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'リビルドの理由（任意）'
+        required: false
+
+jobs:
+  rebuild-cache:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Log rebuild reason
+        env:
+          TRIGGER: ${{ github.event_name }}
+          REASON: ${{ inputs.reason }}
+        run: |
+          echo "=== Docker Cache Full Rebuild ==="
+          echo "Trigger: $TRIGGER"
+          if [ "$TRIGGER" = "workflow_dispatch" ]; then
+            echo "Reason: $REASON"
+          else
+            echo "Reason: Scheduled weekly rebuild"
+          fi
+          echo "Date: $(date -u)"
+
+      - name: Fix workspace permissions
+        run: sudo chown -R $(id -u):$(id -g) "$GITHUB_WORKSPACE"
+
+      - uses: docker/setup-qemu-action@v2
+
+      - uses: docker/setup-buildx-action@v2
+        with:
+          driver-opts: image=moby/buildkit:latest
+
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get latest version tag
+        id: version
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          LATEST_VERSION=${LATEST_TAG#v}
+          echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "Latest version: $LATEST_VERSION"
+
+      - name: Build and push with no-cache
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: .devcontainer/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/config-base:cache-rebuild
+            ghcr.io/${{ github.repository_owner }}/config-base:latest
+          platforms: linux/amd64,linux/arm64
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/config-base:cache,mode=max
+          no-cache: true
+          secrets: |
+            claude_credentials=${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+      - name: Summary
+        env:
+          TRIGGER: ${{ github.event_name }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          echo "### ✅ Docker Cache Rebuild Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger**: $TRIGGER" >> $GITHUB_STEP_SUMMARY
+          echo "- **Date**: $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
+          echo "- **Cache Updated**: ghcr.io/$OWNER/config-base:cache" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "次回の通常ビルドからキャッシュが利用可能です 🚀" >> $GITHUB_STEP_SUMMARY
