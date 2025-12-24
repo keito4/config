@@ -1,8 +1,18 @@
+# Local-only settings and credentials
+settings.local.json
 .credentials.json
-statsig
-todos
-projects
-ide
+
+# Runtime and session data
+statsig/
+todos/
+projects/
+ide/
+debug/
+file-history/
+history.jsonl
+plans/
+session-env/
+shell-snapshots/
 
 # Plugin runtime data (installed plugins and downloaded marketplaces)
 plugins/installed_plugins.json

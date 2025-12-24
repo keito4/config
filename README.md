@@ -74,12 +74,25 @@ The `.claude/` directory contains Claude Code configuration that is partially ve
 
 ### Synchronizing Configuration
 
-To sync settings from `~/.claude/` to the repository:
+Claude Code設定は`export.sh`と`import.sh`スクリプトで自動的に同期されます：
 
-1. Review `~/.claude/commands/` for custom commands worth sharing
-2. Copy new commands to `.claude/commands/` in this repository
-3. Update `settings.local.json` with personal plugin preferences (git-ignored)
-4. Commit shared configurations while keeping local overrides private
+**自動同期される設定**
+
+- `settings.json` - 共有パーミッション、環境変数、フック
+- `commands/` - カスタムスラッシュコマンド
+- `agents/` - 専用エージェント設定
+- `hooks/` - イベント駆動の自動化スクリプト
+- `plugins/config.json`, `plugins/known_marketplaces.json` - プラグイン設定
+- `CLAUDE.md` - 開発標準とガイドライン
+
+**同期されない設定（ローカル専用）**
+
+- `settings.local.json` - ユーザー固有のオーバーライド
+- `.credentials.json` - 認証情報
+- `plugins/installed_plugins.json` - インストール済みプラグイン
+- ランタイムデータ（`debug/`, `projects/`, `todos/`など）
+
+`export.sh`を実行すると、これらの共有設定が自動的にリポジトリにコピーされます。`import.sh`を実行すると、リポジトリから`~/.claude/`に復元されます。
 
 ### Plugin Management
 
@@ -103,20 +116,49 @@ Before using these configuration settings, you should review them and adjust as 
 
 ### Importing Configuration Settings
 
-Set the `REPO_PATH` environment variable to this repository's root and run the `import.sh` script to import configuration settings. Depending on the operating system, it performs the following actions:
+Set the `REPO_PATH` environment variable to this repository's root and run the `import.sh` script to import configuration settings:
 
-- Installs packages listed in a Brewfile.
-- Installs VS Code extensions listed in a specific file.
-- Injects environment variables from a specific file managed by 1Password.
-- Copies configuration files to the home directory.
+```bash
+export REPO_PATH=/path/to/config
+cd "$REPO_PATH"
+./script/import.sh
+```
+
+The script performs the following actions:
+
+- Installs Homebrew packages listed in OS-specific Brewfiles
+- Installs Oh My Zsh and zsh-autosuggestions plugin
+- Installs VS Code/Cursor extensions
+- Copies Git configuration files (`.gitconfig`, `.gitignore`, `.gitattributes`)
+- Copies Zsh configuration files (`.zprofile`, `.zshrc`, `.zshrc.devcontainer`, `.zsh/`)
+- Copies Peco configuration (`.peco/`)
+- Installs npm global packages
+- Copies Claude Code shared configuration (`settings.json`, `commands/`, `agents/`, `hooks/`, `plugins/`)
+- Clones GitHub repositories using `ghq` (if available)
+
+⚠️ **Note**: Local-only files like `settings.local.json` are not overwritten.
 
 ### Exporting Configuration Settings
 
-Ensure `REPO_PATH` points to the repository and run the `export.sh` script to capture the current machine's configuration. Depending on the operating system, it performs the following actions:
+Ensure `REPO_PATH` points to the repository and run the `export.sh` script to capture the current machine's configuration:
 
-- Writes the list of installed VS Code extensions to a file.
-- Dumps the list of installed Brew packages to a Brewfile.
-- Copies various configuration files from the home directory to the repository.
+```bash
+export REPO_PATH=/path/to/config
+cd "$REPO_PATH"
+./script/export.sh
+```
+
+The script performs the following actions:
+
+- Exports Homebrew package lists to OS-specific Brewfiles
+- Exports VS Code/Cursor extensions list
+- Exports Git configuration files (`.gitconfig`, `.gitignore`, `.gitattributes`)
+- Exports Zsh configuration files (`.zprofile`, `.zshrc`, `.zshrc.devcontainer`, `.zsh/`)
+- Exports Peco configuration (`.peco/`)
+- Exports npm global packages list
+- Exports Claude Code shared configuration (`settings.json`, `commands/`, `agents/`, `hooks/`, `plugins/`)
+
+⚠️ **Note**: Local-only files like `settings.local.json` and credentials are excluded.
 
 ### Checking for Changes
 

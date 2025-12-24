@@ -1,7 +1,9 @@
 1password.op-vscode
 4ops.terraform
+amazonwebservices.codewhisperer-for-command-line-companion
 antfu.unocss
 anthropic.claude-code
+anysphere.cursorpyright
 betajob.modulestf
 bierner.markdown-mermaid
 bradlc.vscode-tailwindcss

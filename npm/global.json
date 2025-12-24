@@ -2,7 +2,15 @@
   "name": "lib",
   "dependencies": {
     "@anthropic-ai/claude-code": {
-      "version": "2.0.71",
+      "version": "2.0.76",
+      "overridden": false
+    },
+    "@commitlint/cli": {
+      "version": "20.1.0",
+      "overridden": false
+    },
+    "@commitlint/config-conventional": {
+      "version": "20.0.0",
       "overridden": false
     },
     "@leonardsellem/n8n-mcp-server": {
@@ -10,19 +18,31 @@
       "overridden": false
     },
     "@openai/codex": {
-      "version": "0.73.0",
+      "version": "0.58.0",
+      "overridden": false
+    },
+    "codex": {
+      "version": "0.2.3",
       "overridden": false
     },
     "corepack": {
-      "version": "0.34.5",
+      "version": "0.34.4",
       "overridden": false
     },
     "mcp-remote": {
-      "version": "0.1.37",
+      "version": "0.1.30",
+      "overridden": false
+    },
+    "n8n": {
+      "version": "1.119.2",
       "overridden": false
     },
     "npm": {
-      "version": "11.7.0",
+      "version": "11.6.2",
+      "overridden": false
+    },
+    "pm2": {
+      "version": "6.0.13",
       "overridden": false
     }
   }
