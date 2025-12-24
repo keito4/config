@@ -4,24 +4,22 @@
 # 行頭 # はコメント
 
 # === Code Plugins (claude-code-plugins) ===
-# 実際にキャッシュに存在し動作するプラグインのみ記載
 frontend-design@claude-code-plugins
 hookify@claude-code-plugins
 feature-dev@claude-code-plugins
 security-guidance@claude-code-plugins
 
-# === Workflow Plugins (claude-code-workflows) ===
-# 実際にキャッシュに存在し動作するプラグインのみ記載
-backend-development@claude-code-workflows
+# === Template Plugins (claude-code-templates) ===
+supabase-toolkit@claude-code-templates
+documentation-generator@claude-code-templates
+nextjs-vercel-pro@claude-code-templates
+devops-automation@claude-code-templates
 
-# === 削除済みプラグイン（存在しないマーケットプレイスまたはキャッシュに存在しない）===
-# supabase-toolkit@claude-code-templates - マーケットプレイスにプラグインなし
-# documentation-generator@claude-code-templates - マーケットプレイスにプラグインなし
-# nextjs-vercel-pro@claude-code-templates - マーケットプレイスにプラグインなし
-# devops-automation@claude-code-templates - マーケットプレイスにプラグインなし
-# kubernetes-operations@claude-code-workflows - キャッシュに未インストール
-# javascript-typescript@claude-code-workflows - キャッシュに未インストール
-# full-stack-orchestration@claude-code-workflows - キャッシュに未インストール
-# code-refactoring@claude-code-workflows - キャッシュに未インストール
-# database-design@claude-code-workflows - キャッシュに未インストール
-# database-migrations@claude-code-workflows - キャッシュに未インストール
+# === Workflow Plugins (claude-code-workflows) ===
+backend-development@claude-code-workflows
+full-stack-orchestration@claude-code-workflows
+code-refactoring@claude-code-workflows
+kubernetes-operations@claude-code-workflows
+javascript-typescript@claude-code-workflows
+database-design@claude-code-workflows
+database-migrations@claude-code-workflows
