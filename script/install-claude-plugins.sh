@@ -49,10 +49,10 @@ echo "[INFO] マーケットプレイスを初期化中..."
 if [[ -f "${CLAUDE_DIR}/plugins/known_marketplaces.json" ]]; then
     echo "[INFO] known_marketplaces.jsonが見つかりました"
 
-    # 必須マーケットプレイスを追加
-    claude plugin add-marketplace anthropic/claude-code --name claude-code-plugins 2>&1 || echo "[WARN] claude-code-plugins already exists or failed to add"
-    claude plugin add-marketplace https://github.com/davila7/claude-code-templates.git --name claude-code-templates 2>&1 || echo "[WARN] claude-code-templates already exists or failed to add"
-    claude plugin add-marketplace wshobson/agents --name claude-code-workflows 2>&1 || echo "[WARN] claude-code-workflows already exists or failed to add"
+    # 必須マーケットプレイスを追加（正しいコマンド: claude plugin marketplace add）
+    claude plugin marketplace add anthropic/claude-code 2>&1 || echo "[WARN] claude-code-plugins already exists or failed to add"
+    claude plugin marketplace add https://github.com/davila7/claude-code-templates.git 2>&1 || echo "[WARN] claude-code-templates already exists or failed to add"
+    claude plugin marketplace add wshobson/agents 2>&1 || echo "[WARN] claude-code-workflows already exists or failed to add"
 else
     echo "[WARN] known_marketplaces.jsonが見つかりません"
 fi
