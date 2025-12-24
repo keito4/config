@@ -76,7 +76,6 @@ COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
 COPY --chown=vscode:vscode .claude/agents /home/vscode/.claude/agents
 COPY --chown=vscode:vscode .claude/hooks /home/vscode/.claude/hooks
 COPY --chown=vscode:vscode .claude/plugins/plugins.txt /home/vscode/.claude/plugins/plugins.txt
-COPY --chown=vscode:vscode .claude/plugins/known_marketplaces.json /home/vscode/.claude/plugins/known_marketplaces.json
 COPY --chown=vscode:vscode script/install-claude-plugins.sh /tmp/install-claude-plugins.sh
 
 # Install Claude plugins using BuildKit secret
