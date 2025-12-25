@@ -80,13 +80,13 @@ COPY --chown=vscode:vscode script/install-claude-plugins.sh /tmp/install-claude-
 
 # Install Claude plugins using BuildKit secret
 # Build with: DOCKER_BUILDKIT=1 docker build --secret id=claude_credentials,src=$HOME/.claude/.credentials.json .
-USER vscode
-RUN --mount=type=secret,id=claude_credentials \
+# Note: Run as root to access BuildKit secret, then change ownership to vscode
+RUN --mount=type=secret,id=claude_credentials,uid=0,gid=0 \
     /tmp/install-claude-plugins.sh /home/vscode/.claude/plugins/plugins.txt || ( \
         echo "[WARN] Claude プラグインのインストールに失敗しました（認証情報が不足している可能性があります）" && \
         echo "[INFO] コンテナ起動後に手動でインストールしてください: claude plugin install <plugin>@<marketplace>" \
-    )
-USER root
+    ) \
+    && chown -R vscode:vscode /home/vscode/.claude
 
 RUN chsh -s /bin/bash vscode
 

@@ -44,7 +44,15 @@ else
     exit 1
 fi
 
+echo "[INFO] マーケットプレイスを初期化中..."
+# 必須マーケットプレイスを追加（完全なHTTPS URLを使用）
+claude plugin marketplace add https://github.com/anthropics/claude-code.git 2>&1 || echo "[WARN] claude-code-plugins already exists or failed to add"
+claude plugin marketplace add https://github.com/wshobson/agents.git 2>&1 || echo "[WARN] claude-code-workflows already exists or failed to add"
+
 echo "[INFO] プラグインをインストール中..."
+echo "[DEBUG] Claude version: $(claude --version 2>&1 || echo 'not found')"
+echo "[DEBUG] Marketplaces directory: ${CLAUDE_DIR}/plugins/marketplaces"
+ls -la "${CLAUDE_DIR}/plugins/marketplaces" 2>/dev/null || echo "[WARN] Marketplaces directory not found"
 
 installed=0
 failed=0
@@ -59,11 +67,13 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 
     echo "[INFO]   インストール中: ${plugin}"
 
-    if claude plugin install "$plugin" 2>/dev/null; then
+    # エラー出力をキャプチャ
+    if output=$(claude plugin install "$plugin" 2>&1); then
         echo "[SUCCESS]   完了: ${plugin}"
         installed=$((installed + 1))
     else
-        echo "[WARN]   スキップまたは失敗: ${plugin}"
+        echo "[ERROR]   失敗: ${plugin}"
+        echo "[ERROR]   エラー詳細: ${output}"
         failed=$((failed + 1))
     fi
 done < "$PLUGINS_FILE"

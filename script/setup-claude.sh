@@ -119,6 +119,13 @@ sync_directory() {
         local filename=$(basename "$file")
         local dest_file="${dest_dir}/${filename}"
 
+        # known_marketplaces.json は環境固有なので同期しない
+        if [[ "$filename" == "known_marketplaces.json" ]]; then
+            log_info "  スキップ: ${filename} (環境固有のため同期対象外)"
+            skipped=$((skipped + 1))
+            continue
+        fi
+
         if [[ -f "$dest_file" && "$FORCE" == false ]]; then
             log_warn "  スキップ: ${filename} (既存ファイル、--force で上書き可能)"
             skipped=$((skipped + 1))
@@ -233,6 +240,7 @@ main() {
         sync_directory "${REPO_CLAUDE_DIR}/commands" "${USER_CLAUDE_DIR}/commands" "commands"
         sync_directory "${REPO_CLAUDE_DIR}/agents" "${USER_CLAUDE_DIR}/agents" "agents"
         sync_directory "${REPO_CLAUDE_DIR}/hooks" "${USER_CLAUDE_DIR}/hooks" "hooks"
+        sync_directory "${REPO_CLAUDE_DIR}/plugins" "${USER_CLAUDE_DIR}/plugins" "plugins"
         sync_settings
         echo ""
     fi
