@@ -1,28 +1,20 @@
 # Claude Code Plugin List
-# このファイルに記載されたプラグインは setup-claude.sh で一括インストールされます
+# このファイルに記載されたプラグインは devcontainer 起動時にユーザースコープで一括インストールされます
 # 形式: plugin-name@marketplace-name
 # 行頭 # はコメント
 
 # === Official Plugins (claude-plugins-official) ===
+# 基本プラグイン
 vercel@claude-plugins-official
 commit-commands@claude-plugins-official
-context7@claude-plugins-official
-github@claude-plugins-official
-frontend-design@claude-plugins-official
 hookify@claude-plugins-official
-sentry@claude-plugins-official
 plugin-dev@claude-plugins-official
+frontend-design@claude-plugins-official
 
-# === Workflow Plugins (claude-code-workflows) ===
-code-refactoring@claude-code-workflows
-kubernetes-operations@claude-code-workflows
-javascript-typescript@claude-code-workflows
-backend-development@claude-code-workflows
-full-stack-orchestration@claude-code-workflows
-database-design@claude-code-workflows
-database-migrations@claude-code-workflows
-
-# === Additional Plugins ===
-typescript-lsp@claude-plugins-official
-linear@claude-plugins-official
+# プロジェクト固有
 supabase@claude-plugins-official
+typescript-lsp@claude-plugins-official
+
+# === Template Plugins (claude-code-templates) ===
+nextjs-vercel-pro@claude-code-templates
+supabase-toolkit@claude-code-templates
