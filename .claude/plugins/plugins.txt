@@ -18,3 +18,6 @@ typescript-lsp@claude-plugins-official
 # === Template Plugins (claude-code-templates) ===
 nextjs-vercel-pro@claude-code-templates
 supabase-toolkit@claude-code-templates
+
+# === Workflow Plugins (claude-code-workflows) ===
+code-refactoring@claude-code-workflows
