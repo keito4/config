@@ -16,10 +16,8 @@ log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 
-# スクリプトのディレクトリを取得
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-PLUGINS_FILE="${REPO_ROOT}/.claude/plugins/plugins.txt"
+# DevContainer内の固定パスを使用
+PLUGINS_FILE="/home/vscode/.claude/plugins/plugins.txt"
 
 log_info "Claude Code プラグインセットアップを開始します..."
 
