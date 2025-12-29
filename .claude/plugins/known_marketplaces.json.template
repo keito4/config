@@ -4,41 +4,47 @@
       "source": "git",
       "url": "https://github.com/anthropics/skills.git"
     },
-    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/anthropic-agent-skills"
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/anthropic-agent-skills",
+    "lastUpdated": "2025-01-01T00:00:00.000Z"
   },
   "claude-code-plugins": {
     "source": {
       "source": "github",
       "repo": "anthropics/claude-code"
     },
-    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-code-plugins"
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-code-plugins",
+    "lastUpdated": "2025-01-01T00:00:00.000Z"
   },
   "claude-code-templates": {
     "source": {
       "source": "git",
       "url": "https://github.com/davila7/claude-code-templates.git"
     },
-    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-code-templates"
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-code-templates",
+    "lastUpdated": "2025-01-01T00:00:00.000Z"
   },
   "claude-code-workflows": {
     "source": {
       "source": "github",
       "repo": "wshobson/agents"
     },
-    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-code-workflows"
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-code-workflows",
+    "lastUpdated": "2025-01-01T00:00:00.000Z"
   },
   "claude-plugins-official": {
     "source": {
       "source": "github",
       "repo": "anthropics/claude-plugins-official"
     },
-    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-plugins-official"
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-plugins-official",
+    "lastUpdated": "2025-01-01T00:00:00.000Z"
   },
   "playwright-skill": {
     "source": {
       "source": "github",
       "repo": "lackeyjb/playwright-skill"
     },
-    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/playwright-skill"
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/playwright-skill",
+    "lastUpdated": "2025-01-01T00:00:00.000Z"
   }
 }

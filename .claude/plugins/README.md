@@ -171,3 +171,35 @@ make claude-plugins
 claude marketplace update
 claude plugin update <plugin-name>@<marketplace>
 ```
+
+### hookify プラグインのインポートエラー
+
+**症状:**
+
+```
+Hookify import error: No module named 'hookify'
+```
+
+**原因:**
+
+hookify プラグインの Python モジュール構造の問題により、絶対インポート（`from hookify.core.config_loader`）が失敗します。
+
+**解決方法:**
+
+`setup-claude.sh` は自動的にこの問題を修正します。手動で修正する場合：
+
+```bash
+# マーケットプレイスのhookifyプラグインにパッチを適用
+cd ~/.claude/plugins/marketplaces/claude-code-plugins/plugins/hookify
+find . -name "*.py" -type f -exec sed -i '' \
+  -e 's/from hookify\.core/from core/g' \
+  -e 's/from hookify\.utils/from utils/g' \
+  -e 's/from hookify\.matchers/from matchers/g' \
+  {} \;
+
+# プラグインを再インストール
+claude plugin uninstall hookify@claude-code-plugins
+claude plugin install hookify@claude-code-plugins
+```
+
+**注意:** マーケットプレイスの更新後は、再度パッチの適用が必要になる場合があります。`make claude-plugins` を実行すれば自動的にパッチが適用されます。
