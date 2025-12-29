@@ -15,9 +15,15 @@ typescript-lsp@claude-plugins-official
 
 # === Workflow Plugins (claude-code-workflows) ===
 code-refactoring@claude-code-workflows
-# AI Code Review
+
+# === Additional Plugins ===
+# Code Review
+code-review@claude-plugins-official
+# AI Code Review (from claude-code-workflows)
 code-review-ai@claude-code-workflows
 # Kubernetes Operations
 kubernetes-operations@claude-code-workflows
 # JavaScript/TypeScript Development
 javascript-typescript@claude-code-workflows
+# Playwright Browser Automation
+playwright-skill@playwright-skill
