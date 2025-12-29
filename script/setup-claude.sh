@@ -210,14 +210,23 @@ else
     log_info "hookifyプラグインが見つかりません。パッチはスキップします。"
 fi
 
-# プロジェクトローカルのconfig-base-syncプラグインをグローバルにコピー
+# config-base-syncプラグインをグローバルにコピー
+# プロジェクトローカルのプラグインを優先、なければイメージ内のプラグインを使用
+PLUGIN_SOURCE=""
 if [[ -d "${REPO_ROOT}/.claude/plugins/config-base-sync" ]]; then
-    log_info "config-base-syncプラグインをグローバルにインストール中..."
+    PLUGIN_SOURCE="${REPO_ROOT}/.claude/plugins/config-base-sync"
+    log_info "config-base-syncプラグインをプロジェクトからインストール中..."
+elif [[ -d "/tmp/claude-plugins/config-base-sync" ]]; then
+    PLUGIN_SOURCE="/tmp/claude-plugins/config-base-sync"
+    log_info "config-base-syncプラグインをイメージからインストール中..."
+fi
+
+if [[ -n "$PLUGIN_SOURCE" ]]; then
     rm -rf "${PLUGINS_DIR}/config-base-sync"
-    cp -r "${REPO_ROOT}/.claude/plugins/config-base-sync" "${PLUGINS_DIR}/"
+    cp -r "$PLUGIN_SOURCE" "${PLUGINS_DIR}/"
     log_success "config-base-syncプラグインをインストールしました"
 else
-    log_warn "config-base-syncプラグインが見つかりません: ${REPO_ROOT}/.claude/plugins/config-base-sync"
+    log_warn "config-base-syncプラグインが見つかりません"
 fi
 
 log_success "Claude Code プラグインセットアップが完了しました！"
