@@ -180,4 +180,34 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 done < "$PLUGINS_FILE"
 
 log_info "プラグイン: ${installed} インストール完了、${skipped} スキップ、${failed} 失敗"
+
+# hookifyプラグインのインポートエラー修正パッチを適用
+log_info "hookifyプラグインのインポートパッチを適用中..."
+HOOKIFY_MARKETPLACE="${HOME}/.claude/plugins/marketplaces/claude-code-plugins/plugins/hookify"
+if [[ -d "$HOOKIFY_MARKETPLACE" ]]; then
+    # 絶対インポートを相対インポートに変更
+    find "$HOOKIFY_MARKETPLACE" -name "*.py" -type f -exec sed -i '' \
+        -e 's/from hookify\.core/from core/g' \
+        -e 's/from hookify\.utils/from utils/g' \
+        -e 's/from hookify\.matchers/from matchers/g' \
+        {} \; 2>/dev/null
+
+    # __init__.pyが存在しない場合は作成
+    if [[ ! -f "$HOOKIFY_MARKETPLACE/__init__.py" ]]; then
+        cat > "$HOOKIFY_MARKETPLACE/__init__.py" <<'INIT_EOF'
+"""Hookify plugin package.
+
+This package provides hook-based automation for Claude Code.
+"""
+
+__version__ = "0.1.0"
+INIT_EOF
+        log_success "hookifyパッチを適用しました"
+    else
+        log_info "hookifyパッチは既に適用済みです"
+    fi
+else
+    log_info "hookifyプラグインが見つかりません。パッチはスキップします。"
+fi
+
 log_success "Claude Code プラグインセットアップが完了しました！"
