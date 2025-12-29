@@ -46,6 +46,7 @@ fi
 
 echo "[INFO] マーケットプレイスを初期化中..."
 # 必須マーケットプレイスを追加（完全なHTTPS URLを使用）
+claude plugin marketplace add https://github.com/anthropics/claude-plugins-official.git 2>&1 || echo "[WARN] claude-plugins-official already exists or failed to add"
 claude plugin marketplace add https://github.com/anthropics/claude-code.git 2>&1 || echo "[WARN] claude-code-plugins already exists or failed to add"
 claude plugin marketplace add https://github.com/wshobson/agents.git 2>&1 || echo "[WARN] claude-code-workflows already exists or failed to add"
 

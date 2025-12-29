@@ -7,20 +7,22 @@
 ### Git管理対象
 
 - `config.json` - カスタムプラグインリポジトリの設定
-- `known_marketplaces.json` - 使用するマーケットプレイスのリスト
+- `known_marketplaces.json.template` - マーケットプレイス設定のテンプレート（環境非依存）
+- `plugins.txt` - インストールするプラグインのリスト
 - `README.md` - このドキュメント
 
 ### Git管理対象外（.gitignore）
 
+- `known_marketplaces.json` - 環境固有のマーケットプレイス設定（テンプレートから自動生成）
 - `installed_plugins.json` - インストール済みプラグインのメタデータ（環境依存）
 - `marketplaces/` - マーケットプレイスからダウンロードされたプラグイン実体
 - `repos/` - カスタムリポジトリのプラグイン
 
 ## プラグイン管理の仕組み
 
-### 1. マーケットプレイスの設定
+### 1. 環境非依存のマーケットプレイス設定
 
-`known_marketplaces.json`でどのマーケットプレイスを使用するか定義します：
+`known_marketplaces.json.template`でマーケットプレイスを定義します。`{{HOME}}`プレースホルダーを使用することで、macOS/Linux/DevContainer環境すべてで動作します：
 
 ```json
 {
@@ -29,11 +31,12 @@
       "source": "github",
       "repo": "anthropics/claude-code"
     },
-    "installLocation": "/home/vscode/.claude/plugins/marketplaces/claude-code-plugins",
-    "lastUpdated": "2025-12-02T07:58:31.073Z"
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-code-plugins"
   }
 }
 ```
+
+`setup-claude.sh`実行時に、テンプレートから環境固有の`known_marketplaces.json`が自動生成されます。
 
 ### 2. プラグインの有効化
 
@@ -50,40 +53,50 @@
 
 ## セットアップ手順
 
-### 新しい環境でのセットアップ
+### 新しい環境でのセットアップ（推奨）
 
-1. **マーケットプレイスの追加**
-
-   Claude Codeで以下のコマンドを実行してマーケットプレイスを追加：
-
-   ```bash
-   # 公式プラグイン
-   claude marketplace add anthropics/claude-code
-
-   # コミュニティプラグイン（例）
-   claude marketplace add davila7/claude-code-templates
-   claude marketplace add wshobson/agents
-   ```
-
-2. **プラグインのインストール**
-
-   Claude Code UIまたはコマンドでプラグインをインストール：
-
-   ```bash
-   claude plugin install frontend-design@claude-code-plugins
-   ```
-
-3. **プラグインの有効化**
-
-   `.claude/settings.local.json`に`enabledPlugins`設定を追加
-
-### 既存環境の設定をエクスポート
-
-現在の環境のマーケットプレイス設定を保存：
+リポジトリの自動セットアップスクリプトを使用：
 
 ```bash
-cp ~/.claude/plugins/known_marketplaces.json .claude/plugins/known_marketplaces.json
+# すべてセットアップ（設定同期 + プラグインインストール）
+make claude-setup
+
+# または、プラグインのみインストール
+make claude-plugins
 ```
+
+このコマンドにより：
+
+1. リポジトリの`plugins.txt`と`known_marketplaces.json.template`を`~/.claude/plugins/`にコピー
+2. テンプレートから環境固有の`known_marketplaces.json`を生成
+3. 必要なマーケットプレイスを自動追加
+4. `plugins.txt`に記載されたすべてのプラグインをインストール
+
+### 手動セットアップ
+
+1. **マーケットプレイス設定の生成**
+
+   ```bash
+   # テンプレートから環境固有の設定を生成
+   sed "s|{{HOME}}|${HOME}|g" .claude/plugins/known_marketplaces.json.template > ~/.claude/plugins/known_marketplaces.json
+   ```
+
+2. **マーケットプレイスの追加**
+
+   ```bash
+   claude plugin marketplace add anthropics/claude-plugins-official
+   claude plugin marketplace add wshobson/agents
+   ```
+
+3. **プラグインのインストール**
+
+   ```bash
+   # 個別インストール
+   claude plugin install commit-commands@claude-plugins-official
+
+   # または一括インストール
+   make claude-plugins
+   ```
 
 ## 利用可能なマーケットプレイス
 

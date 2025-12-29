@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Claude Code Setup Script
-# DevContainer 起動時にプラグインをユーザースコープでインストールします
+# ローカル環境/DevContainer両方で動作するプラグインセットアップ
 # ============================================================================
+# 要件: bash 4.0+ (連想配列を使用)
+# macOS: PATH に /opt/homebrew/bin が含まれていること (brew install bash)
 
 set -euo pipefail
+
+# Bash バージョンチェック
+if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]; then
+    echo "エラー: このスクリプトは bash 4.0 以降が必要です (現在: ${BASH_VERSION})"
+    echo "macOS の場合: brew install bash を実行してください"
+    echo "その後、PATH に /opt/homebrew/bin を追加してください"
+    exit 1
+fi
 
 # カラー出力
 GREEN='\033[0;32m'
@@ -16,20 +26,51 @@ log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 
-# DevContainer内の固定パスを使用
-PLUGINS_FILE="/home/vscode/.claude/plugins/plugins.txt"
-KNOWN_MARKETPLACES="/home/vscode/.claude/plugins/known_marketplaces.json"
+# 環境検出とパス設定
+CLAUDE_DIR="${HOME}/.claude"
+PLUGINS_DIR="${CLAUDE_DIR}/plugins"
+PLUGINS_FILE="${PLUGINS_DIR}/plugins.txt"
+KNOWN_MARKETPLACES="${PLUGINS_DIR}/known_marketplaces.json"
+MARKETPLACES_TEMPLATE="${PLUGINS_DIR}/known_marketplaces.json.template"
+
+# リポジトリルートの検出
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_PLUGINS_DIR="${REPO_ROOT}/.claude/plugins"
 
 log_info "Claude Code プラグインセットアップを開始します..."
+log_info "環境: HOME=${HOME}"
 
 # 一時ディレクトリを作成（クロスデバイスリンクエラー対策）
-mkdir -p /home/vscode/.claude/tmp
-export TMPDIR=/home/vscode/.claude/tmp
+mkdir -p "${CLAUDE_DIR}/tmp"
+export TMPDIR="${CLAUDE_DIR}/tmp"
 
 # Claude CLI の存在確認
 if ! command -v claude &> /dev/null; then
     log_warn "Claude CLI が見つかりません。プラグインのインストールはスキップされます。"
     exit 0
+fi
+
+# リポジトリのplugins.txtとテンプレートを$HOME/.claude/pluginsにコピー
+log_info "リポジトリからプラグイン設定をコピー中..."
+mkdir -p "${PLUGINS_DIR}"
+
+if [[ -f "${REPO_PLUGINS_DIR}/plugins.txt" ]]; then
+    cp "${REPO_PLUGINS_DIR}/plugins.txt" "${PLUGINS_FILE}"
+    log_success "plugins.txt をコピーしました"
+else
+    log_warn "リポジトリにplugins.txtが見つかりません"
+fi
+
+if [[ -f "${REPO_PLUGINS_DIR}/known_marketplaces.json.template" ]]; then
+    cp "${REPO_PLUGINS_DIR}/known_marketplaces.json.template" "${MARKETPLACES_TEMPLATE}"
+    log_success "known_marketplaces.json.template をコピーしました"
+fi
+
+# テンプレートから known_marketplaces.json を生成
+if [[ -f "${MARKETPLACES_TEMPLATE}" ]]; then
+    log_info "テンプレートから known_marketplaces.json を生成中..."
+    sed "s|{{HOME}}|${HOME}|g" "${MARKETPLACES_TEMPLATE}" > "${KNOWN_MARKETPLACES}"
+    log_success "known_marketplaces.json を生成しました"
 fi
 
 # plugins.txt の存在確認

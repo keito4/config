@@ -5,19 +5,13 @@
 
 # === Official Plugins (claude-plugins-official) ===
 # 基本プラグイン
-vercel@claude-plugins-official
 commit-commands@claude-plugins-official
 hookify@claude-plugins-official
 plugin-dev@claude-plugins-official
 frontend-design@claude-plugins-official
 
 # プロジェクト固有
-supabase@claude-plugins-official
 typescript-lsp@claude-plugins-official
-
-# === Template Plugins (claude-code-templates) ===
-nextjs-vercel-pro@claude-code-templates
-supabase-toolkit@claude-code-templates
 
 # === Workflow Plugins (claude-code-workflows) ===
 code-refactoring@claude-code-workflows

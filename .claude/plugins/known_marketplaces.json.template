@@ -1,0 +1,44 @@
+{
+  "anthropic-agent-skills": {
+    "source": {
+      "source": "git",
+      "url": "https://github.com/anthropics/skills.git"
+    },
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/anthropic-agent-skills"
+  },
+  "claude-code-plugins": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-code"
+    },
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-code-plugins"
+  },
+  "claude-code-templates": {
+    "source": {
+      "source": "git",
+      "url": "https://github.com/davila7/claude-code-templates.git"
+    },
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-code-templates"
+  },
+  "claude-code-workflows": {
+    "source": {
+      "source": "github",
+      "repo": "wshobson/agents"
+    },
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-code-workflows"
+  },
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    },
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-plugins-official"
+  },
+  "playwright-skill": {
+    "source": {
+      "source": "github",
+      "repo": "lackeyjb/playwright-skill"
+    },
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/playwright-skill"
+  }
+}
