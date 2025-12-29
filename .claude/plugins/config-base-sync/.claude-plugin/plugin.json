@@ -1,0 +1,13 @@
+{
+  "name": "config-base-sync",
+  "version": "0.1.0",
+  "description": "Sync DevContainer configuration with latest config-base image and create PR",
+  "author": {
+    "name": "keito4",
+    "email": "keito4@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/keito4/config",
+  "repository": "https://github.com/keito4/config",
+  "license": "MIT",
+  "keywords": ["devcontainer", "config", "automation", "sync"]
+}
