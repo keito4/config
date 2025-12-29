@@ -38,5 +38,13 @@
     },
     "installLocation": "/home/vscode/.claude/plugins/marketplaces/claude-plugins-official",
     "lastUpdated": "2025-12-17T05:27:08.012Z"
+  },
+  "playwright-skill": {
+    "source": {
+      "source": "github",
+      "repo": "lackeyjb/playwright-skill"
+    },
+    "installLocation": "/home/vscode/.claude/plugins/marketplaces/playwright-skill",
+    "lastUpdated": "2025-12-29T02:35:00.000Z"
   }
 }
