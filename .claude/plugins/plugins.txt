@@ -23,13 +23,13 @@ supabase-toolkit@claude-code-templates
 code-refactoring@claude-code-workflows
 
 # === Additional Plugins ===
-# AI and Code Review
-code-review-ai@claude-plugins-official
-# Kubernetes
-kubernetes-operations@claude-plugins-official
-# JavaScript/TypeScript
-javascript-typescript@claude-plugins-official
-# Agents (wshobson/agents)
-agents@claude-code-workflows
-# Playwright
+# Code Review
+code-review@claude-plugins-official
+# AI Code Review (from claude-code-workflows)
+code-review-ai@claude-code-workflows
+# Kubernetes Operations
+kubernetes-operations@claude-code-workflows
+# JavaScript/TypeScript Development
+javascript-typescript@claude-code-workflows
+# Playwright Browser Automation
 playwright-skill@playwright-skill
