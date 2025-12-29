@@ -55,6 +55,7 @@ report.log
 
 # Claude settings (local overrides)
 .claude/settings.local.json
+.claude/plugins/known_marketplaces.json
 
 # MCP configuration
 .mcp.json
