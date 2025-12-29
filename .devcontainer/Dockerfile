@@ -76,7 +76,6 @@ COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
 COPY --chown=vscode:vscode .claude/agents /home/vscode/.claude/agents
 COPY --chown=vscode:vscode .claude/hooks /home/vscode/.claude/hooks
 COPY --chown=vscode:vscode .claude/plugins/plugins.txt /home/vscode/.claude/plugins/plugins.txt
-COPY --chown=vscode:vscode .claude/plugins/config-base-sync /home/vscode/.claude/plugins/config-base-sync
 COPY --chown=vscode:vscode script/install-claude-plugins.sh /tmp/install-claude-plugins.sh
 COPY --chown=root:root script/setup-claude.sh /usr/local/bin/setup-claude.sh
 RUN chmod +x /usr/local/bin/setup-claude.sh
