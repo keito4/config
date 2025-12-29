@@ -1,5 +1,4 @@
 ---
-name: update
 description: Update DevContainer to latest config-base image and create PR
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Bash(curl:*), Bash(jq:*)
 argument-hint: [--version X.Y.Z]

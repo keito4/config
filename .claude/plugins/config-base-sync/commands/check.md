@@ -1,5 +1,4 @@
 ---
-name: check
 description: Check current and latest config-base image versions
 allowed-tools: Read, Bash(gh:*), Bash(jq:*)
 ---
