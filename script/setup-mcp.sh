@@ -92,9 +92,8 @@ main() {
 
     # envsubst で変数置換して .mcp.json を生成
     print_info ".mcp.json を生成中..."
-    envsubst < "$MCP_TEMPLATE" > "$MCP_OUTPUT"
 
-    if [[ $? -eq 0 ]]; then
+    if envsubst < "$MCP_TEMPLATE" > "$MCP_OUTPUT"; then
         chmod 600 "$MCP_OUTPUT"
         print_success ".mcp.json を生成しました: $MCP_OUTPUT"
         print_info ""
