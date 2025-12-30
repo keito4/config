@@ -108,7 +108,7 @@ if [[ -d "${REPO_AGENTS_DIR}" ]]; then
     mkdir -p "${CLAUDE_DIR}/agents"
     if [[ -n "$(ls -A "${REPO_AGENTS_DIR}" 2>/dev/null)" ]]; then
         cp -r "${REPO_AGENTS_DIR}"/* "${CLAUDE_DIR}/agents/" 2>/dev/null || true
-        log_success "エージェントを同期しました: $(ls -1 "${CLAUDE_DIR}/agents" 2>/dev/null | wc -l) ファイル"
+        log_success "エージェントを同期しました: $(find "${CLAUDE_DIR}/agents" -maxdepth 1 -type f 2>/dev/null | wc -l) ファイル"
     else
         log_info "リポジトリにエージェントが見つかりません"
     fi
@@ -121,7 +121,7 @@ if [[ -d "${REPO_HOOKS_DIR}" ]]; then
     mkdir -p "${CLAUDE_DIR}/hooks"
     if [[ -n "$(ls -A "${REPO_HOOKS_DIR}" 2>/dev/null)" ]]; then
         cp -r "${REPO_HOOKS_DIR}"/* "${CLAUDE_DIR}/hooks/" 2>/dev/null || true
-        log_success "フックを同期しました: $(ls -1 "${CLAUDE_DIR}/hooks" 2>/dev/null | wc -l) ファイル"
+        log_success "フックを同期しました: $(find "${CLAUDE_DIR}/hooks" -maxdepth 1 -type f 2>/dev/null | wc -l) ファイル"
     else
         log_info "リポジトリにフックが見つかりません"
     fi
