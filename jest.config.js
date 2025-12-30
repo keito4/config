@@ -6,6 +6,7 @@ module.exports = {
     '!script/**/*',
     '!node_modules/**/*',
     '!coverage/**/*',
+    '!dist/**/*',
     '!**/*.test.js',
     '!**/*.spec.js',
   ],
