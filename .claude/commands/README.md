@@ -1,6 +1,6 @@
 # Claude Automated Commands
 
-This directory contains 2 pre-configured commands that provide automated workflows for common development tasks. These commands can be invoked directly by Claude or triggered automatically based on repository events and context. Additional automated commands are available in the `.codex/prompts/` directory.
+This directory contains pre-configured commands that provide automated workflows for common development tasks. These commands can be invoked directly by Claude or triggered automatically based on repository events and context. Additional automated commands are available in the `.codex/prompts/` directory.
 
 ## Available Commands
 
@@ -15,6 +15,25 @@ This directory contains 2 pre-configured commands that provide automated workflo
 - Conflict resolution guidance
 - Git workflow automation
 - Repository state validation
+
+### Code Analysis
+
+#### `similarity-analysis.md`
+
+**Purpose**: Analyze code similarity in the repository to detect duplicate functions and patterns
+**Features**:
+
+- AST-based code similarity detection (not just text matching)
+- Configurable similarity threshold
+- Detailed refactoring recommendations
+- Support for TypeScript/JavaScript codebases
+
+**Usage**:
+
+```
+/similarity-analysis
+/similarity-analysis path=src threshold=0.9
+```
 
 ### Development Environment
 
