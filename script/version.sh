@@ -12,7 +12,7 @@ FORCE=false
 
 # Determine script directory and source output library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=lib/output.sh
+# shellcheck source=script/lib/output.sh
 source "$SCRIPT_DIR/lib/output.sh"
 
 usage() {

@@ -10,7 +10,7 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 TEMPLATES_DIR="$REPO_ROOT/credentials/templates"
 CREDENTIALS_DIR="$REPO_ROOT/credentials"
 
-# shellcheck source=lib/output.sh
+# shellcheck source=script/lib/output.sh
 source "$SCRIPT_DIR/lib/output.sh"
 
 # 1Password CLI の利用可否をチェック

@@ -11,7 +11,7 @@ MCP_TEMPLATE="$REPO_ROOT/.mcp.json.template"
 MCP_OUTPUT="$REPO_ROOT/.mcp.json"
 MCP_ENV="$REPO_ROOT/credentials/mcp.env"
 
-# shellcheck source=lib/output.sh
+# shellcheck source=script/lib/output.sh
 source "$SCRIPT_DIR/lib/output.sh"
 
 # envsubst の利用可否をチェック
