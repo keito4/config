@@ -18,6 +18,7 @@ fi
 
 # Determine script directory and source output library
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=script/lib/output.sh
 source "$REPO_ROOT/script/lib/output.sh"
 
 # 環境検出とパス設定
