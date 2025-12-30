@@ -1,9 +1,0 @@
-# Local settings (user-specific configuration)
-*.local.md
-
-# Node modules (if any scripts use npm)
-node_modules/
-
-# Temporary files
-*.tmp
-*.log
