@@ -1,0 +1,27 @@
+name: Test Act
+
+on:
+  push:
+    branches: [test-act]
+  workflow_dispatch:
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Print working directory
+        run: pwd
+
+      - name: List files
+        run: ls -la
+
+      - name: Echo message
+        run: echo "Act is working correctly!"
+
+      - name: Check act configuration
+        run: |
+          echo "Testing act with .actrc configuration"
+          echo "Current directory: $(pwd)"
+          echo "Node version: $(node --version || echo 'Node not installed')"

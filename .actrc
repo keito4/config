@@ -1,0 +1,28 @@
+# act configuration file
+# https://nektosact.com/usage/index.html
+
+# Default runner images (use -P to override)
+-P ubuntu-latest=catthehacker/ubuntu:full-20.04
+-P ubuntu-22.04=catthehacker/ubuntu:full-22.04
+-P ubuntu-20.04=catthehacker/ubuntu:full-20.04
+
+# Load environment variables from .env file (if exists)
+--env-file .env.local
+
+# Use ~/.secrets for GitHub secrets (if exists)
+--secret-file ~/.secrets
+
+# Enable verbose logging by default (remove this line if you prefer quiet mode)
+# -v
+
+# Bind workspace to improve performance
+--bind
+
+# Use container architecture matching the host
+--container-architecture linux/amd64
+
+# Reuse containers between runs for faster execution
+--reuse
+
+# Enable GitHub API token from environment
+# Set GITHUB_TOKEN in your environment or .env.local file
