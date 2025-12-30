@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y \
     shellcheck \
     python3 \
     python3-pip \
+    python3-venv \
+    python3-dev \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  && NODE_VERSION=v22.14.0 \

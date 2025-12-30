@@ -184,15 +184,41 @@ log_info "プラグイン: ${installed} インストール完了、${skipped} �
 # hookifyプラグインのインポートエラー修正パッチを適用
 log_info "hookifyプラグインのインポートパッチを適用中..."
 HOOKIFY_MARKETPLACE="${HOME}/.claude/plugins/marketplaces/claude-code-plugins/plugins/hookify"
-if [[ -d "$HOOKIFY_MARKETPLACE" ]]; then
-    # 絶対インポートを相対インポートに変更（OS非依存）
-    find "$HOOKIFY_MARKETPLACE" -name "*.py" -type f -exec perl -i -pe \
-        's/from hookify\.core/from core/g; s/from hookify\.utils/from utils/g; s/from hookify\.matchers/from matchers/g;' \
-        {} \; 2>/dev/null
+HOOKIFY_OFFICIAL="${HOME}/.claude/plugins/marketplaces/claude-plugins-official/plugins/hookify"
 
-    # __init__.pyが存在しない場合は作成
-    if [[ ! -f "$HOOKIFY_MARKETPLACE/__init__.py" ]]; then
-        cat > "$HOOKIFY_MARKETPLACE/__init__.py" <<'INIT_EOF'
+for HOOKIFY_DIR in "$HOOKIFY_MARKETPLACE" "$HOOKIFY_OFFICIAL"; do
+    if [[ -d "$HOOKIFY_DIR" ]]; then
+        log_info "  パッチ適用先: ${HOOKIFY_DIR}"
+
+        # 絶対インポートを相対インポートに変更（OS非依存）
+        find "$HOOKIFY_DIR" -name "*.py" -type f -exec perl -i -pe \
+            's/from hookify\.core/from core/g; s/from hookify\.utils/from utils/g; s/from hookify\.matchers/from matchers/g;' \
+            {} \; 2>/dev/null
+
+        # hooks/ディレクトリ内のPythonスクリプトのshebangを修正
+        if [[ -d "$HOOKIFY_DIR/hooks" ]]; then
+            for py_file in "$HOOKIFY_DIR/hooks"/*.py; do
+                if [[ -f "$py_file" ]]; then
+                    # shebangを明示的に#!/usr/bin/env python3に設定
+                    if head -n1 "$py_file" | grep -q "^#!"; then
+                        # 既存のshebangを置換
+                        perl -i -pe 's|^#!.*python.*|#!/usr/bin/env python3|' "$py_file"
+                    else
+                        # shebangがない場合は追加
+                        tmp_file=$(mktemp)
+                        echo '#!/usr/bin/env python3' > "$tmp_file"
+                        cat "$py_file" >> "$tmp_file"
+                        mv "$tmp_file" "$py_file"
+                    fi
+                    chmod +x "$py_file"
+                fi
+            done
+            log_success "  hookスクリプトのshebangを修正しました"
+        fi
+
+        # __init__.pyが存在しない場合は作成
+        if [[ ! -f "$HOOKIFY_DIR/__init__.py" ]]; then
+            cat > "$HOOKIFY_DIR/__init__.py" <<'INIT_EOF'
 """Hookify plugin package.
 
 This package provides hook-based automation for Claude Code.
@@ -200,11 +226,12 @@ This package provides hook-based automation for Claude Code.
 
 __version__ = "0.1.0"
 INIT_EOF
-        log_success "hookifyパッチを適用しました"
-    else
-        log_info "hookifyパッチは既に適用済みです"
+            log_success "  __init__.pyを作成しました"
+        fi
     fi
-else
+done
+
+if [[ ! -d "$HOOKIFY_MARKETPLACE" && ! -d "$HOOKIFY_OFFICIAL" ]]; then
     log_info "hookifyプラグインが見つかりません。パッチはスキップします。"
 fi
 
