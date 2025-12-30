@@ -2,175 +2,174 @@
 
 ## 優先度
 
-🔴 **クリティカル**
+**Critical** - 現状0%、目標70%+
 
-## 現状
+## 現状分析
 
-- **現在のカバレッジ**: 0% (statements/branches/functions/lines)
-- **目標カバレッジ**: 70% (jest.config.js で定義)
-- **既存テスト**: 2ファイル、35テストケース（設定ファイル検証のみ）
+### 現在のテストカバレッジ
 
-## 問題の詳細
+```
+Test Suites: 2 passed, 2 total
+Tests:       35 passed, 35 total
+Coverage:    0% (no coverage configured)
+```
 
-### 未テストの重要コード
+**既存テスト:**
 
-1. `script/import.sh` (130行) - 環境セットアップロジック
-2. `script/export.sh` (105行) - 設定エクスポートロジック
-3. `script/update-libraries.sh` (52行) - 依存関係更新ロジック
-4. `commitlint.config.js` (53行) - カスタムルールロジック
-5. 全15シェルスクリプト - 統合テストなし
+- `test/config-validation.test.js` (17 tests)
+- `test/credential-filtering.test.js` (18 tests)
 
-### 影響
+### 未テストの主要コンポーネント
 
-- **本番バグ発見率**: リリース後週1-2件の問題報告が想定される
-- **手動テスト時間**: 2-3時間/変更（macOS, Linux, DevContainer環境）
-- **緊急修正コスト**: 4時間/件
-- **月次影響**: 8-10時間の無駄
-- **年間コスト**: 14,400-18,000ドル
+1. **シェルスクリプト** (15 scripts, ~1,474 lines)
+   - script/setup-claude.sh (372 lines)
+   - script/brew-deps.sh (207 lines)
+   - script/credentials.sh (105 lines)
+   - script/import.sh, export.sh, など
+
+2. **JavaScript/設定ファイル**
+   - commitlint.config.js
+   - eslint.config.mjs
+   - jest.config.js
+
+3. **CI/CD Workflows**
+   - GitHub Actions workflows (7 files)
+
+## 投資対効果 (ROI)
+
+- **投資時間**: 96時間
+- **年間コスト削減**: $14,400-18,000
+  - バグ修正時間: $7,200-9,000/年
+  - リグレッション防止: $4,800-6,000/年
+  - レビュー効率化: $2,400-3,000/年
+- **ROI**: 75-88% (1年目)
+- **累積ROI**: 225-313% (3年)
 
 ## 実装計画
 
-### フェーズ1: JavaScriptコードのユニットテスト（Week 1-2）
+### Phase 1: 既存テストの拡張とカバレッジ設定 (24時間)
 
-```javascript
-// test/commitlint.test.js
-const { execSync } = require('child_process');
-const commitlint = require('../commitlint.config.js');
+**1.1 Jest カバレッジ設定 (4時間)**
 
-describe('Release type validation', () => {
-  test('allows non-release types for non-sensitive files', () => {
-    // モック: package.json以外のファイル
-    jest.spyOn(commitlint, 'getStagedFiles').mockReturnValue(['README.md']);
+- `jest.config.js` にcoverage設定追加
+- カバレッジ閾値設定: 70% lines/branches/functions/statements
+- CI統合 (`.github/workflows/ci.yml`)
 
-    const result = commitlint.rules['codex-release-type'][0]({ type: 'chore' });
-    expect(result[0]).toBe(true);
-  });
+**タスク:**
 
-  test('enforces release types for package.json changes', () => {
-    // モック: package.jsonを含む
-    jest.spyOn(commitlint, 'getStagedFiles').mockReturnValue(['package.json']);
+- [ ] jest.config.js に collectCoverage, coverageThreshold 設定
+- [ ] coverage/ ディレクトリを .gitignore に追加
+- [ ] npm script に `test:coverage` 追加済み → 実行確認
+- [ ] CI workflow にカバレッジチェック追加
 
-    const result = commitlint.rules['codex-release-type'][0]({ type: 'chore' });
-    expect(result[0]).toBe(false);
-    expect(result[1]).toContain('release-triggering type');
-  });
+**1.2 既存スクリプトのテスト追加 (20時間)**
 
-  test('accepts feat type for package.json changes', () => {
-    jest.spyOn(commitlint, 'getStagedFiles').mockReturnValue(['package.json']);
+**優先スクリプト:**
 
-    const result = commitlint.rules['codex-release-type'][0]({ type: 'feat' });
-    expect(result[0]).toBe(true);
-  });
-});
-```
+1. **script/update-libraries.sh** (8時間)
+   - [ ] 依存関係更新ロジックのテスト
+   - [ ] package.json/npm/global.json の解析テスト
+   - [ ] git操作のモックテスト
 
-### フェーズ2: シェルスクリプトの統合テスト（Week 3-4）
+2. **script/credentials.sh** (6時間)
+   - [ ] 資格情報フィルタリングロジックのテスト
+   - [ ] テンプレート生成テスト
+   - [ ] セキュリティ検証テスト
 
-```bash
-# test/integration/import.bats
-#!/usr/bin/env bats
+3. **設定ファイルバリデーション** (6時間)
+   - [ ] commitlint.config.js の設定テスト
+   - [ ] eslint.config.mjs のルールテスト
+   - [ ] jest.config.js の設定テスト
 
-setup() {
-  export REPO_PATH="$(mktemp -d)"
-  mkdir -p "$REPO_PATH"/{.claude,brew,git,npm,dot}
-}
+### Phase 2: シェルスクリプトの統合テスト拡充 (32時間)
 
-teardown() {
-  rm -rf "$REPO_PATH"
-}
+**Issue #004との統合**
 
-@test "import.sh handles missing REPO_PATH gracefully" {
-  unset REPO_PATH
-  run bash script/import.sh
-  [ "$status" -eq 0 ]
-}
+2.1 **script/setup-claude.sh テスト** (12時間)
 
-@test "import.sh creates necessary directories" {
-  run bash script/import.sh
-  [ "$status" -eq 0 ]
-  [ -d "$HOME/.claude" ]
-}
+- [ ] プラグインインストールテスト
+- [ ] 設定ファイル生成テスト
+- [ ] エラーハンドリングテスト
 
-@test "import.sh copies Claude settings correctly" {
-  echo '{"test": true}' > "$REPO_PATH/.claude/settings.json"
+  2.2 **script/brew-deps.sh テスト** (10時間)
 
-  run bash script/import.sh
-  [ "$status" -eq 0 ]
-  [ -f "$HOME/.claude/settings.json" ]
-}
-```
+- [ ] Brewfile解析テスト
+- [ ] 依存関係検証テスト
+- [ ] OS別分岐テスト
 
-### フェーズ3: エンドツーエンドテスト（Month 2）
+  2.3 **import/export スクリプトテスト** (10時間)
 
-```bash
-# test/e2e/export-import-roundtrip.bats
-@test "export followed by import preserves configuration" {
-  # 1. 初期状態をエクスポート
-  bash script/export.sh
+- [ ] export.sh: 設定エクスポートテスト
+- [ ] import.sh: 設定インポートテスト
+- [ ] データ整合性テスト
 
-  # 2. バックアップ
-  cp -r "$REPO_PATH" "$REPO_PATH.backup"
+### Phase 3: CI/CD Workflow テスト (20時間)
 
-  # 3. インポート
-  bash script/import.sh
+3.1 **Workflow 構造テスト** (12時間)
 
-  # 4. 再度エクスポート
-  bash script/export.sh
+- [ ] YAML構文検証
+- [ ] 必須ステップ存在確認
+- [ ] secrets/環境変数参照検証
 
-  # 5. 差分確認（credentials除く）
-  diff -r "$REPO_PATH" "$REPO_PATH.backup" --exclude="*.secret"
-  [ "$?" -eq 0 ]
-}
-```
+  3.2 **Workflow セキュリティテスト** (8時間)
 
-## タスクリスト
+- [ ] コマンドインジェクション検出
+- [ ] 信頼できないインプット検証
+- [ ] 権限設定確認
 
-- [ ] Week 1: batsフレームワークのインストール
-- [ ] Week 1: commitlint.config.js のユニットテスト作成
-- [ ] Week 2: jest.config.js のユニットテスト作成
-- [ ] Week 2: テストヘルパー関数の作成
-- [ ] Week 3: import.sh の統合テスト作成
-- [ ] Week 4: export.sh の統合テスト作成
-- [ ] Week 4: update-libraries.sh の統合テスト作成
-- [ ] Month 2: E2Eテストスイートの作成
-- [ ] Month 2: CI/CDパイプラインにカバレッジレポート統合
-- [ ] Month 2: Codecov連携設定
+### Phase 4: E2Eテストと最終検証 (20時間)
+
+4.1 **統合シナリオテスト** (12時間)
+
+- [ ] 新規環境セットアップシナリオ
+- [ ] 設定更新シナリオ
+- [ ] リカバリーシナリオ
+
+  4.2 **カバレッジ目標達成** (8時間)
+
+- [ ] カバレッジレポート分析
+- [ ] 未カバー領域の追加テスト
+- [ ] 70%達成確認
 
 ## 成功基準
 
-- [ ] JavaScriptコード: 80%以上のカバレッジ
-- [ ] 重要シェルスクリプト: 60%以上のカバレッジ
-- [ ] CI/CDで自動的にカバレッジチェック
-- [ ] PRごとにカバレッジレポート表示
-- [ ] カバレッジバッジをREADMEに追加
+### 定量的指標
 
-## ROI計算
+- ✅ Line coverage ≥ 70%
+- ✅ Branch coverage ≥ 70%
+- ✅ Function coverage ≥ 70%
+- ✅ Statement coverage ≥ 70%
+- ✅ CI でカバレッジチェックが自動実行
+- ✅ 全テストが1分以内に完了
 
-**投資**
+### 定性的指標
 
-- フェーズ1 (JS): 32時間
-- フェーズ2 (Shell): 48時間
-- フェーズ3 (E2E): 16時間
-- **合計**: 96時間 × $150/h = $14,400
+- ✅ クリティカルパス（credentials, setup-claude）は100%カバレッジ
+- ✅ 各スクリプトに正常系・異常系テストが存在
+- ✅ テストドキュメントが整備されている
 
-**リターン**
+## リスクと対策
 
-- 手動テスト時間削減: 8-10時間/月 → 96-120時間/年
-- バグ修正コスト削減: 70%減 → $10,800-12,600/年
-- **年間節約**: $10,800-12,600
-- **ROI**: 75-88% (初年度)、175-188% (2年累積)
+| リスク                       | 影響 | 対策                                 |
+| ---------------------------- | ---- | ------------------------------------ |
+| シェルスクリプトのテスト困難 | 高   | batsフレームワーク活用（Issue #004） |
+| 96時間の大規模投資           | 中   | Phase分割で段階的実装                |
+| 既存機能への影響             | 中   | テストファースト、段階的リリース     |
 
-## 関連ファイル
+## 実装順序
 
-- `jest.config.js` - テスト設定
-- `test/config-validation.test.js` - 既存テスト
-- `test/credential-filtering.test.js` - 既存テスト
-- `script/import.sh` - テスト対象
-- `script/export.sh` - テスト対象
-- `commitlint.config.js` - テスト対象
+1. **Phase 1** (Quick Win) - カバレッジ設定 + 主要スクリプトテスト
+2. **Phase 2** - Issue #004 と統合してシェルスクリプトテスト
+3. **Phase 3** - CI/CD セキュリティ強化
+4. **Phase 4** - E2E 統合と目標達成
 
-## 参考リンク
+## 関連Issue
 
-- [Jest Documentation](https://jestjs.io/docs/getting-started)
-- [Bats Testing Framework](https://bats-core.readthedocs.io/)
-- [Codecov](https://about.codecov.io/)
+- **Issue #004**: シェルスクリプト統合テスト（Phase 2で統合）
+- **Issue #002**: shellcheck導入（静的解析との相乗効果）
+
+## 参考資料
+
+- Jest カバレッジ設定: https://jestjs.io/docs/configuration#collectcoverage-boolean
+- Bats テストガイド: https://bats-core.readthedocs.io/
+- GitHub Actions テストベストプラクティス: https://docs.github.com/en/actions/automating-builds-and-tests
