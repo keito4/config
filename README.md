@@ -568,6 +568,8 @@ The repository includes a complete DevContainer setup (`.devcontainer/`) that pr
 - Integrated Claude Code configuration with specialized agents and commands
 - Bell notification system for development workflow events
 
+**DevContainer推奨設定**: Elu-co-jp配下のリポジトリで統一されたDevContainer環境を構築するための推奨設定とベストプラクティスについては、[.codex/devcontainer-recommendations.md](.codex/devcontainer-recommendations.md)を参照してください。
+
 ### Automated Releases
 
 This repository uses semantic-release for automated version management and releases based on commit messages. Follow conventional commit format:
