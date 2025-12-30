@@ -27,7 +27,7 @@ describe('Jest Configuration', () => {
 
   describe('Coverage configuration', () => {
     test('should collect coverage from JavaScript files', () => {
-      expect(config.collectCoverageFrom).toContain('**/*.js');
+      expect(config.collectCoverageFrom).toContain('**/*.{js,mjs,cjs}');
     });
 
     test('should exclude script directory from coverage', () => {
