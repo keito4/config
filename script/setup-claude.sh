@@ -210,7 +210,7 @@ else
     log_info "hookifyプラグインが見つかりません。パッチはスキップします。"
 fi
 
-# config-base-syncプラグインをグローバルにコピー
+# config-base-syncプラグインをインストール
 # プロジェクトローカルのプラグインを優先、なければイメージ内のプラグインを使用
 PLUGIN_SOURCE=""
 if [[ -d "${REPO_ROOT}/.claude/plugins/config-base-sync" ]]; then
@@ -222,9 +222,36 @@ elif [[ -d "/tmp/claude-plugins/config-base-sync" ]]; then
 fi
 
 if [[ -n "$PLUGIN_SOURCE" ]]; then
-    rm -rf "${PLUGINS_DIR}/config-base-sync"
-    cp -r "$PLUGIN_SOURCE" "${PLUGINS_DIR}/"
-    log_success "config-base-syncプラグインをインストールしました"
+    # プラグインをcacheディレクトリに適切な構造で配置
+    PLUGIN_CACHE_DIR="${PLUGINS_DIR}/cache/local/config-base-sync/0.1.0"
+    mkdir -p "$PLUGIN_CACHE_DIR"
+    cp -r "$PLUGIN_SOURCE"/* "$PLUGIN_CACHE_DIR/"
+
+    # installed_plugins.jsonに登録
+    INSTALLED_PLUGINS="${PLUGINS_DIR}/installed_plugins.json"
+    if [[ ! -f "$INSTALLED_PLUGINS" ]]; then
+        echo '{"version":2,"plugins":{}}' > "$INSTALLED_PLUGINS"
+    fi
+
+    # jqがあれば使用、なければ手動で追記
+    if command -v jq &> /dev/null; then
+        # クロスプラットフォーム対応のタイムスタンプ（ミリ秒なし）
+        TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        jq --arg timestamp "$TIMESTAMP" \
+           --arg path "$PLUGIN_CACHE_DIR" \
+           '.plugins["config-base-sync@local"] = [{
+               "scope": "user",
+               "installPath": $path,
+               "version": "0.1.0",
+               "installedAt": $timestamp,
+               "lastUpdated": $timestamp,
+               "isLocal": true
+           }]' "$INSTALLED_PLUGINS" > "${INSTALLED_PLUGINS}.tmp" && \
+        mv "${INSTALLED_PLUGINS}.tmp" "$INSTALLED_PLUGINS"
+        log_success "config-base-syncプラグインをインストールしました"
+    else
+        log_warn "jqが見つかりません。手動でプラグインを有効化してください: claude plugin enable config-base-sync"
+    fi
 else
     log_warn "config-base-syncプラグインが見つかりません"
 fi
