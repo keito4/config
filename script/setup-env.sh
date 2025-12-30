@@ -62,14 +62,25 @@ generate_env_file() {
 
     if check_op_cli; then
         # 1Password CLI を使用して環境変数を展開
-        op inject -i "$template_file" -o "$output_file" 2>/dev/null
+        local op_result
 
-        if [[ $? -eq 0 ]]; then
+        # OP_ACCOUNT が設定されている場合は --account フラグを追加
+        if [[ -n "${OP_ACCOUNT:-}" ]]; then
+            op inject --account="$OP_ACCOUNT" --force -i "$template_file" -o "$output_file" 2>&1
+            op_result=$?
+        else
+            op inject --force -i "$template_file" -o "$output_file" 2>&1
+            op_result=$?
+        fi
+
+        if [[ $op_result -eq 0 ]]; then
             chmod 600 "$output_file"
             print_success "$description を生成しました: $output_file"
             return 0
         else
             print_error "1Password からの取得に失敗しました"
+            print_info "ヒント: 複数の 1Password アカウントがある場合は OP_ACCOUNT 環境変数を設定してください"
+            print_info "例: OP_ACCOUNT=my.1password.com bash script/setup-env.sh"
             return 1
         fi
     else
