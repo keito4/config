@@ -6,32 +6,57 @@
 
 ```
 credentials/
-├── README.md              # このファイル
-├── setup.md              # 詳細なセットアップガイド
-├── templates/             # 各種サービスのテンプレート
-│   ├── aws.env.template   # AWS認証情報用テンプレート
-│   └── simple.env.template # 汎用環境変数テンプレート
-└── .gitignore            # 生成されたファイルを無視
+├── README.md                        # このファイル
+├── setup.md                         # 詳細なセットアップガイド
+├── templates/                       # 各種サービスのテンプレート
+│   ├── aws.env.template             # AWS認証情報用テンプレート
+│   ├── simple.env.template          # 汎用環境変数テンプレート
+│   ├── devcontainer.env.template    # DevContainer環境変数用（新規）
+│   └── mcp.env.template             # MCP設定用（新規）
+└── .gitignore                       # 生成されたファイルを無視
 ```
 
 ## 使用方法
 
-1. 1Password CLIがインストールされていることを確認
+### クイックスタート（推奨）
+
+1. **1Password CLI をインストール**
 
    ```bash
    brew install --cask 1password-cli
    ```
 
-2. 1Passwordにサインイン
+2. **1Password にサインイン**
 
    ```bash
    op signin
    ```
 
-3. クレデンシャルを取得
+3. **環境変数を自動セットアップ**
+
    ```bash
-   make credentials
+   bash script/setup-env.sh
    ```
+
+   このスクリプトは以下を自動生成します：
+   - `~/.devcontainer.env` - DevContainer 環境変数
+   - `credentials/mcp.env` - MCP 設定用環境変数
+
+4. **MCP 設定を生成**
+
+   ```bash
+   bash script/setup-mcp.sh
+   ```
+
+   `.mcp.json` が自動生成されます。
+
+### 従来の方法
+
+レガシーな方法でクレデンシャルを取得する場合：
+
+```bash
+make credentials
+```
 
 ## セキュリティ
 
@@ -105,8 +130,87 @@ export BUNDLE_RUBYGEMS__PKG__GITHUB__COM="op://Dev/GITHUB_TOKEN/credential"
     git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
 ```
 
+## 1Password Vault 推奨構造
+
+テンプレートが正しく動作するように、1Password の Vault "Dev" に以下の構造でアイテムを作成してください：
+
+```
+Vault: Dev
+├── OPENAI_API_KEY (Login)
+│   └── value: sk-proj-...
+├── AWS (Login)
+│   ├── AWS_ACCESS_KEY_ID: AKIA...
+│   ├── AWS_SECRET_ACCESS_KEY: ...
+│   └── AWS_REGION: ap-northeast-1
+└── その他のクレデンシャル
+```
+
+### アイテムの作成例
+
+```bash
+# OpenAI API Key を作成
+op item create --category=login \
+  --title="OPENAI_API_KEY" \
+  --vault=Dev \
+  value="sk-proj-your-api-key-here"
+
+# AWS クレデンシャルを作成
+op item create --category=login \
+  --title="AWS" \
+  --vault=Dev \
+  AWS_ACCESS_KEY_ID="AKIA..." \
+  AWS_SECRET_ACCESS_KEY="..." \
+  AWS_REGION="ap-northeast-1"
+```
+
+## トラブルシューティング
+
+### 1Password CLI が利用できない
+
+**症状**: `op: command not found`
+
+**解決策**:
+
+1. インストール: `brew install --cask 1password-cli`
+2. サインイン: `op signin`
+
+または手動設定:
+
+```bash
+cp credentials/templates/devcontainer.env.template ~/.devcontainer.env
+# エディタで開いて op:// 参照を実際の値に置換
+```
+
+### DevContainer 起動時にエラー
+
+**症状**: `postCreateCommand` でエラー
+
+**解決策**:
+
+1. スクリプトの実行権限確認: `ls -l script/setup-*.sh`
+2. 手動実行でデバッグ: `bash -x script/setup-env.sh`
+
+### .mcp.json が生成されない
+
+**症状**: `envsubst: command not found` または空の OPENAI_API_KEY
+
+**解決策**:
+
+1. `envsubst` インストール:
+   ```bash
+   brew install gettext
+   brew link --force gettext
+   ```
+2. `credentials/mcp.env` が正しく生成されているか確認:
+   ```bash
+   cat credentials/mcp.env
+   ```
+
 ## 関連ファイル
 
+- `.mcp.json.template`: MCP 設定テンプレート（環境変数参照）
+- `script/setup-env.sh`: 環境変数自動セットアップスクリプト
+- `script/setup-mcp.sh`: MCP 設定自動生成スクリプト
 - `.zsh/configs/pre/.env.secret.template`: シェル環境変数トークンのテンプレート
 - `.claude/settings.local.json.template`: Claude Code ローカル設定のテンプレート
 - `script/export.sh`: 設定エクスポートスクリプト（フィルタリング機能含む）
