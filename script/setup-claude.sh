@@ -16,15 +16,9 @@ if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]; then
     exit 1
 fi
 
-# カラー出力
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
-log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+# Determine script directory and source output library
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$REPO_ROOT/script/lib/output.sh"
 
 # 環境検出とパス設定
 CLAUDE_DIR="${HOME}/.claude"
@@ -32,9 +26,6 @@ PLUGINS_DIR="${CLAUDE_DIR}/plugins"
 PLUGINS_FILE="${PLUGINS_DIR}/plugins.txt"
 KNOWN_MARKETPLACES="${PLUGINS_DIR}/known_marketplaces.json"
 MARKETPLACES_TEMPLATE="${PLUGINS_DIR}/known_marketplaces.json.template"
-
-# リポジトリルートの検出
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_PLUGINS_DIR="${REPO_ROOT}/.claude/plugins"
 
 log_info "Claude Code プラグインセットアップを開始します..."
