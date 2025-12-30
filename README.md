@@ -124,7 +124,7 @@ The `.claude/` directory contains Claude Code configuration that is partially ve
 - `agents/` - Specialized agent configurations
 - `hooks/` - Event-driven automation scripts
 - `plugins/config.json` - Custom plugin repository configuration
-- `plugins/known_marketplaces.json` - List of plugin marketplaces
+- `plugins/known_marketplaces.json.template` - Template for plugin marketplace configuration (generates `known_marketplaces.json` locally)
 - `CLAUDE.md` - Global development standards and guidelines
 
 ### Local-Only Files (Git-Ignored)
@@ -146,7 +146,7 @@ Claude Code設定は`export.sh`と`import.sh`スクリプトで自動的に同�
 - `commands/` - カスタムスラッシュコマンド
 - `agents/` - 専用エージェント設定
 - `hooks/` - イベント駆動の自動化スクリプト
-- `plugins/config.json`, `plugins/known_marketplaces.json` - プラグイン設定
+- `plugins/config.json`, `plugins/known_marketplaces.json.template` - プラグイン設定（テンプレート）
 - `CLAUDE.md` - 開発標準とガイドライン
 
 **同期されない設定（ローカル専用）**
@@ -162,9 +162,10 @@ Claude Code設定は`export.sh`と`import.sh`スクリプトで自動的に同�
 
 Plugin configuration is managed through two layers:
 
-1. **Marketplace Configuration** (version-controlled in `plugins/known_marketplaces.json`)
+1. **Marketplace Configuration** (template in `plugins/known_marketplaces.json.template`, generated as `known_marketplaces.json` locally)
    - Defines which plugin marketplaces to use
-   - Shared across all team members
+   - Template is shared across all team members
+   - Generated file is local-only (not version-controlled)
    - Examples: official Anthropic plugins, community repositories
 
 2. **Plugin Activation** (local-only in `settings.local.json`)
@@ -412,7 +413,7 @@ This repository includes comprehensive GitHub Actions workflows and development 
 
 #### GitHub Actions Workflows
 
-- **CI Pipeline** (`.github/workflows/ci.yml`): Automated testing, linting, and quality checks (uses Node.js 20)
+- **CI Pipeline** (`.github/workflows/ci.yml`): Automated testing, linting, and quality checks (uses Node.js 22)
 - **Claude Code Integration** (`.github/workflows/claude.yml`): AI-assisted code review and issue management
 - **Docker Image Build** (`.github/workflows/docker-image.yml`): Containerized build and deployment pipeline
 - **Library Auto-Update** (`.github/workflows/update-libraries.yml`): Scheduled Codex/Claude tooling refresh that raises a PR when `npm run update:libs` produces changes
@@ -583,7 +584,7 @@ Releases are automatically created when changes are pushed to the main branch.
 
 #### Compatibility Notes
 
-**Node.js Version Requirements**: The current semantic-release (v25.0.2) requires Node.js ^22.14.0 || >= 24.10.0, but the repository currently uses Node.js v20.x in development containers and CI. This produces warnings but continues to function. Consider upgrading Node.js versions for full compatibility.
+**Node.js Version**: The repository uses Node.js v22.14.0 in development containers and CI, which is compatible with semantic-release (v25.0.2) requirements (^22.14.0 || >= 24.10.0).
 
 ### AI-Assisted Development Workflows
 

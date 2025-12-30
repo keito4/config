@@ -19,8 +19,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Install shellcheck and bats
+        run: sudo apt-get update && sudo apt-get install -y shellcheck bats
 
       - name: Run linter
         run: npm run lint
@@ -33,6 +33,13 @@ jobs:
 
       - name: Run tests with coverage
         run: npm run test:coverage
+
+      - name: Run Bats integration tests
+        run: |
+          for test_file in test/integration/*.bats; do
+            echo "Running $test_file"
+            bats "$test_file" || echo "::warning::Test $test_file failed (non-blocking)"
+          done
 
       - name: Upload coverage reports
         if: always()

@@ -185,11 +185,9 @@ log_info "プラグイン: ${installed} インストール完了、${skipped} �
 log_info "hookifyプラグインのインポートパッチを適用中..."
 HOOKIFY_MARKETPLACE="${HOME}/.claude/plugins/marketplaces/claude-code-plugins/plugins/hookify"
 if [[ -d "$HOOKIFY_MARKETPLACE" ]]; then
-    # 絶対インポートを相対インポートに変更
-    find "$HOOKIFY_MARKETPLACE" -name "*.py" -type f -exec sed -i '' \
-        -e 's/from hookify\.core/from core/g' \
-        -e 's/from hookify\.utils/from utils/g' \
-        -e 's/from hookify\.matchers/from matchers/g' \
+    # 絶対インポートを相対インポートに変更（OS非依存）
+    find "$HOOKIFY_MARKETPLACE" -name "*.py" -type f -exec perl -i -pe \
+        's/from hookify\.core/from core/g; s/from hookify\.utils/from utils/g; s/from hookify\.matchers/from matchers/g;' \
         {} \; 2>/dev/null
 
     # __init__.pyが存在しない場合は作成

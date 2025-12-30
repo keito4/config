@@ -1,141 +1,149 @@
 # DevContainer Semantic Versioning
 
-This document explains how to implement semantic versioning for the devcontainer image releases.
+This document explains how semantic versioning is implemented for the devcontainer image releases.
 
-## Current Issue
+## Overview
 
-Currently, all devcontainer images are tagged as `latest` only. This makes it difficult to:
+The devcontainer image uses **automated semantic versioning** powered by `semantic-release`. Versions are determined automatically based on conventional commit messages, eliminating the need for manual version tagging.
 
-- Track which version of the devcontainer you're using
-- Roll back to previous versions if needed
-- Understand what changes were made between versions
+## How It Works
 
-## Proposed Solution
+### 1. Automatic Versioning with semantic-release
 
-### 1. Use Git Tags for Versioning
+When you push to the `main` branch, the GitHub Actions workflow (`.github/workflows/docker-image.yml`) automatically:
 
-Create git tags following semantic versioning (semver) format:
+1. Analyzes commit messages since the last release
+2. Determines the next version based on commit types:
+   - `feat:` → **Minor** version bump (1.0.0 → 1.1.0)
+   - `fix:`, `perf:` → **Patch** version bump (1.0.0 → 1.0.1)
+   - `BREAKING CHANGE:` in footer → **Major** version bump (1.0.0 → 2.0.0)
+   - `docs:`, `style:`, `refactor:`, `test:`, `chore:` → No version bump
+3. Builds and pushes Docker images with both version tag and `latest`
+4. Creates a GitHub release with auto-generated release notes
 
-- `v1.0.0` - Major version for breaking changes
-- `v1.1.0` - Minor version for new features
-- `v1.0.1` - Patch version for bug fixes
+### 2. Conventional Commits
 
-### 2. Version Script
+Your commit messages must follow the conventional commits format:
 
-Use the provided `script/version.sh` to easily create version tags:
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Examples:**
 
 ```bash
-# Bump patch version (1.0.0 -> 1.0.1)
-./script/version.sh --type patch
+feat: add Python support to DevContainer
+fix: resolve hookify plugin import error
+perf: optimize Docker build cache
+docs: update versioning documentation
 
-# Bump minor version (1.0.0 -> 1.1.0)
-./script/version.sh --type minor
+# Breaking change (major version)
+feat!: migrate to Node.js 22
 
-# Bump major version (1.0.0 -> 2.0.0)
-./script/version.sh --type major
-
-# Preview next version without creating tag
-./script/version.sh --dry-run
+BREAKING CHANGE: Node.js 20 is no longer supported
 ```
 
-### 3. GitHub Workflow Modifications
+### 3. Manual Release (Optional)
 
-The `.github/workflows/docker-image.yml` workflow needs to be updated to:
+If you need to create a manual release, use the GitHub Actions workflow dispatch:
 
-1. **Trigger on tags**: Add tag push trigger
-2. **Extract version from git tag**: Use the git tag as the Docker image tag
-3. **Build multiple tags**: Create both versioned tag and latest
+1. Go to Actions → "Build and Release DevContainer Image"
+2. Click "Run workflow"
+3. Select release mode:
+   - `auto` (default): Use semantic-release
+   - `patch`: Force a patch release
+   - `minor`: Force a minor release
+   - `major`: Force a major release
+   - `custom`: Specify a custom version
 
-#### Required Changes to `.github/workflows/docker-image.yml`:
+## Workflow Trigger
 
-**Add tag trigger:**
+The workflow is triggered by:
 
-```yaml
-on:
-  push:
-    branches: [main]
-    tags: ['v*'] # Trigger on version tags
-    paths:
-      - '.devcontainer/**'
-      - 'features/**'
-      - '.github/workflows/devcontainer-image.yml'
+- **Automatic**: Push to `main` branch
+- **Manual**: workflow_dispatch (Actions UI)
+
+**Note**: Unlike the previous proposal, tag pushes do NOT trigger builds. Versions are created automatically by semantic-release.
+
+## Image Tags
+
+Each release creates two tags:
+
+- `ghcr.io/keito4/config-base:{version}` (e.g., `1.13.1`)
+- `ghcr.io/keito4/config-base:latest`
+
+### Usage Example
+
+**Pin to a specific version (recommended for production):**
+
+```json
+{
+  "image": "ghcr.io/keito4/config-base:1.13.1"
+}
 ```
 
-**Add version extraction step:**
+**Use latest (for development):**
 
-```yaml
-- name: Extract version
-  id: version
-  run: |
-    if [[ $GITHUB_REF == refs/tags/* ]]; then
-      VERSION=${GITHUB_REF#refs/tags/}
-    else
-      VERSION=latest
-    fi
-    echo "version=$VERSION" >> $GITHUB_OUTPUT
-    echo "Version: $VERSION"
+```json
+{
+  "image": "ghcr.io/keito4/config-base:latest"
+}
 ```
-
-**Update devcontainer build step:**
-
-```yaml
-- name: Pre-build Dev Container image
-  uses: devcontainers/ci@v0.3
-  with:
-    imageName: ghcr.io/${{ github.repository_owner }}/config-base
-    imageTag: ${{ steps.version.outputs.version }}
-    platforms: linux/amd64,linux/arm64
-    push: always
-    runCmd: echo done
-```
-
-**Add latest tag for version releases:**
-
-```yaml
-- name: Tag as latest (for version tags)
-  if: startsWith(github.ref, 'refs/tags/v')
-  run: |
-    docker tag ghcr.io/${{ github.repository_owner }}/config-base:${{ steps.version.outputs.version }} \
-               ghcr.io/${{ github.repository_owner }}/config-base:latest
-    docker push ghcr.io/${{ github.repository_owner }}/config-base:latest
-```
-
-## Usage Workflow
-
-1. **Make changes** to devcontainer configuration
-2. **Test changes** locally
-3. **Create version tag**:
-   ```bash
-   ./script/version.sh --type patch
-   git push origin v1.0.1
-   ```
-4. **GitHub Actions** will automatically build and push the tagged image
-5. **Users can reference** specific versions:
-   ```json
-   {
-     "image": "ghcr.io/keito4/config-base:v1.0.1"
-   }
-   ```
 
 ## Benefits
 
+- **Zero manual versioning**: Versions are determined automatically
+- **Consistent changelog**: Release notes generated from commit messages
 - **Version tracking**: Know exactly which version you're using
 - **Rollback capability**: Can easily go back to previous versions
-- **Change history**: Git tags provide clear version history
+- **Change history**: GitHub releases provide clear version history
 - **Stability**: Production environments can pin to specific versions
-- **Development**: Latest tag still available for development
 
-## Migration Plan
+## Configuration
 
-1. ✅ Create versioning script (`script/version.sh`)
-2. ⚠️ Update GitHub workflow (requires manual modification due to permissions)
-3. Create initial version tag (e.g., `v1.0.0`)
-4. Test the new versioning workflow
-5. Update documentation
+The semantic-release configuration is in `.releaserc.json`:
+
+```json
+{
+  "branches": ["main"],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/github"
+  ]
+}
+```
+
+## Commit Type Reference
+
+| Type                           | Version Bump | Description             |
+| ------------------------------ | ------------ | ----------------------- |
+| `feat:`                        | **Minor**    | New feature             |
+| `fix:`                         | **Patch**    | Bug fix                 |
+| `perf:`                        | **Patch**    | Performance improvement |
+| `feat!:` or `BREAKING CHANGE:` | **Major**    | Breaking change         |
+| `docs:`                        | None         | Documentation only      |
+| `style:`                       | None         | Code style (formatting) |
+| `refactor:`                    | None         | Code refactoring        |
+| `test:`                        | None         | Adding tests            |
+| `chore:`                       | None         | Maintenance tasks       |
+
+## Migration Status
+
+- ✅ semantic-release configured and working
+- ✅ GitHub workflow automated
+- ✅ Conventional commits enforced via commitlint
+- ✅ Multi-platform image builds (amd64/arm64)
+- ✅ Docker layer caching enabled
+- ✅ Automated release notes generation
 
 ## Notes
 
-- The version script follows semantic versioning principles
-- Git tags trigger the Docker image builds automatically
-- Both versioned and `latest` tags are maintained
-- The workflow cannot be automatically updated due to GitHub security restrictions
+- The workflow skips release if no release-triggering commits are found
+- Both automatic (semantic-release) and manual releases are supported
+- All releases are published to GitHub Container Registry (ghcr.io)
+- Release notes are automatically generated from commit history

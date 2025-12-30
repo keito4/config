@@ -67,13 +67,18 @@ def emit_human(sections, remaining, show_uncategorized: bool):
         print("\n".join(remaining) if remaining else "")
 
 
-def emit_brew(sections, item_type):
+def emit_brew(sections, remaining, item_type):
     keyword = "brew" if item_type == "formulae" else "cask"
     for title, rows in sections:
         if not rows:
             continue
         print(f"# {title}")
         for row in rows:
+            print(f'{keyword} "{row}"')
+        print()
+    if remaining:
+        print("# Uncategorized")
+        for row in remaining:
             print(f'{keyword} "{row}"')
         print()
 
