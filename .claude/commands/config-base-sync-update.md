@@ -8,18 +8,15 @@ argument-hint: [--version X.Y.Z]
 
 ## Step 1: Load Settings
 
-設定ファイルが存在する場合は読み込む：
+Try to read `.claude/config-base-sync.local.md` for user configuration.
 
-Check settings file: !`test -f .claude/config-base-sync.local.md && echo "EXISTS" || echo "MISSING"`
+If the file exists:
 
-設定ファイルが存在する場合:
-
-- Read `.claude/config-base-sync.local.md` to load user configuration
 - Extract `baseBranch`, `autoCreatePR`, `updateScope` from YAML frontmatter
 - Validate settings values (baseBranch must be valid git branch, autoCreatePR must be boolean, updateScope must be one of: all, image-only, minimal)
 - If validation fails, stop and report the error to the user
 
-設定ファイルが存在しない場合:
+If the file does not exist or cannot be read:
 
 - Use defaults: baseBranch="main", autoCreatePR=true, updateScope="all"
 
