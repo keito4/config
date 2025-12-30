@@ -55,7 +55,9 @@ git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
    op signin
    ```
 
-3. **Set up environment variables** (for multiple 1Password accounts)
+3. **Set up environment variables** ⚠️ **Run on host machine BEFORE DevContainer**
+
+   For multiple 1Password accounts:
 
    ```bash
    OP_ACCOUNT=my.1password.com bash script/setup-env.sh
@@ -68,6 +70,8 @@ git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
    bash script/setup-env.sh
    bash script/setup-mcp.sh
    ```
+
+   This creates `~/.devcontainer.env` which is **required** for DevContainer startup.
 
 4. **Configure Git settings**
 
@@ -289,6 +293,53 @@ Then manually create `.mcp.json` from the template:
 cp .mcp.json.template .mcp.json
 # Edit .mcp.json and replace ${OPENAI_API_KEY} with actual value
 chmod 600 .mcp.json
+```
+
+#### When to Run Setup Scripts
+
+The environment variable setup is required at specific times:
+
+**1. Initial Setup (Required - Run on Host Machine)**
+
+Before using DevContainer for the first time, run on your **host machine**:
+
+```bash
+OP_ACCOUNT=my.1password.com bash script/setup-env.sh
+```
+
+This creates `~/.devcontainer.env` which is required for DevContainer startup via `runArgs`.
+
+**2. DevContainer Startup (Automatic)**
+
+When DevContainer starts, `postCreateCommand` automatically runs:
+
+- `setup-env.sh` - Regenerates environment files inside container
+- `setup-mcp.sh` - Generates `.mcp.json` from template
+
+**3. Credential Updates (Manual)**
+
+Re-run setup scripts when:
+
+- API keys are rotated in 1Password
+- New credentials are added to templates
+- Environment variables need to be refreshed
+
+```bash
+# On host machine
+OP_ACCOUNT=my.1password.com bash script/setup-env.sh
+
+# Inside DevContainer (or rebuild container)
+bash script/setup-env.sh
+bash script/setup-mcp.sh
+```
+
+**4. Template Updates (Manual)**
+
+After modifying `credentials/templates/*.env.template`, regenerate:
+
+```bash
+bash script/setup-env.sh
+bash script/setup-mcp.sh
 ```
 
 #### How It Works
