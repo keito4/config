@@ -12,6 +12,7 @@
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "shellcheck": "find script -name '*.sh' -exec shellcheck {} +",
     "test": "jest --runInBand",
     "test:watch": "jest --runInBand --watch",
     "test:coverage": "jest --runInBand --coverage",

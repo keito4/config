@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     wget \
     xz-utils \
+    shellcheck \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  && NODE_VERSION=v22.14.0 \
