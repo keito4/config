@@ -16,6 +16,7 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:artifacthub.io)",
       "WebFetch(domain:developers.notion.com)",
+      "WebFetch(domain:www.assemblyai.com)",
       "mcp__ide__getDiagnostics",
       "Bash(ls:*)",
       "Bash(cat:*)",
@@ -52,8 +53,10 @@
       "Bash(node:*)",
       "Bash(python3:*)",
       "Bash(deno:*)",
+      "Bash(deno --version)",
       "Bash(deno test:*)",
       "Bash(deno fmt:*)",
+      "Bash(deno lint)",
       "Bash(deno lint:*)",
       "Bash(deno check:*)",
       "Bash(deno run:*)",
@@ -252,7 +255,11 @@
       "Bash(supervisorctl stop:*)",
       "Bash(supervisord:*)",
       "Bash(act:*)",
-      "Bash(afplay:*)"
+      "Bash(afplay:*)",
+      "Bash(brew list:*)",
+      "Read(//tmp/**)",
+      "Read(//workspaces/**)",
+      "Skill(plugin-dev:command-development)"
     ],
     "deny": [
       "Bash(npx supabase db push)",
