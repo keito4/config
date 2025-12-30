@@ -81,6 +81,75 @@ Claude Code（AI開発アシスタント）を動作させるための最小限�
 ANTHROPIC_API_KEY=***
 ```
 
+### 5. MCP (Model Context Protocol) 設定
+
+Claude CodeでMCPサーバーを利用する場合、`.mcp.json`の配置とマウントが必要です。
+
+**推奨配置**: `.claude/.mcp.json`（Claude Codeが優先的に読み込む場所）
+
+#### `.mcp.json`の生成方法
+
+```bash
+# postCreateCommandで自動生成（推奨）
+bash script/setup-mcp.sh
+```
+
+`setup-mcp.sh`は以下を実行：
+
+- `credentials/mcp.env`から環境変数を読み込み
+- `.mcp.json.template`から`.mcp.json`を生成
+- ワークスペースルート（`/workspaces/<project>/.mcp.json`）に配置
+
+#### MCP設定例（`.mcp.json`）
+
+```json
+{
+  "mcpServers": {
+    "o3": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["o3-search-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
+      }
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"],
+      "env": {}
+    }
+  }
+}
+```
+
+#### 必須環境変数（`.devcontainer.env`）
+
+```bash
+OPENAI_API_KEY=***  # o3 MCP用
+```
+
+#### ⚠️ 重要な注意事項
+
+1. **セキュリティ**:
+   - `.mcp.json`は`.gitignore`に追加必須
+   - API KEYは環境変数テンプレート（`${OPENAI_API_KEY}`）を使用
+   - 平文でのAPI KEY保存は避ける
+
+2. **配置場所の優先順位**:
+   - Claude Codeは以下の順で`.mcp.json`を探索：
+     1. `.claude/.mcp.json`（推奨）
+     2. `~/.claude/.mcp.json`（グローバル）
+     3. ワークスペースルート（バージョン依存）
+
+#### MCP対応のpostCreateCommand
+
+```json
+{
+  "postCreateCommand": "bash script/setup-env.sh && bash script/setup-mcp.sh && /usr/local/bin/setup-claude.sh"
+}
+```
+
 ### Claude Code最小構成例
 
 ```json
@@ -93,7 +162,7 @@ ANTHROPIC_API_KEY=***
     "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind,consistency=cached"
   ],
-  "postCreateCommand": "/usr/local/bin/setup-claude.sh",
+  "postCreateCommand": "bash script/setup-env.sh && bash script/setup-mcp.sh && /usr/local/bin/setup-claude.sh",
   "runArgs": ["--env-file=${localEnv:HOME}/.devcontainer.env"]
 }
 ```
@@ -455,6 +524,57 @@ NODE_ENV=development
    - 不要なFeatureを削除
    - ベースイメージに含まれるものは重複指定しない
 
+7. **MCPサーバーが動作しない**
+   - `.mcp.json`の存在確認:
+     ```bash
+     ls -la /workspaces/<project>/.mcp.json
+     ls -la ~/.claude/.mcp.json
+     ```
+   - `.mcp.json`が生成されない場合:
+     - `credentials/mcp.env`が存在するか確認
+     - `script/setup-env.sh`を先に実行
+     - 手動で実行: `bash script/setup-mcp.sh`
+   - 環境変数が展開されているか確認:
+     ```bash
+     cat .mcp.json | grep OPENAI_API_KEY
+     # ${OPENAI_API_KEY}が残っている場合は未展開
+     ```
+   - 推奨: `.mcp.json`を`.claude/.mcp.json`にコピー:
+     ```bash
+     mkdir -p ~/.claude
+     cp .mcp.json ~/.claude/.mcp.json
+     ```
+
+8. **o3 MCP（OpenAI検索）が使えない**
+   - `OPENAI_API_KEY`の設定確認:
+     ```bash
+     echo $OPENAI_API_KEY
+     ```
+   - `credentials/mcp.env`に`OPENAI_API_KEY`が含まれているか確認
+   - 1Passwordから取得:
+     ```bash
+     OP_ACCOUNT=your.1password.com bash script/setup-env.sh
+     ```
+   - `.mcp.json`を再生成:
+     ```bash
+     bash script/setup-mcp.sh
+     ```
+
+9. **Playwright MCPが動作しない**
+   - Node.jsとnpxが利用可能か確認:
+     ```bash
+     node --version
+     npx --version
+     ```
+   - Playwrightパッケージをグローバルインストール:
+     ```bash
+     npm install -g @playwright/mcp@latest
+     ```
+   - ブラウザのインストール:
+     ```bash
+     npx playwright install
+     ```
+
 ## 参考リンク
 
 ### DevContainer関連
@@ -468,6 +588,13 @@ NODE_ENV=development
 - [Claude Code公式ドキュメント](https://docs.anthropic.com/claude/docs/claude-code)
 - [Claude API Documentation](https://docs.anthropic.com/)
 - 本リポジトリのClaude設定: [.claude/](./.claude/) および [.codex/](./.codex/)
+
+### MCP (Model Context Protocol) 関連
+
+- [MCP公式ドキュメント](https://modelcontextprotocol.io/)
+- [Playwright MCP](https://github.com/microsoft/playwright-mcp)
+- [o3 Search MCP](https://www.npmjs.com/package/o3-search-mcp)
+- 本リポジトリのMCP設定: [.mcp.json.template](./.mcp.json.template) および [credentials/templates/mcp.env.template](./credentials/templates/mcp.env.template)
 
 ---
 
