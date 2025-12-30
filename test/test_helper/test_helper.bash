@@ -48,3 +48,38 @@ assert_directory_exists() {
     return 1
   }
 }
+
+# Helper function to assert command succeeded
+assert_success() {
+  if [ "$status" -ne 0 ]; then
+    echo "Expected success but got status: $status"
+    echo "Output: $output"
+    return 1
+  fi
+}
+
+# Helper function to assert command failed
+assert_failure() {
+  if [ "$status" -eq 0 ]; then
+    echo "Expected failure but command succeeded"
+    echo "Output: $output"
+    return 1
+  fi
+}
+
+# Helper function to assert output matches
+assert_output() {
+  if [ "$#" -eq 1 ]; then
+    if [ "$output" != "$1" ]; then
+      echo "Expected output: $1"
+      echo "Actual output: $output"
+      return 1
+    fi
+  elif [ "$1" = "--partial" ]; then
+    if [[ ! "$output" =~ $2 ]]; then
+      echo "Expected output to contain: $2"
+      echo "Actual output: $output"
+      return 1
+    fi
+  fi
+}
