@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y \
     wget \
     xz-utils \
     shellcheck \
+    python3 \
+    python3-pip \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  && NODE_VERSION=v22.14.0 \

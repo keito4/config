@@ -1,4 +1,4 @@
-.PHONY: version-patch version-minor version-major version-dry-run credentials clean-credentials list-credentials brew-leaves brew-categorized brew-generate brew-deps brew-uses claude-setup claude-sync claude-plugins
+.PHONY: version-patch version-minor version-major version-dry-run credentials clean-credentials list-credentials brew-leaves brew-categorized brew-generate brew-deps brew-uses claude-setup
 
 # Semantic versioning for devcontainer
 version-patch:
@@ -47,9 +47,3 @@ brew-uses: ## Show packages that depend on a specific package
 # Claude Code setup
 claude-setup: ## Setup Claude Code (sync settings + install plugins)
 	@./script/setup-claude.sh
-
-claude-sync: ## Sync Claude Code settings only (no plugin install)
-	@./script/setup-claude.sh --sync-only
-
-claude-plugins: ## Install Claude Code plugins only
-	@./script/setup-claude.sh --plugins-only

@@ -86,7 +86,7 @@ Lint → Test → Build → SCA → Deploy:Stg → E2E → Deploy:Prod
 ## 5. 環境作成
 
 基本的にdevcontainerを使用する。
-またベースはghcr.io/keito4/config-base:1.0.13を使用する。
+またベースはghcr.io/keito4/config-base:1.13.1を使用する。
 
 ## 6. デプロイ
 

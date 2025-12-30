@@ -120,10 +120,10 @@ fi
 
 # npm global packages
 if type jq >/dev/null 2>&1 && type npm >/dev/null 2>&1; then
-	npm install -g $(jq -r '.dependencies | keys | .[]' "$REPO_PATH/npm/global.json")
+	npm install -g $(jq -r '.dependencies | to_entries[] | "\(.key)@\(.value.version)"' "$REPO_PATH/npm/global.json")
 fi
 
 # Clone repositories using ghq
 if type gh >/dev/null 2>&1 && type ghq >/dev/null 2>&1; then
-	gh api user/repos | jq -r '.[].ssh_url' | xargs -L1 ghq get
+	gh api user/repos --paginate | jq -r '.[].ssh_url' | xargs -L1 ghq get
 fi
