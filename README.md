@@ -417,6 +417,71 @@ This repository includes comprehensive GitHub Actions workflows and development 
 - **Docker Image Build** (`.github/workflows/docker-image.yml`): Containerized build and deployment pipeline
 - **Library Auto-Update** (`.github/workflows/update-libraries.yml`): Scheduled Codex/Claude tooling refresh that raises a PR when `npm run update:libs` produces changes
 
+#### Local GitHub Actions Testing with act
+
+The repository includes configuration for [act](https://nektosact.com), a tool that allows you to run GitHub Actions workflows locally on your machine for testing and debugging before pushing to GitHub.
+
+**Quick Start:**
+
+```bash
+# List all available workflows
+act -l
+
+# Run all workflows
+act
+
+# Run specific event triggers
+act push
+act pull_request
+
+# Run a specific job
+act -j quality
+
+# Dry run (shows what would be executed without running)
+act -n
+```
+
+**Configuration:**
+
+The `.actrc` file provides default settings for act:
+
+- Uses full-featured Ubuntu Docker images (`catthehacker/ubuntu:full-*`) for better GitHub Actions compatibility
+- Loads environment variables from `.env.local` (git-ignored)
+- Loads secrets from `~/.secrets` if available
+- Enables workspace binding and container reuse for better performance
+- Uses `linux/amd64` architecture for consistency
+
+**Common Use Cases:**
+
+```bash
+# Test CI workflow before pushing
+act -j quality
+
+# Test with specific environment variables
+echo "MY_VAR=value" > .env.local
+act
+
+# Use verbose output for debugging
+act -v
+
+# Run workflow without pulling latest images
+act --pull=false
+```
+
+**Environment Variables:**
+
+For workflows requiring secrets or environment variables:
+
+1. Create `.env.local` in the repository root (already in `.gitignore`)
+2. Add your variables: `GITHUB_TOKEN=your_token_here`
+3. Run act normally - it will automatically load from `.env.local`
+
+**Important Notes:**
+
+- First run downloads large Docker images (~2.6GB), subsequent runs are faster with `--reuse`
+- Some GitHub-hosted runner features may not work identically in local containers
+- For sensitive workflows, ensure `.env.local` is never committed
+
 #### Development Quality Tools
 
 - **ESLint**: JavaScript/TypeScript linting with customizable rules
@@ -525,6 +590,7 @@ The repository includes automated Slack notifications for development workflow e
 - **ESLint**: A static analysis tool for identifying problematic patterns in JavaScript/TypeScript code.
 - **Git**: A distributed version control system for tracking changes in source code during software development.
 - **GitHub Actions**: CI/CD platform integrated with GitHub for automating workflows.
+- **act**: A tool that allows you to run GitHub Actions workflows locally on your machine for testing and debugging before pushing to GitHub.
 - **Husky**: Git hooks tool that enables running scripts at various Git lifecycle events.
 - **npm**: The default package manager for the JavaScript runtime environment Node.js.
 - **Prettier**: An opinionated code formatter that enforces consistent code style.
