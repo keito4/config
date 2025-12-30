@@ -1,6 +1,6 @@
 ---
 description: Update DevContainer to latest config-base image, sync recommended features, and create PR
-allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Bash(curl:*), Bash(jq:*), Bash(find:*), Bash(test:*), Bash(ls:*)
+allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Bash(curl:*), Bash(jq:*), Bash(find:*), Bash(test:*), Bash(ls:*), Bash(sed:*), Bash(grep:*), Bash(cat:*), Bash(echo:*), Bash(mkdir:*), Bash(rm:*), Bash(mv:*), Bash(cp:*), Bash(date:*)
 argument-hint: [--version X.Y.Z]
 ---
 
