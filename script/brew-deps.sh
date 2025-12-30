@@ -5,13 +5,6 @@
 
 set -euo pipefail
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
 # Determine script directory
 SCRIPT_DIR="${0:A:h}"
 REPO_ROOT="${SCRIPT_DIR:h}"
@@ -19,22 +12,7 @@ BREW_DIR="$REPO_ROOT/brew"
 CATEGORY_MANIFEST="$BREW_DIR/categories.json"
 CATEGORY_SCRIPT="$SCRIPT_DIR/lib/brew_categories.py"
 
-# Functions
-print_error() {
-    echo -e "${RED}ERROR: $1${NC}" >&2
-}
-
-print_success() {
-    echo -e "${GREEN}SUCCESS: $1${NC}"
-}
-
-print_info() {
-    echo -e "${BLUE}INFO: $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}WARNING: $1${NC}"
-}
+source "$SCRIPT_DIR/lib/output.sh"
 
 check_brew() {
     if ! command -v brew &> /dev/null; then

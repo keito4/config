@@ -4,28 +4,13 @@
 
 set -euo pipefail
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
 SCRIPT_DIR="${0:A:h}"
 REPO_ROOT="${SCRIPT_DIR:h}"
 CREDENTIALS_DIR="$REPO_ROOT/credentials"
 CREDENTIAL_PROVIDER="${CREDENTIAL_PROVIDER:-op}"
 PROVIDER_PATH="$SCRIPT_DIR/credentials/providers/${CREDENTIAL_PROVIDER}.sh"
 
-print_error() {
-    echo -e "${RED}ERROR: $1${NC}" >&2
-}
-
-print_success() {
-    echo -e "${GREEN}SUCCESS: $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}WARNING: $1${NC}"
-}
+source "$SCRIPT_DIR/lib/output.sh"
 
 load_provider() {
     if [[ ! -f "$PROVIDER_PATH" ]]; then

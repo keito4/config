@@ -3,6 +3,11 @@
 
 set -euo pipefail
 
+# Constants for Claude configuration
+typeset -ga CONFIG_CLAUDE_SHARED_FILES=(settings.json CLAUDE.md)
+typeset -ga CONFIG_CLAUDE_SHARED_DIRS=(commands agents hooks)
+typeset -ga CONFIG_CLAUDE_PLUGIN_FILES=(config.json known_marketplaces.json)
+
 # Claude設定のインポート
 config::import_claude() {
   local source_dir="${1:?Source directory required}"
@@ -16,8 +21,7 @@ config::import_claude() {
   mkdir -p "$target_dir"
 
   # 共有設定ファイル
-  local shared_files=(settings.json CLAUDE.md)
-  for file in "${shared_files[@]}"; do
+  for file in "${CONFIG_CLAUDE_SHARED_FILES[@]}"; do
     if [[ -f "$source_dir/$file" ]]; then
       cp "$source_dir/$file" "$target_dir/$file"
       echo "✅ Imported $file"
@@ -25,8 +29,7 @@ config::import_claude() {
   done
 
   # ディレクトリのコピー
-  local shared_dirs=(commands agents hooks)
-  for dir in "${shared_dirs[@]}"; do
+  for dir in "${CONFIG_CLAUDE_SHARED_DIRS[@]}"; do
     if [[ -d "$source_dir/$dir" ]]; then
       mkdir -p "$target_dir/$dir"
       cp -r "$source_dir/$dir"/* "$target_dir/$dir/" 2>/dev/null || true
@@ -37,8 +40,7 @@ config::import_claude() {
   # プラグイン設定
   if [[ -d "$source_dir/plugins" ]]; then
     mkdir -p "$target_dir/plugins"
-    local plugin_files=(config.json known_marketplaces.json)
-    for file in "${plugin_files[@]}"; do
+    for file in "${CONFIG_CLAUDE_PLUGIN_FILES[@]}"; do
       if [[ -f "$source_dir/plugins/$file" ]]; then
         cp "$source_dir/plugins/$file" "$target_dir/plugins/$file"
         echo "✅ Imported plugins/$file"
@@ -60,8 +62,7 @@ config::export_claude() {
   mkdir -p "$target_dir"
 
   # 共有設定ファイル
-  local shared_files=(settings.json CLAUDE.md)
-  for file in "${shared_files[@]}"; do
+  for file in "${CONFIG_CLAUDE_SHARED_FILES[@]}"; do
     if [[ -f "$source_dir/$file" ]]; then
       cp "$source_dir/$file" "$target_dir/$file"
       echo "✅ Exported $file"
@@ -69,8 +70,7 @@ config::export_claude() {
   done
 
   # ディレクトリのエクスポート
-  local shared_dirs=(commands agents hooks)
-  for dir in "${shared_dirs[@]}"; do
+  for dir in "${CONFIG_CLAUDE_SHARED_DIRS[@]}"; do
     if [[ -d "$source_dir/$dir" ]] && [[ -n "$(ls -A "$source_dir/$dir" 2>/dev/null)" ]]; then
       mkdir -p "$target_dir/$dir"
       cp -r "$source_dir/$dir"/* "$target_dir/$dir/" 2>/dev/null && \
@@ -82,8 +82,7 @@ config::export_claude() {
   # プラグイン設定
   if [[ -d "$source_dir/plugins" ]]; then
     mkdir -p "$target_dir/plugins"
-    local plugin_files=(config.json known_marketplaces.json)
-    for file in "${plugin_files[@]}"; do
+    for file in "${CONFIG_CLAUDE_PLUGIN_FILES[@]}"; do
       if [[ -f "$source_dir/plugins/$file" ]]; then
         cp "$source_dir/plugins/$file" "$target_dir/plugins/$file"
         echo "✅ Exported plugins/$file"

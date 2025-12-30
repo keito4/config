@@ -6,14 +6,13 @@
 
 set -euo pipefail
 
-# カラー出力
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Determine script directory and source output library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=script/lib/output.sh
+source "$SCRIPT_DIR/lib/output.sh"
 
-echo -e "${BLUE}=== コンテナ内セットアップ確認 ===${NC}\n"
+output::header "コンテナ内セットアップ確認"
+echo ""
 
 # 1. plugins.txt の内容確認
 echo -e "${BLUE}1. plugins.txt の内容確認${NC}"
