@@ -222,10 +222,10 @@ elif [[ -d "/tmp/claude-plugins/config-base-sync" ]]; then
 fi
 
 if [[ -n "$PLUGIN_SOURCE" ]]; then
-    # プラグインをcacheディレクトリに適切な構造で配置
+    # プラグインをcacheディレクトリに適切な構造で配置（隠しファイルも含む）
     PLUGIN_CACHE_DIR="${PLUGINS_DIR}/cache/local/config-base-sync/0.1.0"
     mkdir -p "$PLUGIN_CACHE_DIR"
-    cp -r "$PLUGIN_SOURCE"/* "$PLUGIN_CACHE_DIR/"
+    cp -r "$PLUGIN_SOURCE"/. "$PLUGIN_CACHE_DIR/"
 
     # installed_plugins.jsonに登録
     INSTALLED_PLUGINS="${PLUGINS_DIR}/installed_plugins.json"
