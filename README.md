@@ -425,6 +425,74 @@ This repository includes comprehensive GitHub Actions workflows and development 
 - **Commitlint**: Enforces conventional commit message format
 - **semantic-release**: Automated version management and releases
 
+#### Local GitHub Actions Testing with act
+
+This repository includes [act](https://nektosact.com/) for testing GitHub Actions workflows locally before pushing to GitHub.
+
+**Quick Start:**
+
+```bash
+# List all available workflows
+act -l
+
+# Run all workflows that would trigger on push
+act push
+
+# Run a specific workflow
+act -j <job-name>
+
+# Run with secrets from environment
+GITHUB_TOKEN=your_token act
+
+# Dry run to see what would be executed
+act -n
+```
+
+**Configuration:**
+
+The `.actrc` file provides default settings:
+
+- Uses `catthehacker/ubuntu:full-*` images for better GitHub Actions compatibility
+- Loads environment variables from `.env.local` (create this file for local secrets)
+- Enables container reuse for faster subsequent runs
+- Binds workspace for improved performance
+
+**Common Use Cases:**
+
+```bash
+# Test CI pipeline locally before pushing
+act -j ci
+
+# Test with specific event payload
+act pull_request --eventpath event.json
+
+# Test Docker builds
+act -j docker-image
+
+# Run with verbose logging for debugging
+act -v
+```
+
+**Environment Variables:**
+
+Create `.env.local` (git-ignored) for local testing:
+
+```bash
+cat <<'EOF' > .env.local
+GITHUB_TOKEN=your_github_token
+OPENAI_API_KEY=your_openai_key
+EOF
+chmod 600 .env.local
+```
+
+**Important Notes:**
+
+- Some actions may not work identically to GitHub's hosted runners
+- Docker-in-Docker workflows require `--privileged` flag
+- Network requests may behave differently in containerized environment
+
+For more details, see the [act documentation](https://nektosact.com/).
+
 #### DevContainer Support
 
 The repository includes a complete DevContainer setup (`.devcontainer/`) that provides:
@@ -513,6 +581,7 @@ The repository includes automated Slack notifications for development workflow e
 
 ## Glossary
 
+- **act**: A tool that allows you to run GitHub Actions workflows locally on your machine for testing and debugging before pushing to GitHub.
 - **Homebrew (Brew)**: A package manager for macOS and Linux that allows easy installation and management of software packages.
 - **Brewfile**: A file format used by Homebrew to declare and install packages in a reproducible way.
 - **1Password**: A password manager that securely stores credentials, with CLI integration for automated credential management.
