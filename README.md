@@ -41,13 +41,77 @@ git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
 
 ### Setup Instructions
 
-1. Configure Git settings using the commands above
-2. Install 1Password CLI: `brew install --cask 1password-cli`
-3. Sign in to 1Password: `op signin`
-4. Use the credentials script for 1Password integration: `make credentials`
-5. Install packages using Homebrew: `brew bundle --file=brew/StandaloneBrewfile`
+#### Quick Start (Recommended)
 
-For detailed security guidelines, see [SECURITY.md](SECURITY.md).
+1. **Install 1Password CLI**
+
+   ```bash
+   brew install --cask 1password-cli
+   ```
+
+2. **Sign in to 1Password**
+
+   ```bash
+   op signin
+   ```
+
+3. **Set up environment variables** ⚠️ **Run on host machine BEFORE DevContainer**
+
+   For multiple 1Password accounts:
+
+   ```bash
+   OP_ACCOUNT=my.1password.com bash script/setup-env.sh
+   bash script/setup-mcp.sh
+   ```
+
+   For single account:
+
+   ```bash
+   bash script/setup-env.sh
+   bash script/setup-mcp.sh
+   ```
+
+   This creates `~/.devcontainer.env` which is **required** for DevContainer startup.
+
+4. **Configure Git settings**
+
+   ```bash
+   git config --global user.name "Your Name"
+   git config --global user.email "your.email@example.com"
+   git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
+   ```
+
+5. **Install packages using Homebrew**
+   ```bash
+   brew bundle --file=brew/StandaloneBrewfile
+   ```
+
+#### What Gets Set Up
+
+The automated setup creates:
+
+- `~/.devcontainer.env` - DevContainer environment variables (600 permissions)
+- `credentials/mcp.env` - MCP environment variables (600 permissions)
+- `.mcp.json` - MCP configuration file (600 permissions)
+
+All generated files are automatically excluded from Git via `.gitignore`.
+
+#### 1Password Vault Structure
+
+For the automated setup to work, create items in your 1Password Vault "Dev":
+
+```
+Vault: Dev
+├── OPENAI_API_KEY (Login)
+│   └── value: sk-proj-...
+├── AWS (Login)
+│   ├── AWS_ACCESS_KEY_ID: AKIA...
+│   ├── AWS_SECRET_ACCESS_KEY: ...
+│   └── AWS_REGION: ap-northeast-1
+└── Other credentials
+```
+
+For detailed security guidelines and troubleshooting, see [SECURITY.md](SECURITY.md) and [credentials/README.md](credentials/README.md).
 
 ## Claude Code Configuration Management
 
@@ -183,20 +247,109 @@ Run the `commit_changes.sh` script with `REPO_PATH` set to this repository to ch
 
 The repository provides standardized configuration files that can be imported to set up a consistent development environment. See the usage instructions below for importing and exporting configurations.
 
-### Secure MCP Credential Configuration
+### Environment Variables and Credentials Management
 
-The Dev Container loads an environment file from your host machine to avoid committing API tokens. Create `${HOME}/.devcontainer.env` (ignored by Git) with the required secrets:
+This repository uses 1Password CLI for secure, automated environment variable management. Credentials are never committed to Git.
+
+#### Automated Setup (Recommended)
+
+Use the automated setup scripts to generate environment files from 1Password:
+
+```bash
+# For multiple 1Password accounts
+OP_ACCOUNT=my.1password.com bash script/setup-env.sh
+bash script/setup-mcp.sh
+
+# For single account
+bash script/setup-env.sh
+bash script/setup-mcp.sh
+```
+
+This automatically creates:
+
+- `~/.devcontainer.env` - DevContainer environment variables
+- `credentials/mcp.env` - MCP environment variables
+- `.mcp.json` - MCP configuration file
+
+All files are set with 600 permissions and excluded from Git.
+
+#### Manual Setup (Alternative)
+
+If 1Password CLI is not available, you can manually create the environment file:
 
 ```bash
 cat <<'EOF' > ~/.devcontainer.env
-SUPABASE_MCP_TOKEN=your_supabase_token
-VERCEL_MCP_TOKEN=your_vercel_token
-GITHUB_COPILOT_MCP_TOKEN=your_github_copilot_token
 OPENAI_API_KEY=your_openai_api_key
+AWS_ACCESS_KEY_ID=your_aws_access_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+AWS_REGION=ap-northeast-1
 EOF
+chmod 600 ~/.devcontainer.env
 ```
 
-These variables are injected into the container via `runArgs` and referenced in `.codex/config.toml` for MCP server headers (e.g., `Authorization = "Bearer ${SUPABASE_MCP_TOKEN}"`). Update the file locally whenever tokens rotate; no repository changes are required.
+Then manually create `.mcp.json` from the template:
+
+```bash
+cp .mcp.json.template .mcp.json
+# Edit .mcp.json and replace ${OPENAI_API_KEY} with actual value
+chmod 600 .mcp.json
+```
+
+#### When to Run Setup Scripts
+
+The environment variable setup is required at specific times:
+
+**1. Initial Setup (Required - Run on Host Machine)**
+
+Before using DevContainer for the first time, run on your **host machine**:
+
+```bash
+OP_ACCOUNT=my.1password.com bash script/setup-env.sh
+```
+
+This creates `~/.devcontainer.env` which is required for DevContainer startup via `runArgs`.
+
+**2. DevContainer Startup (Automatic)**
+
+When DevContainer starts, `postCreateCommand` automatically runs:
+
+- `setup-env.sh` - Regenerates environment files inside container
+- `setup-mcp.sh` - Generates `.mcp.json` from template
+
+**3. Credential Updates (Manual)**
+
+Re-run setup scripts when:
+
+- API keys are rotated in 1Password
+- New credentials are added to templates
+- Environment variables need to be refreshed
+
+```bash
+# On host machine
+OP_ACCOUNT=my.1password.com bash script/setup-env.sh
+
+# Inside DevContainer (or rebuild container)
+bash script/setup-env.sh
+bash script/setup-mcp.sh
+```
+
+**4. Template Updates (Manual)**
+
+After modifying `credentials/templates/*.env.template`, regenerate:
+
+```bash
+bash script/setup-env.sh
+bash script/setup-mcp.sh
+```
+
+#### How It Works
+
+- Environment variables are injected into DevContainer via `runArgs: ["--env-file=${localEnv:HOME}/.devcontainer.env"]`
+- MCP configuration references environment variables (e.g., `"OPENAI_API_KEY": "${OPENAI_API_KEY}"`)
+- Templates are version-controlled; generated files are git-ignored
+- Update tokens by re-running setup scripts; no repository changes required
+
+For detailed instructions, troubleshooting, and 1Password Vault structure, see [credentials/README.md](credentials/README.md).
 
 ### Available Commands
 
@@ -221,14 +374,17 @@ make version-dry-run
 #### Credential Management
 
 ```bash
-# Fetch credentials from 1Password
-make credentials
+# Automated setup (recommended)
+bash script/setup-env.sh    # Generate environment variables from 1Password
+bash script/setup-mcp.sh    # Generate MCP configuration
 
-# Clean up credential files
-make clean-credentials
+# For multiple 1Password accounts
+OP_ACCOUNT=my.1password.com bash script/setup-env.sh
 
-# List available credential templates
-make list-credentials
+# Legacy method
+make credentials            # Fetch credentials from 1Password
+make clean-credentials      # Clean up credential files
+make list-credentials       # List available credential templates
 ```
 
 #### Homebrew Package Management
@@ -360,6 +516,9 @@ The repository includes automated Slack notifications for development workflow e
 - **Homebrew (Brew)**: A package manager for macOS and Linux that allows easy installation and management of software packages.
 - **Brewfile**: A file format used by Homebrew to declare and install packages in a reproducible way.
 - **1Password**: A password manager that securely stores credentials, with CLI integration for automated credential management.
+- **1Password CLI**: Command-line tool for 1Password that enables automated credential retrieval using `op inject` command.
+- **op inject**: 1Password CLI command that replaces `op://Vault/Item/Field` references in templates with actual credential values.
+- **Environment Variable Template**: A template file (e.g., `*.env.template`) containing `op://` references that get expanded by 1Password CLI.
 - **Claude Code**: AI-powered development assistant with specialized agents for code review, architecture validation, and quality analysis.
 - **MCP (Model Context Protocol)**: Integration protocol enabling Claude Code to interact with external services like Slack, o3 search, and Playwright automation.
 - **DevContainer**: A containerized development environment that provides consistent tooling and configurations across different machines and platforms.
@@ -372,6 +531,7 @@ The repository includes automated Slack notifications for development workflow e
 - **Semantic Release**: Automated version management and release process based on commit messages.
 - **Visual Studio Code**: A free source-code editor made by Microsoft for Windows, Linux, and macOS.
 - **Zsh**: An extended Unix shell with advanced features for interactive use and scripting.
+- **envsubst**: GNU gettext utility that substitutes environment variables in shell format strings (e.g., `${VARIABLE}`).
 
 ## Disclaimer
 

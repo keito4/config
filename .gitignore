@@ -43,9 +43,11 @@ supabase/.temp/
 
 # Credentials
 credentials/*.env
+!credentials/*.env.template
 credentials/secrets/
 .env.secret
 .env*.local
+.devcontainer.env
 .zsh/configs/pre/.env.secret
 
 # Test artifacts and libraries

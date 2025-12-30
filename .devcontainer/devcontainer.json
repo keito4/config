@@ -44,6 +44,6 @@
       }
     }
   },
-  "postCreateCommand": "sudo chown -R vscode:vscode /workspaces/config && npm ci && npm run prepare && cp -r /tmp/.husky /workspaces/config/ && cp /tmp/commitlint.config.js /workspaces/config/ && /usr/local/bin/setup-claude.sh",
+  "postCreateCommand": "bash script/setup-env.sh && bash script/setup-mcp.sh && sudo chown -R vscode:vscode /workspaces/config && npm ci && npm run prepare && cp -r /tmp/.husky /workspaces/config/ && cp /tmp/commitlint.config.js /workspaces/config/ && /usr/local/bin/setup-claude.sh",
   "runArgs": ["--env-file=${localEnv:HOME}/.devcontainer.env"]
 }
