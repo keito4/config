@@ -262,6 +262,63 @@ OPENAI_API_KEY=***  # o3 MCP用
 
 ## オプションFeatures（特定用途向け）
 
+### common-utils with Zsh（開発者体験向上）
+
+```json
+{
+  "ghcr.io/devcontainers/features/common-utils:2": {
+    "configureZshAsDefaultShell": true
+  }
+}
+```
+
+**機能概要**:
+
+- **Zsh**: モダンで機能豊富なシェル
+- **Oh-My-Zsh**: 人気のZsh設定フレームワーク
+- **共通CLIツール**: curl, wget, git など
+- **ビルドツール**: gcc, make など
+
+**Zshの利点**:
+
+- ✅ スマートなタブ補完（Bashより高機能）
+- ✅ 豊富なプラグインエコシステム（Oh-My-Zsh）
+- ✅ カスタマイズ可能なプロンプト
+- ✅ 改善されたコマンド履歴検索
+- ✅ Gitステータスのプロンプト表示
+
+**考慮事項**:
+
+- 学習コストあり（Bashに慣れた開発者向け）
+- ほとんどのBashスクリプトはZshでも動作（一部互換性差異あり）
+- 起動が若干遅い（実用上は無視できるレベル）
+
+**Bash派の代替設定**:
+
+```json
+{
+  "ghcr.io/devcontainers/features/common-utils:2": {}
+}
+```
+
+Zshを無効にする場合は`configureZshAsDefaultShell`オプションを省略します。
+
+**推奨環境変数**（Zsh使用時）:
+
+```json
+{
+  "remoteEnv": {
+    "SHELL": "/bin/zsh"
+  }
+}
+```
+
+**利用シーン**:
+
+- 開発者の生産性向上を重視するプロジェクト
+- ターミナル操作が多いプロジェクト
+- チーム全体で統一されたシェル環境を提供したい場合
+
 ### 1Password統合（機密情報管理）
 
 ```json
