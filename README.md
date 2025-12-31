@@ -430,6 +430,7 @@ For setting up a complete CI/CD pipeline in a new repository following Elu-co-jp
 - Troubleshooting guidance
 
 **Quick Start:**
+
 ```
 @claude use setup-recommended-ci to set up CI/CD pipeline
 ```
