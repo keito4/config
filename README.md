@@ -416,6 +416,24 @@ make brew-uses pkg=<package>
 
 This repository includes comprehensive GitHub Actions workflows and development tooling:
 
+#### Setup Guide for New Projects
+
+For setting up a complete CI/CD pipeline in a new repository following Elu-co-jp organization standards, use the `setup-recommended-ci` command available in `.codex/prompts/setup-recommended-ci.md`. This comprehensive guide provides:
+
+- Step-by-step CI/CD pipeline setup instructions
+- Quality checks (lint, format, type-check, complexity analysis)
+- Unit & E2E testing with 70%+ coverage requirement
+- Security scanning (dependency audit, SAST, license compliance)
+- Claude Code Review integration
+- GitHub Secrets configuration guide
+- Husky Git hooks setup
+- Troubleshooting guidance
+
+**Quick Start:**
+```
+@claude use setup-recommended-ci to set up CI/CD pipeline
+```
+
 #### GitHub Actions Workflows
 
 - **CI Pipeline** (`.github/workflows/ci.yml`): Automated testing, linting, and quality checks (uses Node.js 22)
