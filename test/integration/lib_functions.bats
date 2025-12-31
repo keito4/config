@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-# Integration tests for library functions (config.sh and errors.sh)
+# Integration tests for library functions (config.sh and output.sh)
 
 load ../test_helper/test_helper
 
@@ -10,8 +10,8 @@ load ../test_helper/test_helper
   [ -x "$script" ]
 }
 
-@test "errors.sh script exists and is executable" {
-  local script="${REPO_ROOT}/script/lib/errors.sh"
+@test "output.sh script exists and is executable" {
+  local script="${REPO_ROOT}/script/lib/output.sh"
   assert_file_exists "$script"
   [ -x "$script" ]
 }
@@ -36,32 +36,46 @@ load ../test_helper/test_helper
   grep -q "config::filter_credentials()" "${REPO_ROOT}/script/lib/config.sh"
 }
 
-@test "errors.sh defines errors::fatal function" {
-  grep -q "errors::fatal()" "${REPO_ROOT}/script/lib/errors.sh"
+# Output function tests (consolidated from errors.sh)
+@test "output.sh defines output::fatal function" {
+  grep -q "output::fatal()" "${REPO_ROOT}/script/lib/output.sh"
 }
 
-@test "errors.sh defines errors::warn function" {
-  grep -q "errors::warn()" "${REPO_ROOT}/script/lib/errors.sh"
+@test "output.sh defines output::warning function" {
+  grep -q "output::warning()" "${REPO_ROOT}/script/lib/output.sh"
 }
 
-@test "errors.sh defines errors::info function" {
-  grep -q "errors::info()" "${REPO_ROOT}/script/lib/errors.sh"
+@test "output.sh defines output::info function" {
+  grep -q "output::info()" "${REPO_ROOT}/script/lib/output.sh"
 }
 
-@test "errors.sh defines errors::success function" {
-  grep -q "errors::success()" "${REPO_ROOT}/script/lib/errors.sh"
+@test "output.sh defines output::success function" {
+  grep -q "output::success()" "${REPO_ROOT}/script/lib/output.sh"
 }
 
-@test "errors.sh defines errors::require_command function" {
-  grep -q "errors::require_command()" "${REPO_ROOT}/script/lib/errors.sh"
+@test "output.sh defines output::require_command function" {
+  grep -q "output::require_command()" "${REPO_ROOT}/script/lib/output.sh"
 }
 
-@test "errors.sh defines errors::require_file function" {
-  grep -q "errors::require_file()" "${REPO_ROOT}/script/lib/errors.sh"
+@test "output.sh defines output::require_file function" {
+  grep -q "output::require_file()" "${REPO_ROOT}/script/lib/output.sh"
 }
 
-@test "errors.sh defines errors::require_directory function" {
-  grep -q "errors::require_directory()" "${REPO_ROOT}/script/lib/errors.sh"
+@test "output.sh defines output::require_directory function" {
+  grep -q "output::require_directory()" "${REPO_ROOT}/script/lib/output.sh"
+}
+
+# Backward compatibility: errors:: namespace aliases
+@test "output.sh provides errors::fatal alias" {
+  grep -q "errors::fatal()" "${REPO_ROOT}/script/lib/output.sh"
+}
+
+@test "output.sh provides errors::warn alias" {
+  grep -q "errors::warn()" "${REPO_ROOT}/script/lib/output.sh"
+}
+
+@test "output.sh provides errors::require_command alias" {
+  grep -q "errors::require_command()" "${REPO_ROOT}/script/lib/output.sh"
 }
 
 @test "config::filter_gitconfig filters personal information" {
@@ -116,35 +130,52 @@ EOF
   grep -q "alias ll=" "$test_output"
 }
 
-@test "errors::require_command succeeds for existing command" {
-  # Source errors.sh
-  source "${REPO_ROOT}/script/lib/errors.sh"
+@test "output::require_command succeeds for existing command" {
+  # Source output.sh
+  source "${REPO_ROOT}/script/lib/output.sh"
 
   # Test with 'ls' which should always exist
-  run errors::require_command ls
+  run output::require_command ls
   [ "$status" -eq 0 ]
 }
 
-@test "errors::info outputs to stdout" {
-  source "${REPO_ROOT}/script/lib/errors.sh"
+@test "output::info outputs to stdout" {
+  source "${REPO_ROOT}/script/lib/output.sh"
 
-  run errors::info "Test message"
+  run output::info "Test message"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"INFO: Test message"* ]]
+  [[ "$output" == *"INFO"* ]]
+  [[ "$output" == *"Test message"* ]]
 }
 
-@test "errors::warn outputs to stderr" {
-  source "${REPO_ROOT}/script/lib/errors.sh"
+@test "output::warning outputs warning message" {
+  source "${REPO_ROOT}/script/lib/output.sh"
 
-  run errors::warn "Test warning"
+  run output::warning "Test warning"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"WARNING: Test warning"* ]]
+  [[ "$output" == *"Test warning"* ]]
 }
 
-@test "errors::success outputs success message" {
-  source "${REPO_ROOT}/script/lib/errors.sh"
+@test "output::success outputs success message" {
+  source "${REPO_ROOT}/script/lib/output.sh"
 
-  run errors::success "Operation completed"
+  run output::success "Operation completed"
   [ "$status" -eq 0 ]
   [[ "$output" == *"Operation completed"* ]]
+}
+
+# Backward compatibility: test errors:: aliases work
+@test "errors:: aliases work through output.sh" {
+  source "${REPO_ROOT}/script/lib/output.sh"
+
+  run errors::require_command ls
+  [ "$status" -eq 0 ]
+
+  run errors::info "Test info"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Test info"* ]]
+
+  run errors::success "Test success"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Test success"* ]]
 }
