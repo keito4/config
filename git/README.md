@@ -70,13 +70,25 @@ fix: 버그 수정
 
 ### Setup Guide
 
-#### 1. Install Dependencies
+#### DevContainer (Automatic)
+
+This repository's DevContainer automatically sets up commitlint with Japanese language support:
+
+1. The configuration is copied from `git/commitlint.config.js` to the workspace root during container creation
+2. Dependencies are installed via `npm ci`
+3. Husky hooks are configured to use commitlint
+
+No manual setup needed when using DevContainer!
+
+#### Manual Setup
+
+##### 1. Install Dependencies
 
 ```bash
 npm install --save-dev @commitlint/cli @commitlint/config-conventional
 ```
 
-#### 2. Copy Configuration
+##### 2. Copy Configuration
 
 ```bash
 cp git/commitlint.config.js ./commitlint.config.js
