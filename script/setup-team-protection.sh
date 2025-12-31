@@ -118,8 +118,6 @@ if ! gh auth status &>/dev/null; then
 fi
 
 # Check if user has admin access
-OWNER=$(echo "$REPO" | cut -d/ -f1)
-REPO_NAME=$(echo "$REPO" | cut -d/ -f2)
 PERMISSIONS=$(gh api "repos/$REPO" --jq '.permissions.admin // false' 2>/dev/null || echo "false")
 if [[ "$PERMISSIONS" != "true" ]]; then
   error "You don't have admin access to $REPO"
@@ -228,13 +226,17 @@ setup_repository_settings() {
   info "Configuring repository settings..."
 
   # Enable squash merge only
-  execute gh api "repos/$REPO" \
+  if execute gh api "repos/$REPO" \
     --method PATCH \
     --field allow_squash_merge=true \
     --field allow_merge_commit=false \
     --field allow_rebase_merge=false \
     --field delete_branch_on_merge=true \
-    &>/dev/null && success "Repository settings updated" || error "Failed to update repository settings"
+    &>/dev/null; then
+    success "Repository settings updated"
+  else
+    error "Failed to update repository settings"
+  fi
 }
 
 # Function to enable security features
@@ -242,14 +244,22 @@ setup_security_features() {
   info "Enabling security features..."
 
   # Enable vulnerability alerts
-  execute gh api "repos/$REPO/vulnerability-alerts" \
+  if execute gh api "repos/$REPO/vulnerability-alerts" \
     --method PUT \
-    &>/dev/null && success "Vulnerability alerts enabled" || warning "Could not enable vulnerability alerts"
+    &>/dev/null; then
+    success "Vulnerability alerts enabled"
+  else
+    warning "Could not enable vulnerability alerts"
+  fi
 
   # Enable automated security fixes (Dependabot)
-  execute gh api "repos/$REPO/automated-security-fixes" \
+  if execute gh api "repos/$REPO/automated-security-fixes" \
     --method PUT \
-    &>/dev/null && success "Automated security fixes enabled" || warning "Could not enable automated security fixes"
+    &>/dev/null; then
+    success "Automated security fixes enabled"
+  else
+    warning "Could not enable automated security fixes"
+  fi
 
   # Note: Code scanning and secret scanning require GitHub Advanced Security
   # and cannot be enabled via API for private repos on free tier
