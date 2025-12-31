@@ -22,4 +22,19 @@ module.exports = {
   },
   verbose: true,
   testTimeout: 10000,
+  // JUnit reporter for CI integration
+  reporters: [
+    'default',
+    [
+      'jest-junit',
+      {
+        outputDirectory: './reports',
+        outputName: 'junit.xml',
+        classNameTemplate: '{classname}',
+        titleTemplate: '{title}',
+        ancestorSeparator: ' > ',
+        usePathForSuiteName: true,
+      },
+    ],
+  ],
 };

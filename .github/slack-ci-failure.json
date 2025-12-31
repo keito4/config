@@ -1,0 +1,32 @@
+{
+  "text": "CI Failed on main branch",
+  "blocks": [
+    {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "CI Pipeline Failed"
+      }
+    },
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*Repository:*\n${{ env.REPO }}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Branch:*\n${{ env.REF_NAME }}"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "<${{ env.SERVER_URL }}/${{ env.REPO }}/actions/runs/${{ env.RUN_ID }}|View Workflow Run>"
+      }
+    }
+  ]
+}
