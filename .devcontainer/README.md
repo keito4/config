@@ -41,6 +41,8 @@ On container startup, the following configurations are automatically applied:
 
 - **Shell configuration** (`.zshrc`, aliases, functions)
 - **Git configuration** (user settings, signing keys, aliases)
+- **Commitlint configuration** (`git/commitlint.config.js` with Japanese language support)
+- **Husky Git hooks** (pre-commit, commit-msg, pre-push)
 - **VS Code extensions** (from `vscode/extensions.txt`)
 - **Homebrew packages** (development dependencies)
 - **Credential templates** (1Password integration)
