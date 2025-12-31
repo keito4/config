@@ -23,6 +23,7 @@ JSON_OUTPUT=false
 while [[ $# -gt 0 ]]; do
   case $1 in
     --fix)
+      # shellcheck disable=SC2034
       AUTO_FIX=true
       shift
       ;;

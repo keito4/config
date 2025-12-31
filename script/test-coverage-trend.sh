@@ -32,6 +32,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --detailed)
+      # shellcheck disable=SC2034
       DETAILED=true
       shift
       ;;
