@@ -1,0 +1,231 @@
+# Unified CI Workflow with Coverage Reporting and PR Size Detection
+#
+# This workflow provides an all-in-one quality gate for pull requests:
+# - Unified quality checks (lint, type-check, build, test)
+# - Automatic coverage reporting in PR comments
+# - PR size detection and labeling
+#
+# Features:
+# - Fail-fast sequential execution for quick feedback
+# - Coverage summary posted/updated as PR comment
+# - Automatic PR size labels (size/S, size/M, size/L, size/XL)
+# - Warning for XL PRs (>1000 lines or >30 files)
+# - Concurrency control to cancel outdated runs
+#
+# Usage:
+# 1. Copy this file to .github/workflows/ci.yml
+# 2. Customize the quality check commands for your project
+# 3. Ensure your test runner generates coverage-summary.json
+# 4. Add size labels to your repository (size/S, size/M, size/L, size/XL)
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+# Cancel in-progress runs for the same workflow on the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  quality-checks:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm' # or 'pnpm' if using pnpm
+
+      - name: Install dependencies
+        run: npm ci --frozen-lockfile
+        # For pnpm: pnpm install --frozen-lockfile
+        # For yarn: yarn install --frozen-lockfile
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run type checking
+        run: npm run type-check
+        # Skip if not using TypeScript
+
+      - name: Run build
+        run: npm run build
+        # Skip if not needed
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage
+        # Ensure this generates coverage-summary.json
+
+  coverage-report:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --frozen-lockfile
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage
+
+      - name: Post coverage comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Read coverage summary
+            const coveragePath = path.join(process.cwd(), 'coverage/coverage-summary.json');
+            if (!fs.existsSync(coveragePath)) {
+              console.log('No coverage summary found');
+              return;
+            }
+
+            const coverage = JSON.parse(fs.readFileSync(coveragePath, 'utf8'));
+
+            // Build coverage table
+            let commentBody = '## Test Coverage Report\n\n';
+
+            for (const [packageName, metrics] of Object.entries(coverage)) {
+              if (packageName === 'total') {
+                commentBody += '### Overall Coverage\n\n';
+              } else {
+                commentBody += `### ${packageName}\n\n`;
+              }
+
+              commentBody += '| Metric | Coverage |\n';
+              commentBody += '|--------|----------|\n';
+              commentBody += `| Statements | ${metrics.statements.pct}% |\n`;
+              commentBody += `| Branches | ${metrics.branches.pct}% |\n`;
+              commentBody += `| Functions | ${metrics.functions.pct}% |\n`;
+              commentBody += `| Lines | ${metrics.lines.pct}% |\n\n`;
+            }
+
+            // Find existing coverage comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' && comment.body.includes('Test Coverage Report')
+            );
+
+            // Create or update comment
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }
+
+  pr-size-labeler:
+    name: PR Size Labeler
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate PR size and add label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Get PR details
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            // Get PR files
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            // Calculate total changes
+            const totalChanges = files.reduce((sum, file) => sum + file.changes, 0);
+            const fileCount = files.length;
+
+            // Determine size label
+            let sizeLabel;
+            if (totalChanges < 100 && fileCount < 10) {
+              sizeLabel = 'size/S';
+            } else if (totalChanges < 300 && fileCount < 20) {
+              sizeLabel = 'size/M';
+            } else if (totalChanges < 1000 && fileCount < 30) {
+              sizeLabel = 'size/L';
+            } else {
+              sizeLabel = 'size/XL';
+            }
+
+            // Remove old size labels
+            const currentLabels = pr.labels.map(label => label.name);
+            const sizeLabels = currentLabels.filter(label => label.startsWith('size/'));
+
+            for (const label of sizeLabels) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: label,
+              });
+            }
+
+            // Add new size label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [sizeLabel],
+            });
+
+            // Post warning for XL PRs
+            if (sizeLabel === 'size/XL') {
+              const warningBody = `⚠️ **Large PR Detected**\n\nThis PR has ${totalChanges} line changes across ${fileCount} files.\n\nConsider breaking it into smaller PRs for easier review.`;
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: warningBody
+              });
+            }

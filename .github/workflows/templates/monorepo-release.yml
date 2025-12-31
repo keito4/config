@@ -1,0 +1,236 @@
+# Monorepo Release Workflow with Change Detection
+#
+# This workflow provides sophisticated release automation for monorepo projects:
+# - Intelligent per-package change detection
+# - Conditional semantic-release execution
+# - Separate versioning for each package
+# - GitHub Packages publishing support
+#
+# Features:
+# - Detects which packages have changed since last commit
+# - Only releases packages with actual changes
+# - Runs tests before release
+# - Supports multiple package configurations
+# - Proper permissions for contents, issues, PRs, and packages
+#
+# Usage:
+# 1. Copy this file to .github/workflows/release.yml
+# 2. Customize package names and paths for your monorepo
+# 3. Configure semantic-release for each package
+# 4. Ensure each package has its own .releaserc.json
+
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+# Do not cancel in-progress releases
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  packages: write
+
+jobs:
+  detect-changes:
+    name: Detect Package Changes
+    runs-on: ubuntu-latest
+    outputs:
+      package1_changed: ${{ steps.changes.outputs.package1_changed }}
+      package2_changed: ${{ steps.changes.outputs.package2_changed }}
+      global_changed: ${{ steps.changes.outputs.global_changed }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes
+        id: changes
+        run: |
+          # Get the previous commit
+          if [ $(git rev-list --count HEAD) -eq 1 ]; then
+            # First commit, consider all packages changed
+            echo "package1_changed=true" >> $GITHUB_OUTPUT
+            echo "package2_changed=true" >> $GITHUB_OUTPUT
+            echo "global_changed=true" >> $GITHUB_OUTPUT
+          else
+            PREV_COMMIT=$(git rev-parse HEAD~1)
+
+            # Check if package1 has changes
+            if git diff --name-only $PREV_COMMIT HEAD | grep -q "^packages/package1/"; then
+              echo "package1_changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "package1_changed=false" >> $GITHUB_OUTPUT
+            fi
+
+            # Check if package2 has changes
+            if git diff --name-only $PREV_COMMIT HEAD | grep -q "^packages/package2/"; then
+              echo "package2_changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "package2_changed=false" >> $GITHUB_OUTPUT
+            fi
+
+            # Check for global changes (root-level files)
+            if git diff --name-only $PREV_COMMIT HEAD | grep -q -v "^packages/"; then
+              echo "global_changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "global_changed=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  release-package1:
+    name: Release Package1
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.package1_changed == 'true'
+    env:
+      HUSKY: 0 # Disable Husky in CI
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Install dependencies
+        run: npm ci --frozen-lockfile
+
+      - name: Run tests
+        run: npm test
+        working-directory: packages/package1
+
+      - name: Run coverage
+        run: npm run test:coverage
+        working-directory: packages/package1
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+        working-directory: packages/package1
+
+  release-package2:
+    name: Release Package2
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.package2_changed == 'true'
+    env:
+      HUSKY: 0
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Install dependencies
+        run: npm ci --frozen-lockfile
+
+      - name: Run tests
+        run: npm test
+        working-directory: packages/package2
+
+      - name: Run coverage
+        run: npm run test:coverage
+        working-directory: packages/package2
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+        working-directory: packages/package2
+
+  global-release:
+    name: Global Release
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.global_changed == 'true'
+    env:
+      HUSKY: 0
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --frozen-lockfile
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run coverage
+        run: npm run test:coverage
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+# Configuration Notes:
+#
+# Each package should have its own .releaserc.json:
+#
+# packages/package1/.releaserc.json:
+# {
+#   "branches": ["main"],
+#   "plugins": [
+#     "@semantic-release/commit-analyzer",
+#     "@semantic-release/release-notes-generator",
+#     "@semantic-release/npm",
+#     "@semantic-release/github"
+#   ],
+#   "tagFormat": "package1-v${version}"
+# }
+#
+# packages/package2/.releaserc.json:
+# {
+#   "branches": ["main"],
+#   "plugins": [
+#     "@semantic-release/commit-analyzer",
+#     "@semantic-release/release-notes-generator",
+#     "@semantic-release/npm",
+#     "@semantic-release/github"
+#   ],
+#   "tagFormat": "package2-v${version}"
+# }
+#
+# For GitHub Packages, configure package.json:
+# {
+#   "name": "@your-org/package-name",
+#   "publishConfig": {
+#     "registry": "https://npm.pkg.github.com"
+#   }
+# }
