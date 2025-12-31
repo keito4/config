@@ -16,7 +16,6 @@ The DevContainer configuration includes:
 
 - `devcontainer.json`: Main DevContainer configuration
 - `Dockerfile`: Custom container image with development tools
-- `bell.sh`: Notification system for development workflow events
 - `claude-settings.json`: Claude Code configuration for AI-assisted development
 - `VERSIONING.md`: Semantic versioning guidelines for container releases
 
