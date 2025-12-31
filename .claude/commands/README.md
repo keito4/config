@@ -47,6 +47,24 @@ This directory contains pre-configured commands that provide automated workflows
 - Code quality gate enforcement
 - Development workflow integration
 
+#### `setup-team-protection.md`
+
+**Purpose**: Configures GitHub repository protection for team development
+**Features**:
+
+- Branch protection rules (no direct push, required reviews)
+- Required status checks (CI passing)
+- Repository settings (squash merge, auto-delete branches)
+- Security features (Dependabot, vulnerability alerts)
+
+**Usage**:
+
+```
+/setup-team-protection
+/setup-team-protection --reviewers 2
+/setup-team-protection owner/repo --dry-run
+```
+
 ## Additional Commands
 
 For a comprehensive set of automated development commands, see the `.codex/prompts/` directory which contains 11 specialized prompts for:
