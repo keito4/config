@@ -230,6 +230,7 @@ This directory contains pre-configured commands that provide automated workflows
 **Features**:
 
 - Branch protection (no direct push, required reviews)
+- Required status checks (CI passing)
 - Repository settings (squash merge, auto-delete branches)
 - Security features (Dependabot, vulnerability alerts)
 - Configurable reviewer count and enforcement

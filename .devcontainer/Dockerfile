@@ -102,4 +102,5 @@ RUN echo 'source ~/.bashrc' >> /home/vscode/.bash_profile \
 
 COPY package.json package-lock.json /tmp/
 COPY .husky /tmp/.husky/
+COPY git/commitlint.config.js /tmp/commitlint.config.js
 RUN cd /tmp && npm ci && npm run prepare || true
