@@ -1,5 +1,10 @@
 # Config Repository
 
+[![CI](https://github.com/keito4/config/actions/workflows/ci.yml/badge.svg)](https://github.com/keito4/config/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/keito4/config/actions/workflows/codeql.yml/badge.svg)](https://github.com/keito4/config/actions/workflows/codeql.yml)
+[![Security](https://github.com/keito4/config/actions/workflows/security.yml/badge.svg)](https://github.com/keito4/config/actions/workflows/security.yml)
+[![codecov](https://codecov.io/gh/keito4/config/branch/main/graph/badge.svg)](https://codecov.io/gh/keito4/config)
+
 This repository holds a collection of configuration settings and scripts for managing a consistent development environment across different systems. The primary purpose of this repository is to reduce the time and effort required to set up a new development environment. By running a single command, you can replicate the same development environment on a new computer.
 
 It includes settings for various tools, such as the shell (Zsh), Git, npm, and Visual Studio Code, and provides specific configurations for different operating systems.

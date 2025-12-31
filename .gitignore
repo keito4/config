@@ -10,6 +10,7 @@ node_modules/
 # Testing
 coverage/
 .nyc_output/
+reports/
 
 # Production
 build/

@@ -1,0 +1,71 @@
+version: 2
+updates:
+  # npm dependencies
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '03:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: 'deps'
+    labels:
+      - 'dependencies'
+      - 'npm'
+    groups:
+      # Group patch updates together
+      patch-updates:
+        patterns:
+          - '*'
+        update-types:
+          - 'patch'
+      # Group minor updates for dev dependencies
+      dev-minor:
+        dependency-type: 'development'
+        update-types:
+          - 'minor'
+    ignore:
+      # Ignore major updates for semantic-release (requires manual review)
+      - dependency-name: 'semantic-release'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@semantic-release/*'
+        update-types: ['version-update:semver-major']
+
+  # GitHub Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '03:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'ci'
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+    groups:
+      actions-minor:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # Docker base images
+  - package-ecosystem: 'docker'
+    directory: '/.devcontainer'
+    schedule:
+      interval: 'weekly'
+      day: 'tuesday'
+      time: '03:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: 'docker'
+    labels:
+      - 'dependencies'
+      - 'docker'
