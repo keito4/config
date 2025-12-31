@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Semantic versioning script for devcontainer releases
 # This script helps create properly versioned tags for devcontainer images
