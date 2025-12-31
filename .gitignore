@@ -62,3 +62,7 @@ report.log
 
 # MCP configuration
 .mcp.json
+
+# Generated files
+brew/CategorizedBrewfile
+.VERSION
