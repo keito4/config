@@ -1,6 +1,6 @@
 # Codex Automated Prompts
 
-This directory contains 11 pre-configured prompts that provide automated workflows for common development tasks. These prompts can be invoked directly by Codex CLI or triggered automatically based on repository events and context.
+This directory contains 12 pre-configured prompts that provide automated workflows for common development tasks. These prompts can be invoked directly by Codex CLI or triggered automatically based on repository events and context.
 
 ## Command Categories
 
@@ -114,6 +114,20 @@ This directory contains 11 pre-configured prompts that provide automated workflo
 - Commit message validation
 - Code quality gate enforcement
 - Development workflow integration
+
+#### `setup-recommended-ci.md`
+
+**Purpose**: Comprehensive guide for setting up recommended CI/CD pipeline based on Elu-co-jp organization standards
+**Features**:
+
+- Step-by-step CI/CD setup instructions
+- Quality checks (lint, format, type-check, complexity)
+- Unit & E2E testing with 70%+ coverage requirement
+- Security scanning (dependency audit, SAST, license compliance)
+- Claude Code Review integration
+- GitHub Secrets configuration guide
+- Husky Git hooks setup
+- Troubleshooting guide
 
 #### `next-security:deps-scan.md`
 
