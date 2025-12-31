@@ -12,15 +12,16 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 ## Directory Structure
 
 - `.claude/`: Claude Code configuration directory containing settings, commands, agents, and hooks. User-specific settings like `settings.local.json` are git-ignored while shared configurations are version-controlled.
-- `.codex/`: Codex CLI configuration directory containing automated prompts and configuration for security analysis, refactoring, and development workflow automation
+- `.codex/`: Codex CLI configuration directory containing automated prompts and configuration for security analysis, refactoring, and development workflow automation. Includes DevContainer recommendations and feature documentation.
 - `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines.
+- `.github/`: GitHub configuration including workflows for CI/CD, security scanning, and release automation. The `templates/` subdirectory contains reusable workflow templates for unified CI with coverage reporting and monorepo releases with change detection.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
 - `issues/`: Templates and helper notes for managing known issues and troubleshooting steps.
 - `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory, including Zsh configuration with comprehensive aliases, functions, and environment setup.
 - `git/`: Contains Git configuration files including gitconfig, gitignore, and modular configuration files in the `gitconfig.d/` subdirectory.
 - `npm/`: Contains npm global package configuration.
-- `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), credential management (`credentials.sh`), Homebrew dependency management (`brew-deps.sh`), semantic versioning (`version.sh`), and automated library updates for Codex/Claude Code tooling (`update-libraries.sh`).
+- `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), credential management (`credentials.sh`), Homebrew dependency management (`brew-deps.sh`), semantic versioning (`version.sh`), documentation sync checking (`check-docs-sync.sh`), and automated library updates for Codex/Claude Code tooling (`update-libraries.sh`). See [script/README.md](script/README.md) for details.
 - `vscode/`: Contains Visual Studio Code configuration including extensions list and installation documentation.
 
 ## Security
