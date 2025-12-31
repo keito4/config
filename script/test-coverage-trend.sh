@@ -6,14 +6,16 @@ set -euo pipefail
 # Colors
 readonly RED='\033[0;31m'
 readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'  # shellcheck disable=SC2034
+# shellcheck disable=SC2034
+readonly YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
 
 # Options
 DAYS=30
 SHOW_GRAPH=false
-DETAILED=false  # shellcheck disable=SC2034
+# shellcheck disable=SC2034
+DETAILED=false
 EXPORT_CSV=""
 JSON_OUTPUT=false
 RECORD_MODE=false

@@ -119,7 +119,8 @@ declare -A OTHER
 
 while IFS='|' read -r hash subject body; do
   # Extract type from conventional commit
-  if [[ "$subject" =~ ^([a-z]+)(\([^)]+\))?: (.+)$ ]]; then
+  regex='^([a-z]+)(\([^)]+\))?: (.+)$'
+  if [[ "$subject" =~ $regex ]]; then
     TYPE="${BASH_REMATCH[1]}"
     MESSAGE="${BASH_REMATCH[3]}"
 

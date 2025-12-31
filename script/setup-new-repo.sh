@@ -4,7 +4,8 @@
 set -euo pipefail
 
 # Colors
-readonly RED='\033[0;31m'  # shellcheck disable=SC2034
+# shellcheck disable=SC2034
+readonly RED='\033[0;31m'
 readonly GREEN='\033[0;32m'
 readonly YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m'
@@ -18,7 +19,8 @@ MINIMAL=false
 NO_DEVCONTAINER=false
 LICENSE="MIT"
 NO_INSTALL=false
-INTERACTIVE=false  # shellcheck disable=SC2034
+# shellcheck disable=SC2034
+INTERACTIVE=false
 TARGET_DIR=""
 
 # Parse arguments

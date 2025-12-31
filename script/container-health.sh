@@ -11,8 +11,10 @@ readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
 
 # Options
-VERBOSE=false  # shellcheck disable=SC2034
-AUTO_FIX=false  # shellcheck disable=SC2034
+# shellcheck disable=SC2034
+VERBOSE=false
+# shellcheck disable=SC2034
+AUTO_FIX=false
 JSON_OUTPUT=false
 CHECK_COMPONENT=""
 

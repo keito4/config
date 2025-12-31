@@ -11,7 +11,8 @@ readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
 
 # Options
-AUTO_FIX=false  # shellcheck disable=SC2034
+# shellcheck disable=SC2034
+AUTO_FIX=false
 REPORT_FILE=""
 SCAN_PATH="."
 IGNORE_PATTERN=""
