@@ -2,11 +2,25 @@
 
 set -euo pipefail
 
+# カラー出力
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
 REPO_PATH="${REPO_PATH:-$(cd "$(dirname "$0")/.." && pwd)}"
 cd "$REPO_PATH"
 
 log() {
-  printf '==> %s\n' "$1"
+  printf "${BLUE}==> %s${NC}\n" "$1"
+}
+
+log_success() {
+  printf "${GREEN}✓ %s${NC}\n" "$1"
+}
+
+log_warn() {
+  printf "${YELLOW}⚠ %s${NC}\n" "$1"
 }
 
 if ! command -v npx >/dev/null 2>&1; then
@@ -32,14 +46,36 @@ if [[ -f "$GLOBAL_FILE" ]] && command -v jq >/dev/null 2>&1; then
   tmp_file=$(mktemp)
   cp "$GLOBAL_FILE" "$tmp_file"
 
+  # 更新されたパッケージを追跡
+  declare -a updated_packages=()
+
   while IFS= read -r pkg; do
-    latest_version=$(npm view "$pkg" version)
+    current_version=$(jq -r ".dependencies[\"$pkg\"].version" "$GLOBAL_FILE")
+    latest_version=$(npm view "$pkg" version 2>/dev/null || echo "$current_version")
+
+    if [[ "$current_version" != "$latest_version" ]]; then
+      log_warn "Updating $pkg: $current_version → $latest_version"
+      updated_packages+=("$pkg: $current_version → $latest_version")
+    fi
+
     jq --arg pkg "$pkg" --arg version "$latest_version" \
       '.dependencies[$pkg].version = $version' "$tmp_file" >"${tmp_file}.next"
     mv "${tmp_file}.next" "$tmp_file"
   done < <(jq -r '.dependencies | keys[]' "$GLOBAL_FILE")
 
   mv "$tmp_file" "$GLOBAL_FILE"
+
+  # 更新サマリーを表示
+  if [[ ${#updated_packages[@]} -gt 0 ]]; then
+    echo ""
+    log "Updated packages summary:"
+    for update in "${updated_packages[@]}"; do
+      echo "  - $update"
+    done
+    echo ""
+  else
+    log_success "All global packages are already up to date"
+  fi
 else
   log "Skipping global CLI manifest update (missing $GLOBAL_FILE or jq)"
 fi
@@ -48,4 +84,12 @@ log "Running verification pipeline (lint + tests)"
 npm run lint
 npm test
 
-log "Library update complete"
+log_success "Library update complete"
+
+# Claude Code のバージョンを特別に表示
+if [[ -f "$GLOBAL_FILE" ]] && command -v jq >/dev/null 2>&1; then
+  claude_version=$(jq -r '.dependencies["@anthropic-ai/claude-code"].version' "$GLOBAL_FILE")
+  echo ""
+  log_success "Claude Code version: ${claude_version}"
+  echo ""
+fi
