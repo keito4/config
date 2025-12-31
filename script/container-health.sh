@@ -11,8 +11,8 @@ readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
 
 # Options
-VERBOSE=false
-AUTO_FIX=false
+VERBOSE=false  # shellcheck disable=SC2034
+AUTO_FIX=false  # shellcheck disable=SC2034
 JSON_OUTPUT=false
 CHECK_COMPONENT=""
 
@@ -116,20 +116,19 @@ if [ -z "$CHECK_COMPONENT" ] || [ "$CHECK_COMPONENT" = "tools" ]; then
     echo -e "${BLUE}✅ Claude Code Tools${NC}"
   fi
 
-  for tool in claude; do
-    if check_tool "$tool" false; then
-      if [ "$JSON_OUTPUT" = false ]; then
-        VERSION=${TOOL_STATUS["$tool"]#installed:}
-        echo -e "  ${GREEN}✓${NC} $tool"
-      fi
-    else
-      if [ "$JSON_OUTPUT" = false ]; then
-        echo -e "  ${YELLOW}⚠${NC} $tool (not installed)"
-      fi
-      ((HEALTH_SCORE -= 5)) || true
-      RECOMMENDATIONS+=("Install Claude Code: npm install -g @anthropic-ai/claude-code")
+  # Check claude tool
+  if check_tool "claude" false; then
+    if [ "$JSON_OUTPUT" = false ]; then
+      VERSION=${TOOL_STATUS["claude"]#installed:}
+      echo -e "  ${GREEN}✓${NC} claude"
     fi
-  done
+  else
+    if [ "$JSON_OUTPUT" = false ]; then
+      echo -e "  ${YELLOW}⚠${NC} claude (not installed)"
+    fi
+    ((HEALTH_SCORE -= 5)) || true
+    RECOMMENDATIONS+=("Install Claude Code: npm install -g @anthropic-ai/claude-code")
+  fi
 
   if [ "$JSON_OUTPUT" = false ]; then
     echo ""

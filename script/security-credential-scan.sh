@@ -11,7 +11,7 @@ readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
 
 # Options
-AUTO_FIX=false
+AUTO_FIX=false  # shellcheck disable=SC2034
 REPORT_FILE=""
 SCAN_PATH="."
 IGNORE_PATTERN=""
@@ -136,6 +136,7 @@ for pattern_name in "${!PATTERNS[@]}"; do
     fi
 
     # Mask sensitive part
+    # shellcheck disable=SC2001
     MASKED=$(echo "$line_content" | sed 's/[A-Za-z0-9]\{10,\}/************/g')
 
     FINDINGS+=("$SEVERITY|$pattern_name|$file:$line_num|$MASKED")

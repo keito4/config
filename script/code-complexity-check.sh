@@ -71,12 +71,19 @@ estimate_complexity() {
   local complexity=1
 
   # Count decision points
-  local if_count=$(grep -c "if \[" "$file" 2>/dev/null || echo "0")
-  local case_count=$(grep -c "case " "$file" 2>/dev/null || echo "0")
-  local while_count=$(grep -c "while " "$file" 2>/dev/null || echo "0")
-  local for_count=$(grep -c "for " "$file" 2>/dev/null || echo "0")
-  local and_count=$(grep -c " && " "$file" 2>/dev/null || echo "0")
-  local or_count=$(grep -c " || " "$file" 2>/dev/null || echo "0")
+  local if_count
+  local case_count
+  local while_count
+  local for_count
+  local and_count
+  local or_count
+
+  if_count=$(grep -c "if \[" "$file" 2>/dev/null || echo "0")
+  case_count=$(grep -c "case " "$file" 2>/dev/null || echo "0")
+  while_count=$(grep -c "while " "$file" 2>/dev/null || echo "0")
+  for_count=$(grep -c "for " "$file" 2>/dev/null || echo "0")
+  and_count=$(grep -c " && " "$file" 2>/dev/null || echo "0")
+  or_count=$(grep -c " || " "$file" 2>/dev/null || echo "0")
 
   complexity=$((complexity + if_count + case_count + while_count + for_count + and_count + or_count))
 
@@ -97,8 +104,11 @@ get_max_nesting() {
 
   while IFS= read -r line; do
     # Increment depth on opening braces
-    local opens=$(echo "$line" | grep -o "{" | wc -l | tr -d ' ')
-    local closes=$(echo "$line" | grep -o "}" | wc -l | tr -d ' ')
+    local opens
+    local closes
+
+    opens=$(echo "$line" | grep -o "{" | wc -l | tr -d ' ')
+    closes=$(echo "$line" | grep -o "}" | wc -l | tr -d ' ')
 
     current_depth=$((current_depth + opens - closes))
 
