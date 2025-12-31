@@ -80,12 +80,6 @@ Next steps:
 ## Options
 
 ```bash
-# Production dependencies only
-/dependency-health-check --prod
-
-# Include DevContainer features
-/dependency-health-check --include-container
-
 # JSON output for CI integration
 /dependency-health-check --json
 

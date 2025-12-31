@@ -11,22 +11,12 @@ readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
 
 # Options
-PROD_ONLY=false
-INCLUDE_CONTAINER=false
 JSON_OUTPUT=false
 STRICT_MODE=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --prod)
-      PROD_ONLY=true
-      shift
-      ;;
-    --include-container)
-      INCLUDE_CONTAINER=true
-      shift
-      ;;
     --json)
       JSON_OUTPUT=true
       shift
@@ -39,8 +29,6 @@ while [[ $# -gt 0 ]]; do
       echo "Usage: $0 [OPTIONS]"
       echo ""
       echo "Options:"
-      echo "  --prod               Check production dependencies only"
-      echo "  --include-container  Include DevContainer features check"
       echo "  --json               Output in JSON format"
       echo "  --strict             Fail on high severity issues"
       echo "  --help               Show this help message"
@@ -62,7 +50,6 @@ fi
 # npm Packages Check
 TOTAL_PACKAGES=0
 OUTDATED_COUNT=0
-DEPRECATED_COUNT=0
 VULN_CRITICAL=0
 VULN_HIGH=0
 VULN_MODERATE=0

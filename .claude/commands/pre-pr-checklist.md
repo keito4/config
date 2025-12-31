@@ -76,9 +76,6 @@ This command runs a comprehensive checklist to ensure your changes are ready for
 
 # Skip integration tests only
 /pre-pr-checklist --skip-integration
-
-# Verbose output
-/pre-pr-checklist --verbose
 ```
 
 ## Implementation

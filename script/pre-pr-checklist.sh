@@ -13,7 +13,6 @@ readonly NC='\033[0m' # No Color
 # Options
 SKIP_TESTS=false
 SKIP_INTEGRATION=false
-VERBOSE=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -26,17 +25,12 @@ while [[ $# -gt 0 ]]; do
       SKIP_INTEGRATION=true
       shift
       ;;
-    --verbose)
-      VERBOSE=true
-      shift
-      ;;
     --help)
       echo "Usage: $0 [OPTIONS]"
       echo ""
       echo "Options:"
       echo "  --skip-tests         Skip all tests"
       echo "  --skip-integration   Skip integration tests only"
-      echo "  --verbose            Verbose output"
       echo "  --help               Show this help message"
       exit 0
       ;;
@@ -175,7 +169,7 @@ fi
 COMMIT_MESSAGES=$(git log "origin/$MAIN_BRANCH"..HEAD --pretty=format:"%s %b")
 LINKED_ISSUES=$(echo "$COMMIT_MESSAGES" | grep -oP '#\d+' | sort -u || true)
 if [ -n "$LINKED_ISSUES" ]; then
-  echo "  • Linked issues: $(echo $LINKED_ISSUES | tr '\n' ' ')"
+  echo "  • Linked issues: $(echo "$LINKED_ISSUES" | tr '\n' ' ')"
 else
   echo -e "${YELLOW}  ⚠ No linked issues found${NC}"
 fi

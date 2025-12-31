@@ -113,11 +113,11 @@ done < <(git branch --merged "$MAIN_BRANCH" | sed 's/^[* ]*//' | grep -v "^$MAIN
 # Find stale branches (if not merged-only)
 STALE_BRANCHES=()
 if [ "$MERGED_ONLY" = false ]; then
-  CUTOFF_DATE=$(date -v-${STALE_DAYS}d +%s 2>/dev/null || date -d "${STALE_DAYS} days ago" +%s 2>/dev/null || echo "0")
+  CUTOFF_DATE=$(date -v-"${STALE_DAYS}"d +%s 2>/dev/null || date -d "${STALE_DAYS} days ago" +%s 2>/dev/null || echo "0")
 
   while IFS= read -r branch; do
     # Skip if already in merged list
-    if [[ " ${MERGED_BRANCHES[*]} " =~ " ${branch} " ]]; then
+    if [[ " ${MERGED_BRANCHES[*]} " =~ \ ${branch}\  ]]; then
       continue
     fi
 
