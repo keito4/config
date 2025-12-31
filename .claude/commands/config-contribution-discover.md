@@ -9,6 +9,22 @@ argument-hint: [--category <category>] [--dry-run]
 このコマンドは `config-base-sync-update` の逆機能を提供します。
 現在のリポジトリから便利な機能や設定を探索し、keito4/config リポジトリへの貢献候補としてissueを自動作成します。
 
+## Usage Examples
+
+```bash
+# 全カテゴリをdry-runでスキャン
+claude /config-contribution-discover --dry-run
+
+# Claude Commandsのみ探索してissue作成
+claude /config-contribution-discover --category claude-commands
+
+# 環境変数でconfig repositoryのパスを指定
+CONFIG_REPO_PATH=~/my-config claude /config-contribution-discover
+
+# 複数回実行しても重複issueは作成されない
+claude /config-contribution-discover
+```
+
 ## Step 1: Parse Arguments
 
 引数を解析:
@@ -39,7 +55,17 @@ argument-hint: [--category <category>] [--dry-run]
    gh auth status
    ```
 
-3. 現在のリポジトリ名を取得:
+3. GitHubトークンがkeito4/configへのアクセス権限を持つか確認:
+
+   ```bash
+   gh repo view keito4/config --json name -q '.name' 2>/dev/null || {
+     echo "Error: GitHub token lacks access to keito4/config repository"
+     exit 1
+   }
+   ```
+
+4. 現在のリポジトリ名を取得:
+
    ```bash
    git remote get-url origin
    ```
@@ -48,15 +74,37 @@ argument-hint: [--category <category>] [--dry-run]
 
 configリポジトリの既存設定を取得して比較基準とする。
 
-configリポジトリのパスを特定:
+### キャッシュロジック
 
-- 環境変数 `CONFIG_REPO_PATH` が設定されていれば使用
-- なければ `~/develop/github.com/keito4/config` を試行
-- それもなければ一時的にclone
+1. キャッシュディレクトリを確認:
+
+   ```bash
+   CACHE_DIR="$HOME/.cache/claude/config-repo"
+   CACHE_AGE_HOURS=24
+   ```
+
+2. configリポジトリのパスを特定:
+   - 環境変数 `CONFIG_REPO_PATH` が設定されていれば使用
+   - なければ `~/develop/github.com/keito4/config` を試行
+   - キャッシュが24時間以内に存在すれば `$CACHE_DIR` を使用
+   - それもなければ shallow clone:
+
+     ```bash
+     git clone --depth 1 --single-branch \
+       https://github.com/keito4/config.git \
+       "$CACHE_DIR"
+     ```
+
+3. 代替手段（高速）: GitHub APIを使用:
+
+   ```bash
+   gh api repos/keito4/config/contents/.devcontainer/devcontainer.json \
+     -q '.content' | base64 -d
+   ```
 
 以下のファイルを読み込んで既存の機能リストを作成:
 
-```
+```text
 .devcontainer/devcontainer.json → 既存のfeatures
 .github/workflows/ → 既存のワークフロー
 .claude/commands/ → 既存のコマンド
@@ -70,6 +118,32 @@ script/ → 既存のスクリプト
 
 各カテゴリで探索を実行:
 
+### カテゴリ別エラーハンドリング
+
+各カテゴリで以下のエラーを個別処理:
+
+- **FileNotFound**: スキップしてログに記録（警告レベル）
+- **ParseError** (JSON/YAML): 警告を表示して次へ
+- **PermissionDenied**: エラー報告してスキップ
+- **NetworkError** (GitHub API): リトライ3回後に失敗
+
+エラー蓄積:
+
+```bash
+ERRORS=()
+scan_category "devcontainer" || ERRORS+=("devcontainer: $?")
+# 最後にエラーサマリーを表示
+```
+
+### セキュリティフィルタリング
+
+以下のファイル・パターンは候補から自動除外:
+
+- `.env*`, `*.env`
+- `credentials.json`, `secrets.yaml`, `*.pem`, `*.key`
+- `secrets.`, `AWS_`, `DATABASE_URL` を含む環境変数
+- `.git/`, `node_modules/`, `vendor/`
+
 ### 4.1: DevContainer Features
 
 現在のリポジトリの `.devcontainer/devcontainer.json` を読み込み:
@@ -80,7 +154,7 @@ script/ → 既存のスクリプト
 
 報告形式:
 
-```
+```text
 📦 DevContainer Features
 - ghcr.io/custom/feature:1 → 新規候補
 - ghcr.io/existing/feature:2 → 既存（スキップ）
@@ -93,6 +167,22 @@ script/ → 既存のスクリプト
 - 各ワークフローの名前と目的を抽出
 - configリポジトリにない汎用的なワークフローを検出
 - プロジェクト固有のワークフローは除外
+
+#### 汎用性判定基準
+
+**汎用的（候補に含める）**:
+
+- ファイル名: `ci.yml`, `lint.yml`, `test.yml`, `security.yml`, `dependabot.yml`
+- トリガー: `push`, `pull_request`, `schedule` のみ
+- 外部公開可能なアクション（`actions/*`, `github/*`）のみ使用
+- 環境変数に機密情報を直接参照していない
+
+**プロジェクト固有（除外）**:
+
+- ファイル名に `deploy-`, `release-`, プロジェクト名を含む
+- `env:` セクションに `secrets.`, `AWS_`, `DATABASE_URL` を含む
+- `uses:` で社内プライベートアクションを参照
+- 特定のクラウドプロバイダーにハードコード依存
 
 検出基準:
 
@@ -138,6 +228,22 @@ script/ → 既存のスクリプト
 - 汎用的なユーティリティスクリプトを検出
 - プロジェクト固有のスクリプトは除外
 
+#### 汎用性判定基準
+
+**汎用的（候補に含める）**:
+
+- ファイル名: `setup*.sh`, `install*.sh`, `lint*.sh`, `format*.sh`, `test*.sh`
+- 他のプロジェクトでも使用可能な汎用ツールラッパー
+- 環境非依存（特定パスやURLをハードコードしていない）
+- ドキュメント（コメント）付き
+
+**プロジェクト固有（除外）**:
+
+- ビルド成果物生成スクリプト
+- 特定インフラへのデプロイスクリプト
+- アプリケーション固有のユーティリティ
+- プロジェクト名やドメインがハードコードされている
+
 検出基準:
 
 - セットアップスクリプト
@@ -169,25 +275,42 @@ script/ → 既存のスクリプト
 
 各候補を以下の基準で評価:
 
-| 基準                               | 重み |
-| ---------------------------------- | ---- |
-| 汎用性（他プロジェクトでも使える） | 高   |
-| 重複なし（configにない）           | 必須 |
-| ドキュメント化されている           | 中   |
-| 実績あり（使用中）                 | 中   |
-| メンテナンス性                     | 低   |
+### スコアリング計算式
+
+```text
+Score = (Genericity × 0.4) + (Documentation × 0.3) + (TrackRecord × 0.3)
+
+各要素の値:
+- Genericity: 0.0 (プロジェクト固有) ~ 1.0 (完全に汎用)
+- Documentation: 0.0 (ドキュメントなし) ~ 1.0 (包括的なドキュメント)
+- TrackRecord: 0.0 (未使用) ~ 1.0 (本番実績あり)
+
+判定閾値:
+- High: Score ≥ 0.7
+- Medium: 0.4 ≤ Score < 0.7
+- Low: Score < 0.4
+```
+
+### 評価基準詳細
+
+| 基準                               | 重み | 評価方法                                       |
+| ---------------------------------- | ---- | ---------------------------------------------- |
+| 汎用性（他プロジェクトでも使える） | 0.4  | プロジェクト固有の参照がないか確認             |
+| 重複なし（configにない）           | 必須 | 既存機能リストと照合                           |
+| ドキュメント化されている           | 0.3  | description, コメント, README の有無           |
+| 実績あり（使用中）                 | 0.3  | git log でコミット履歴を確認、最終更新日を評価 |
 
 スコアを計算:
 
-- 高: 即座に採用検討
-- 中: 検討価値あり
-- 低: 条件付きで検討
+- 高 (≥0.7): 即座に採用検討
+- 中 (0.4-0.7): 検討価値あり
+- 低 (<0.4): 条件付きで検討
 
 ## Step 6: Generate Discovery Report
 
 発見した候補をカテゴリ別にレポート:
 
-```
+```text
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Config Contribution Discovery Report
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -204,6 +327,7 @@ Config Contribution Discovery Report
    📝 {description}
    📁 Source: {file-path}
    💡 Reason: {why-useful}
+   📊 Score: {score}
 
 2. ...
 
@@ -283,7 +407,7 @@ EOF
 
 最終サマリーを表示:
 
-```
+```text
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ Discovery Complete
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -323,9 +447,30 @@ Run without --dry-run to create issues
 2. 可能であれば次のカテゴリに進む
 3. 最終レポートでエラーをまとめて報告
 
+エラーサマリー形式:
+
+```text
+⚠️ Warnings during scan:
+- DevContainer: File not found (skipped)
+- MCP Servers: .mcp.json parse error (skipped)
+- Workflows: 2 files skipped due to parse errors
+```
+
 ## Configuration
 
-`.claude/config-contribution.local.md` でカスタマイズ可能:
+`.claude/config-contribution.local.md` でカスタマイズ可能。
+
+### ファイルの作成方法
+
+このファイルはオプションで、プロジェクトルートの `.claude/` ディレクトリに作成します。
+`.gitignore` に追加することを推奨（個人設定のため）。
+
+```bash
+# .gitignore に追加
+.claude/*.local.md
+```
+
+### 設定例
 
 ```yaml
 ---
@@ -333,10 +478,23 @@ excludeCategories:
   - vscode # VS Code設定をスキップ
 excludePatterns:
   - '**/test/**' # テスト関連を除外
+  - '**/fixtures/**' # テストフィクスチャを除外
 minPriority: medium # medium以上のみissue作成
 autoLabel: true # 自動ラベル付け
+targetRepo: keito4/config # issue作成先（デフォルト: keito4/config）
 ---
 ```
+
+### 設定項目
+
+| 項目              | 型       | デフォルト      | 説明                             |
+| ----------------- | -------- | --------------- | -------------------------------- |
+| excludeCategories | string[] | []              | 除外するカテゴリ                 |
+| excludePatterns   | string[] | []              | 除外するファイルパターン         |
+| minPriority       | string   | "low"           | issue作成の最低優先度            |
+| autoLabel         | boolean  | true            | 自動ラベル付けの有効/無効        |
+| targetRepo        | string   | "keito4/config" | issue作成先リポジトリ            |
+| cacheHours        | number   | 24              | configリポジトリのキャッシュ時間 |
 
 ---
 
