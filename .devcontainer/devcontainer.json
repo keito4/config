@@ -18,7 +18,8 @@
       "helm": "none",
       "minikube": "none"
     },
-    "ghcr.io/dhoeric/features/act:1": {}
+    "ghcr.io/dhoeric/features/act:1": {},
+    "ghcr.io/devcontainers-community/features/deno:1": {}
   },
   "remoteEnv": {
     "HOMEBREW_NO_AUTO_UPDATE": "1",
