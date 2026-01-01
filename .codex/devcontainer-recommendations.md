@@ -322,6 +322,36 @@ pnpmを使用する場合、以下の2つの設定方法があります:
 - 利用率: 75% (6/8)
 - 必須ケース: Supabase使用プロジェクト全般
 
+### Deno Runtime（Edge Functions開発）
+
+```json
+{
+  "ghcr.io/devcontainers-community/features/deno:1": {}
+}
+```
+
+**バージョン**: 1 (最新のメジャーバージョン)
+
+**利点**:
+
+- **TypeScriptファーストサポート**: 設定不要でTypeScriptを直接実行可能
+- **Supabase Edge Functions対応**: Supabase Edge Functionsの開発環境として必須
+- **組み込みツールチェーン**: `deno fmt`（フォーマッター）、`deno lint`（リンター）、`deno test`（テストランナー）が標準搭載
+- **セキュアデフォルト**: 権限システムによりファイルシステムやネットワークアクセスを明示的に許可
+- **モダンエコシステム**: JSR (JavaScript Registry) との統合
+
+**必須ケース**:
+
+- Supabase Edge Functionsの開発
+- DenoベースのWebアプリケーション
+- TypeScript/JavaScriptのモダンランタイム環境が必要な場合
+
+**参考リンク**:
+
+- [Deno DevContainer Feature](https://github.com/devcontainers-community/features/tree/main/src/deno)
+- [Deno公式ドキュメント](https://deno.com/)
+- [Supabase Edge Functions](https://supabase.com/docs/guides/functions)
+
 ### E2Eテスト環境
 
 ```json
