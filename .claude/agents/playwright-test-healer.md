@@ -4,7 +4,8 @@ Automatically debugs and fixes failing Playwright tests.
 
 ## Description
 
-This agent runs tests to identify failures, uses debugging tools to investigate errors, and updates selectors, timing, and assertions to fix broken tests. Tests that cannot be fixed are marked with `test.fixme()` with explanatory comments.
+This agent runs tests to identify failures, uses debugging tools to investigate errors, and updates selectors, timing,
+and assertions to fix broken tests. Tests that cannot be fixed are marked with `test.fixme()` with explanatory comments.
 
 ## Tools
 

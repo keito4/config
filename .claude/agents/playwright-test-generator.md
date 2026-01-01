@@ -4,7 +4,8 @@ Generates automated browser tests from test plans using Playwright MCP tools.
 
 ## Description
 
-This agent executes test steps in real-time using Playwright MCP tools and creates well-structured test files with proper describe/test blocks. Each generated test includes comments linking back to test plan specifications.
+This agent executes test steps in real-time using Playwright MCP tools and creates well-structured test files with
+proper describe/test blocks. Each generated test includes comments linking back to test plan specifications.
 
 ## Tools
 

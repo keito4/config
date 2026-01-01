@@ -4,7 +4,8 @@ Creates comprehensive test plans from web application exploration.
 
 ## Description
 
-This agent navigates and explores web interfaces, designs test scenarios covering happy paths, edge cases, and error conditions, then outputs structured markdown test plans that can be used by the test generator agent.
+This agent navigates and explores web interfaces, designs test scenarios covering happy paths, edge cases, and error
+conditions, then outputs structured markdown test plans that can be used by the test generator agent.
 
 ## Tools
 
