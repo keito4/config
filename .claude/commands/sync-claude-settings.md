@@ -11,6 +11,12 @@ argument-hint: [--create-pr] [--base-path PATH]
 このコマンドは Elu-co-jp 配下の全プロジェクトから `.claude/settings.local.json` を収集し、
 共通設定を抽出して `.devcontainer/claude-settings.json` に反映させます。
 
+## 前提条件
+
+- ベースパス（`/Users/keito4/develop/github.com/Elu-co-jp`）は既に存在すると仮定
+- 環境確認は不要で、直接ファイル検索から開始
+- Node.js, npm, git, gh コマンドは既にインストール済みと仮定
+
 ## Step 1: Parse Arguments
 
 引数から設定を読み取る：
@@ -22,16 +28,16 @@ argument-hint: [--create-pr] [--base-path PATH]
 
 ## Step 2: Find settings.local.json Files
 
-指定されたベースパス配下で `settings.local.json` ファイルを検索：
+指定されたベースパス配下で `settings.local.json` ファイルを検索（node_modules を除外）：
 
 ```bash
-find ${BASE_PATH} -name "settings.local.json" -type f 2>/dev/null
+find ${BASE_PATH} -name "settings.local.json" -type f 2>/dev/null | grep -v node_modules
 ```
 
 見つかったファイル数を報告：
 
-- 0件の場合: エラーを報告して終了
-- 1件以上: 次のステップへ進む
+- 0件の場合: 警告を表示して終了
+- 1件以上: node_modules 内のファイルを除外してから次のステップへ進む
 
 ## Step 3: Read and Parse Settings Files
 
@@ -40,12 +46,16 @@ find ${BASE_PATH} -name "settings.local.json" -type f 2>/dev/null
 1. ファイルパスとリポジトリ名を記録
 2. JSON として解析
 3. `permissions.allow`, `permissions.deny`, `permissions.ask` を抽出
-4. エラーがあればスキップして次へ（エラー内容は記録）
+4. セキュリティ配慮：
+   - APIキー、トークン、パスワードを含むコマンドを除外（SUPABASE_SERVICE_ROLE_KEY, AWS_ACCESS_KEY_ID など）
+   - 特定のプロジェクトパスを含む Read パーミッションを除外（`Read(//workspaces/specific-project/**)`）
+5. エラーがあればスキップして次へ（エラー内容は記録）
 
 読み込み結果を報告：
 
 - 成功: X 件
 - 失敗: Y 件（ファイルパスと理由を列挙）
+- 除外: Z 件（セキュリティ上の理由）
 
 ## Step 4: Analyze Common Patterns
 
