@@ -413,14 +413,13 @@ Zshを無効にする場合は`configureZshAsDefaultShell`オプションを省�
 
 ```json
 {
-  "ghcr.io/flexwie/devcontainer-features/op:1": {
-    "version": "latest"
-  }
+  "ghcr.io/itsmechlark/features/1password:1": {}
 }
 ```
 
-- 利用例: management_tools, pulse_survey
+- 利用例: config
 - 用途: 環境変数・シークレット管理
+- メンテナンス状況: アクティブ（2025年12月更新）
 
 ### act（ローカルGitHub Actions実行）
 
