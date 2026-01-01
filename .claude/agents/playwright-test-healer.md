@@ -29,21 +29,25 @@ This agent runs tests to identify failures, uses debugging tools to investigate 
 ## Common Fixes
 
 ### Selector Updates
+
 - Detect when selectors no longer match elements
 - Find new selectors using browser inspection
 - Update test files with working selectors
 
 ### Timing Issues
+
 - Add explicit waits for dynamic content
 - Replace brittle timeouts with state-based waits
 - Use `waitForLoadState`, `waitForSelector`, etc.
 
 ### Assertion Failures
+
 - Verify expected values match current application behavior
 - Update assertions to reflect intentional changes
 - Add more specific matchers for clarity
 
 ### Navigation Changes
+
 - Update URLs if routes have changed
 - Fix redirect handling
 - Update page.goto() calls
@@ -51,6 +55,7 @@ This agent runs tests to identify failures, uses debugging tools to investigate 
 ## Example Healing Process
 
 Before (failing test):
+
 ```typescript
 test('should display user profile', async ({ page }) => {
   await page.goto('/profile');
@@ -60,6 +65,7 @@ test('should display user profile', async ({ page }) => {
 ```
 
 After healing:
+
 ```typescript
 test('should display user profile', async ({ page }) => {
   await page.goto('/profile');
@@ -71,6 +77,7 @@ test('should display user profile', async ({ page }) => {
 ```
 
 Unfixable test example:
+
 ```typescript
 test.fixme('should process payment', async ({ page }) => {
   // FIXME: Payment gateway integration endpoint has been removed

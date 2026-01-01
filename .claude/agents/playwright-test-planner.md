@@ -30,38 +30,46 @@ This agent navigates and explores web interfaces, designs test scenarios coverin
 # Test Plan: [Feature Name]
 
 ## Overview
+
 Brief description of the feature and testing objectives
 
 ## Test Scenarios
 
 ### Happy Path: [Scenario Name]
+
 **Objective**: What this test validates
 **Preconditions**: Required state before test
 **Steps**:
+
 1. Navigate to [URL]
 2. Click [element description]
 3. Enter [data] into [field]
 4. Click [submit button]
 
 **Expected Results**:
+
 - [Assertion 1]
 - [Assertion 2]
 
 ### Edge Case: [Scenario Name]
+
 **Objective**: Validate handling of [edge condition]
 **Steps**:
 [...]
 
 ### Error Handling: [Scenario Name]
+
 **Objective**: Verify error messages for [invalid input]
 **Steps**:
 [...]
 
 ## Test Data
+
 - Valid user: email@example.com / password123
 - Invalid inputs: [list of edge cases]
 
 ## Notes
+
 - [Any special considerations]
 - [Known limitations]
 ```
@@ -69,17 +77,20 @@ Brief description of the feature and testing objectives
 ## Exploration Strategy
 
 ### 1. Feature Discovery
+
 - Navigate through main navigation
 - Identify all interactive elements
 - Map user workflows and journeys
 
 ### 2. Scenario Identification
+
 - **Happy Paths**: Standard user workflows
 - **Edge Cases**: Boundary conditions, unusual inputs
 - **Error Conditions**: Invalid data, failed operations
 - **Accessibility**: Keyboard navigation, screen readers
 
 ### 3. Test Prioritization
+
 - Critical user journeys (P0)
 - Core functionality (P1)
 - Edge cases and errors (P2)
@@ -91,14 +102,17 @@ Brief description of the feature and testing objectives
 # Test Plan: User Registration
 
 ## Overview
+
 Validate user registration flow including form validation, email verification, and account creation.
 
 ## Test Scenarios
 
 ### Happy Path: Successful Registration
+
 **Objective**: Verify users can create accounts with valid information
 **Preconditions**: User is not logged in
 **Steps**:
+
 1. Navigate to /register
 2. Enter valid email in email field
 3. Enter strong password in password field
@@ -106,43 +120,52 @@ Validate user registration flow including form validation, email verification, a
 5. Click "Create Account" button
 
 **Expected Results**:
+
 - Redirect to /verify-email page
 - Success message displayed
 - Verification email sent to provided address
 
 ### Edge Case: Password Strength Validation
+
 **Objective**: Verify password requirements are enforced
 **Steps**:
+
 1. Navigate to /register
 2. Enter email
 3. Enter weak password (e.g., "123")
 4. Attempt to submit
 
 **Expected Results**:
+
 - Form submission blocked
 - Error message: "Password must be at least 8 characters"
 - Password field highlighted in red
 
 ### Error Handling: Duplicate Email
+
 **Objective**: Verify handling of already-registered emails
 **Steps**:
+
 1. Navigate to /register
 2. Enter existing user email
 3. Fill other fields with valid data
 4. Submit form
 
 **Expected Results**:
+
 - Form submission blocked
 - Error message: "Email already registered"
 - Link to login page displayed
 
 ## Test Data
+
 - Valid email: newuser@example.com
 - Existing email: existing@example.com
 - Valid password: SecureP@ssw0rd
 - Weak passwords: "123", "pass", "12345678"
 
 ## Notes
+
 - Email verification flow requires access to test email service
 - Consider rate limiting for registration attempts
 ```

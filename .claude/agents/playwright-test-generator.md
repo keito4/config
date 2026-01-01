@@ -28,8 +28,10 @@ This agent executes test steps in real-time using Playwright MCP tools and creat
 ## Example
 
 Input test plan:
-```
+
+```markdown
 Test Plan: User Login
+
 1. Navigate to login page
 2. Enter valid credentials
 3. Click login button
@@ -37,6 +39,7 @@ Test Plan: User Login
 ```
 
 Generated test:
+
 ```typescript
 import { test, expect } from '@playwright/test';
 
