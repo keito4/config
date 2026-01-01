@@ -275,6 +275,39 @@ OPENAI_API_KEY=***  # o3 MCP用
 }
 ```
 
+#### pnpmパッケージマネージャー
+
+pnpmを使用する場合、以下の2つの設定方法があります:
+
+**推奨: 独立したpnpm Feature（推奨）**
+
+```json
+{
+  "ghcr.io/devcontainers-extra/features/pnpm:2": {
+    "version": "latest"
+  }
+}
+```
+
+**利点**:
+- pnpmバージョン管理が明確
+- node Featureとの依存関係を分離
+- 最新のpnpm機能を即座に利用可能
+- より柔軟なバージョン管理
+
+**代替: node:1のpnpmVersionオプション**
+
+```json
+{
+  "ghcr.io/devcontainers/features/node:1": {
+    "version": "20",
+    "pnpmVersion": "latest"
+  }
+}
+```
+
+**推奨**: 独立したpnpm:2 Featureを使用することで、Node.jsとpnpmのバージョン管理を分離し、より明確な構成が可能になります
+
 ### Supabaseプロジェクト
 
 ```json
