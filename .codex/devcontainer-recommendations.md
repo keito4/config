@@ -279,7 +279,7 @@ OPENAI_API_KEY=***  # o3 MCP用
 
 pnpmを使用する場合、以下の2つの設定方法があります:
 
-**推奨: 独立したpnpm Feature（推奨）**
+##### 推奨: 独立したpnpm Feature（推奨）
 
 ```json
 {
@@ -290,12 +290,13 @@ pnpmを使用する場合、以下の2つの設定方法があります:
 ```
 
 **利点**:
+
 - pnpmバージョン管理が明確
 - node Featureとの依存関係を分離
 - 最新のpnpm機能を即座に利用可能
 - より柔軟なバージョン管理
 
-**代替: node:1のpnpmVersionオプション**
+##### 代替: node:1のpnpmVersionオプション
 
 ```json
 {
