@@ -43,6 +43,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --interactive)
+      # shellcheck disable=SC2034
       INTERACTIVE=true
       shift
       ;;

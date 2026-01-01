@@ -19,6 +19,7 @@
     "test:watch": "jest --runInBand --watch",
     "test:coverage": "jest --runInBand --coverage",
     "update:libs": "bash script/update-libraries.sh",
+    "update:claude": "bash script/update-claude-code.sh",
     "prepare": "husky"
   },
   "devDependencies": {

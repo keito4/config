@@ -26,10 +26,12 @@ MAX_SCORE=100
 while [[ $# -gt 0 ]]; do
   case $1 in
     --verbose)
+      # shellcheck disable=SC2034
       VERBOSE=true
       shift
       ;;
     --fix)
+      # shellcheck disable=SC2034
       AUTO_FIX=true
       shift
       ;;
