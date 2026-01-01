@@ -81,6 +81,7 @@ Provide your setup guidance as:
 ## Act Local CI Manager セットアップレポート
 
 ### 現在のワークフロー分析
+
 - 検出されたワークフロー: [リスト]
 - 必要なランナー環境: [ubuntu-latest, etc.]
 - 依存関係: [Docker, Node.js, etc.]
@@ -88,14 +89,19 @@ Provide your setup guidance as:
 ### セットアップ手順
 
 #### 1. Act インストール
+
 \`\`\`bash
+
 # macOS
+
 brew install act
 
 # Linux
+
 curl https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
 
 # Windows
+
 choco install act-cli
 \`\`\`
 
@@ -133,35 +139,47 @@ choco install act-cli
 ### 使用方法
 
 #### 基本コマンド
+
 \`\`\`bash
+
 # すべてのワークフローを実行
+
 npm run ci:all
 
 # 特定のジョブを実行
+
 npm run ci:test
 
 # ドライラン（実際には実行しない）
+
 act -n
 
 # 特定のイベントをシミュレート
+
 act pull_request
 \`\`\`
 
 #### デバッグコマンド
+
 \`\`\`bash
+
 # 詳細ログ出力
+
 act -v
 
 # 特定のステップまで実行
+
 act -j build --matrix node:18
 
 # シェルに入る
+
 act -j test --shell
 \`\`\`
 
 ### トラブルシューティング
 
 #### よくある問題と解決策
+
 1. **Docker イメージが大きすぎる**
    - 解決策: `catthehacker/ubuntu:act-latest` の slim バージョンを使用
 
@@ -176,7 +194,7 @@ act -j test --shell
 - **並列実行**: 独立したジョブを並列実行
 - **キャッシュ活用**: Docker layer キャッシュを活用
 - **選択的実行**: 変更されたワークフローのみ実行
-\`\`\`
+  \`\`\`
 
 **Quality Standards:**
 
@@ -216,3 +234,4 @@ act -j test --shell
 - For platform-specific workflows (Windows, macOS), document cross-platform testing limitations
 
 When configuring act, prioritize developer experience and fast feedback cycles. Ensure that local CI execution is as close to GitHub Actions as possible while remaining practical for daily development use. Always provide clear documentation and troubleshooting guidance.
+```
