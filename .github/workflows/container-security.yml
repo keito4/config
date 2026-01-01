@@ -29,6 +29,20 @@ jobs:
       security-events: write
 
     steps:
+      - name: Free disk space before scan
+        run: |
+          echo "=== Disk space before cleanup ==="
+          df -h
+
+          docker system prune -af --volumes
+          sudo rm -rf /usr/local/lib/android || true
+          sudo rm -rf /usr/share/dotnet || true
+          sudo rm -rf /opt/ghc || true
+          sudo rm -rf /usr/local/share/boost || true
+
+          echo "=== Disk space after cleanup ==="
+          df -h
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -86,6 +100,20 @@ jobs:
       packages: read
 
     steps:
+      - name: Free disk space before SBOM generation
+        run: |
+          echo "=== Disk space before cleanup ==="
+          df -h
+
+          docker system prune -af --volumes
+          sudo rm -rf /usr/local/lib/android || true
+          sudo rm -rf /usr/share/dotnet || true
+          sudo rm -rf /opt/ghc || true
+          sudo rm -rf /usr/local/share/boost || true
+
+          echo "=== Disk space after cleanup ==="
+          df -h
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
