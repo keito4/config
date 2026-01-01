@@ -35,6 +35,105 @@ This directory contains pre-configured commands that provide automated workflows
 /similarity-analysis path=src threshold=0.9
 ```
 
+#### `code-complexity-check.md`
+
+**Purpose**: Analyze code complexity and identify refactoring candidates
+**Features**:
+
+- Cyclomatic complexity analysis
+- Function length and nesting depth detection
+- Complexity thresholds (low/medium/high/critical)
+- Refactoring recommendations
+- CI integration with strict mode
+
+**Usage**:
+
+```
+/code-complexity-check
+/code-complexity-check --threshold 15
+/code-complexity-check --strict
+```
+
+### Quality & Testing
+
+#### `pre-pr-checklist.md`
+
+**Purpose**: Automate comprehensive checks before creating a pull request
+**Features**:
+
+- Sequential quality checks (lint, format, test, etc.)
+- PR size estimation and labeling
+- Linked issues verification
+- Branch status validation
+- Merge conflict detection
+
+**Usage**:
+
+```
+/pre-pr-checklist
+/pre-pr-checklist --skip-tests
+/pre-pr-checklist --verbose
+```
+
+#### `test-coverage-trend.md`
+
+**Purpose**: Track and visualize test coverage trends over time
+**Features**:
+
+- Historical coverage tracking
+- Trend analysis with ASCII graphs
+- Threshold alerts (70% coverage)
+- Per-file coverage breakdown
+- CSV export for external analysis
+
+**Usage**:
+
+```
+/test-coverage-trend
+/test-coverage-trend --days 30
+/test-coverage-trend --graph
+```
+
+### Security
+
+#### `dependency-health-check.md`
+
+**Purpose**: Comprehensive dependency health analysis
+**Features**:
+
+- npm package updates detection
+- Security vulnerability scanning (`npm audit`)
+- Deprecated package identification
+- License compliance checking
+- Health score calculation
+
+**Usage**:
+
+```
+/dependency-health-check
+/dependency-health-check --strict
+/dependency-health-check --json
+```
+
+#### `security-credential-scan.md`
+
+**Purpose**: Scan repository for hardcoded credentials and secrets
+**Features**:
+
+- API key, token, and password detection
+- Private key and certificate scanning
+- .env file validation
+- False positive reduction
+- Auto-fix capabilities
+
+**Usage**:
+
+```
+/security-credential-scan
+/security-credential-scan --fix
+/security-credential-scan --strict
+```
+
 ### Development Environment
 
 #### `setup-husky.md`
@@ -47,15 +146,94 @@ This directory contains pre-configured commands that provide automated workflows
 - Code quality gate enforcement
 - Development workflow integration
 
-#### `setup-team-protection.md`
+#### `container-health.md`
 
-**Purpose**: Configures GitHub repository protection for team development
+**Purpose**: Verify DevContainer environment health and configuration
 **Features**:
 
-- Branch protection rules (no direct push, required reviews)
+- Tool availability verification
+- Version checking (Node.js, npm, Claude Code)
+- Configuration validation
+- System resource monitoring
+- Auto-fix capabilities
+
+**Usage**:
+
+```
+/container-health
+/container-health --fix
+/container-health --verbose
+```
+
+#### `setup-new-repo.md`
+
+**Purpose**: Bootstrap a new repository with this configuration
+**Features**:
+
+- DevContainer setup
+- Git configuration (commitlint, Husky)
+- GitHub Actions workflows
+- Development tools (ESLint, Prettier, Jest)
+- Documentation templates
+
+**Usage**:
+
+```
+/setup-new-repo /path/to/new/repo
+/setup-new-repo --minimal
+/setup-new-repo --no-devcontainer
+```
+
+### Repository Management
+
+#### `branch-cleanup.md`
+
+**Purpose**: Clean up merged and stale branches
+**Features**:
+
+- Merged branch detection and deletion
+- Stale branch identification (30+ days)
+- Protected branch exclusion
+- Interactive confirmation
+- Remote branch cleanup support
+
+**Usage**:
+
+```
+/branch-cleanup
+/branch-cleanup --dry-run
+/branch-cleanup --remote
+```
+
+#### `changelog-generator.md`
+
+**Purpose**: Generate CHANGELOG from Conventional Commits history
+**Features**:
+
+- Automatic commit grouping by type
+- GitHub commit and PR links
+- Breaking changes highlighting
+- Version detection
+- Keep a Changelog format
+
+**Usage**:
+
+```
+/changelog-generator
+/changelog-generator --since v1.0.0
+/changelog-generator --contributors
+```
+
+#### `setup-team-protection.md`
+
+**Purpose**: Setup GitHub repository protection rules for team development
+**Features**:
+
+- Branch protection (no direct push, required reviews)
 - Required status checks (CI passing)
 - Repository settings (squash merge, auto-delete branches)
 - Security features (Dependabot, vulnerability alerts)
+- Configurable reviewer count and enforcement
 
 **Usage**:
 
