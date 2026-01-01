@@ -237,10 +237,22 @@ Run the `commit_changes.sh` script with `REPO_PATH` set to this repository to ch
 
 ### Updating Codex & Claude Tooling
 
+#### Update All Libraries
+
 - Run `npm run update:libs` (wrapper for `script/update-libraries.sh`) to refresh npm devDependencies together with Codex/Claude Code CLI definitions captured in `npm/global.json`.
 - The script performs `npm-check-updates`, `npm install`, and re-synchronizes global CLI versions via `npm view <package> version` before running lint/tests to verify the updated toolchain.
 - Packages that currently require newer Node.js releases (`semantic-release`, `@semantic-release/github`) are excluded by default. Override the exclusion list with `UPDATE_LIBS_REJECT="pkg1,pkg2" npm run update:libs` when you are ready to bump them.
 - `.github/workflows/update-libraries.yml` executes the same script weekly and opens a PR whenever it produces changes, ensuring Codex/Claude Code tooling stays current without manual effort.
+
+#### Update Claude Code Only
+
+- Run `npm run update:claude` (wrapper for `script/update-claude-code.sh`) to check and update **only** the `@anthropic-ai/claude-code` package to the latest version.
+- The script compares the current version in `npm/global.json` with the latest available version on npm registry.
+- If a newer version is available, it automatically updates `npm/global.json` and displays the release notes URL.
+- Use `/update-claude-code` Claude command for interactive update within Claude Code sessions.
+
+#### Commit Requirements
+
 - Commits that touch release-critical files (`package*.json`, `npm/global.json`, `.devcontainer/codex*`, `.codex/**`) **must** use a release-triggering Conventional Commit type (`feat`, `fix`, `perf`, `revert`, or `docs`). Commitlint enforces this so semantic-release can publish automatically when tooling versions change.
 
 #### Global CLI version source of truth
