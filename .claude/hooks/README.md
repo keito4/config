@@ -1,0 +1,184 @@
+# Claude Code Hooks
+
+このディレクトリには、Claude Codeの動作をカスタマイズするためのHooksスクリプトが格納されています。
+
+## 概要
+
+Hooksは、Claude Codeの特定のイベント（ツール実行前後、タスク完了時など）に自動的に実行されるスクリプトです。これにより、品質チェック、通知、自動化などを実現できます。
+
+## 利用可能なHooks
+
+### 1. `block_git_no_verify.py`
+
+**目的**: `git commit --no-verify` や `HUSKY=0` の使用をブロックし、必ずGit Hooksを実行させる
+
+**トリガー**: `PreToolUse(Bash)`
+
+**動作**:
+
+- `--no-verify` フラグを検出してブロック
+- `HUSKY=0` 環境変数を検出してブロック
+- 違反が見つかった場合、exit code 2でツール実行を阻止
+
+**設定例**:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "comment": "Block git --no-verify and HUSKY=0",
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/block_git_no_verify.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 2. `pre_git_quality_gates.py`
+
+**目的**: Git操作（commit/push）の前にQuality Gatesを実行し、品質基準を満たさない変更のコミット/プッシュを防止
+
+**トリガー**: `PreToolUse(Bash)` で `git commit` または `git push` を検出
+
+**実行されるチェック**:
+
+1. **Format Check** (`npm run format:check`) - コードフォーマットの検証
+2. **Lint** (`npm run lint`) - コード品質の検証
+3. **Test** (`npm run test`) - ユニットテストの実行
+4. **ShellCheck** (`npm run shellcheck`) - シェルスクリプトの検証
+5. **Security Credential Scan** (`./script/security-credential-scan.sh --strict`) - 認証情報の漏洩チェック
+6. **Code Complexity Check** (`./script/code-complexity-check.sh --strict`) - コード複雑度の検証
+
+**動作**:
+
+- すべてのチェックに合格した場合のみ、Git操作を許可
+- 1つでも失敗した場合、exit code 2でツール実行を阻止
+- 失敗したチェックの詳細を標準エラー出力に表示
+
+**設定例**:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "comment": "Run Quality Gates before git commit/push",
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/pre_git_quality_gates.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Hooksの設定方法
+
+### ステップ1: settings.local.json に設定を追加
+
+`.claude/settings.local.json` ファイルに `hooks` フィールドを追加します：
+
+```json
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "comment": "Block git --no-verify and HUSKY=0",
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/block_git_no_verify.py"
+          }
+        ]
+      },
+      {
+        "comment": "Run Quality Gates before git commit/push",
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/pre_git_quality_gates.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### ステップ2: Hookスクリプトに実行権限を付与
+
+```bash
+chmod +x .claude/hooks/*.py
+```
+
+### ステップ3: Claude Codeを再起動
+
+設定変更を反映させるため、Claude Codeを再起動します。
+
+## トラブルシューティング
+
+### Hookが実行されない
+
+1. `settings.local.json` の構文が正しいか確認
+2. Hookスクリプトに実行権限があるか確認（`ls -l .claude/hooks/`）
+3. Pythonがインストールされているか確認（`python3 --version`）
+
+### Quality Gatesで意図せずブロックされる
+
+以下のいずれかの対処を行います：
+
+1. **修正してコミット**: エラーメッセージに従って問題を修正
+2. **特定のチェックをスキップ**: 一時的に `pre_git_quality_gates.py` の該当チェックをコメントアウト
+3. **Hookを無効化**: `settings.local.json` から該当のHook設定を削除
+
+### タイムアウトエラー
+
+テストやビルドに時間がかかる場合、`pre_git_quality_gates.py` の `timeout` 値を増やします：
+
+```python
+result = subprocess.run(
+    check["command"],
+    timeout=600  # 10分に変更
+)
+```
+
+## カスタムHooksの作成
+
+新しいHookスクリプトを作成する場合の基本構造：
+
+```python
+#!/usr/bin/env python3
+import sys
+import json
+
+# Read input from Claude
+data = json.load(sys.stdin)
+tool_input = data.get("tool_input", {}) or {}
+
+# Your hook logic here
+# ...
+
+# Exit codes:
+# 0 = Allow tool execution
+# 2 = Block tool execution with error message
+sys.exit(0)
+```
+
+## 参考資料
+
+- [Claude Code Hooks ドキュメント](https://docs.anthropic.com/claude-code/hooks)
+- [settings.local.json.template](./../settings.local.json.template)

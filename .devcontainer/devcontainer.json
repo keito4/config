@@ -24,6 +24,7 @@
       "moby": true,
       "dockerDashComposeVersion": "v2"
     }
+    "ghcr.io/schlich/devcontainer-features/playwright:0": {}
   },
   "remoteEnv": {
     "HOMEBREW_NO_AUTO_UPDATE": "1",

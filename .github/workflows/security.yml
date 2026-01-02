@@ -3,8 +3,28 @@ name: Security Scans
 on:
   push:
     branches: [main]
+    paths:
+      - '**.js'
+      - '**.ts'
+      - '**.mjs'
+      - '**.cjs'
+      - '**.sh'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'npm/global.json'
+      - '.github/workflows/security.yml'
   pull_request:
     branches: [main]
+    paths:
+      - '**.js'
+      - '**.ts'
+      - '**.mjs'
+      - '**.cjs'
+      - '**.sh'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'npm/global.json'
+      - '.github/workflows/security.yml'
   schedule:
     - cron: '0 5 * * *'
 

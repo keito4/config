@@ -209,6 +209,84 @@ For npm registry instead of GitHub Packages:
   run: npx semantic-release
 ```
 
+## Path Filters for CI Optimization
+
+Path filtersを使用することで、変更されたファイルに応じて必要なワークフローやジョブのみを実行し、CI実行時間とコストを削減できます。
+
+### ワークフローレベルのフィルタリング
+
+ワークフロー全体をスキップするには、`on`セクションでpathsを指定します:
+
+```yaml
+on:
+  pull_request:
+    paths:
+      - '**.js'
+      - '**.ts'
+      - 'src/**'
+      - 'package.json'
+      - '.github/workflows/**'
+  push:
+    branches: [main]
+    # mainブランチでは全チェックを実行（pathsを指定しない）
+```
+
+### ジョブレベルのフィルタリング
+
+より細かい制御には`dorny/paths-filter`アクションを使用します:
+
+```yaml
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'src/**'
+              - 'test/**'
+            docs:
+              - '**.md'
+              - 'docs/**'
+
+  test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    # ... testジョブ
+
+  deploy-docs:
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    # ... ドキュメントデプロイジョブ
+```
+
+### 推奨フィルターパターン
+
+| ワークフロー  | 推奨パス                                             | 理由                                               |
+| ------------- | ---------------------------------------------------- | -------------------------------------------------- |
+| CI Pipeline   | `**.{js,ts}`, `package.json`, `src/**`, `test/**`    | コード変更時のみテスト実行                         |
+| Docker Build  | `.devcontainer/**`, `Dockerfile`, `package.json`     | コンテナ関連の変更時のみビルド                     |
+| Documentation | `**.md`, `docs/**`                                   | ドキュメント変更時のみデプロイ                     |
+| Security Scan | `**.{js,ts}`, `package-lock.json`, `npm/global.json` | セキュリティリスクのあるファイル変更時のみスキャン |
+
+### 効果測定例
+
+- **ドキュメントのみの変更**: CI実行時間 90%削減 (10分 → 1分)
+- **Docker関連以外の変更**: イメージビルド スキップ (45分 → 0分)
+- **コード変更なし**: テストスキップ (15分 → 0分)
+
+### 注意事項
+
+1. **mainブランチ**: 本番ブランチでは全チェックを実行することを推奨（path filtersを緩めに設定）
+2. **skipped状態の処理**: Quality Gateで`skipped`を成功として扱う必要があります
+3. **ワークフロー自体の変更**: `.github/workflows/**`は常に含める
+
 ## Best Practices
 
 ### CI Workflow
@@ -217,6 +295,7 @@ For npm registry instead of GitHub Packages:
 2. **Fail early**: Put fastest checks first (lint before tests)
 3. **Clear feedback**: Use descriptive job and step names
 4. **Protect main**: Require CI to pass before merging
+5. **Optimize with path filters**: Skip unnecessary jobs when files haven't changed
 
 ### Release Workflow
 

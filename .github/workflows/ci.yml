@@ -2,18 +2,82 @@ name: CI
 
 on:
   pull_request:
+    paths:
+      - '**.js'
+      - '**.ts'
+      - '**.mjs'
+      - '**.cjs'
+      - '**.json'
+      - '**.sh'
+      - '**.bats'
+      - '.github/workflows/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.eslintrc.*'
+      - '.prettierrc.*'
+      - 'tsconfig.json'
   push:
     branches: [main, master]
+    paths:
+      - '**.js'
+      - '**.ts'
+      - '**.mjs'
+      - '**.cjs'
+      - '**.json'
+      - '**.sh'
+      - '**.bats'
+      - '.github/workflows/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.eslintrc.*'
+      - '.prettierrc.*'
+      - 'tsconfig.json'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      scripts: ${{ steps.filter.outputs.scripts }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+      dependencies: ${{ steps.filter.outputs.dependencies }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '**.js'
+              - '**.ts'
+              - '**.mjs'
+              - '**.cjs'
+              - 'src/**'
+              - 'test/**/*.test.{js,ts}'
+              - 'tsconfig.json'
+            scripts:
+              - '**.sh'
+              - 'script/**'
+              - 'test/integration/**'
+            workflows:
+              - '.github/workflows/**'
+            dependencies:
+              - 'package.json'
+              - 'package-lock.json'
+
   lint:
     name: Lint & Format
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    needs: changes
+    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.scripts == 'true' || needs.changes.outputs.dependencies == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -41,6 +105,8 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: changes
+    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.dependencies == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -87,6 +153,8 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: changes
+    if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.dependencies == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -118,6 +186,8 @@ jobs:
     name: Workflow Lint
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -131,7 +201,7 @@ jobs:
     name: Quality Gate
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [lint, test, integration-test, actionlint]
+    needs: [changes, lint, test, integration-test, actionlint]
     if: always()
     steps:
       - name: Check job results
@@ -154,9 +224,35 @@ jobs:
         env:
           LINT_RESULT: ${{ needs.lint.result }}
           TEST_RESULT: ${{ needs.test.result }}
+          INTEGRATION_RESULT: ${{ needs.integration-test.result }}
+          ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
         run: |
-          if [ "$LINT_RESULT" != "success" ] || [ "$TEST_RESULT" != "success" ]; then
-            echo "::error::Quality gate failed - lint or test jobs did not succeed"
+          # skipped は成功扱い（該当ファイルの変更がない場合）
+          function check_result() {
+            local result=$1
+            [[ "$result" == "success" || "$result" == "skipped" ]]
+          }
+
+          FAILED=false
+          if ! check_result "$LINT_RESULT"; then
+            echo "::error::Lint & Format failed"
+            FAILED=true
+          fi
+          if ! check_result "$TEST_RESULT"; then
+            echo "::error::Unit Tests failed"
+            FAILED=true
+          fi
+          if ! check_result "$INTEGRATION_RESULT"; then
+            echo "::error::Integration Tests failed"
+            FAILED=true
+          fi
+          if ! check_result "$ACTIONLINT_RESULT"; then
+            echo "::error::Workflow Lint failed"
+            FAILED=true
+          fi
+
+          if [ "$FAILED" = true ]; then
+            echo "::error::Quality gate failed - one or more jobs did not succeed"
             exit 1
           fi
 
