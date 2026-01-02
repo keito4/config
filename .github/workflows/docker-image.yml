@@ -3,6 +3,12 @@ name: Build and Release DevContainer Image
 on:
   push:
     branches: [main]
+    paths:
+      - '.devcontainer/**'
+      - 'npm/global.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/docker-image.yml'
   workflow_dispatch:
     inputs:
       release_mode:

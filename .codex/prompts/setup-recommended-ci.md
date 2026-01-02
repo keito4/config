@@ -216,6 +216,135 @@ jobs:
         run: npm run build
 ```
 
+### CI最適化: Path Filters による実行最適化
+
+**目的**: 変更されたファイルに応じて必要なジョブのみを実行することで、CIの実行時間を短縮し、コストを削減します。
+
+#### 実装方法
+
+GitHub Actionsの`on.push.paths`と`on.pull_request.paths`フィルター、および`dorny/paths-filter`アクションを組み合わせて使用します。
+
+##### 1. ワークフローレベルでのフィルタリング
+
+ワークフロー全体をスキップするには、`on`セクションで`paths`を指定します:
+
+```yaml
+on:
+  pull_request:
+    paths:
+      - '**.js'
+      - '**.ts'
+      - '**.mjs'
+      - '**.cjs'
+      - '**.json'
+      - '**.sh'
+      - '**.bats'
+      - '.github/workflows/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.eslintrc.*'
+      - '.prettierrc.*'
+      - 'tsconfig.json'
+  push:
+    branches: [main, master]
+    paths:
+      - '**.js'
+      - '**.ts'
+      # ... 同様のパターン
+```
+
+##### 2. ジョブレベルでの細かい制御
+
+各ジョブを変更内容に応じて実行するには、`dorny/paths-filter`を使用します:
+
+```yaml
+jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      scripts: ${{ steps.filter.outputs.scripts }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+      dependencies: ${{ steps.filter.outputs.dependencies }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '**.js'
+              - '**.ts'
+              - 'src/**'
+              - 'test/**/*.test.{js,ts}'
+            scripts:
+              - '**.sh'
+              - 'script/**'
+            workflows:
+              - '.github/workflows/**'
+            dependencies:
+              - 'package.json'
+              - 'package-lock.json'
+
+  lint:
+    needs: changes
+    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.dependencies == 'true'
+    # ... lintジョブの内容
+
+  test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.dependencies == 'true'
+    # ... testジョブの内容
+
+  actionlint:
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true'
+    # ... actionlintジョブの内容
+```
+
+##### 3. Quality Gate での skipped 状態の処理
+
+ジョブがスキップされた場合も成功として扱うように、Quality Gateを更新します:
+
+```yaml
+quality-gate:
+  needs: [changes, lint, test, integration-test, actionlint]
+  if: always()
+  steps:
+    - name: Verify all checks passed
+      run: |
+        function check_result() {
+          local result=$1
+          [[ "$result" == "success" || "$result" == "skipped" ]]
+        }
+
+        if ! check_result "${{ needs.lint.result }}"; then
+          echo "::error::Lint & Format failed"
+          exit 1
+        fi
+        # ... 他のジョブも同様にチェック
+```
+
+#### Path Filters のベストプラクティス
+
+| 対象ワークフロー       | 推奨フィルター                                        | 理由                                     |
+| ---------------------- | ----------------------------------------------------- | ---------------------------------------- |
+| **CI Pipeline**        | コード、設定ファイル、ワークフロー自体                | ドキュメントのみの変更でテストをスキップ |
+| **Docker Image Build** | `.devcontainer/**`, `npm/global.json`, `package.json` | DevContainer関連の変更時のみビルド       |
+| **Security Scans**     | コード、依存関係ファイル                              | セキュリティに影響する変更のみスキャン   |
+| **Documentation**      | `**.md`, `docs/**`                                    | ドキュメント変更時のみデプロイ           |
+
+#### 効果測定
+
+Path Filtersを導入すると、以下のような効果が期待できます:
+
+- ドキュメントのみの変更: CI実行時間 **90%削減** (10分 → 1分)
+- DevContainer変更なし: Docker Image Build **スキップ** (45分 → 0分)
+- ワークフローのみの変更: Lint/Test **スキップ**、Actionlintのみ実行
+
+**注意**: mainブランチへのpushでは、すべてのチェックを実行することを推奨します（path filtersを適用しない、または緩めに設定）。
+
 ### フル構成版 (Next.js + Supabase プロジェクト向け)
 
 Elu-co-jp リポジトリから参照:
