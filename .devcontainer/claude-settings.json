@@ -245,8 +245,6 @@
       "Bash(gcloud container clusters:*)",
       "Bash(gcloud container clusters get-credentials:*)",
       "Bash(gcloud compute machine-types describe:*)",
-      "Bash(vercel:*)",
-      "Bash(vercel env:*)",
       "Bash(wscat:*)",
       "Bash(openssl rand:*)",
       "Bash(uv run:*)",

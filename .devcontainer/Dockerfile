@@ -56,8 +56,7 @@ RUN CLAUDE_CODE_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies
     typescript \
     typescript-language-server \
     @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
-    @openai/codex@${CODEX_VERSION} \
-    vercel
+    @openai/codex@${CODEX_VERSION}
 
 USER vscode
 RUN bash -lc "cargo install similarity-ts" || true \

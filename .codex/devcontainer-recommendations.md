@@ -275,6 +275,40 @@ OPENAI_API_KEY=***  # o3 MCP用
 }
 ```
 
+#### pnpmパッケージマネージャー
+
+pnpmを使用する場合、以下の2つの設定方法があります:
+
+**推奨: 独立したpnpm Feature（推奨）**
+
+```json
+{
+  "ghcr.io/devcontainers-extra/features/pnpm:2": {
+    "version": "latest"
+  }
+}
+```
+
+**利点**:
+
+- pnpmバージョン管理が明確
+- node Featureとの依存関係を分離
+- 最新のpnpm機能を即座に利用可能
+- より柔軟なバージョン管理
+
+**代替: node:1のpnpmVersionオプション**
+
+```json
+{
+  "ghcr.io/devcontainers/features/node:1": {
+    "version": "20",
+    "pnpmVersion": "latest"
+  }
+}
+```
+
+**推奨**: 独立したpnpm:2 Featureを使用することで、Node.jsとpnpmのバージョン管理を分離し、より明確な構成が可能になります
+
 ### Supabaseプロジェクト
 
 ```json
@@ -287,6 +321,36 @@ OPENAI_API_KEY=***  # o3 MCP用
 
 - 利用率: 75% (6/8)
 - 必須ケース: Supabase使用プロジェクト全般
+
+### Deno Runtime（Edge Functions開発）
+
+```json
+{
+  "ghcr.io/devcontainers-community/features/deno:1": {}
+}
+```
+
+**バージョン**: 1 (最新のメジャーバージョン)
+
+**利点**:
+
+- **TypeScriptファーストサポート**: 設定不要でTypeScriptを直接実行可能
+- **Supabase Edge Functions対応**: Supabase Edge Functionsの開発環境として必須
+- **組み込みツールチェーン**: `deno fmt`（フォーマッター）、`deno lint`（リンター）、`deno test`（テストランナー）が標準搭載
+- **セキュアデフォルト**: 権限システムによりファイルシステムやネットワークアクセスを明示的に許可
+- **モダンエコシステム**: JSR (JavaScript Registry) との統合
+
+**必須ケース**:
+
+- Supabase Edge Functionsの開発
+- DenoベースのWebアプリケーション
+- TypeScript/JavaScriptのモダンランタイム環境が必要な場合
+
+**参考リンク**:
+
+- [Deno DevContainer Feature](https://github.com/devcontainers-community/features/tree/main/src/deno)
+- [Deno公式ドキュメント](https://deno.com/)
+- [Supabase Edge Functions](https://supabase.com/docs/guides/functions)
 
 ### E2Eテスト環境
 
