@@ -1,8 +1,22 @@
 # Claude Specialized Agents
 
-This directory contains 13 specialized AI agents designed to provide comprehensive code analysis, quality assurance, and development assistance. Each agent is optimized for specific aspects of software development and can be invoked proactively or on-demand.
+This directory contains 14 specialized AI agents designed to provide comprehensive code analysis, quality assurance, and development assistance. Each agent is optimized for specific aspects of software development and can be invoked proactively or on-demand.
 
 ## Agent Categories
+
+### DevOps & CI/CD
+
+#### `act-local-ci-manager.md`
+
+**Purpose**: Manages local CI pipeline execution using act (GitHub Actions local runner)
+**Use Cases**:
+
+- Setting up act configuration for testing GitHub Actions workflows locally
+- Configuring Docker environment for act execution
+- Managing secrets and environment variables for local testing
+- Running full CI pipeline validation before pushing code
+- Debugging workflow failures locally
+- Integrating act with development workflows (pre-commit hooks, VS Code tasks)
 
 ### Architecture & Code Quality
 
