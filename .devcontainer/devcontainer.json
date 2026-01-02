@@ -23,7 +23,7 @@
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "moby": true,
       "dockerDashComposeVersion": "v2"
-    }
+    },
     "ghcr.io/schlich/devcontainer-features/playwright:0": {}
   },
   "remoteEnv": {
