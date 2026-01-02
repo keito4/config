@@ -4,6 +4,36 @@ This directory contains pre-configured commands that provide automated workflows
 
 ## Available Commands
 
+### Maintenance
+
+#### `repo-maintenance.md`
+
+**Purpose**: Comprehensive repository maintenance - run all health checks and updates
+**Features**:
+
+- Environment health checks (container, DevContainer version, Claude Code)
+- CI/CD setup checks (team protection, Husky, pre-PR checklist)
+- Repository cleanup (branches, git gc)
+- New feature discovery from config repository
+
+**Usage**:
+
+```
+/repo-maintenance                    # Full maintenance
+/repo-maintenance --mode quick       # Quick check (no updates)
+/repo-maintenance --mode check-only  # Read-only checks
+/repo-maintenance --skip security    # Skip specific category
+/repo-maintenance --create-pr        # Create PR for changes
+```
+
+**Modes**:
+
+| Mode       | Description                        |
+| ---------- | ---------------------------------- |
+| full       | Run all updates and checks         |
+| quick      | Important checks only (no updates) |
+| check-only | Read-only status checks            |
+
 ### Git Workflow
 
 #### `git-sync.md`
