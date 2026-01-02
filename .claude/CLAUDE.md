@@ -91,3 +91,27 @@ Lint → Test → Build → SCA → Deploy:Stg → E2E → Deploy:Prod
 ## 6. デプロイ
 
 基本的にgithub actionsを使用する。
+
+## 7. Quality Gates（品質ゲート）
+
+Git操作（commit/push）の前に自動的に品質チェックを実行する仕組みを導入しています。
+
+### 実行されるチェック
+
+1. **Format Check** - コードフォーマットの検証
+2. **Lint** - コード品質の検証
+3. **Test** - ユニットテストの実行
+4. **ShellCheck** - シェルスクリプトの検証
+5. **Security Credential Scan** - 認証情報の漏洩チェック
+6. **Code Complexity Check** - コード複雑度の検証
+
+### Hooks設定
+
+`.claude/hooks/` ディレクトリに以下のHooksスクリプトが配置されています：
+
+- `block_git_no_verify.py`: `--no-verify` や `HUSKY=0` の使用をブロック
+- `pre_git_quality_gates.py`: Git操作前にQuality Gatesを実行
+
+これらは `.claude/settings.local.json` の `hooks` フィールドで設定されており、Claudeによる `git commit` や `git push` の実行前に自動的にトリガーされます。
+
+詳細は [.claude/hooks/README.md](./.claude/hooks/README.md) を参照してください。
