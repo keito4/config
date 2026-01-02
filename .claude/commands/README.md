@@ -1,6 +1,6 @@
 # Claude Automated Commands
 
-This directory contains pre-configured commands that provide automated workflows for common development tasks. These commands can be invoked directly by Claude or triggered automatically based on repository events and context. Additional automated commands are available in the `.codex/prompts/` directory.
+This directory contains pre-configured commands that provide automated workflows for common development tasks. These commands can be invoked directly by Claude or triggered automatically based on repository events and context.
 
 ## Available Commands
 
