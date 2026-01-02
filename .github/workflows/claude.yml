@@ -11,16 +11,78 @@ on:
     types: [submitted]
 
 concurrency:
-  group: claude-${{ github.run_id }}
+  group: claude-${{ github.repository }}-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
   cancel-in-progress: false
 
 jobs:
-  claude:
+  # PRの場合、CIが完了しているかチェック
+  check-ci-status:
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body || '', '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body || '', '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body || '', '@claude'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      ci_passed: ${{ steps.check.outputs.ci_passed }}
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: read
+    steps:
+      - name: Get PR number
+        id: pr
+        run: |
+          if [ "${{ github.event_name }}" = "issue_comment" ]; then
+            echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
+            echo "number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "pull_request_review" ]; then
+            echo "number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check CI status
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER="${{ steps.pr.outputs.number }}"
+          REPO="${{ github.repository }}"
+
+          # PRのHEAD SHAを取得
+          PR_DATA=$(gh api repos/$REPO/pulls/$PR_NUMBER)
+          HEAD_SHA=$(echo "$PR_DATA" | jq -r '.head.sha')
+
+          echo "Checking CI status for PR #$PR_NUMBER (SHA: $HEAD_SHA)"
+
+          # Check runsを取得
+          CHECKS=$(gh api repos/$REPO/commits/$HEAD_SHA/check-runs --jq '.check_runs[] | select(.name == "CI" or .name == "build" or .name == "test" or .name == "lint")')
+
+          # CIワークフローのステータスを取得
+          CI_STATUS=$(gh api repos/$REPO/commits/$HEAD_SHA/status --jq '.state')
+
+          echo "CI Status: $CI_STATUS"
+
+          # CIが成功している、またはチェックが存在しない場合は許可
+          if [ "$CI_STATUS" = "success" ] || [ "$CI_STATUS" = "" ]; then
+            echo "ci_passed=true" >> $GITHUB_OUTPUT
+            echo "✅ CI checks passed or not required"
+          else
+            echo "ci_passed=false" >> $GITHUB_OUTPUT
+            echo "❌ CI checks have not passed yet. Current status: $CI_STATUS"
+            echo "Please wait for CI to complete before running Claude Code."
+          fi
+
+  claude:
+    # Issue（PRではない）へのコメント、または CIチェックが必要ない場合
+    if: |
+      always() &&
+      (
+        (github.event_name == 'issues' && (contains(github.event.issue.body || '', '@claude') || contains(github.event.issue.title || '', '@claude'))) ||
+        (needs.check-ci-status.result == 'success' && needs.check-ci-status.outputs.ci_passed == 'true') ||
+        (needs.check-ci-status.result == 'skipped')
+      )
+    needs: [check-ci-status]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -29,6 +91,7 @@ jobs:
       issues: write
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
+      checks: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -44,6 +107,7 @@ jobs:
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
             actions: read
+            checks: read
 
           # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
           # prompt: 'Update the pull request description to include a summary of changes.'
