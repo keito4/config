@@ -56,6 +56,16 @@ jobs:
             QUALITY_GATE=$(echo "$CHECK_RUNS" | jq -r 'select(.name == "Quality Gate")')
 
             if [ -z "$QUALITY_GATE" ]; then
+              # Quality Gateが2分経っても出現しない場合、CIがpath filtersでスキップされた可能性を確認
+              if [ $ELAPSED_TIME -ge 120 ]; then
+                DETECT_CHANGES=$(echo "$CHECK_RUNS" | jq -r 'select(.name == "Detect Changes")')
+                if [ -z "$DETECT_CHANGES" ]; then
+                  echo "ci_passed=true" >> $GITHUB_OUTPUT
+                  echo "✅ CI workflow skipped by path filters (no code changes detected)"
+                  echo "Claude Code Review will proceed without waiting for CI."
+                  exit 0
+                fi
+              fi
               echo "⏳ Quality Gate check has not started yet, waiting..."
               sleep $POLL_INTERVAL
               ELAPSED_TIME=$((ELAPSED_TIME + POLL_INTERVAL))
