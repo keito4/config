@@ -313,14 +313,46 @@ pnpmを使用する場合、以下の2つの設定方法があります:
 
 ```json
 {
-  "ghcr.io/devcontainers-extra/features/supabase-cli": {
-    "version": "latest"
-  }
+  "ghcr.io/devcontainers-extra/features/supabase-cli": {}
 }
 ```
 
-- 利用率: 75% (6/8)
-- 必須ケース: Supabase使用プロジェクト全般
+**バージョン**: latest（デフォルト）
+
+**利点**:
+
+- **データベースマイグレーション**: `supabase db push`、`supabase db diff`でスキーマ管理
+- **型生成**: `supabase gen types typescript`でTypeScript型を自動生成
+- **ローカル開発環境**: `supabase start`でローカルSupabaseスタックを起動
+- **Edge Functions開発**: `supabase functions serve`でローカルテスト
+- **リモート管理**: `supabase link`でプロジェクトと連携
+
+**必須ケース**:
+
+- ✅ `supabase/config.toml`が存在するプロジェクト
+- ✅ Supabaseをバックエンドとして使用するプロジェクト
+- ✅ データベーススキーマのバージョン管理が必要な場合
+- ✅ Supabase Edge Functionsを開発する場合
+
+**推奨設定**:
+
+プロジェクトルートに`supabase/config.toml`が存在する場合、このFeatureを追加することを強く推奨します。
+
+**関連Feature**:
+
+Supabase Edge Functionsを開発する場合、Deno Runtimeとの併用を推奨:
+
+```json
+{
+  "ghcr.io/devcontainers-extra/features/supabase-cli": {},
+  "ghcr.io/devcontainers-community/features/deno:1": {}
+}
+```
+
+**参考リンク**:
+
+- [Supabase CLI公式ドキュメント](https://supabase.com/docs/guides/cli)
+- [DevContainer Feature](https://github.com/devcontainers-extra/features/tree/main/src/supabase-cli)
 
 ### Deno Runtime（Edge Functions開発）
 
