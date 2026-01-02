@@ -55,23 +55,53 @@ jobs:
 
           echo "Checking CI status for PR #$PR_NUMBER (SHA: $HEAD_SHA)"
 
-          # Check runsを取得
-          CHECKS=$(gh api repos/$REPO/commits/$HEAD_SHA/check-runs --jq '.check_runs[] | select(.name == "CI" or .name == "build" or .name == "test" or .name == "lint")')
+          # Check Runsを取得（CI workflowのみ）
+          CHECK_RUNS=$(gh api repos/$REPO/commits/$HEAD_SHA/check-runs \
+            --jq '.check_runs[] | select(.name != "check-ci-status" and .name != "claude") | {name, status, conclusion}')
 
-          # CIワークフローのステータスを取得
-          CI_STATUS=$(gh api repos/$REPO/commits/$HEAD_SHA/status --jq '.state')
+          echo "Check Runs:"
+          echo "$CHECK_RUNS" | jq -r '"\(.name): \(.status) - \(.conclusion)"'
 
-          echo "CI Status: $CI_STATUS"
+          # 必須チェック: Quality Gate
+          QUALITY_GATE=$(echo "$CHECK_RUNS" | jq -r 'select(.name == "Quality Gate")')
 
-          # CIが成功している、またはチェックが存在しない場合は許可
-          if [ "$CI_STATUS" = "success" ] || [ "$CI_STATUS" = "" ]; then
-            echo "ci_passed=true" >> $GITHUB_OUTPUT
-            echo "✅ CI checks passed or not required"
-          else
+          if [ -z "$QUALITY_GATE" ]; then
             echo "ci_passed=false" >> $GITHUB_OUTPUT
-            echo "❌ CI checks have not passed yet. Current status: $CI_STATUS"
-            echo "Please wait for CI to complete before running Claude Code."
+            echo "⏳ Quality Gate check has not started yet"
+            echo "Please wait for CI to start before running Claude Code."
+            exit 0
           fi
+
+          QUALITY_GATE_STATUS=$(echo "$QUALITY_GATE" | jq -r '.status')
+          QUALITY_GATE_CONCLUSION=$(echo "$QUALITY_GATE" | jq -r '.conclusion')
+
+          if [ "$QUALITY_GATE_STATUS" != "completed" ]; then
+            echo "ci_passed=false" >> $GITHUB_OUTPUT
+            echo "⏳ Quality Gate is still running: $QUALITY_GATE_STATUS"
+            echo "Please wait for CI to complete before running Claude Code."
+            exit 0
+          fi
+
+          if [ "$QUALITY_GATE_CONCLUSION" != "success" ]; then
+            echo "ci_passed=false" >> $GITHUB_OUTPUT
+            echo "❌ Quality Gate failed with conclusion: $QUALITY_GATE_CONCLUSION"
+            echo "Please fix CI failures before running Claude Code."
+            exit 0
+          fi
+
+          # すべての実行されたチェック（skippedでないもの）を確認
+          FAILED_CHECKS=$(echo "$CHECK_RUNS" | jq -r 'select(.status == "completed" and .conclusion != "success" and .conclusion != "skipped" and .conclusion != "neutral")')
+
+          if [ -n "$FAILED_CHECKS" ]; then
+            echo "ci_passed=false" >> $GITHUB_OUTPUT
+            echo "❌ Some CI checks failed:"
+            echo "$FAILED_CHECKS" | jq -r '"\(.name): \(.conclusion)"'
+            echo "Please fix CI failures before running Claude Code."
+            exit 0
+          fi
+
+          echo "ci_passed=true" >> $GITHUB_OUTPUT
+          echo "✅ All CI checks passed"
 
   claude:
     # Issue（PRではない）へのコメント、または CIチェックが必要ない場合
