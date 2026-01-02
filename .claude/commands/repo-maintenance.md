@@ -1,7 +1,7 @@
 ---
 description: Comprehensive repository maintenance - run all health checks and updates
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(jq:*), Bash(find:*), Bash(test:*), Bash(ls:*), Bash(grep:*), Bash(cat:*), Bash(echo:*), Bash(date:*), Bash(curl:*), Task, Skill
-argument-hint: [--mode full|quick|check-only] [--skip CATEGORY] [--create-pr]
+argument-hint: '[--mode full|quick|check-only] [--skip CATEGORY] [--create-pr]'
 ---
 
 # Repository Maintenance Workflow
@@ -180,6 +180,29 @@ PR 作成前のチェック項目を検証：
 - ✅ すべてのチェック項目が設定済み
 - ⚠️ 不足している項目あり（詳細をリスト）
 
+### 3.4 CI/CD Setup Check (full mode only)
+
+CI/CD ワークフローの設定状況を確認：
+
+実行内容:
+
+- GitHub Actions ワークフローの存在確認
+- 必須ジョブ（lint, test, build）の確認
+- セキュリティスキャンの設定確認
+- Claude Code Review の統合確認
+
+これは `/setup-ci --dry-run` コマンドと同等の処理を実行します。
+
+結果:
+
+- ✅ CI/CD 設定済み
+- ⚠️ CI/CD 未設定または不完全 → セットアップを提案
+- 📝 推奨レベル: standard または comprehensive
+
+MODE が `full` かつ CI/CD が未設定の場合:
+
+`/setup-ci` コマンドの実行を提案。
+
 ## Step 4: Cleanup Category
 
 ### 4.1 Branch Cleanup
@@ -251,7 +274,8 @@ config リポジトリから取り込み可能な新機能を発見：
 ## Setup (2/4)
 ├── Team Protection: ✅ Branch protection enabled
 ├── Husky: ✅ Git hooks configured
-└── Pre-PR Checklist: ✅ CI workflow exists
+├── Pre-PR Checklist: ✅ CI workflow exists
+└── CI/CD: ✅ Standard level configured
 
 ## Cleanup (3/4)
 ├── Branches: 🗑️ 8 merged branches can be deleted
@@ -271,15 +295,17 @@ config リポジトリから取り込み可能な新機能を発見：
    Run: /setup-team-protection
 2. Setup Git hooks (Husky)
    Run: /setup-husky
+3. Setup CI/CD workflows
+   Run: /setup-ci
 
 ### 🟡 Soon (Updates)
-3. Update DevContainer to v1.15.0
+4. Update DevContainer to v1.15.0
    Run: /config-base-sync-update
 
 ### 🟢 Recommended (Maintenance)
-4. Delete 8 merged branches
+5. Delete 8 merged branches
    Run: /branch-cleanup
-5. Review 2 new config features
+6. Review 2 new config features
    Run: /config-contribution-discover
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -432,5 +458,6 @@ Run this command regularly to maintain repository health:
 | Setup       | `/setup-team-protection`        | GitHub保護ルール設定    |
 | Setup       | `/setup-husky`                  | Git hooks設定           |
 | Setup       | `/pre-pr-checklist`             | PR前チェックリスト      |
+| Setup       | `/setup-ci`                     | CI/CDワークフロー設定   |
 | Cleanup     | `/branch-cleanup`               | ブランチクリーンアップ  |
 | Discovery   | `/config-contribution-discover` | 新機能発見              |

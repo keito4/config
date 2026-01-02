@@ -1,7 +1,7 @@
 ---
 description: Setup comprehensive CI/CD workflows for your repository
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(pnpm:*), Bash(node:*), Bash(ls:*), Bash(cat:*), Bash(find:*), Bash(test:*), Bash(mkdir:*), Task, Glob, Grep
-argument-hint: [--type nextjs|nodejs|terraform|monorepo] [--level minimal|standard|comprehensive] [--dry-run]
+argument-hint: '[--type nextjs|nodejs|terraform|monorepo] [--level minimal|standard|comprehensive] [--dry-run]'
 ---
 
 # CI/CD Setup Command
