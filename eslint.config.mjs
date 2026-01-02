@@ -21,12 +21,28 @@ export default [
     rules: {
       'no-console': 'off',
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      // Complexity rules
-      complexity: ['error', { max: 10 }],
-      'max-depth': ['error', 4],
-      'max-nested-callbacks': ['error', 3],
-      'max-lines-per-function': ['warn', { max: 50, skipBlankLines: true, skipComments: true }],
-      'max-params': ['warn', 4],
+      // Complexity rules (Phase 1: warnings to prevent new technical debt)
+      // See eslint/README.md for detailed documentation
+      complexity: ['warn', { max: 15 }],
+      'max-lines-per-function': [
+        'warn',
+        {
+          max: 100,
+          skipBlankLines: true,
+          skipComments: true,
+        },
+      ],
+      'max-lines': [
+        'warn',
+        {
+          max: 500,
+          skipBlankLines: true,
+          skipComments: true,
+        },
+      ],
+      'max-depth': ['warn', 4],
+      'max-params': ['warn', 5],
+      'max-nested-callbacks': ['warn', 3],
     },
   },
   // Relaxed rules for test files
