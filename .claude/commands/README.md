@@ -146,6 +146,33 @@ This directory contains pre-configured commands that provide automated workflows
 - Code quality gate enforcement
 - Development workflow integration
 
+#### `setup-ci.md`
+
+**Purpose**: Setup comprehensive CI/CD workflows for your repository
+**Features**:
+
+- Project type auto-detection (Next.js, Node.js, Terraform, Monorepo)
+- Gap analysis comparing current vs recommended CI configuration
+- Multi-level setup (minimal, standard, comprehensive)
+- Security scanning, E2E tests, and Claude Code Review integration
+
+**Usage**:
+
+```
+/setup-ci                           # Auto-detect and recommend
+/setup-ci --type nextjs             # Specify project type
+/setup-ci --level comprehensive     # Full CI/CD setup
+/setup-ci --dry-run                 # Preview changes only
+```
+
+**Levels**:
+
+| Level         | Features                                            |
+| ------------- | --------------------------------------------------- |
+| minimal       | Lint + Build                                        |
+| standard      | Lint + Test + Build + Security Audit                |
+| comprehensive | All + E2E + CodeQL + Claude Review + Scheduled Scan |
+
 #### `container-health.md`
 
 **Purpose**: Verify DevContainer environment health and configuration
