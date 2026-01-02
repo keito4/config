@@ -11,20 +11,51 @@
 # - Automatic PR size labels (size/S, size/M, size/L, size/XL)
 # - Warning for XL PRs (>1000 lines or >30 files)
 # - Concurrency control to cancel outdated runs
+# - Path filters for optimized execution (only run when relevant files change)
 #
 # Usage:
 # 1. Copy this file to .github/workflows/ci.yml
 # 2. Customize the quality check commands for your project
 # 3. Ensure your test runner generates coverage-summary.json
 # 4. Add size labels to your repository (size/S, size/M, size/L, size/XL)
+# 5. Adjust the path filters to match your project structure
 
 name: CI
 
 on:
   pull_request:
     branches: [main, develop]
+    # Path filters: only run CI when code or configuration changes
+    # Customize these patterns to match your project structure
+    paths:
+      - '**.js'
+      - '**.ts'
+      - '**.jsx'
+      - '**.tsx'
+      - '**.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'pnpm-lock.yaml'
+      - 'yarn.lock'
+      - '.github/workflows/**'
+      - 'src/**'
+      - 'test/**'
+      - 'tests/**'
+      # Add project-specific patterns below:
+      # - 'apps/**'
+      # - 'packages/**'
   push:
     branches: [main, develop]
+    # Less restrictive on main/develop to ensure all checks run
+    paths:
+      - '**.js'
+      - '**.ts'
+      - '**.jsx'
+      - '**.tsx'
+      - '**.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/**'
 
 # Cancel in-progress runs for the same workflow on the same PR
 concurrency:

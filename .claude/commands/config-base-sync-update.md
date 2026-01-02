@@ -64,8 +64,64 @@ git status --porcelain
 
 If there are uncommitted changes:
 
+### 4.1: Check if only devcontainer.json is modified
+
+Check if the only modified file is `.devcontainer/devcontainer.json`:
+
+```bash
+MODIFIED_FILES=$(git status --porcelain | awk '{print $2}')
+```
+
+If only `.devcontainer/devcontainer.json` is modified:
+
+### 4.2: Check if change is version-only
+
+Analyze the diff to determine if it's only an image version change:
+
+```bash
+git diff .devcontainer/devcontainer.json
+```
+
+Check if:
+
+1. The only change is in the `"image"` field
+2. The change is a version number update (e.g., `ghcr.io/keito4/config-base:1.13.1` → `ghcr.io/keito4/config-base:1.15.0`)
+3. No other fields are modified
+
+**Detection logic**:
+
+- Count the number of changed lines (excluding +/- prefixes)
+- Verify all changes match the pattern: `"image": "ghcr.io/keito4/config-base:X.Y.Z"`
+- Ensure both old and new versions point to the same registry and repository
+
+If the change is **version-only**:
+
+- Report: "✅ Detected version-only change in devcontainer.json (auto-overwrite enabled)"
+- Show the version change: `X.Y.Z → target-version`
+- Automatically discard the change and continue:
+  ```bash
+  git restore .devcontainer/devcontainer.json
+  ```
+- Proceed to Step 5
+
+If the change includes **other modifications** (e.g., features, mounts, settings):
+
+- Report error: "❌ Uncommitted changes detected in .devcontainer/devcontainer.json"
+- Show the non-version changes
+- Suggest: "Please commit or stash these changes before updating"
+- Stop execution
+
+### 4.3: Handle other uncommitted files
+
+If there are uncommitted changes in **other files** (not just devcontainer.json):
+
 - Report error: "Uncommitted changes detected. Please commit or stash changes before updating."
 - List the uncommitted files
+- Suggested actions:
+  1. Review the changes: `git diff <file>`
+  2. Commit the changes: `git add <file> && git commit -m "your message"`
+  3. Or stash the changes: `git stash`
+  4. Then re-run this command
 - Stop execution
 
 ## Step 5: Create Update Branch
