@@ -19,7 +19,11 @@
       "minikube": "none"
     },
     "ghcr.io/dhoeric/features/act:1": {},
-    "ghcr.io/devcontainers-community/features/deno:1": {}
+    "ghcr.io/devcontainers-community/features/deno:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": true,
+      "dockerDashComposeVersion": "v2"
+    }
   },
   "remoteEnv": {
     "HOMEBREW_NO_AUTO_UPDATE": "1",
