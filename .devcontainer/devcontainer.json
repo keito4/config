@@ -20,6 +20,10 @@
     },
     "ghcr.io/dhoeric/features/act:1": {},
     "ghcr.io/devcontainers-community/features/deno:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": true,
+      "dockerDashComposeVersion": "v2"
+    }
     "ghcr.io/schlich/devcontainer-features/playwright:0": {}
   },
   "remoteEnv": {
