@@ -42,10 +42,10 @@
 
 ## 入力パラメータ
 
-| パラメータ | 必須 | デフォルト値 | 説明 |
-|-----------|------|-------------|------|
-| `github-token` | Yes | - | GitHub API アクセス用トークン（通常は `${{ secrets.GITHUB_TOKEN }}`） |
-| `coverage-path` | No | `coverage/coverage-summary.json` | カバレッジファイルのパス（カンマ区切りで複数指定可） |
+| パラメータ      | 必須 | デフォルト値                     | 説明                                                                  |
+| --------------- | ---- | -------------------------------- | --------------------------------------------------------------------- |
+| `github-token`  | Yes  | -                                | GitHub API アクセス用トークン（通常は `${{ secrets.GITHUB_TOKEN }}`） |
+| `coverage-path` | No   | `coverage/coverage-summary.json` | カバレッジファイルのパス（カンマ区切りで複数指定可）                  |
 
 ## カバレッジファイルの生成
 
@@ -75,15 +75,16 @@ module.exports = {
 ```markdown
 ## Test Coverage Report
 
-| Category | Coverage | Covered | Total |
-|----------|----------|---------|-------|
-| ✅ Statements | 85.50% | 342 | 400 |
-| ⚠️ Branches | 75.20% | 188 | 250 |
-| ✅ Functions | 82.00% | 82 | 100 |
-| ✅ Lines | 86.30% | 345 | 400 |
+| Category      | Coverage | Covered | Total |
+| ------------- | -------- | ------- | ----- |
+| ✅ Statements | 85.50%   | 342     | 400   |
+| ⚠️ Branches   | 75.20%   | 188     | 250   |
+| ✅ Functions  | 82.00%   | 82      | 100   |
+| ✅ Lines      | 86.30%   | 345     | 400   |
 
 ---
-*Updated: 2026-01-02T17:00:00.000Z*
+
+_Updated: 2026-01-02T17:00:00.000Z_
 ```
 
 ## 統合手順

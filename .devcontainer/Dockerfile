@@ -75,6 +75,7 @@ RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /hom
  && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex
 
 COPY --chown=vscode:vscode .devcontainer/claude-settings.json /home/vscode/.claude/settings.json
+COPY --chown=vscode:vscode .devcontainer/claude-settings.local.json /home/vscode/.claude/settings.local.json
 COPY --chown=vscode:vscode .devcontainer/codex-config.json /home/vscode/.codex/config.json
 COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
 COPY --chown=vscode:vscode .claude/agents /home/vscode/.claude/agents
