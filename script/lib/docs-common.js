@@ -1,155 +1,103 @@
 /**
- * Documentation Generation Utilities
- *
- * Reusable utilities for parsing code metadata and generating Markdown documentation.
- * Based on pattern from keito4-org/n8n_custom_node
+ * Common utilities for documentation generation
+ * @module docs-common
  */
 
 const fs = require('fs');
 const path = require('path');
-const yaml = require('js-yaml');
 
 /**
- * Read and parse template files (JSON/YAML)
- * @param {string} file - File path to read
- * @returns {Object} Parsed template data
+ * Read and parse JSON/YAML files
+ * @param {string} filePath - Path to the file
+ * @returns {object} Parsed content
  */
-function readTemplate(file) {
-  const content = fs.readFileSync(file, 'utf8');
-  const ext = path.extname(file).toLowerCase();
-
-  if (ext === '.json') {
+function readTemplate(filePath) {
+  const content = fs.readFileSync(filePath, 'utf8');
+  if (filePath.endsWith('.json')) {
     return JSON.parse(content);
-  } else if (ext === '.yaml' || ext === '.yml') {
-    return yaml.load(content);
   }
-
-  throw new Error(`Unsupported file format: ${ext}`);
+  // For YAML, return raw content (implement YAML parsing if needed)
+  return content;
 }
 
 /**
- * Load and parse TypeScript metadata files
- * @param {string} metadataPath - Path to metadata file
- * @returns {Object} Parsed metadata
+ * Parse TypeScript/JavaScript metadata files
+ * @param {string} filePath - Path to the metadata file
+ * @returns {object} Extracted metadata
  */
-function loadMetadata(metadataPath) {
-  const content = fs.readFileSync(metadataPath, 'utf8');
-
-  // Basic TypeScript/JavaScript parsing
-  // Extract exported objects and their properties
+function loadMetadata(filePath) {
+  const content = fs.readFileSync(filePath, 'utf8');
   const metadata = {};
 
-  // Simple regex-based extraction (can be enhanced with proper AST parsing)
-  const nameMatch = content.match(/name:\s*['"]([^'"]+)['"]/);
-  const descMatch = content.match(/description:\s*['"]([^'"]+)['"]/);
-  const versionMatch = content.match(/version:\s*['"]?([^'",\s]+)['"]?/);
+  // Extract name from displayName or name property
+  const nameMatch = content.match(/(?:displayName|name):\s*['"]([^'"]+)['"]/);
+  if (nameMatch) {
+    metadata.name = nameMatch[1];
+  }
 
-  if (nameMatch) metadata.name = nameMatch[1];
-  if (descMatch) metadata.description = descMatch[1];
-  if (versionMatch) metadata.version = versionMatch[1];
+  // Extract description
+  const descMatch = content.match(/description:\s*['"]([^'"]+)['"]/);
+  if (descMatch) {
+    metadata.description = descMatch[1];
+  }
 
   return metadata;
 }
 
 /**
- * Extract and count node types from node list
- * @param {Array} nodes - Array of node objects
- * @returns {Object} Node type statistics
+ * Count and categorize items based on type
+ * @param {Array} items - Array of items to categorize
+ * @param {function} typeExtractor - Function to extract type from item
+ * @returns {object} Count by type
  */
-function extractNodeTypes(nodes) {
-  const types = {};
-
-  nodes.forEach(node => {
-    const type = node.type || 'unknown';
-    types[type] = (types[type] || 0) + 1;
-  });
-
-  return types;
+function extractTypes(items, typeExtractor) {
+  const counts = {};
+  for (const item of items) {
+    const type = typeExtractor(item);
+    counts[type] = (counts[type] || 0) + 1;
+  }
+  return counts;
 }
 
 /**
- * Write Markdown content to file (creates directory if needed)
- * @param {string} content - Markdown content to write
- * @param {string} outputPath - Output file path
+ * Write markdown content to file, creating directories if needed
+ * @param {string} content - Markdown content
+ * @param {string} filePath - Output file path
  */
-function writeMarkdownFile(content, outputPath) {
-  const dir = path.dirname(outputPath);
-
-  // Create directory if it doesn't exist
+function writeMarkdownFile(content, filePath) {
+  const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
-
-  fs.writeFileSync(outputPath, content, 'utf8');
+  fs.writeFileSync(filePath, content, 'utf8');
 }
 
 /**
- * Categorize items based on keyword matching
- * @param {string} itemId - Item identifier
- * @param {Object} metadata - Item metadata
- * @param {Object} categoryKeywords - Category to keywords mapping
- * @returns {string} Matched category or 'Other'
- */
-function categorizeItem(itemId, metadata, categoryKeywords) {
-  const text = `${itemId} ${metadata.name || ''}`.toLowerCase();
-
-  for (const [category, keywords] of Object.entries(categoryKeywords)) {
-    for (const keyword of keywords) {
-      if (text.includes(keyword.toLowerCase())) {
-        return category;
-      }
-    }
-  }
-
-  return 'Other';
-}
-
-/**
- * Generate Markdown table from data
- * @param {Array<string>} headers - Table headers
- * @param {Array<Array<string>>} rows - Table rows
- * @returns {string} Markdown table
+ * Generate markdown table from data
+ * @param {Array} headers - Table headers
+ * @param {Array<Array>} rows - Table rows
+ * @returns {string} Markdown table string
  */
 function generateMarkdownTable(headers, rows) {
   const headerRow = `| ${headers.join(' | ')} |`;
   const separator = `| ${headers.map(() => '---').join(' | ')} |`;
-  const dataRows = rows.map(row => `| ${row.join(' | ')} |`).join('\n');
-
+  const dataRows = rows.map((row) => `| ${row.join(' | ')} |`).join('\n');
   return `${headerRow}\n${separator}\n${dataRows}`;
 }
 
 /**
- * Get current timestamp in ISO format
+ * Generate timestamp string
  * @returns {string} ISO timestamp
  */
-function getTimestamp() {
+function generateTimestamp() {
   return new Date().toISOString();
-}
-
-/**
- * Escape Markdown special characters
- * @param {string} text - Text to escape
- * @returns {string} Escaped text
- */
-function escapeMarkdown(text) {
-  return text
-    .replace(/\\/g, '\\\\')
-    .replace(/\|/g, '\\|')
-    .replace(/\*/g, '\\*')
-    .replace(/_/g, '\\_')
-    .replace(/\[/g, '\\[')
-    .replace(/\]/g, '\\]')
-    .replace(/\(/g, '\\(')
-    .replace(/\)/g, '\\)');
 }
 
 module.exports = {
   readTemplate,
   loadMetadata,
-  extractNodeTypes,
+  extractTypes,
   writeMarkdownFile,
-  categorizeItem,
   generateMarkdownTable,
-  getTimestamp,
-  escapeMarkdown,
+  generateTimestamp,
 };

@@ -2,225 +2,159 @@
 /**
  * Documentation Generator Template
  *
- * Template for automated documentation generation from code metadata.
- * Based on pattern from keito4-org/n8n_custom_node
+ * This is a template for generating documentation from code metadata.
+ * Customize the CATEGORY_KEYWORDS and directory paths for your project.
  *
- * USAGE:
- *   1. Copy this template to your project
+ * Usage:
+ *   1. Copy this file to your project as generate-docs.js
  *   2. Customize CATEGORY_KEYWORDS for your domain
- *   3. Modify generateDocumentation() to match your structure
- *   4. Run: node generate-docs.js
+ *   3. Update TEMPLATES_DIR and OUTPUT_FILE paths
+ *   4. Run: node scripts/generate-docs.js
  */
 
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 const {
-  readTemplate,
   loadMetadata,
-  categorizeItem,
-  generateMarkdownTable,
+  extractTypes,
   writeMarkdownFile,
-  getTimestamp,
-  escapeMarkdown,
+  generateMarkdownTable,
+  generateTimestamp,
 } = require('./lib/docs-common');
 
-// ============================================================================
-// CONFIGURATION - Customize for your project
-// ============================================================================
+// Configuration - Customize these for your project
+const TEMPLATES_DIR = path.join(__dirname, '../templates');
+const OUTPUT_FILE = path.join(__dirname, '../docs/TEMPLATES.md');
 
-/**
- * Category keywords for classification
- * Add/modify categories based on your domain
- */
+// Category keywords for classification
 const CATEGORY_KEYWORDS = {
-  Slack: ['slack', 'channel', 'message', 'workspace'],
-  Notion: ['notion', 'database', 'page', 'template'],
-  GitHub: ['github', 'repository', 'issue', 'pull request', 'pr'],
-  API: ['api', 'rest', 'graphql', 'endpoint', 'webhook'],
-  Database: ['database', 'sql', 'mongodb', 'postgres', 'mysql'],
-  Automation: ['automation', 'workflow', 'trigger', 'schedule'],
-  Other: [], // Fallback category
+  Slack: ['slack', 'channel', 'message', 'notification'],
+  Notion: ['notion', 'database', 'template', 'page'],
+  GitHub: ['github', 'repo', 'pr', 'issue', 'workflow'],
+  Communication: ['email', 'webhook', 'api'],
+  Other: [],
 };
 
 /**
- * Trigger type keywords (example for n8n-style workflows)
+ * Categorize a template based on its ID and metadata
+ * @param {string} templateId - Template identifier
+ * @param {object} metadata - Template metadata
+ * @returns {string} Category name
  */
-const TRIGGER_TYPES = {
-  Manual: ['manual', 'start'],
-  Schedule: ['schedule', 'cron', 'interval'],
-  Webhook: ['webhook', 'http'],
-  Event: ['event', 'trigger'],
-};
+function categorizeTemplate(templateId, metadata) {
+  const text = `${templateId} ${metadata.name || ''}`.toLowerCase();
 
-// ============================================================================
-// MAIN DOCUMENTATION GENERATION
-// ============================================================================
+  for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (category === 'Other') continue;
+    for (const keyword of keywords) {
+      if (text.includes(keyword)) {
+        return category;
+      }
+    }
+  }
+  return 'Other';
+}
 
 /**
- * Generate documentation from templates/metadata
+ * Scan templates directory and collect metadata
+ * @returns {Array} Array of template info objects
  */
-function generateDocumentation() {
-  console.log('Starting documentation generation...');
-
-  // TODO: Customize these paths for your project structure
-  const templatesDir = path.join(__dirname, '../templates');
-  const metadataDir = path.join(__dirname, '../src/metadata');
-  const outputPath = path.join(__dirname, '../docs/generated.md');
-
-  // Check if directories exist
-  if (!fs.existsSync(templatesDir)) {
-    console.warn(`Templates directory not found: ${templatesDir}`);
-    console.log('Please customize the paths in this script for your project.');
-    return;
+function scanTemplates() {
+  if (!fs.existsSync(TEMPLATES_DIR)) {
+    console.log(`Templates directory not found: ${TEMPLATES_DIR}`);
+    return [];
   }
 
-  // Collect all items (templates, components, etc.)
-  const items = [];
-  const templateFiles = fs.readdirSync(templatesDir).filter(f =>
-    f.endsWith('.json') || f.endsWith('.yaml') || f.endsWith('.yml')
-  );
+  const templates = [];
+  const files = fs.readdirSync(TEMPLATES_DIR);
 
-  // Process each template/item
-  templateFiles.forEach(file => {
-    try {
-      const templatePath = path.join(templatesDir, file);
-      const template = readTemplate(templatePath);
+  for (const file of files) {
+    const filePath = path.join(TEMPLATES_DIR, file);
+    const stat = fs.statSync(filePath);
+
+    if (stat.isFile() && (file.endsWith('.ts') || file.endsWith('.js'))) {
       const templateId = path.basename(file, path.extname(file));
+      const metadata = loadMetadata(filePath);
+      const category = categorizeTemplate(templateId, metadata);
 
-      // Try to load associated metadata
-      let metadata = { name: templateId };
-      const metadataPath = path.join(metadataDir, `${templateId}.ts`);
-      if (fs.existsSync(metadataPath)) {
-        metadata = loadMetadata(metadataPath);
-      }
-
-      // Categorize item
-      const category = categorizeItem(templateId, metadata, CATEGORY_KEYWORDS);
-
-      // Detect trigger type (example for workflow-based systems)
-      let triggerType = 'Unknown';
-      const itemText = JSON.stringify(template).toLowerCase();
-      for (const [type, keywords] of Object.entries(TRIGGER_TYPES)) {
-        if (keywords.some(kw => itemText.includes(kw))) {
-          triggerType = type;
-          break;
-        }
-      }
-
-      items.push({
+      templates.push({
         id: templateId,
         name: metadata.name || templateId,
-        description: metadata.description || 'No description',
+        description: metadata.description || '',
         category,
-        triggerType,
+        file,
       });
-    } catch (error) {
-      console.error(`Error processing ${file}:`, error.message);
     }
-  });
-
-  // Generate statistics
-  const stats = generateStatistics(items);
-
-  // Generate Markdown content
-  const markdown = generateMarkdown(items, stats);
-
-  // Write output
-  writeMarkdownFile(markdown, outputPath);
-
-  console.log(`Documentation generated: ${outputPath}`);
-  console.log(`Total items: ${items.length}`);
-  console.log(`Categories: ${Object.keys(stats.byCategory).length}`);
-}
-
-/**
- * Generate statistics from items
- */
-function generateStatistics(items) {
-  const stats = {
-    total: items.length,
-    byCategory: {},
-    byTriggerType: {},
-  };
-
-  items.forEach(item => {
-    // Count by category
-    stats.byCategory[item.category] = (stats.byCategory[item.category] || 0) + 1;
-
-    // Count by trigger type
-    stats.byTriggerType[item.triggerType] =
-      (stats.byTriggerType[item.triggerType] || 0) + 1;
-  });
-
-  return stats;
-}
-
-/**
- * Generate Markdown document
- */
-function generateMarkdown(items, stats) {
-  let markdown = '';
-
-  // Header
-  markdown += '# Generated Documentation\n\n';
-  markdown += `> Auto-generated on ${getTimestamp()}\n\n`;
-
-  // Summary
-  markdown += '## Summary\n\n';
-  markdown += `Total items: **${stats.total}**\n\n`;
-
-  // Statistics - By Category
-  markdown += '### By Category\n\n';
-  const categoryRows = Object.entries(stats.byCategory)
-    .sort(([, a], [, b]) => b - a)
-    .map(([category, count]) => [category, count.toString()]);
-  markdown += generateMarkdownTable(['Category', 'Count'], categoryRows);
-  markdown += '\n\n';
-
-  // Statistics - By Trigger Type
-  if (Object.keys(stats.byTriggerType).length > 0) {
-    markdown += '### By Trigger Type\n\n';
-    const triggerRows = Object.entries(stats.byTriggerType)
-      .sort(([, a], [, b]) => b - a)
-      .map(([type, count]) => [type, count.toString()]);
-    markdown += generateMarkdownTable(['Trigger Type', 'Count'], triggerRows);
-    markdown += '\n\n';
   }
 
-  // Items by Category
-  markdown += '## Items by Category\n\n';
+  return templates;
+}
 
-  const categories = Object.keys(stats.byCategory).sort();
-  categories.forEach(category => {
-    const categoryItems = items
-      .filter(item => item.category === category)
-      .sort((a, b) => a.name.localeCompare(b.name));
+/**
+ * Generate documentation markdown
+ * @param {Array} templates - Template info array
+ * @returns {string} Markdown content
+ */
+function generateDocs(templates) {
+  const timestamp = generateTimestamp();
 
-    markdown += `### ${category} (${categoryItems.length})\n\n`;
+  // Group by category
+  const byCategory = {};
+  for (const template of templates) {
+    if (!byCategory[template.category]) {
+      byCategory[template.category] = [];
+    }
+    byCategory[template.category].push(template);
+  }
 
-    const rows = categoryItems.map(item => [
-      escapeMarkdown(item.name),
-      escapeMarkdown(item.description),
-      item.triggerType,
+  // Generate statistics
+  const typeCounts = extractTypes(templates, (t) => t.category);
+
+  let markdown = `# Templates Documentation\n\n`;
+  markdown += `> Auto-generated on ${timestamp}\n\n`;
+  markdown += `## Statistics\n\n`;
+  markdown += `- Total templates: ${templates.length}\n`;
+
+  for (const [category, count] of Object.entries(typeCounts)) {
+    markdown += `- ${category}: ${count}\n`;
+  }
+
+  markdown += `\n## Templates by Category\n\n`;
+
+  // Generate tables by category
+  for (const [category, categoryTemplates] of Object.entries(byCategory)) {
+    markdown += `### ${category}\n\n`;
+
+    const headers = ['Name', 'Description', 'File'];
+    const rows = categoryTemplates.map((t) => [
+      t.name,
+      t.description || '-',
+      `\`${t.file}\``,
     ]);
 
-    markdown += generateMarkdownTable(['Name', 'Description', 'Trigger'], rows);
+    markdown += generateMarkdownTable(headers, rows);
     markdown += '\n\n';
-  });
-
-  // Footer
-  markdown += '---\n\n';
-  markdown += '_This documentation is automatically generated. Do not edit manually._\n';
+  }
 
   return markdown;
 }
 
-// ============================================================================
-// EXECUTION
-// ============================================================================
+// Main execution
+function main() {
+  console.log('Scanning templates...');
+  const templates = scanTemplates();
 
-if (require.main === module) {
-  generateDocumentation();
+  if (templates.length === 0) {
+    console.log('No templates found. Please check TEMPLATES_DIR configuration.');
+    return;
+  }
+
+  console.log(`Found ${templates.length} templates`);
+
+  const markdown = generateDocs(templates);
+  writeMarkdownFile(markdown, OUTPUT_FILE);
+
+  console.log(`Documentation generated: ${OUTPUT_FILE}`);
 }
 
-module.exports = { generateDocumentation };
+main();
