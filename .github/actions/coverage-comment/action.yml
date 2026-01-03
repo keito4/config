@@ -1,0 +1,111 @@
+name: 'Coverage Comment'
+description: 'Post test coverage summary as PR comment with update capability'
+author: 'keito4'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  coverage-path:
+    description: 'Path to coverage-summary.json file(s) (comma-separated for monorepo)'
+    required: false
+    default: 'coverage/coverage-summary.json'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Post Coverage Comment
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const fs = require('fs');
+
+          // Parse coverage paths (support multiple files for monorepo)
+          const coveragePaths = '${{ inputs.coverage-path }}'.split(',').map(p => p.trim());
+
+          let comment = '## Test Coverage Report\n\n';
+          let hasData = false;
+
+          for (const coveragePath of coveragePaths) {
+            try {
+              if (!fs.existsSync(coveragePath)) {
+                console.log(`Coverage file not found: ${coveragePath}`);
+                continue;
+              }
+
+              const coverageData = JSON.parse(fs.readFileSync(coveragePath, 'utf8'));
+
+              // Extract package name from path if in monorepo
+              const pathParts = coveragePath.split('/');
+              const packageName = pathParts.length > 2 ? pathParts[pathParts.length - 2] : 'Default';
+
+              if (coveragePaths.length > 1) {
+                comment += `### Package: ${packageName}\n\n`;
+              }
+
+              // Get total coverage
+              const total = coverageData.total;
+
+              if (total) {
+                comment += '| Category | Coverage | Covered | Total |\n';
+                comment += '|----------|----------|---------|-------|\n';
+
+                const categories = ['statements', 'branches', 'functions', 'lines'];
+                for (const category of categories) {
+                  if (total[category]) {
+                    const pct = total[category].pct || 0;
+                    const covered = total[category].covered || 0;
+                    const totalCount = total[category].total || 0;
+                    const emoji = pct >= 80 ? '✅' : pct >= 60 ? '⚠️' : '❌';
+
+                    comment += `| ${emoji} ${category.charAt(0).toUpperCase() + category.slice(1)} | ${pct.toFixed(2)}% | ${covered} | ${totalCount} |\n`;
+                  }
+                }
+
+                comment += '\n';
+                hasData = true;
+              }
+            } catch (error) {
+              console.error(`Error processing ${coveragePath}:`, error.message);
+            }
+          }
+
+          if (!hasData) {
+            console.log('No coverage data found');
+            return;
+          }
+
+          comment += '\n---\n*Updated: ' + new Date().toISOString() + '*\n';
+
+          // Find existing coverage comment
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+
+          const botComment = comments.find(c =>
+            c.user.type === 'Bot' &&
+            c.body.includes('## Test Coverage Report')
+          );
+
+          if (botComment) {
+            // Update existing comment
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: comment
+            });
+            console.log('Updated existing coverage comment');
+          } else {
+            // Create new comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+            console.log('Created new coverage comment');
+          }

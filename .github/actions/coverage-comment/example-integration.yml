@@ -1,0 +1,49 @@
+# このファイルは参考例です - 実際の .github/workflows/ci.yml への統合方法を示します
+# このファイル自体はワークフローとして実行されません
+
+# 既存の test job に以下のステップを追加してください:
+
+test:
+  name: Unit Tests
+  runs-on: ubuntu-latest
+  timeout-minutes: 15
+  needs: changes
+  if: needs.changes.outputs.code == 'true' || needs.changes.outputs.dependencies == 'true'
+  steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v6
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run tests with coverage
+      run: npm run test:coverage -- --ci --reporters=default --reporters=jest-junit
+      env:
+        JEST_JUNIT_OUTPUT_DIR: ./reports
+        JEST_JUNIT_OUTPUT_NAME: junit.xml
+
+    # ===== ここから追加 =====
+
+    - name: Post Coverage Comment
+      if: github.event_name == 'pull_request'
+      uses: ./.github/actions/coverage-comment
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        # モノレポの場合は以下のように複数パスを指定:
+        # coverage-path: 'packages/pkg1/coverage/coverage-summary.json,packages/pkg2/coverage/coverage-summary.json'
+
+    # ===== ここまで追加 =====
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v6
+      if: always()
+      with:
+        name: test-results
+        path: ./reports/junit.xml
+        retention-days: 30
+
+    # ... 以降は既存の設定
