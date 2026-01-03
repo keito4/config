@@ -197,6 +197,87 @@ jobs:
           reporter: github-pr-review
           fail_on_error: true
 
+  pr-size-check:
+    name: PR Size Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Check PR Size
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { additions, deletions, changed_files } = context.payload.pull_request;
+            const totalChanges = additions + deletions;
+
+            // Define size thresholds
+            const sizes = [
+              { label: 'size/XS', maxLines: 50, maxFiles: 3 },
+              { label: 'size/S', maxLines: 200, maxFiles: 10 },
+              { label: 'size/M', maxLines: 500, maxFiles: 15 },
+              { label: 'size/L', maxLines: 1000, maxFiles: 30 },
+            ];
+
+            // Determine size
+            let sizeLabel = 'size/XL';
+            for (const size of sizes) {
+              if (totalChanges <= size.maxLines && changed_files <= size.maxFiles) {
+                sizeLabel = size.label;
+                break;
+              }
+            }
+
+            // Remove old size labels
+            const currentLabels = context.payload.pull_request.labels.map(l => l.name);
+            for (const label of currentLabels) {
+              if (label.startsWith('size/')) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  name: label
+                }).catch(() => {});
+              }
+            }
+
+            // Add new size label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [sizeLabel]
+            });
+
+            // Post warning for XL PRs
+            if (sizeLabel === 'size/XL') {
+              const body = `## ⚠️ Large PR Warning
+
+            This PR is quite large with **${totalChanges} lines** changed across **${changed_files} files**.
+
+            Large PRs are harder to review and more likely to introduce bugs. Please consider:
+            - Breaking this into smaller, focused PRs
+            - Separating refactoring from feature changes
+            - Creating a PR series with clear dependencies
+
+            **PR Size Guidelines:**
+            | Size | Lines | Files |
+            |------|-------|-------|
+            | XS | ≤50 | ≤3 |
+            | S | ≤200 | ≤10 |
+            | M | ≤500 | ≤15 |
+            | L | ≤1000 | ≤30 |
+            | XL | >1000 | >30 |`;
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
+            console.log(`PR Size: ${sizeLabel} (${totalChanges} lines, ${changed_files} files)`);
+
   quality-gate:
     name: Quality Gate
     runs-on: ubuntu-latest
