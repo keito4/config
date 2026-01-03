@@ -17,6 +17,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 - `.github/`: GitHub configuration including workflows for CI/CD, security scanning, and release automation. The `templates/` subdirectory contains reusable workflow templates for unified CI with coverage reporting and monorepo releases with change detection.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
+- `eslint/`: Contains recommended ESLint complexity rules template and documentation to prevent technical debt accumulation. See [eslint/README.md](eslint/README.md) for usage guidelines.
 - `issues/`: Templates and helper notes for managing known issues and troubleshooting steps.
 - `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory, including Zsh configuration with comprehensive aliases, functions, and environment setup.
 - `git/`: Contains Git configuration files including gitconfig, gitignore, commitlint configuration with i18n support, and modular configuration files in the `gitconfig.d/` subdirectory. See [git/README.md](git/README.md) for details.
