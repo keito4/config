@@ -26,14 +26,26 @@ DEP_KEY="shared"
 while [[ $# -gt 0 ]]; do
     case $1 in
         --scope)
+            if [[ -z "${2:-}" ]] || [[ "$2" == --* ]]; then
+                echo "Error: --scope requires a value"
+                exit 1
+            fi
             SCOPE="$2"
             shift 2
             ;;
         --tag-prefix)
+            if [[ -z "${2:-}" ]] || [[ "$2" == --* ]]; then
+                echo "Error: --tag-prefix requires a value"
+                exit 1
+            fi
             TAG_PREFIX="$2"
             shift 2
             ;;
         --dep-key)
+            if [[ -z "${2:-}" ]] || [[ "$2" == --* ]]; then
+                echo "Error: --dep-key requires a value"
+                exit 1
+            fi
             DEP_KEY="$2"
             shift 2
             ;;
@@ -54,7 +66,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Get repository root
-REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+if ! REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null); then
+    echo "Error: Must be run inside a git repository"
+    exit 1
+fi
 
 echo "Resolving workspace:* dependencies..."
 echo "  Scope: ${SCOPE}"
@@ -62,7 +77,8 @@ echo "  Tag prefix: ${TAG_PREFIX}"
 echo "  Dependency key: ${DEP_KEY}"
 
 # Get version from git tag (semantic-release creates tags like shared-v1.0.3)
-SHARED_VERSION=$(git describe --tags --match "${TAG_PREFIX}*" --abbrev=0 2>/dev/null | sed "s/${TAG_PREFIX}//" || true)
+TAG_WITH_VERSION=$(git describe --tags --match "${TAG_PREFIX}*" --abbrev=0 2>/dev/null || true)
+SHARED_VERSION="${TAG_WITH_VERSION#"$TAG_PREFIX"}"
 
 if [ -z "$SHARED_VERSION" ]; then
     echo "No git tag found with prefix '${TAG_PREFIX}', checking package.json..."
@@ -98,11 +114,22 @@ if jq -e ".dependencies[\"${FULL_DEP_NAME}\"]" package.json > /dev/null 2>&1; th
         echo "Resolving ${FULL_DEP_NAME}: ${CURRENT_VERSION} -> ^${SHARED_VERSION}"
 
         # Update package.json
-        jq --arg version "^${SHARED_VERSION}" \
+        if jq --arg version "^${SHARED_VERSION}" \
             ".dependencies[\"${FULL_DEP_NAME}\"] = \$version" \
-            package.json > package.json.tmp && mv package.json.tmp package.json
-
-        echo "Successfully updated package.json"
+            package.json > package.json.tmp; then
+            if jq -e . package.json.tmp >/dev/null 2>&1; then
+                mv package.json.tmp package.json
+                echo "Successfully updated package.json"
+            else
+                echo "Error: Generated invalid JSON, aborting update"
+                rm -f package.json.tmp
+                exit 1
+            fi
+        else
+            echo "Error: Failed to update package.json"
+            rm -f package.json.tmp
+            exit 1
+        fi
     else
         echo "${FULL_DEP_NAME} is not a workspace dependency (${CURRENT_VERSION}), skipping..."
     fi
