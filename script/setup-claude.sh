@@ -29,6 +29,28 @@ PLUGINS_DIR="${CLAUDE_DIR}/plugins"
 PLUGINS_FILE="${PLUGINS_DIR}/plugins.txt"
 KNOWN_MARKETPLACES="${PLUGINS_DIR}/known_marketplaces.json"
 REPO_PLUGINS_DIR="${REPO_ROOT}/.claude/plugins"
+SETTINGS_LOCAL_FILE="${CLAUDE_DIR}/settings.local.json"
+DEFAULT_SETTINGS_LOCAL="${REPO_ROOT}/.devcontainer/claude-settings.local.json"
+
+# settings.local.json のセットアップ
+# ホストに settings.local.json がない場合、デフォルトをコピー
+setup_settings_local() {
+    if [[ ! -f "$SETTINGS_LOCAL_FILE" ]]; then
+        log_info "settings.local.json が見つかりません。デフォルト設定をコピーします..."
+        if [[ -f "$DEFAULT_SETTINGS_LOCAL" ]]; then
+            mkdir -p "$CLAUDE_DIR"
+            if cp "$DEFAULT_SETTINGS_LOCAL" "$SETTINGS_LOCAL_FILE" 2>/dev/null; then
+                log_success "settings.local.json をセットアップしました"
+            else
+                log_warn "settings.local.json のコピーに失敗しました"
+            fi
+        else
+            log_warn "デフォルト設定ファイルが見つかりません: ${DEFAULT_SETTINGS_LOCAL}"
+        fi
+    else
+        log_info "settings.local.json は既に存在します"
+    fi
+}
 
 main() {
     log_info "Claude Code セットアップを開始します..."
@@ -37,6 +59,9 @@ main() {
     # 一時ディレクトリを作成（クロスデバイスリンクエラー対策）
     mkdir -p "${CLAUDE_DIR}/tmp"
     export TMPDIR="${CLAUDE_DIR}/tmp"
+
+    # settings.local.json のセットアップ
+    setup_settings_local
 
     # Claude CLI の存在確認
     if ! command -v claude &> /dev/null; then
