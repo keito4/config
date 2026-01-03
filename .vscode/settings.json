@@ -3,6 +3,11 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
   "typescript.tsdk": "node_modules/typescript/lib",
   "files.eol": "\n",
   "files.trimTrailingWhitespace": true,
