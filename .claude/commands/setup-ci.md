@@ -287,27 +287,129 @@ on:
   pull_request:
     types: [opened, synchronize]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  review:
+  # CIが完了しているかチェック
+  check-ci-status:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      ci_passed: ${{ steps.check.outputs.ci_passed }}
     permissions:
       contents: read
-      pull-requests: write
+      pull-requests: read
+      checks: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Wait for CI and check status
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          REPO="${{ github.repository }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          echo "Waiting for CI to complete for PR #$PR_NUMBER (SHA: $HEAD_SHA)"
+
+          # ポーリング設定
+          MAX_WAIT_TIME=900  # 15分（秒）
+          POLL_INTERVAL=30   # 30秒
+          ELAPSED_TIME=0
+
+          while [ $ELAPSED_TIME -lt $MAX_WAIT_TIME ]; do
+            echo "⏱️  Elapsed time: ${ELAPSED_TIME}s / ${MAX_WAIT_TIME}s"
+
+            # Check Runsを取得（CI workflowのみ）
+            CHECK_RUNS=$(gh api repos/$REPO/commits/$HEAD_SHA/check-runs \
+              --jq '.check_runs[] | select(.name != "check-ci-status" and .name != "claude-review") | {name, status, conclusion}')
+
+            echo "Check Runs:"
+            echo "$CHECK_RUNS" | jq -r '"\(.name): \(.status) - \(.conclusion)"'
+
+            # 必須チェック: Quality Gate
+            QUALITY_GATE=$(echo "$CHECK_RUNS" | jq -r 'select(.name == "Quality Gate")')
+
+            if [ -z "$QUALITY_GATE" ]; then
+              if [ $ELAPSED_TIME -ge 120 ]; then
+                echo "ci_passed=true" >> $GITHUB_OUTPUT
+                echo "✅ CI workflow skipped by path filters"
+                exit 0
+              fi
+              echo "⏳ Quality Gate check has not started yet, waiting..."
+              sleep $POLL_INTERVAL
+              ELAPSED_TIME=$((ELAPSED_TIME + POLL_INTERVAL))
+              continue
+            fi
+
+            QUALITY_GATE_STATUS=$(echo "$QUALITY_GATE" | jq -r '.status')
+            QUALITY_GATE_CONCLUSION=$(echo "$QUALITY_GATE" | jq -r '.conclusion')
+
+            if [ "$QUALITY_GATE_STATUS" != "completed" ]; then
+              echo "⏳ Quality Gate is still running: $QUALITY_GATE_STATUS, waiting..."
+              sleep $POLL_INTERVAL
+              ELAPSED_TIME=$((ELAPSED_TIME + POLL_INTERVAL))
+              continue
+            fi
+
+            if [ "$QUALITY_GATE_CONCLUSION" != "success" ]; then
+              echo "ci_passed=false" >> $GITHUB_OUTPUT
+              echo "❌ Quality Gate failed with conclusion: $QUALITY_GATE_CONCLUSION"
+              exit 0
+            fi
+
+            echo "ci_passed=true" >> $GITHUB_OUTPUT
+            echo "✅ All CI checks passed"
+            exit 0
+          done
+
+          echo "ci_passed=false" >> $GITHUB_OUTPUT
+          echo "⏱️ Timeout: CI did not complete within ${MAX_WAIT_TIME}s"
+          exit 0
+
+  claude-review:
+    # CIが成功した場合のみ実行（Dependabotはシークレットにアクセスできないためスキップ）
+    if: needs.check-ci-status.outputs.ci_passed == 'true' && github.actor != 'dependabot[bot]'
+    needs: [check-ci-status]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true # ワークフローファイル変更時の初回PR用
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-      - name: Run Claude Review
-        uses: anthropics/claude-code-action@beta
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model: claude-sonnet-4-20250514
-          direct_prompt: |
-            Review this PR for:
-            1. Code quality and best practices
-            2. Potential bugs or security issues
-            3. Performance implications
-            4. Test coverage adequacy
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Please review this pull request and provide feedback on:
+            - Code quality and best practices
+            - Potential bugs or issues
+            - Performance considerations
+            - Security concerns
+            - Test coverage
+
+            Use the repository's CLAUDE.md for guidance on style and conventions.
+            Be constructive and helpful in your feedback.
+
+            Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
+
+          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
 ```
 
 ### 4.2 Node.js パッケージ

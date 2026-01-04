@@ -114,11 +114,12 @@ jobs:
           exit 0
 
   claude-review:
-    # CIが成功した場合のみ実行
-    if: needs.check-ci-status.outputs.ci_passed == 'true'
+    # CIが成功した場合のみ実行（Dependabotはシークレットにアクセスできないためスキップ）
+    if: needs.check-ci-status.outputs.ci_passed == 'true' && github.actor != 'dependabot[bot]'
     needs: [check-ci-status]
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    continue-on-error: true # ワークフローファイル変更時の初回PR用
     permissions:
       contents: read
       pull-requests: read
