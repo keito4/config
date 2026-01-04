@@ -1,7 +1,6 @@
 # Config Repository
 
 [![CI](https://github.com/keito4/config/actions/workflows/ci.yml/badge.svg)](https://github.com/keito4/config/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/keito4/config/actions/workflows/codeql.yml/badge.svg)](https://github.com/keito4/config/actions/workflows/codeql.yml)
 [![Security](https://github.com/keito4/config/actions/workflows/security.yml/badge.svg)](https://github.com/keito4/config/actions/workflows/security.yml)
 [![codecov](https://codecov.io/gh/keito4/config/branch/main/graph/badge.svg)](https://codecov.io/gh/keito4/config)
 
