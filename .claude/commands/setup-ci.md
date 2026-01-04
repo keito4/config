@@ -375,6 +375,7 @@ jobs:
     needs: [check-ci-status]
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    continue-on-error: true # ワークフローファイル変更時の初回PR用
     permissions:
       contents: read
       pull-requests: read
