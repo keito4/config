@@ -17,6 +17,7 @@
 #   --branches B1,B2      Comma-separated list of branches to protect (default: main)
 #   --skip-status-checks  Skip required status checks configuration
 #   --create-branches     Create branches if they don't exist
+#   --merge-method METHOD Merge method: squash, merge, rebase, all, none (default: squash)
 #   --help                Show this help message
 
 set -euo pipefail
@@ -34,6 +35,7 @@ INTERACTIVE=false
 DRY_RUN=false
 SKIP_STATUS_CHECKS=false
 CREATE_BRANCHES=false
+MERGE_METHOD="merge"  # Options: squash, merge, rebase, all, none
 
 # Parse arguments
 REPO=""
@@ -66,6 +68,10 @@ while [[ $# -gt 0 ]]; do
     --create-branches)
       CREATE_BRANCHES=true
       shift
+      ;;
+    --merge-method)
+      MERGE_METHOD="$2"
+      shift 2
       ;;
     --help)
       grep '^#' "$0" | grep -v '#!/usr/bin/env' | sed 's/^# //; s/^#//'
@@ -136,6 +142,7 @@ if [[ "$INTERACTIVE" == "true" ]]; then
   echo "  Required reviewers: $REVIEWERS"
   echo "  Enforce for admins: $ENFORCE_ADMINS"
   echo "  Skip status checks: $SKIP_STATUS_CHECKS"
+  echo "  Merge method: $MERGE_METHOD"
   echo ""
   read -p "Continue? (y/N) " -n 1 -r
   echo
@@ -190,7 +197,7 @@ setup_branch_protection() {
   protection_config+='"required_pull_request_reviews":{'
   protection_config+="\"required_approving_review_count\":$REVIEWERS,"
   protection_config+='"dismiss_stale_reviews":true,'
-  protection_config+='"require_code_owner_reviews":false'
+  protection_config+='"require_code_owner_reviews":true'
   protection_config+='},'
 
   if [[ "$ENFORCE_ADMINS" == "true" ]]; then
@@ -225,17 +232,58 @@ setup_branch_protection() {
 setup_repository_settings() {
   info "Configuring repository settings..."
 
-  # Enable squash merge only
-  if execute gh api "repos/$REPO" \
-    --method PATCH \
-    --field allow_squash_merge=true \
-    --field allow_merge_commit=false \
-    --field allow_rebase_merge=false \
-    --field delete_branch_on_merge=true \
-    &>/dev/null; then
-    success "Repository settings updated"
+  # Determine merge method settings based on MERGE_METHOD
+  local allow_squash=false
+  local allow_merge=false
+  local allow_rebase=false
+
+  case "$MERGE_METHOD" in
+    squash)
+      allow_squash=true
+      allow_merge=false
+      allow_rebase=false
+      ;;
+    merge)
+      allow_squash=false
+      allow_merge=true
+      allow_rebase=false
+      ;;
+    rebase)
+      allow_squash=false
+      allow_merge=false
+      allow_rebase=true
+      ;;
+    all)
+      allow_squash=true
+      allow_merge=true
+      allow_rebase=true
+      ;;
+    none)
+      allow_squash=false
+      allow_merge=false
+      allow_rebase=false
+      ;;
+    *)
+      error "Invalid merge method: $MERGE_METHOD. Valid options: squash, merge, rebase, all, none"
+      return 1
+      ;;
+  esac
+
+  info "Merge method: $MERGE_METHOD (squash=$allow_squash, merge=$allow_merge, rebase=$allow_rebase)"
+
+  # Build API command
+  local api_cmd="gh api repos/$REPO --method PATCH"
+  api_cmd+=" --field allow_squash_merge=$allow_squash"
+  api_cmd+=" --field allow_merge_commit=$allow_merge"
+  api_cmd+=" --field allow_rebase_merge=$allow_rebase"
+  api_cmd+=" --field delete_branch_on_merge=true"
+  api_cmd+=" --field allow_auto_merge=false"
+
+  if execute eval "$api_cmd" &>/dev/null; then
+    success "Repository settings updated (merge method: $MERGE_METHOD)"
   else
     error "Failed to update repository settings"
+    return 1
   fi
 }
 
@@ -261,8 +309,29 @@ setup_security_features() {
     warning "Could not enable automated security fixes"
   fi
 
-  # Note: Code scanning and secret scanning require GitHub Advanced Security
-  # and cannot be enabled via API for private repos on free tier
+  # Enable private vulnerability reporting
+  if execute gh api "repos/$REPO/private-vulnerability-reporting" \
+    --method PUT \
+    &>/dev/null; then
+    success "Private vulnerability reporting enabled"
+  else
+    warning "Could not enable private vulnerability reporting"
+  fi
+
+  # Enable secret scanning and push protection
+  # Note: These require GitHub Advanced Security for private repos
+  local security_config='{"security_and_analysis":{'
+  security_config+='"secret_scanning":{"status":"enabled"},'
+  security_config+='"secret_scanning_push_protection":{"status":"enabled"}'
+  security_config+='}}'
+
+  if execute gh api "repos/$REPO" \
+    --method PATCH \
+    --input - <<< "$security_config" &>/dev/null; then
+    success "Secret scanning and push protection enabled"
+  else
+    warning "Could not enable secret scanning (may require GitHub Advanced Security)"
+  fi
 }
 
 # Main execution

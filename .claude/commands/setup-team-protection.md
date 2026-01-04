@@ -10,20 +10,25 @@
 • 直接プッシュ禁止
 • プルリクエスト必須
 • レビュー承認必須（最低1名）
+• CODEOWNERSレビュー必須
 • ステータスチェック必須（CI通過）
 • force pushの禁止
 • ブランチ削除保護
+• 古いレビューの自動却下
 • マージ前のブランチ更新必須
 
 **リポジトリ設定**
-• マージコミットを無効化（Squash mergeのみ）
+• マージ方法の設定（デフォルト: Merge commitのみ、オプションで変更可能）
+• 自動マージ無効（チェック通過後の自動マージを禁止）
 • 自動削除（マージ後のブランチ）
 • Issue/PR テンプレート有効化
 
 **セキュリティ設定**
 • Dependabot alerts 有効化
-• Code scanning alerts 有効化
+• Dependabot security updates 有効化
 • Secret scanning 有効化
+• Secret scanning push protection 有効化
+• Private vulnerability reporting 有効化
 
 ---
 
@@ -125,6 +130,26 @@ bash script/setup-team-protection.sh --enforce-admins
 bash script/setup-team-protection.sh --branches main,develop
 ```
 
+**マージ方法の設定**
+
+```bash
+# Merge commitのみ（デフォルト）
+bash script/setup-team-protection.sh --merge-method merge
+
+# Squash mergeのみ
+bash script/setup-team-protection.sh --merge-method squash
+
+# Rebase mergeのみ
+bash script/setup-team-protection.sh --merge-method rebase
+
+# すべてのマージ方法を許可
+bash script/setup-team-protection.sh --merge-method all
+
+# Squash mergeを無効化（merge commitとrebase mergeを許可）
+bash script/setup-team-protection.sh --merge-method all
+# または個別に設定したい場合は、スクリプトを直接編集
+```
+
 ---
 
 確認方法
@@ -220,6 +245,42 @@ bash script/setup-team-protection.sh
 • `.github/CODEOWNERS`: コードオーナーの定義
 • `.github/PULL_REQUEST_TEMPLATE.md`: PR テンプレート
 • `.github/workflows/ci.yml`: 必須ステータスチェック
+
+---
+
+追加可能な機能（将来の拡張）
+
+以下の機能を追加する可能性があります：
+
+**リポジトリ基本設定**
+• デフォルトブランチの変更
+• リポジトリの説明・トピック設定
+• リポジトリの可視性設定（プライベート/パブリック）
+• Wikiの有効/無効
+• Issues/Projectsの有効/無効
+• ディスカッションの有効/無効
+
+**ブランチ保護の拡張**
+• 必須ステータスチェックの詳細設定（特定のワークフローのみ必須化）
+• コードオーナーのレビュー必須化
+• プルリクエストのマージ前のブランチ更新必須化
+• 署名済みコミットの必須化
+• 保護されたブランチへのプッシュ権限の制限
+
+**セキュリティ機能の拡張**
+• Code scanningの有効化（GitHub Advanced Securityが必要）
+• Secret scanningの有効化（GitHub Advanced Securityが必要）
+• Dependency graphの有効化
+• Security policyの設定
+
+**自動化機能**
+• 自動マージの設定（すべてのチェック通過後）
+• 自動リリースノート生成
+• ラベルの自動付与
+
+**通知・統合**
+• ブランチ保護違反時の通知設定
+• Slack/Teamsへの通知統合
 
 ---
 
