@@ -2,30 +2,42 @@
   "name": "config-lsp",
   "version": "1.0.0",
   "description": "Language Server Protocol configuration for Claude Code",
-  "languageServers": {
+  "lspServers": {
     "typescript": {
       "command": "typescript-language-server",
       "args": ["--stdio"],
-      "filetypes": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
-      "rootPatterns": ["package.json", "tsconfig.json"]
+      "extensionToLanguage": {
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".mjs": "javascript",
+        ".cjs": "javascript"
+      }
     },
     "bash": {
       "command": "bash-language-server",
       "args": ["start"],
-      "filetypes": ["sh", "bash"],
-      "rootPatterns": [".git"]
+      "extensionToLanguage": {
+        ".sh": "sh",
+        ".bash": "bash"
+      }
     },
     "json": {
       "command": "vscode-json-language-server",
       "args": ["--stdio"],
-      "filetypes": ["json", "jsonc"],
-      "rootPatterns": ["package.json"]
+      "extensionToLanguage": {
+        ".json": "json",
+        ".jsonc": "jsonc"
+      }
     },
     "yaml": {
       "command": "yaml-language-server",
       "args": ["--stdio"],
-      "filetypes": ["yaml", "yml"],
-      "rootPatterns": [".git"]
+      "extensionToLanguage": {
+        ".yaml": "yaml",
+        ".yml": "yml"
+      }
     }
   }
 }
