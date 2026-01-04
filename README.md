@@ -182,6 +182,44 @@ Plugin configuration is managed through two layers:
 
 For detailed plugin management instructions, see [.claude/plugins/README.md](.claude/plugins/README.md).
 
+### Language Server Protocol (LSP) Configuration
+
+The repository includes LSP configuration (`.claude-plugin/plugin.json`) to enable advanced code analysis and IntelliSense features in Claude Code v2.0.74+.
+
+**Supported Language Servers:**
+
+- **TypeScript/JavaScript**: `typescript-language-server` - Provides type checking, auto-completion, and navigation
+- **Bash**: `bash-language-server` - Shell script analysis and validation
+- **JSON**: `vscode-json-language-server` - JSON schema validation and formatting
+- **YAML**: `yaml-language-server` - YAML syntax checking and schema validation
+
+**Installation:**
+
+Language servers are automatically installed as global npm packages during DevContainer setup. To manually install:
+
+```bash
+npm install -g typescript-language-server typescript bash-language-server vscode-langservers-extracted yaml-language-server
+```
+
+**Configuration:**
+
+The `.claude-plugin/plugin.json` file defines LSP server configurations. Language servers are automatically activated based on file extensions:
+
+- TypeScript/JavaScript: `.js`, `.jsx`, `.ts`, `.tsx`
+- Bash: `.sh`, `.bash`
+- JSON: `.json`, `.jsonc`
+- YAML: `.yaml`, `.yml`
+
+**Benefits:**
+
+- Real-time code analysis and error detection
+- Intelligent auto-completion and suggestions
+- Go-to-definition and find-references navigation
+- Inline documentation and type information
+- Refactoring support
+
+For more information about LSP support in Claude Code, see [Claude Code LSP Guide](https://blog.lai.so/claude-code-lsp/).
+
 ## Usage
 
 Before using these configuration settings, you should review them and adjust as necessary for your specific environment and preferences. For credentials, we use environment variables managed by 1Password.

@@ -21,8 +21,28 @@
       "version": "0.58.0",
       "overridden": false
     },
+    "bash-language-server": {
+      "version": "5.4.0",
+      "overridden": false
+    },
     "codex": {
       "version": "0.2.3",
+      "overridden": false
+    },
+    "typescript": {
+      "version": "5.7.3",
+      "overridden": false
+    },
+    "typescript-language-server": {
+      "version": "4.3.3",
+      "overridden": false
+    },
+    "vscode-langservers-extracted": {
+      "version": "4.10.0",
+      "overridden": false
+    },
+    "yaml-language-server": {
+      "version": "1.16.0",
       "overridden": false
     },
     "corepack": {
