@@ -123,6 +123,93 @@ MODE が `full` の場合は `/update-claude-code` コマンドを実行。
 
 `/sync-claude-settings` の実行を確認。
 
+### 2.6 Claude Code LSP Setup Check
+
+Claude Code の LSP（Language Server Protocol）サポートの設定状況を確認：
+
+**LSP とは:**
+コード補完、定義ジャンプ、参照検索などのコード解析機能を提供するプロトコル。
+Claude Code v2.0.74+ でサポートされています。
+
+**確認項目:**
+
+1. `.claude-plugin/plugin.json` の存在確認
+2. LSP サーバ設定の確認
+3. 必要な言語サーバのインストール状況確認
+
+**対応言語:**
+
+- TypeScript/JavaScript
+- Python
+- Go
+- Rust
+- PHP
+
+**設定例（TypeScript）:**
+
+```json
+{
+  "name": "project-lsp",
+  "lspServers": {
+    "typescript": {
+      "command": "typescript-language-server",
+      "args": ["--stdio"],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".js": "javascript",
+        ".jsx": "javascriptreact"
+      }
+    }
+  }
+}
+```
+
+**必要な言語サーバ（グローバルインストール）:**
+
+```bash
+# TypeScript/JavaScript
+npm install -g typescript-language-server typescript
+
+# Python
+pip install python-lsp-server
+
+# Go
+go install golang.org/x/tools/gopls@latest
+
+# Rust
+rustup component add rust-analyzer
+```
+
+**環境変数:**
+
+Claude Code 起動時に `ENABLE_LSP_TOOL=1` を設定：
+
+```bash
+ENABLE_LSP_TOOL=1 npx @anthropic-ai/claude-code@stable
+```
+
+**結果:**
+
+- ✅ LSP 設定済み（対応言語をリスト表示）
+- ⚠️ LSP 未設定 → セットアップを提案
+- 📝 未インストールの言語サーバをリスト表示
+
+**MODE が `full` の場合:**
+
+プロジェクトで使用されている言語を検出し、適切な LSP 設定を提案・適用：
+
+1. `package.json` → TypeScript/JavaScript
+2. `requirements.txt` / `pyproject.toml` → Python
+3. `go.mod` → Go
+4. `Cargo.toml` → Rust
+5. `composer.json` → PHP
+
+**参考:**
+
+- [Claude Code LSP 設定ガイド](https://blog.lai.so/claude-code-lsp/)
+- [公式プラグイン](https://github.com/anthropics/claude-plugins-official)
+
 ## Step 3: Setup Category
 
 ### 3.1 Team Protection Setup (full mode only)
@@ -269,7 +356,8 @@ config リポジトリから取り込み可能な新機能を発見：
 ├── Container Health: ✅ Healthy (Score: 95/100)
 ├── DevContainer: ⚠️ Update available (v1.13.1 → v1.15.0)
 ├── Claude Code: ✅ Up to date
-└── Claude Settings: ✅ Synced
+├── Claude Settings: ✅ Synced
+└── Claude Code LSP: ⚠️ Not configured (TypeScript detected)
 
 ## Setup (2/4)
 ├── Team Protection: ✅ Branch protection enabled
@@ -455,6 +543,7 @@ Run this command regularly to maintain repository health:
 | Environment | `/config-base-sync-update`      | DevContainer 更新       |
 | Environment | `/update-claude-code`           | Claude Code 更新        |
 | Environment | `/sync-claude-settings`         | Claude 設定同期         |
+| Environment | (Claude Code LSP setup)         | LSP 設定                |
 | Setup       | `/setup-team-protection`        | GitHub保護ルール設定    |
 | Setup       | `/setup-husky`                  | Git hooks設定           |
 | Setup       | `/pre-pr-checklist`             | PR前チェックリスト      |
