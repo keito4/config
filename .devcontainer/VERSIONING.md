@@ -73,7 +73,7 @@ The workflow is triggered by:
 
 Each release creates two tags:
 
-- `ghcr.io/keito4/config-base:{version}` (e.g., `1.13.1`)
+- `ghcr.io/keito4/config-base:{version}` (e.g., `1.43.0`)
 - `ghcr.io/keito4/config-base:latest`
 
 ### Usage Example
@@ -82,7 +82,7 @@ Each release creates two tags:
 
 ```json
 {
-  "image": "ghcr.io/keito4/config-base:1.13.1"
+  "image": "ghcr.io/keito4/config-base:1.43.0"
 }
 ```
 

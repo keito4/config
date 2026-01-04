@@ -10,12 +10,12 @@ Elu-co-jp配下の全リポジトリで統一されたDevContainer環境を提�
 
 ```json
 {
-  "image": "ghcr.io/keito4/config-base:1.13.1"
+  "image": "ghcr.io/keito4/config-base:1.43.0"
 }
 ```
 
-**最新バージョン**: 1.15.0（management_toolsで使用中）
-**推奨バージョン**: 1.13.1+（安定版として広く採用）
+**最新バージョン**: 1.43.0
+**推奨バージョン**: 1.43.0+（安定版として広く採用）
 
 ## Claude Code動作のための必須設定
 
@@ -25,12 +25,12 @@ Claude Code（AI開発アシスタント）を動作させるための最小限�
 
 ```json
 {
-  "image": "ghcr.io/keito4/config-base:1.13.1"
+  "image": "ghcr.io/keito4/config-base:1.43.0"
 }
 ```
 
 - config-baseイメージには`@anthropic-ai/claude-code` CLIが既にインストール済み
-- バージョン1.13.1以降を推奨
+- バージョン1.43.0以降を推奨
 
 ### 2. 必須mounts
 
@@ -155,7 +155,7 @@ OPENAI_API_KEY=***  # o3 MCP用
 ```json
 {
   "name": "Project Name",
-  "image": "ghcr.io/keito4/config-base:1.13.1",
+  "image": "ghcr.io/keito4/config-base:1.43.0",
   "mounts": [
     "source=${localEnv:HOME}/.codex,target=/home/vscode/.codex,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
@@ -696,7 +696,7 @@ NODE_ENV=development
 
 ### 1. バージョン管理
 
-- **ベースイメージ**: セマンティックバージョニング（例: `1.13.1`）を明示
+- **ベースイメージ**: セマンティックバージョニング（例: `1.43.0`）を明示
 - **Features**: `latest`使用は最小限に、安定性重視の場合はバージョン固定
 - **更新頻度**: 四半期ごとにベースイメージ見直し
 
@@ -737,7 +737,7 @@ NODE_ENV=development
 
    ```json
    - "image": "ghcr.io/keito4/config-base:1.0.40"
-   + "image": "ghcr.io/keito4/config-base:1.13.1"
+   + "image": "ghcr.io/keito4/config-base:1.43.0"
    ```
 
 2. **非推奨Feature削除**
