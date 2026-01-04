@@ -90,13 +90,18 @@ ls -la .claude-plugin/plugin.json
 
 # LSP設定ファイルの内容確認
 cat .claude-plugin/plugin.json
+
+# lspServersキーが正しく設定されているか確認
+cat .claude-plugin/plugin.json | jq '.lspServers | keys'
 ```
 
 **確認ポイント:**
 
 - [ ] `.claude-plugin/plugin.json` が存在する
 - [ ] JSONが正しくフォーマットされている
+- [ ] `lspServers` キーが使用されている（`languageServers` ではない）
 - [ ] 4つのLanguage Server設定が含まれている（typescript, bash, json, yaml）
+- [ ] 各サーバーに `extensionToLanguage` マッピングが設定されている
 
 ### Claude Code LSP機能の確認
 
@@ -293,12 +298,20 @@ act -l
 ### LSPが動作しない場合
 
 ```bash
-# Language Serverを手動でインストール
+# Language Serverセットアップスクリプトを実行
+bash script/setup-lsp.sh
+
+# または手動でインストール
 npm install -g typescript-language-server typescript bash-language-server vscode-langservers-extracted yaml-language-server
+
+# LSP設定ファイルの確認
+cat .claude-plugin/plugin.json | jq '.lspServers | keys'
 
 # Claude Codeを再起動
 # VS Code/Cursorを再起動
 ```
+
+**注意**: LSP設定では `lspServers` キーと `extensionToLanguage` プロパティを使用してください。古い形式の `languageServers` と `filetypes` は動作しません。
 
 ### 環境変数が読み込まれない場合
 
@@ -337,4 +350,4 @@ npm run format:check && npm run lint && npm test
 ---
 
 **最終更新**: 2026-01-04
-**対象バージョン**: Claude Code 2.0.76+, DevContainer config-base 1.42.0+
+**対象バージョン**: Claude Code 2.0.76+, DevContainer config-base 1.43.0+

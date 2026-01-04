@@ -104,6 +104,7 @@
     "deny": []
   },
   "enabledPlugins": {
+    "config-lsp": true,
     "frontend-design@claude-code-plugins": true,
     "supabase-toolkit@claude-code-templates": true,
     "documentation-generator@claude-code-templates": true,
