@@ -29,7 +29,8 @@
   "remoteEnv": {
     "HOMEBREW_NO_AUTO_UPDATE": "1",
     "SHELL": "/bin/bash",
-    "TMPDIR": "/home/vscode/.claude/tmp"
+    "TMPDIR": "/home/vscode/.claude/tmp",
+    "ENABLE_LSP_TOOL": "1"
   },
   "overrideCommand": true,
   "updateRemoteUserUID": false,
