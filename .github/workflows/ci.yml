@@ -345,7 +345,7 @@ jobs:
     if: failure() && github.ref == 'refs/heads/main'
     steps:
       - name: Send Slack notification
-        uses: slackapi/slack-github-action@v1.27.0
+        uses: slackapi/slack-github-action@v2.1.1
         with:
           channel-id: ${{ vars.SLACK_CI_CHANNEL_ID }}
           payload-file-path: '.github/slack-ci-failure.json'
