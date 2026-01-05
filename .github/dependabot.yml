@@ -46,7 +46,6 @@ updates:
       prefix: 'ci'
     labels:
       - 'dependencies'
-      - 'github-actions'
     groups:
       actions-minor:
         patterns:
