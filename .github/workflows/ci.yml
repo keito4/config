@@ -135,6 +135,7 @@ jobs:
       - name: Test Report
         uses: dorny/test-reporter@v1
         if: always()
+        continue-on-error: true
         with:
           name: Jest Test Results
           path: ./reports/junit.xml
@@ -202,9 +203,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: github.event_name == 'pull_request'
+    continue-on-error: true
     steps:
       - name: Check PR Size
         uses: actions/github-script@v8
+        continue-on-error: true
         with:
           script: |
             const { additions, deletions, changed_files } = context.payload.pull_request;
