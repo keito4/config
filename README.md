@@ -21,7 +21,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 - `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory, including Zsh configuration with comprehensive aliases, functions, and environment setup.
 - `git/`: Contains Git configuration files including gitconfig, gitignore, commitlint configuration with i18n support, and modular configuration files in the `gitconfig.d/` subdirectory. See [git/README.md](git/README.md) for details.
 - `npm/`: Contains npm global package configuration.
-- `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), checking for changes and making commits (`commit_changes.sh`), credential management (`credentials.sh`), Homebrew dependency management (`brew-deps.sh`), semantic versioning (`version.sh`), documentation sync checking (`check-docs-sync.sh`), and automated library updates for Codex/Claude Code tooling (`update-libraries.sh`). See [script/README.md](script/README.md) for details.
+- `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), credential management (`credentials.sh`), Homebrew dependency management (`brew-deps.sh`), semantic versioning (`version.sh`), documentation sync checking (`check-docs-sync.sh`), and automated library updates for Codex/Claude Code tooling (`update-libraries.sh`). See [script/README.md](script/README.md) for details.
 - `vscode/`: Contains Visual Studio Code configuration including extensions list and installation documentation.
 
 ## Security
@@ -268,10 +268,6 @@ The script performs the following actions:
 - Exports Claude Code shared configuration (`settings.json`, `commands/`, `agents/`, `hooks/`, `plugins/`)
 
 ⚠️ **Note**: Local-only files like `settings.local.json` and credentials are excluded.
-
-### Checking for Changes
-
-Run the `commit_changes.sh` script with `REPO_PATH` set to this repository to check for local modifications. If there are changes, it stages all of them and makes a commit.
 
 ### Updating Codex & Claude Tooling
 
