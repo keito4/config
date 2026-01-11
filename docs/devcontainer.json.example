@@ -1,0 +1,12 @@
+{
+  "name": "Management Tools",
+  "image": "ghcr.io/keito4/config-base:latest",
+  "remoteEnv": {
+    "TMPDIR": "/home/vscode/.claude/tmp"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint"]
+    }
+  }
+}

@@ -11,22 +11,31 @@
 - Git hooks（Quality Gates）
 - 開発ツール（Node.js, pnpm, Rust, terraform, aws-cli など）
 
-## 最小構成（マウントなし）
+## 推奨構成（DevContainer用）
 
-新しいリポジトリで最小限の設定で使用する場合：
+新しいリポジトリで使用する場合の推奨設定：
 
 ```json
 // .devcontainer/devcontainer.json
 {
   "name": "My Project",
-  "image": "ghcr.io/keito4/config-base:1.43.0",
+  "image": "ghcr.io/keito4/config-base:latest",
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
   }
 }
 ```
 
-この構成では、イメージに含まれているすべての設定がそのまま利用できます。
+**重要**: ホストの `~/.claude` をマウント**しない**ことで、イメージに含まれている設定がそのまま使えます。
+
+📝 **サンプル**: [devcontainer.json.example](./devcontainer.json.example) を参照してください。
+
+この構成では以下がすぐに利用できます：
+
+- 事前インストールされたプラグイン
+- カスタムコマンド
+- カスタムエージェント
+- Git hooks
 
 ### 利用可能なコマンド
 
@@ -59,7 +68,7 @@ claude --help
 - `javascript-typescript@claude-code-workflows`
 - `playwright-skill@playwright-skill`
 
-## 推奨構成（ホスト設定の永続化）
+## 高度な構成（ホスト設定の永続化）
 
 プラグインの追加インストールや設定のカスタマイズを永続化したい場合：
 
@@ -67,7 +76,7 @@ claude --help
 // .devcontainer/devcontainer.json
 {
   "name": "My Project",
-  "image": "ghcr.io/keito4/config-base:1.43.0",
+  "image": "ghcr.io/keito4/config-base:latest",
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
   },
@@ -77,11 +86,12 @@ claude --help
 }
 ```
 
-この構成では：
+**注意**: この構成では：
 
-- ホストの `~/.claude` をマウントして設定を永続化
-- `setup-claude.sh` でイメージの設定をホスト側にコピー
-- 追加のプラグインインストールや設定変更が保持される
+- ホストの `~/.claude` をマウントすると、**イメージの設定が上書きされます**
+- `setup-claude.sh` がイメージの設定をホスト側にコピーします
+- ホスト側の設定が優先されるため、存在しないプラグインのエラーが出る可能性があります
+- **DevContainer 専用で使う場合は、マウントなしの構成を推奨します**
 
 ## プロジェクト固有の設定を追加
 
