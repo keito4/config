@@ -26,7 +26,17 @@ if [[ -f "$CREDENTIALS_SECRET" ]]; then
     echo "[INFO] BuildKit secret から認証情報を読み込み中..."
     cp "$CREDENTIALS_SECRET" "${CLAUDE_DIR}/.credentials.json"
     chmod 600 "${CLAUDE_DIR}/.credentials.json"
-# 方法2: 環境変数から作成（API キー）
+# 方法2: 環境変数から作成（OAuth トークンまたは API キー）
+elif [[ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]]; then
+    echo "[INFO] CLAUDE_CODE_OAUTH_TOKEN から認証情報を作成中..."
+    cat > "${CLAUDE_DIR}/.credentials.json" << EOF
+{
+  "claudeAiOauth": {
+    "accessToken": "${CLAUDE_CODE_OAUTH_TOKEN}",
+    "expiresAt": 9999999999999
+  }
+}
+EOF
 elif [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
     echo "[INFO] ANTHROPIC_API_KEY から認証情報を作成中..."
     cat > "${CLAUDE_DIR}/.credentials.json" << EOF
@@ -40,7 +50,7 @@ EOF
 else
     echo "[ERROR] 認証情報が見つかりません"
     echo "  - BuildKit secret: $CREDENTIALS_SECRET"
-    echo "  - 環境変数: ANTHROPIC_API_KEY"
+    echo "  - 環境変数: CLAUDE_CODE_OAUTH_TOKEN または ANTHROPIC_API_KEY"
     exit 1
 fi
 
