@@ -49,6 +49,7 @@ echo "[INFO] マーケットプレイスを初期化中..."
 claude plugin marketplace add https://github.com/anthropics/claude-plugins-official.git 2>&1 || echo "[WARN] claude-plugins-official already exists or failed to add"
 claude plugin marketplace add https://github.com/anthropics/claude-code.git 2>&1 || echo "[WARN] claude-code-plugins already exists or failed to add"
 claude plugin marketplace add https://github.com/wshobson/agents.git 2>&1 || echo "[WARN] claude-code-workflows already exists or failed to add"
+claude plugin marketplace add https://github.com/lackeyjb/playwright-skill.git 2>&1 || echo "[WARN] playwright-skill already exists or failed to add"
 
 echo "[INFO] プラグインをインストール中..."
 echo "[DEBUG] Claude version: $(claude --version 2>&1 || echo 'not found')"
