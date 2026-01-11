@@ -50,9 +50,6 @@ main() {
         log_success "known_marketplaces.json を生成しました"
     fi
 
-    # 設定ファイルのパーミッション確認
-    chown -R vscode:vscode "$CLAUDE_DIR"
-
     log_success "Claude Code ビルド時セットアップが完了しました！"
 }
 
