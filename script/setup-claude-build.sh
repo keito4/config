@@ -21,7 +21,6 @@ source "$LIB_DIR/output.sh"
 source "$LIB_DIR/claude_plugins.sh"
 
 CLAUDE_DIR="/home/vscode/.claude"
-PLUGINS_FILE="${CLAUDE_DIR}/plugins/plugins.txt"
 
 main() {
     log_info "Claude Code ビルド時セットアップを開始します..."
