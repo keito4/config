@@ -86,6 +86,7 @@ COPY --chown=vscode:vscode script/install-claude-plugins.sh /tmp/install-claude-
 COPY --chown=root:root script/setup-claude.sh /usr/local/bin/setup-claude.sh
 COPY --chown=vscode:vscode script/setup-claude-build.sh /tmp/setup-claude-build.sh
 COPY --chown=vscode:vscode script/lib /tmp/script-lib
+COPY --chown=root:root script/lib /usr/local/script/lib
 RUN chmod +x /usr/local/bin/setup-claude.sh /tmp/setup-claude-build.sh
 
 # Install Claude plugins using BuildKit secret
