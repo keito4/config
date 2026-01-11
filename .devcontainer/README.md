@@ -64,8 +64,8 @@ No known issues at this time. The container uses Node.js v22.14.0, which is comp
 
 The container includes comprehensive AI-assisted development capabilities:
 
-- **18 Specialized Agents**: Architecture validation, performance analysis, security review, accessibility validation, concurrency safety analysis, Playwright test automation, and more
-- **23 Automated Commands**: Repository maintenance, Git workflows, code analysis, quality checks, DevContainer management, dependency health, security scanning, and CI/CD setup
+- **17 Specialized Agents**: Architecture validation, performance analysis, security review, accessibility validation, concurrency safety analysis, Playwright test automation, and more
+- **22 Automated Commands**: Repository maintenance, Git workflows, code analysis, quality checks, DevContainer management, dependency health, security scanning, and CI/CD setup
 - **Quality Standards**: Japanese-language development guidelines with TDD methodology and static quality gates
 
 ## Container Versioning
