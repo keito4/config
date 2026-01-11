@@ -1,5 +1,5 @@
-# Claude Code Plugin List
-# このファイルに記載されたプラグインは devcontainer 起動時にユーザースコープで一括インストールされます
+# Claude Code Plugin List for DevContainer
+# このファイルに記載されたプラグインは devcontainer ビルド時にインストールされます
 # 形式: plugin-name@marketplace-name
 # 行頭 # はコメント
 
@@ -8,22 +8,18 @@
 commit-commands@claude-plugins-official
 hookify@claude-plugins-official
 plugin-dev@claude-plugins-official
-frontend-design@claude-plugins-official
 
-# プロジェクト固有
+# LSP サポート
 typescript-lsp@claude-plugins-official
+
+# Code Review
+code-review@claude-plugins-official
 
 # === Workflow Plugins (claude-code-workflows) ===
 code-refactoring@claude-code-workflows
-
-# === Additional Plugins ===
-# Code Review
-code-review@claude-plugins-official
-# AI Code Review (from claude-code-workflows)
-code-review-ai@claude-code-workflows
-# Kubernetes Operations
 kubernetes-operations@claude-code-workflows
-# JavaScript/TypeScript Development
 javascript-typescript@claude-code-workflows
-# Playwright Browser Automation
-playwright-skill@playwright-skill
+backend-development@claude-code-workflows
+full-stack-orchestration@claude-code-workflows
+database-design@claude-code-workflows
+database-migrations@claude-code-workflows
