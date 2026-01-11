@@ -113,10 +113,6 @@ Exports configuration settings to the home directory.
 
 Imports configuration settings from the home directory.
 
-### commit_changes.sh
-
-Checks for changes and makes commits.
-
 ## Credential Management Scripts
 
 ### credentials.sh

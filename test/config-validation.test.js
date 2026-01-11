@@ -123,7 +123,6 @@ describe('Configuration Validation', () => {
         'script/credentials.sh',
         'script/version.sh',
         'script/brew-deps.sh',
-        'script/commit_changes.sh',
       ];
 
       requiredScripts.forEach((script) => {

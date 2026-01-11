@@ -189,7 +189,6 @@ external-sources=true
 - `script/import.sh`
 - `script/export.sh`
 - `script/update-libraries.sh`
-- `script/commit_changes.sh`
 - `script/credentials.sh`
 - `script/brew-deps.sh`
 - `script/version.sh`
