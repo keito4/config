@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu
 
+# Build argument for Anthropic API Key
+ARG ANTHROPIC_API_KEY
+
 # Install dependencies and Node.js using official binaries
 RUN apt-get update && apt-get install -y \
     curl \
@@ -89,11 +92,12 @@ COPY --chown=vscode:vscode script/lib /tmp/script-lib
 COPY --chown=root:root script/lib /usr/local/script/lib
 RUN chmod +x /usr/local/bin/setup-claude.sh /tmp/setup-claude-build.sh
 
-# Install Claude plugins using BuildKit secret
+# Install Claude plugins using BuildKit secret or ANTHROPIC_API_KEY
 # Build with: DOCKER_BUILDKIT=1 docker build --secret id=claude_credentials,src=$HOME/.claude/.credentials.json .
+# Or with: docker build --build-arg ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY .
 # Note: Run as root to access BuildKit secret, but use vscode's HOME for plugin installation
 RUN --mount=type=secret,id=claude_credentials,uid=0,gid=0 \
-    env HOME=/home/vscode /tmp/install-claude-plugins.sh /home/vscode/.claude/plugins/plugins.txt || ( \
+    env HOME=/home/vscode ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}" /tmp/install-claude-plugins.sh /home/vscode/.claude/plugins/plugins.txt || ( \
         echo "[WARN] Claude プラグインのインストールに失敗しました（認証情報が不足している可能性があります）" && \
         echo "[INFO] コンテナ起動後に手動でインストールしてください: claude plugin install <plugin>@<marketplace>" \
     ) \
