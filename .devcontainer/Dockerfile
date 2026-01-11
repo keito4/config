@@ -81,9 +81,12 @@ COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
 COPY --chown=vscode:vscode .claude/agents /home/vscode/.claude/agents
 COPY --chown=vscode:vscode .claude/hooks /home/vscode/.claude/hooks
 COPY --chown=vscode:vscode .claude/plugins/plugins.txt /home/vscode/.claude/plugins/plugins.txt
+COPY --chown=vscode:vscode .claude/plugins/known_marketplaces.json.template /home/vscode/.claude/plugins/known_marketplaces.json.template
 COPY --chown=vscode:vscode script/install-claude-plugins.sh /tmp/install-claude-plugins.sh
 COPY --chown=root:root script/setup-claude.sh /usr/local/bin/setup-claude.sh
-RUN chmod +x /usr/local/bin/setup-claude.sh
+COPY --chown=vscode:vscode script/setup-claude-build.sh /tmp/setup-claude-build.sh
+COPY --chown=vscode:vscode script/lib /tmp/script-lib
+RUN chmod +x /usr/local/bin/setup-claude.sh /tmp/setup-claude-build.sh
 
 # Install Claude plugins using BuildKit secret
 # Build with: DOCKER_BUILDKIT=1 docker build --secret id=claude_credentials,src=$HOME/.claude/.credentials.json .
@@ -94,6 +97,11 @@ RUN --mount=type=secret,id=claude_credentials,uid=0,gid=0 \
         echo "[INFO] コンテナ起動後に手動でインストールしてください: claude plugin install <plugin>@<marketplace>" \
     ) \
     && chown -R vscode:vscode /home/vscode/.claude
+
+# ビルド時にClaude設定を完全にセットアップ
+USER vscode
+RUN bash /tmp/setup-claude-build.sh || echo "[WARN] ビルド時セットアップに失敗しました"
+USER root
 
 RUN chsh -s /bin/bash vscode
 
