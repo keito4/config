@@ -19,7 +19,7 @@
 // .devcontainer/devcontainer.json
 {
   "name": "My Project",
-  "image": "ghcr.io/keito4/config-base:latest",
+  "image": "ghcr.io/keito4/config-base:1.45.3",
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
   }
@@ -56,17 +56,23 @@ claude --help
 
 以下のプラグインが事前インストールされています：
 
-- `commit-commands@claude-plugins-official`
-- `hookify@claude-plugins-official`
-- `plugin-dev@claude-plugins-official`
-- `frontend-design@claude-plugins-official`
-- `typescript-lsp@claude-plugins-official`
-- `code-refactoring@claude-code-workflows`
-- `code-review@claude-plugins-official`
-- `code-review-ai@claude-code-workflows`
-- `kubernetes-operations@claude-code-workflows`
-- `javascript-typescript@claude-code-workflows`
-- `playwright-skill@playwright-skill`
+**公式プラグイン (`claude-plugins-official`)**:
+
+- `commit-commands` - Git commit 関連のコマンド
+- `hookify` - Git hooks の管理
+- `plugin-dev` - プラグイン開発ツール
+- `typescript-lsp` - TypeScript 言語サーバー
+- `code-review` - コードレビュー支援
+
+**ワークフロープラグイン (`claude-code-workflows`)**:
+
+- `code-refactoring` - リファクタリング支援
+- `kubernetes-operations` - Kubernetes 運用
+- `javascript-typescript` - JavaScript/TypeScript 開発
+- `backend-development` - バックエンド開発
+- `full-stack-orchestration` - フルスタック開発オーケストレーション
+- `database-design` - データベース設計
+- `database-migrations` - データベースマイグレーション
 
 ## 高度な構成（ホスト設定の永続化）
 
@@ -76,7 +82,7 @@ claude --help
 // .devcontainer/devcontainer.json
 {
   "name": "My Project",
-  "image": "ghcr.io/keito4/config-base:latest",
+  "image": "ghcr.io/keito4/config-base:1.45.3",
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
   },
@@ -127,7 +133,7 @@ my-plugin@marketplace
 ```json
 {
   "name": "My Project",
-  "image": "ghcr.io/keito4/config-base:1.43.0",
+  "image": "ghcr.io/keito4/config-base:1.45.3",
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
   },

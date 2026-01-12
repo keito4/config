@@ -76,13 +76,68 @@ This DevContainer image is automatically built and versioned using semantic-rele
 - **Minor versions**: New features and enhancements (1.0.0 → 1.1.0)
 - **Major versions**: Breaking changes (1.0.0 → 2.0.0)
 
+**Latest Version**: `v1.45.3`
+
 Images are published to GitHub Container Registry: `ghcr.io/keito4/config-base`
+
+### Embedded Setup Script
+
+The image includes `/usr/local/bin/setup-claude.sh` which automatically:
+
+- Copies Claude Code configuration from the image to `~/.claude/`
+- Installs project-specific plugins from `.claude/plugins/plugins.txt`
+- Applies hookify patches for Git hooks integration
+
+**Note**: This script is only necessary when mounting host's `~/.claude` directory. For DevContainer-only usage, the image works standalone without any setup.
 
 ## Customization
 
 ### For Other Projects
 
-To use this DevContainer configuration in other projects:
+#### Option 1: DevContainer-Only (Recommended)
+
+Use the pre-built image without mounting host's `~/.claude` directory:
+
+```json
+{
+  "name": "My Project",
+  "image": "ghcr.io/keito4/config-base:1.45.3",
+  "remoteEnv": {
+    "TMPDIR": "/home/vscode/.claude/tmp"
+  }
+}
+```
+
+**Benefits**:
+
+- Image configuration works immediately without setup
+- No conflicts with host configuration
+- Consistent environment across all team members
+
+See [docs/devcontainer.json.example](../docs/devcontainer.json.example) for complete example.
+
+#### Option 2: With Host Persistence
+
+Mount host's `~/.claude` to persist custom plugin installations:
+
+```json
+{
+  "name": "My Project",
+  "image": "ghcr.io/keito4/config-base:1.45.3",
+  "remoteEnv": {
+    "TMPDIR": "/home/vscode/.claude/tmp"
+  },
+  "initializeCommand": "mkdir -p ~/.claude",
+  "mounts": ["source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind"],
+  "postCreateCommand": "/usr/local/bin/setup-claude.sh"
+}
+```
+
+**Note**: This overwrites image configuration with host settings. Use only when you need to persist custom plugins.
+
+#### Option 3: Custom Setup
+
+To fully customize:
 
 1. **Copy the entire `.devcontainer` directory** to your project root
 2. **Modify `devcontainer.json`** to add project-specific requirements
