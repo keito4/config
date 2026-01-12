@@ -644,6 +644,15 @@ The repository includes a complete DevContainer setup (`.devcontainer/`) that pr
 - Integrated Claude Code configuration with specialized agents and commands
 - Bell notification system for development workflow events
 
+**Latest Version**: `ghcr.io/keito4/config-base:1.45.3`
+
+**Pre-installed Plugins** (v1.45.3):
+
+- Official plugins: `commit-commands`, `hookify`, `plugin-dev`, `typescript-lsp`, `code-review`
+- Workflow plugins: `code-refactoring`, `kubernetes-operations`, `javascript-typescript`, `backend-development`, `full-stack-orchestration`, `database-design`, `database-migrations`
+
+**Recommended Usage**: For new projects, use the pre-built image without mounting host's `~/.claude` directory. This ensures the image configuration works immediately. See [docs/using-config-base-image.md](docs/using-config-base-image.md) for detailed usage instructions.
+
 **DevContainer推奨設定**: Elu-co-jp配下のリポジトリで統一されたDevContainer環境を構築するための推奨設定とベストプラクティスについては、[.codex/devcontainer-recommendations.md](.codex/devcontainer-recommendations.md)を参照してください。
 
 ### Automated Releases

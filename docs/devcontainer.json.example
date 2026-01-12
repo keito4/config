@@ -1,6 +1,6 @@
 {
-  "name": "Management Tools",
-  "image": "ghcr.io/keito4/config-base:latest",
+  "name": "My Project",
+  "image": "ghcr.io/keito4/config-base:1.45.3",
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
   },
