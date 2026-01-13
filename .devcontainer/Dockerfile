@@ -6,22 +6,15 @@ ARG ANTHROPIC_API_KEY
 
 # Install dependencies and Node.js using official binaries
 # Security: Apply latest security patches (fixes gnupg CVE-2025-68972, curl CVE-2025-15224/15079/14819/14524)
-# Note: Python is NOT included - add via devcontainer features if needed
+# Note: Python, Rust, ShellCheck are NOT included - add via devcontainer features if needed
 RUN apt-get update && apt-get upgrade -y \
  && apt-get install -y \
     curl \
     git \
-    alsa-utils \
-    sox \
-    build-essential \
-    pkg-config \
-    libssl-dev \
-    libasound2-dev \
     ca-certificates \
     gnupg \
     wget \
     xz-utils \
-    shellcheck \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  && NODE_VERSION=v22.14.0 \
@@ -36,18 +29,10 @@ RUN npm install -g pnpm
 USER vscode
 ENV SHELL=/bin/bash
 ENV PNPM_HOME="/home/vscode/.local/share/pnpm"
-ENV RUSTUP_HOME="/home/vscode/.rustup"
-ENV CARGO_HOME="/home/vscode/.cargo"
-ENV PATH="${CARGO_HOME}/bin:${PNPM_HOME}:${PATH}"
+ENV PATH="${PNPM_HOME}:${PATH}"
 RUN bash -c "pnpm setup" \
  && echo "export PNPM_HOME=\"/home/vscode/.local/share/pnpm\"" >> /home/vscode/.bashrc \
- && echo "export PATH=\"\$PNPM_HOME:\$PATH\"" >> /home/vscode/.bashrc \
- && echo "export RUSTUP_HOME=\"/home/vscode/.rustup\"" >> /home/vscode/.bashrc \
- && echo "export CARGO_HOME=\"/home/vscode/.cargo\"" >> /home/vscode/.bashrc \
- && echo "export PATH=\"\$CARGO_HOME/bin:\$PATH\"" >> /home/vscode/.bashrc \
- && curl -sSf https://sh.rustup.rs | bash -s -- -y --default-toolchain stable \
- && bash -lc "rustup component add rustfmt clippy" \
- && bash -c "source /home/vscode/.bashrc && pnpm add -g supabase"
+ && echo "export PATH=\"\$PNPM_HOME:\$PATH\"" >> /home/vscode/.bashrc
 
 USER root
 
@@ -63,10 +48,6 @@ RUN CLAUDE_CODE_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies
     @openai/codex@${CODEX_VERSION} \
     vercel@${VERCEL_VERSION}
 
-USER vscode
-RUN bash -lc "cargo install similarity-ts" || true \
-    && curl https://cursor.com/install -fsS | bash \
-    && echo 'export PATH="$HOME/.local/bin:$PATH"' >> /home/vscode/.bashrc
 USER root
 
 RUN echo "alias gco='git checkout'" >> /home/vscode/.bashrc \
