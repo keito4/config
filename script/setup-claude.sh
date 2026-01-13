@@ -56,6 +56,13 @@ main() {
     log_info "Claude Code セットアップを開始します..."
     log_info "環境: HOME=${HOME}"
 
+    # CLAUDE_ENV_FILE が設定されている場合、環境変数ファイルを読み込む
+    if [[ -n "${CLAUDE_ENV_FILE:-}" ]] && [[ -f "$CLAUDE_ENV_FILE" ]]; then
+        log_info "環境変数ファイルを読み込みます: ${CLAUDE_ENV_FILE}"
+        # shellcheck source=/dev/null
+        source "$CLAUDE_ENV_FILE"
+    fi
+
     # 一時ディレクトリを作成（クロスデバイスリンクエラー対策）
     mkdir -p "${CLAUDE_DIR}/tmp"
     export TMPDIR="${CLAUDE_DIR}/tmp"

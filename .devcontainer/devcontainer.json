@@ -26,17 +26,14 @@
     },
     "ghcr.io/schlich/devcontainer-features/playwright:0": {}
   },
-  "remoteEnv": {
-    "HOMEBREW_NO_AUTO_UPDATE": "1",
-    "SHELL": "/bin/bash",
-    "TMPDIR": "/home/vscode/.claude/tmp",
-    "ENABLE_LSP_TOOL": "1"
-  },
   "overrideCommand": true,
   "updateRemoteUserUID": false,
   "initializeCommand": "mkdir -p ~/.claude ~/.cursor",
+  "containerEnv": {
+    "CLAUDE_ENV_FILE": "/home/vscode/.devcontainer.env"
+  },
   "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.devcontainer.env,target=/home/vscode/.devcontainer.env,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.cursor,target=/home/vscode/.cursor,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind,consistency=cached",
@@ -52,5 +49,5 @@
     }
   },
   "postCreateCommand": "bash script/setup-env.sh && bash script/setup-mcp.sh && sudo chown -R vscode:vscode /workspaces/config && npm ci && npm run prepare && cp -r /tmp/.husky /workspaces/config/ && cp git/commitlint.config.js commitlint.config.js && bash script/sync-claude-commands.sh && bash script/setup-lsp.sh && /usr/local/bin/setup-claude.sh",
-  "runArgs": ["--env-file=${localEnv:HOME}/.devcontainer.env"]
+  "postStartCommand": "bash script/sync-claude-commands.sh"
 }

@@ -149,7 +149,7 @@ Read the reference configuration from this repository:
 
 Extract recommended configuration based on `updateScope`:
 
-- **all**: Update image, features, mounts, postCreateCommand, customizations, remoteEnv
+- **all**: Update image, features, mounts, postCreateCommand, customizations
 - **image-only**: Update only the image field
 - **minimal**: Update image and features only
 
@@ -164,7 +164,6 @@ From `devcontainer-recommendations.md`, identify:
 
 2. **Claude Code必須設定**:
    - `.codex` mount (必須)
-   - `.claude` mount (必須)
    - `postCreateCommand`に`/usr/local/bin/setup-claude.sh`を含める
 
 3. **プロジェクトタイプ別Features**（現在のプロジェクトに基づいて判定）:
@@ -220,13 +219,27 @@ Update `image` field to `ghcr.io/keito4/config-base:{target-version}`
 **Claude Code必須mounts**を確認・追加:
 
 - `.codex` mount
-- `.claude` mount
 
 **標準mounts**を確認・追加:
 
 - `.cursor` mount
 - `.gitconfig` mount
 - `.config/gh` mount
+
+**環境変数ファイル設定（推奨）**:
+
+- `.devcontainer.env`ファイルのマウントを追加:
+  ```json
+  "source=${localEnv:HOME}/.devcontainer.env,target=/home/vscode/.devcontainer.env,type=bind,consistency=cached"
+  ```
+- `containerEnv`に`CLAUDE_ENV_FILE`を追加:
+  ```json
+  "containerEnv": {
+    "CLAUDE_ENV_FILE": "/home/vscode/.devcontainer.env"
+  }
+  ```
+- この設定により、`setup-claude.sh`実行時に環境変数ファイルが読み込まれる
+- ユーザーは`~/.devcontainer.env`ファイルを作成して環境変数を設定
 
 既存のユーザー追加mountsは保持。
 
@@ -242,7 +255,6 @@ Update `image` field to `ghcr.io/keito4/config-base:{target-version}`
 
 ### 7.5: Update Other Settings (if updateScope is "all")
 
-- Update `remoteEnv` with recommended environment variables
 - Update `customizations` with recommended VS Code settings
 
 Use the Edit tool to make precise updates to the JSON file.
@@ -300,7 +312,6 @@ _注意: これらのfeaturesは自動削除されていません。必要に応
 **追加されたMounts**:
 
 - `.codex` (Claude Code必須)
-- `.claude` (Claude Code必須)
 
 ### Commands Changes (if updateScope is "all")
 
@@ -310,7 +321,6 @@ _注意: これらのfeaturesは自動削除されていません。必要に応
 
 ### Other Changes (if updateScope is "all")
 
-- Updated remoteEnv settings
 - Updated VS Code customizations
 
 ## Step 10: Commit Changes
@@ -325,7 +335,7 @@ git commit -m "feat: Update config-base image to v{target-version}
 - Sync configuration with latest recommended settings
 - Add {count} new features based on project type detection
 - Ensure Claude Code compatibility (mounts, postCreateCommand)
-- Update features, mounts, and environment variables
+- Update features and mounts
 
 Features added: {list-of-added-features}
 
@@ -366,13 +376,14 @@ If `autoCreatePR` is true:
   - ✨ **Preserved**: {preserved-features-list}
 
   #### Configuration
-  - 📁 **Mounts**: Added Claude Code required mounts (`.codex`, `.claude`)
+  - 📁 **Mounts**: Added Claude Code required mounts (`.codex`)
   - 🔧 **postCreateCommand**: Ensured `/usr/local/bin/setup-claude.sh` execution
-  - ⚙️ **Settings**: Synced remoteEnv and VS Code customizations
+  - ⚙️ **Settings**: Synced VS Code customizations
+  - 🔑 **containerEnv**: Added CLAUDE_ENV_FILE for environment configuration
 
   ### Claude Code Compatibility
   This update ensures full Claude Code compatibility with:
-  - Required mounts for `.codex` and `.claude`
+  - Required mounts for `.codex`
   - Automatic Claude CLI setup via `setup-claude.sh`
   - Recommended features based on project type
 
