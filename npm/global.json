@@ -64,6 +64,10 @@
     "pm2": {
       "version": "6.0.14",
       "overridden": false
+    },
+    "vercel": {
+      "version": "50.3.0",
+      "overridden": false
     }
   }
 }
