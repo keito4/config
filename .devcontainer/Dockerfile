@@ -5,7 +5,10 @@ ARG CLAUDE_CODE_OAUTH_TOKEN
 ARG ANTHROPIC_API_KEY
 
 # Install dependencies and Node.js using official binaries
-RUN apt-get update && apt-get install -y \
+# Security: Apply latest security patches (fixes gnupg CVE-2025-68972, curl CVE-2025-15224/15079/14819/14524)
+# Note: Python is NOT included - add via devcontainer features if needed
+RUN apt-get update && apt-get upgrade -y \
+ && apt-get install -y \
     curl \
     git \
     alsa-utils \
@@ -19,10 +22,6 @@ RUN apt-get update && apt-get install -y \
     wget \
     xz-utils \
     shellcheck \
-    python3 \
-    python3-pip \
-    python3-venv \
-    python3-dev \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  && NODE_VERSION=v22.14.0 \
