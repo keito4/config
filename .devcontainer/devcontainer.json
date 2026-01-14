@@ -24,7 +24,10 @@
       "moby": true,
       "dockerDashComposeVersion": "v2"
     },
-    "ghcr.io/schlich/devcontainer-features/playwright:0": {}
+    "ghcr.io/schlich/devcontainer-features/playwright:0": {},
+    "ghcr.io/devcontainers-extra/features/supabase-cli": {
+      "version": "latest"
+    }
   },
   "overrideCommand": true,
   "updateRemoteUserUID": false,
