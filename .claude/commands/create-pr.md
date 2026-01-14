@@ -1,6 +1,6 @@
 ---
 description: Create PR with latest base branch changes merged
-allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Bash(find:*), Bash(ls:*)
+allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Bash(find:*), Bash(ls:*), Bash(codex:*)
 argument-hint: [--base BRANCH] [--title TITLE] [--draft]
 ---
 
@@ -159,11 +159,52 @@ ${COMMIT_LIST}
 - ✅ pre-commit フック: Format, Lint, Test 通過
 - ✅ コンフリクト解決: 完了
 - ✅ 最新の${BASE_BRANCH}ブランチとマージ済み
+- ✅ Codex Review: ${VERDICT} (Confidence: ${CONFIDENCE})
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
 
-## Step 5: Push to Remote
+## Step 5: Codex Review（必須）
+
+PR作成前にOpenAI Codexによるコードレビューを実行する。
+
+### レビュー実行
+
+```bash
+# ベースブランチとの差分をCodexでレビュー
+codex exec --sandbox read-only "You are acting as a reviewer for a proposed code change made by another engineer. Focus on issues that impact correctness, performance, security, maintainability, or developer experience. Flag only actionable issues introduced by the change. When you flag an issue, provide a short, direct explanation and cite the affected file and line range. Prioritize severe issues and avoid nit-level comments unless they block understanding of the diff. After listing findings, produce an overall correctness verdict ('patch is correct' or 'patch is incorrect') with a concise justification and a confidence score between 0 and 1. Review the current branch against origin/${BASE_BRANCH}. Use git merge-base to find the merge base, then review the diff from that merge base to HEAD."
+```
+
+### レビュー結果の確認
+
+1. **verdict が "patch is correct"** の場合
+   - そのまま次のステップへ進む
+
+2. **verdict が "patch is incorrect"** の場合
+   - 指摘された問題を確認
+   - 修正が必要な場合は修正してコミット
+   - 再度Codexレビューを実行
+
+3. **重大な問題が指摘された場合**
+   - セキュリティ問題: 必ず修正
+   - パフォーマンス問題: 影響度を評価して対応
+   - 保守性の問題: 可能な範囲で対応
+
+### レビュー結果の記録
+
+PR本文に以下を追加：
+
+```markdown
+## Codex Review
+
+- Verdict: ${VERDICT}
+- Confidence: ${CONFIDENCE}
+- 指摘事項: ${ISSUES_COUNT} 件（対応済み）
+```
+
+**注意**: Codex CLIがインストールされていない場合はスキップ可能だが、インストール済みの場合は必ず実行すること。
+
+## Step 6: Push to Remote
 
 リモートブランチにプッシュ：
 
@@ -177,7 +218,7 @@ git push -u origin $(git branch --show-current)
 - リモートブランチが既に存在する場合: force pushを確認
 - プッシュに失敗した場合: エラー内容を表示して終了
 
-## Step 6: Create Pull Request
+## Step 7: Create Pull Request
 
 gh CLI を使用してPRを作成：
 
@@ -209,7 +250,7 @@ PR URL: https://github.com/owner/repo/pull/123
 4. 必要に応じて修正
 ```
 
-## Step 7: Final Report
+## Step 8: Final Report
 
 完了レポートを表示：
 
@@ -235,7 +276,7 @@ PR URL: ${PR_URL}
 4. マージ準備完了後、レビュアーに通知
 ```
 
-## Step 8: CI失敗時のフォローアップ（必須）
+## Step 9: CI失敗時のフォローアップ（必須）
 
 **重要**: PR作成後にCIが失敗した場合、そのブランチで解決できる問題は必ず修正する。
 
