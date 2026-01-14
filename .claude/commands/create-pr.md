@@ -159,7 +159,7 @@ ${COMMIT_LIST}
 - ✅ pre-commit フック: Format, Lint, Test 通過
 - ✅ コンフリクト解決: 完了
 - ✅ 最新の${BASE_BRANCH}ブランチとマージ済み
-- ✅ Codex Review: ${VERDICT} (Confidence: ${CONFIDENCE})
+- ✅ Codex Review: [verdict] (Confidence: [score])
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
@@ -192,15 +192,11 @@ codex exec --sandbox read-only "You are acting as a reviewer for a proposed code
 
 ### レビュー結果の記録
 
-PR本文に以下を追加：
+Codexレビューの結果を確認し、PR本文のテストセクションに以下の形式で記録する：
 
-```markdown
-## Codex Review
-
-- Verdict: ${VERDICT}
-- Confidence: ${CONFIDENCE}
-- 指摘事項: ${ISSUES_COUNT} 件（対応済み）
-```
+- **verdict**: "patch is correct" または "patch is incorrect"
+- **confidence**: 0〜1のスコア
+- **指摘事項**: 対応した問題の件数
 
 **注意**: Codex CLIがインストールされていない場合はスキップ可能だが、インストール済みの場合は必ず実行すること。
 
