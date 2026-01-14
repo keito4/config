@@ -7,14 +7,6 @@
     "ghcr.io/devcontainers/features/node:1": {
       "pnpmVersion": "latest"
     },
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.12"
-    },
-    "ghcr.io/devcontainers/features/rust:1": {
-      "version": "latest",
-      "profile": "default"
-    },
-    "ghcr.io/devcontainers-contrib/features/shellcheck:0": {},
     "ghcr.io/itsmechlark/features/1password:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/git:1": {},
@@ -56,6 +48,6 @@
       }
     }
   },
-  "postCreateCommand": "bash script/setup-env.sh && bash script/setup-mcp.sh && sudo chown -R vscode:vscode /workspaces/config && npm ci && npm run prepare && cp -r /tmp/.husky /workspaces/config/ && cp git/commitlint.config.js commitlint.config.js && bash script/sync-claude-commands.sh && bash script/setup-lsp.sh && /usr/local/bin/setup-claude.sh && (cargo install similarity-ts || true) && (pnpm add -g supabase || true) && (curl https://cursor.com/install -fsS | bash || true)",
+  "postCreateCommand": "bash script/setup-env.sh && bash script/setup-mcp.sh && sudo chown -R vscode:vscode /workspaces/config && npm ci && npm run prepare && cp -r /tmp/.husky /workspaces/config/ && cp git/commitlint.config.js commitlint.config.js && bash script/sync-claude-commands.sh && bash script/setup-lsp.sh && /usr/local/bin/setup-claude.sh",
   "postStartCommand": "bash script/sync-claude-commands.sh"
 }
