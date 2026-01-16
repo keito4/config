@@ -30,24 +30,24 @@
         ]
       },
       {
-        "comment": "Run Codex review before ExitPlanMode",
+        "comment": "Run AI review (Codex + Gemini) before ExitPlanMode",
         "matcher": "tool_name == 'ExitPlanMode'",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/pre_exit_plan_codex_review.py"
+            "command": "python3 .claude/hooks/pre_exit_plan_ai_review.py"
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "comment": "Run Codex review after PR creation",
+        "comment": "Run AI review (Codex + Gemini) after PR creation",
         "matcher": "tool_name == 'Bash'",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/post_pr_codex_review.py"
+            "command": "python3 .claude/hooks/post_pr_ai_review.py"
           }
         ]
       }
@@ -73,6 +73,7 @@
     "allow": [
       "Bash(codex:*)",
       "Bash(codex exec:*)",
+      "Bash(gemini:*)",
       "Add machine-specific permissions here"
     ],
     "deny": [
