@@ -9,6 +9,7 @@ import json
 import subprocess
 import shutil
 import os
+import re
 
 # Read input from Claude
 data = json.load(sys.stdin)
@@ -22,18 +23,26 @@ if tool_name != "Bash":
     sys.exit(0)
 
 # コマンドを取得
-command = tool_input.get("command", "")
+command = tool_input.get("command", "").strip()
 
-# gh pr create コマンドかどうかを判定
-if "gh pr create" not in command:
+# gh pr create コマンドかどうかを厳密に判定（プレフィックス判定）
+if not command.startswith("gh pr create"):
+    sys.exit(0)
+
+# ヘルプコマンドは除外
+if "--help" in command or "-h" in command:
     sys.exit(0)
 
 # ツール実行が成功したかチェック
 stdout = tool_response.get("stdout", "")
 stderr = tool_response.get("stderr", "")
 
+# PR URLパターン（https://github.com/owner/repo/pull/123 形式）
+pr_url_pattern = r"https://github\.com/[^/]+/[^/]+/pull/\d+"
+combined_output = stdout + stderr
+
 # PR URLが出力に含まれていれば成功と判断
-if "github.com" not in stdout and "github.com" not in stderr:
+if not re.search(pr_url_pattern, combined_output):
     # PR作成が失敗した可能性
     sys.exit(0)
 

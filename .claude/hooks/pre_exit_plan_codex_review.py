@@ -86,6 +86,8 @@ codex_command = [
     codex_prompt
 ]
 
+review_success = False
+
 try:
     result = subprocess.run(
         codex_command,
@@ -110,20 +112,31 @@ try:
             print("=" * 60, file=sys.stderr)
             sys.exit(2)
 
-    if result.returncode != 0 and result.stderr:
-        print(f"⚠️  Codexエラー: {result.stderr}", file=sys.stderr)
+        # verdictが "plan is ready" の場合のみ成功
+        if "plan is ready" in output:
+            review_success = True
 
-    print("", file=sys.stderr)
-    print("=" * 60, file=sys.stderr)
-    print("✅ Codexプランレビュー完了 - 問題なし", file=sys.stderr)
-    print("=" * 60, file=sys.stderr)
+    # Codex実行エラーの場合
+    if result.returncode != 0:
+        print(f"⚠️  Codex実行エラー (exit code: {result.returncode})", file=sys.stderr)
+        if result.stderr:
+            print(f"    {result.stderr[:500]}", file=sys.stderr)
 
 except subprocess.TimeoutExpired:
     print("⚠️  Codexレビューがタイムアウトしました（10分）", file=sys.stderr)
-    # タイムアウトの場合は続行を許可
+    # タイムアウトの場合は続行を許可（ブロックしすぎを避ける）
 
 except Exception as e:
     print(f"⚠️  Codexレビュー実行エラー: {e}", file=sys.stderr)
     # エラーの場合は続行を許可
+
+# 結果の表示
+print("", file=sys.stderr)
+print("=" * 60, file=sys.stderr)
+if review_success:
+    print("✅ Codexプランレビュー完了 - 問題なし", file=sys.stderr)
+else:
+    print("⚠️  Codexプランレビュー完了 - 明確な承認なし（続行を許可）", file=sys.stderr)
+print("=" * 60, file=sys.stderr)
 
 sys.exit(0)
