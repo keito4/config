@@ -105,17 +105,52 @@ def run_codex_review():
 
 
 def run_gemini_review():
-    """Geminiによるレビューを実行"""
+    """Geminiによるレビューを実行（diffをstdinで渡す）"""
     print("", file=sys.stderr)
     print("## ✨ Gemini Review", file=sys.stderr)
     print("-" * 40, file=sys.stderr)
 
-    gemini_command = [
-        "gemini",
-        "-p", review_prompt
-    ]
-
     try:
+        # マージベースを取得
+        merge_base_result = subprocess.run(
+            ["git", "merge-base", "origin/main", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        merge_base = merge_base_result.stdout.strip()
+
+        if not merge_base:
+            print("⚠️  マージベースの取得に失敗しました", file=sys.stderr)
+            return
+
+        # diffを取得
+        diff_result = subprocess.run(
+            ["git", "diff", merge_base, "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+        diff_content = diff_result.stdout
+
+        if not diff_content:
+            print("⚠️  diffが空です", file=sys.stderr)
+            return
+
+        # Gemini用のプロンプト（diffを含める）
+        gemini_prompt = f"""You are acting as a reviewer for a proposed code change.
+Focus on issues that impact correctness, performance, security, maintainability, or developer experience.
+Flag only actionable issues introduced by the change.
+When you flag an issue, provide a short, direct explanation and cite the affected file and line range.
+Prioritize severe issues and avoid nit-level comments unless they block understanding of the diff.
+After listing findings, produce an overall correctness verdict ('patch is correct' or 'patch is incorrect') with a concise justification and a confidence score between 0 and 1.
+
+## Git Diff to Review:
+
+{diff_content[:50000]}"""
+
+        gemini_command = ["gemini", "-p", gemini_prompt]
+
         result = subprocess.run(
             gemini_command,
             cwd=os.getcwd(),
