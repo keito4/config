@@ -156,6 +156,85 @@ result = subprocess.run(
 )
 ```
 
+### 3. `post_pr_ai_review.py`
+
+**目的**: PR作成後にAI（Codex + Gemini）による自動コードレビューを実行
+
+**トリガー**: `PostToolUse(Bash)` で `gh pr create` の成功を検出
+
+**動作**:
+
+- `gh pr create` 成功後に自動実行
+- インストールされているAIツール（Codex、Gemini）でレビューを実行
+- 各AIがコード変更をレビュー（正確性、パフォーマンス、セキュリティ、保守性）
+- verdict（"patch is correct" / "patch is incorrect"）と信頼度スコアを出力
+- ブロックはしない（レビュー結果を表示のみ）
+
+**前提条件**:
+
+- Codex CLI（`npm install -g @openai/codex`）またはGemini CLI（`npm install -g @google/gemini-cli`）がインストール済み
+- 両方インストールされていれば両方でレビューを実行
+- どちらも未インストールの場合は自動スキップ
+
+**設定例**:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/post_pr_ai_review.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 4. `pre_exit_plan_ai_review.py`
+
+**目的**: プラン作成後、ExitPlanMode実行前にAI（Codex + Gemini）によるプランレビューを実行
+
+**トリガー**: `PreToolUse(ExitPlanMode)`
+
+**動作**:
+
+- ExitPlanMode実行前に自動発火
+- 最新のプランファイル（`~/.claude/plans/*.md`）を検出
+- インストールされているAIツールでプランをレビュー（完全性、技術的実現可能性、リスク、依存関係）
+- いずれかのAIが "plan needs revision" と判定した場合は exit code 2 でブロック
+- いずれかのAIが "plan is ready" と判定した場合は続行を許可
+
+**前提条件**:
+
+- Codex CLIまたはGemini CLIがインストール済み
+- プランファイルが `~/.claude/plans/` に存在
+
+**設定例**:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "tool_name == 'ExitPlanMode'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/pre_exit_plan_ai_review.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
 ## カスタムHooksの作成
 
 新しいHookスクリプトを作成する場合の基本構造：

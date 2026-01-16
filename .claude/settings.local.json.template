@@ -8,6 +8,50 @@
     "MAX_THINKING_TOKENS": "31999"
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "comment": "Block git --no-verify and HUSKY=0",
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/block_git_no_verify.py"
+          }
+        ]
+      },
+      {
+        "comment": "Run Quality Gates before git commit/push",
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/pre_git_quality_gates.py"
+          }
+        ]
+      },
+      {
+        "comment": "Run AI review (Codex + Gemini) before ExitPlanMode",
+        "matcher": "tool_name == 'ExitPlanMode'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/pre_exit_plan_ai_review.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "comment": "Run AI review (Codex + Gemini) after PR creation",
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/post_pr_ai_review.py"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "comment": "Example hook: notify when task completes",
@@ -27,6 +71,9 @@
   },
   "permissions": {
     "allow": [
+      "Bash(codex:*)",
+      "Bash(codex exec:*)",
+      "Bash(gemini:*)",
       "Add machine-specific permissions here"
     ],
     "deny": [
