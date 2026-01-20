@@ -651,6 +651,133 @@ The repository includes a complete DevContainer setup (`.devcontainer/`) that pr
 
 **DevContainer推奨設定**: Elu-co-jp配下のリポジトリで統一されたDevContainer環境を構築するための推奨設定とベストプラクティスについては、[.codex/devcontainer-recommendations.md](.codex/devcontainer-recommendations.md)を参照してください。
 
+## GitHub Codespaces Integration
+
+This repository can be used as your personal dotfiles repository for [GitHub Codespaces](https://github.com/features/codespaces), enabling automatic setup of your development environment whenever you create a new codespace.
+
+### How It Works
+
+GitHub Codespaces automatically recognizes dotfiles repositories and runs installation scripts when creating new codespaces. This repository includes two installation scripts:
+
+- `install.sh` - Primary installation script that GitHub Codespaces executes automatically
+- `bootstrap.sh` - Alternative script with environment detection (Codespaces, DevContainer, Docker, Local)
+
+### Setup Instructions
+
+1. **Navigate to GitHub Settings**
+
+   Go to [GitHub Settings > Codespaces](https://github.com/settings/codespaces)
+
+2. **Enable Dotfiles**
+   - Check the box for "Automatically install dotfiles"
+   - Select this repository (`keito4/config`) from the dropdown
+
+3. **Configure Installation Script** (Optional)
+
+   By default, GitHub searches for installation scripts in this order:
+   - `install.sh` (used by this repository)
+   - `install`
+   - `bootstrap.sh`
+   - `bootstrap`
+   - `script/bootstrap`
+   - `setup.sh`
+   - `setup`
+   - `script/setup`
+
+### What Gets Installed
+
+When you create a new codespace, the installation script automatically sets up:
+
+#### Shell Configuration
+
+- `.zshrc` - Zsh configuration with comprehensive aliases and functions
+- `.zprofile` - Zsh profile with environment setup
+- `.peco/` - Peco configuration for interactive filtering
+
+#### Git Configuration
+
+- `.gitconfig` - Git configuration with commit conventions and aliases
+- `.gitignore_global` - Global gitignore patterns
+- `gitconfig.d/*` - Modular Git configuration files
+
+#### Development Tools
+
+- `.actrc` - act configuration for local GitHub Actions testing
+
+#### VS Code Extensions (Optional)
+
+- Automatically installs extensions listed in `vscode/extensions.txt`
+- Only installed if VS Code CLI is available
+
+#### Claude Code Plugins (Optional)
+
+- Installs Claude Code plugins if `~/.claude/plugins/plugins.txt` exists
+- Requires Claude Code CLI to be available
+
+#### Homebrew Packages (Interactive)
+
+- Prompts for Homebrew package installation from `brew/StandaloneBrewfile`
+- 10-second timeout before skipping (can be cancelled with Ctrl+C)
+
+### Important Notes
+
+**New Codespaces Only**: Dotfiles configuration only applies to **new** codespaces. Existing codespaces are not automatically updated.
+
+**Manual Setup Required**: After installation, you'll need to configure:
+
+```bash
+# Git user information
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+
+# SSH signing key
+git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
+
+# Restart shell to apply changes
+exec $SHELL -l
+```
+
+**Environment-Specific Behavior**: Use `bootstrap.sh` instead of `install.sh` if you need environment detection:
+
+- Detects GitHub Codespaces, VS Code DevContainer, Docker, or local environments
+- Applies environment-specific configurations
+- Includes safety checks for Git directories
+
+**VS Code Settings**: User-scoped VS Code settings cannot be personalized via dotfiles. Use DevContainer configuration (`devcontainer.json`) for VS Code settings instead.
+
+### Alternative: Using DevContainer
+
+If you prefer more control over the environment, use the pre-built DevContainer image instead:
+
+```json
+{
+  "image": "ghcr.io/keito4/config-base:1.48.0"
+}
+```
+
+See [DevContainer Support](#devcontainer-support) section for details.
+
+### Troubleshooting
+
+**Installation Script Not Running**:
+
+- Verify the repository is selected in GitHub Codespaces settings
+- Check that "Automatically install dotfiles" is enabled
+- Ensure `install.sh` has executable permissions (`chmod +x install.sh`)
+
+**Extensions Not Installing**:
+
+- VS Code CLI must be available in the codespace
+- Check `vscode/extensions.txt` for invalid extension IDs
+
+**Claude Plugins Not Installing**:
+
+- Verify Claude Code CLI is installed
+- Check `~/.claude/plugins/plugins.txt` exists and is properly formatted
+- Review `.claude/.credentials.json` permissions (600)
+
+For more details, see the [GitHub Codespaces dotfiles documentation](https://docs.github.com/en/codespaces/setting-your-user-preferences/personalizing-github-codespaces-for-your-account#dotfiles).
+
 ### Automated Releases
 
 This repository uses semantic-release for automated version management and releases based on commit messages. Follow conventional commit format:
