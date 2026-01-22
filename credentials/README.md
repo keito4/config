@@ -50,6 +50,31 @@ credentials/
 
    `.mcp.json` が自動生成されます。
 
+## サポートされているMCPサーバー
+
+このリポジトリは以下のMCP (Model Context Protocol) サーバーをサポートしています：
+
+| MCPサーバー    | パッケージ                      | 必要な環境変数               | 説明                            |
+| -------------- | ------------------------------- | ---------------------------- | ------------------------------- |
+| **Playwright** | `@playwright/mcp@latest`        | なし                         | ブラウザ自動化とテスト          |
+| **o3 Search**  | `o3-search-mcp`                 | `OPENAI_API_KEY`             | OpenAI o3モデルによる高度な検索 |
+| **Linear**     | `@mseep/linear-mcp`             | `LINEAR_API_KEY`             | Linear イシュートラッキング     |
+| **n8n**        | `@leonardsellem/n8n-mcp-server` | `N8N_API_URL`, `N8N_API_KEY` | n8n ワークフロー自動化          |
+
+### MCP環境変数の設定
+
+`credentials/templates/mcp.env.template`に必要な環境変数が定義されています。
+
+1Password CLIを使用する場合、以下の形式で1Passwordボールトに保存してください：
+
+```bash
+# 例: 1Password "Dev" ボールトに以下のアイテムを作成
+- OPENAI_API_KEY
+- LINEAR_API_KEY
+- N8N_API_URL
+- N8N_API_KEY
+```
+
 ### 従来の方法
 
 レガシーな方法でクレデンシャルを取得する場合：
