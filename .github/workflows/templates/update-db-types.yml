@@ -1,0 +1,94 @@
+# Supabase Database Types Auto-Update Workflow
+# This workflow generates TypeScript types from Supabase schema and creates PRs automatically.
+#
+# Required secrets:
+#   - SUPABASE_ACCESS_TOKEN: Supabase access token for API access
+#
+# Required repository variables (optional):
+#   - SUPABASE_PROJECT_REF: Supabase project reference ID
+#
+# Customization:
+#   - Modify `types:gen` command in your package.json
+#   - Adjust output file path as needed
+#   - Configure branch naming convention
+
+name: Update Database Types
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run daily at 02:00 UTC
+    - cron: '0 2 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/seed.sql'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  update-types:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate database types
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+        run: |
+          # Use the types generation script from package.json
+          # Customize the command name as needed (e.g., types:gen, types:gen:staging)
+          npm run types:gen || npm run supabase:types || npx supabase gen types typescript --project-id "${SUPABASE_PROJECT_REF}" > src/types/database.types.ts
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update database types'
+          title: 'chore: Update database types'
+          body: |
+            ## Summary
+            This PR updates the database types generated from Supabase schema.
+
+            ## Changes
+            - Auto-generated TypeScript types from current database schema
+
+            ## Test plan
+            - [ ] Verify TypeScript compilation succeeds
+            - [ ] Check that type changes match expected schema modifications
+
+            ---
+            This PR was automatically created by the update-db-types workflow.
+          branch: chore/update-db-types
+          delete-branch: true
+          labels: |
+            automated
+            database
