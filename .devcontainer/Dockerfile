@@ -75,7 +75,8 @@ RUN echo "alias gco='git checkout'" >> /home/vscode/.bashrc \
  && echo "alias gad='git add'" >> /home/vscode/.bashrc \
  && echo "alias gcm='git commit -m'" >> /home/vscode/.bashrc \
  && echo "alias gps='git push'" >> /home/vscode/.bashrc \
- && echo "alias gpl='git pull'" >> /home/vscode/.bashrc
+ && echo "alias gpl='git pull'" >> /home/vscode/.bashrc \
+ && echo 'export PATH="/usr/local/script:$PATH"' >> /home/vscode/.bashrc
 
 RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex \
  && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex
@@ -93,7 +94,8 @@ COPY --chown=root:root script/setup-claude.sh /usr/local/bin/setup-claude.sh
 COPY --chown=vscode:vscode script/setup-claude-build.sh /tmp/setup-claude-build.sh
 COPY --chown=vscode:vscode script/lib /tmp/script-lib
 COPY --chown=root:root script/lib /usr/local/script/lib
-RUN chmod +x /usr/local/bin/setup-claude.sh /tmp/setup-claude-build.sh
+COPY --chown=root:root script/*.sh /usr/local/script/
+RUN chmod +x /usr/local/bin/setup-claude.sh /tmp/setup-claude-build.sh /usr/local/script/*.sh
 
 # Install Claude plugins using BuildKit secret or environment variables
 # Build with: DOCKER_BUILDKIT=1 docker build --secret id=claude_credentials,src=$HOME/.claude/.credentials.json .
