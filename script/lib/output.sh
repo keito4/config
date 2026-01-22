@@ -147,3 +147,10 @@ errors::success() { output::success "$@"; }
 errors::require_command() { output::require_command "$@"; }
 errors::require_file() { output::require_file "$@"; }
 errors::require_directory() { output::require_directory "$@"; }
+
+# Bash-compatible short aliases
+info() { output::info "$@"; }
+success() { output::success "$@"; }
+warning() { output::warning "$@"; }
+error() { output::error "$@"; }
+fatal() { output::fatal "$@"; }
