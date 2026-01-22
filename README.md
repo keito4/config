@@ -11,7 +11,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 ## Directory Structure
 
 - `.claude/`: Claude Code configuration directory containing settings, commands, agents, and hooks. User-specific settings like `settings.local.json` are git-ignored while shared configurations are version-controlled.
-- `.codex/`: Contains MCP (Model Context Protocol) server configuration (`config.toml`) for Claude Code integration with external services like AWS, GitHub, Playwright, o3, Supabase, and Vercel.
+- `.codex/`: Contains MCP (Model Context Protocol) server configuration (`config.toml`) for Claude Code integration with external services like AWS, GitHub, Playwright, o3, Linear, n8n, Supabase, and Vercel.
 - `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines.
 - `.github/`: GitHub configuration including workflows for CI/CD, security scanning, and release automation. The `templates/` subdirectory contains reusable workflow templates for unified CI with coverage reporting and monorepo releases with change detection.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.

@@ -19,6 +19,29 @@
         "SEARCH_CONTEXT_SIZE": "medium",
         "REASONING_EFFORT": "medium"
       }
+    },
+    "linear": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mseep/linear-mcp"
+      ],
+      "env": {
+        "LINEAR_API_KEY": "${LINEAR_API_KEY}"
+      }
+    },
+    "n8n": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@leonardsellem/n8n-mcp-server"
+      ],
+      "env": {
+        "N8N_API_URL": "${N8N_API_URL}",
+        "N8N_API_KEY": "${N8N_API_KEY}"
+      }
     }
   }
 }

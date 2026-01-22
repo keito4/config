@@ -17,6 +17,10 @@
       "version": "0.1.8",
       "overridden": false
     },
+    "@mseep/linear-mcp": {
+      "version": "78.0.1",
+      "overridden": false
+    },
     "@openai/codex": {
       "version": "0.88.0",
       "overridden": false
