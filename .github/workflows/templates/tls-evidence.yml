@@ -1,0 +1,145 @@
+# TLS Evidence Capture Workflow
+# Captures TLS certificate and cipher suite evidence for security audits and compliance.
+#
+# Use cases:
+#   - App marketplace submissions (Zoom, Slack, etc.)
+#   - Compliance documentation (SOC2, GDPR)
+#   - Security audits
+#
+# Required repository variables:
+#   - TARGET_HOST: The host to verify (e.g., api.example.com or api.example.com:443)
+#
+# Outputs:
+#   - openssl_tls12.txt: OpenSSL TLS 1.2 handshake output
+#   - openssl_tls13.txt: OpenSSL TLS 1.3 handshake output
+#   - curl_tls12.txt: curl TLS 1.2 verification
+#   - nmap_ciphers.txt: Complete cipher enumeration
+
+name: TLS Evidence Capture
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_host:
+        description: 'Target host to verify (e.g., api.example.com or api.example.com:443)'
+        required: false
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capture-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install nmap
+        run: sudo apt-get update && sudo apt-get install -y nmap
+
+      - name: Prepare target host
+        id: prep
+        env:
+          INPUT_HOST: ${{ inputs.target_host }}
+          VAR_HOST: ${{ vars.TARGET_HOST }}
+        run: |
+          TARGET="${INPUT_HOST:-$VAR_HOST}"
+          if [ -z "$TARGET" ]; then
+            echo "::error::No target host specified. Set TARGET_HOST variable or provide target_host input."
+            exit 1
+          fi
+
+          # Parse host and port
+          if [[ "$TARGET" == *":"* ]]; then
+            HOST_ONLY="${TARGET%:*}"
+            PORT="${TARGET##*:}"
+          else
+            HOST_ONLY="$TARGET"
+            PORT="443"
+          fi
+
+          echo "host_only=${HOST_ONLY}" >> "$GITHUB_OUTPUT"
+          echo "host_port=${HOST_ONLY}:${PORT}" >> "$GITHUB_OUTPUT"
+          echo "port=${PORT}" >> "$GITHUB_OUTPUT"
+          echo "Target: ${HOST_ONLY}:${PORT}"
+
+      - name: OpenSSL TLS 1.2 handshake
+        env:
+          HOST_ONLY: ${{ steps.prep.outputs.host_only }}
+          HOST_PORT: ${{ steps.prep.outputs.host_port }}
+        run: |
+          echo "=== OpenSSL TLS 1.2 Handshake ===" > openssl_tls12.txt
+          echo "Host: ${HOST_PORT}" >> openssl_tls12.txt
+          echo "Date: $(date -u)" >> openssl_tls12.txt
+          echo "" >> openssl_tls12.txt
+          openssl s_client -servername "${HOST_ONLY}" \
+            -connect "${HOST_PORT}" -tls1_2 < /dev/null 2>&1 \
+            | tee -a openssl_tls12.txt || true
+
+      - name: OpenSSL TLS 1.3 handshake
+        env:
+          HOST_ONLY: ${{ steps.prep.outputs.host_only }}
+          HOST_PORT: ${{ steps.prep.outputs.host_port }}
+        run: |
+          echo "=== OpenSSL TLS 1.3 Handshake ===" > openssl_tls13.txt
+          echo "Host: ${HOST_PORT}" >> openssl_tls13.txt
+          echo "Date: $(date -u)" >> openssl_tls13.txt
+          echo "" >> openssl_tls13.txt
+          openssl s_client -servername "${HOST_ONLY}" \
+            -connect "${HOST_PORT}" -tls1_3 < /dev/null 2>&1 \
+            | tee -a openssl_tls13.txt || true
+
+      - name: curl TLS 1.2 verification
+        env:
+          HOST_PORT: ${{ steps.prep.outputs.host_port }}
+        run: |
+          echo "=== curl TLS 1.2 Verification ===" > curl_tls12.txt
+          echo "Host: ${HOST_PORT}" >> curl_tls12.txt
+          echo "Date: $(date -u)" >> curl_tls12.txt
+          echo "" >> curl_tls12.txt
+          curl -v --tlsv1.2 --tls-max 1.2 -I "https://${HOST_PORT}" 2>&1 \
+            | tee -a curl_tls12.txt || true
+
+      - name: Enumerate ciphers via nmap
+        env:
+          HOST_ONLY: ${{ steps.prep.outputs.host_only }}
+          PORT: ${{ steps.prep.outputs.port }}
+        run: |
+          echo "=== nmap Cipher Enumeration ===" > nmap_ciphers.txt
+          echo "Host: ${HOST_ONLY}" >> nmap_ciphers.txt
+          echo "Port: ${PORT}" >> nmap_ciphers.txt
+          echo "Date: $(date -u)" >> nmap_ciphers.txt
+          echo "" >> nmap_ciphers.txt
+          nmap --script ssl-enum-ciphers -p "${PORT}" "${HOST_ONLY}" 2>&1 \
+            | tee -a nmap_ciphers.txt || true
+
+      - name: Check certificate expiry
+        env:
+          HOST_ONLY: ${{ steps.prep.outputs.host_only }}
+          HOST_PORT: ${{ steps.prep.outputs.host_port }}
+        run: |
+          echo "=== Certificate Expiry Check ===" > cert_expiry.txt
+          echo "Host: ${HOST_PORT}" >> cert_expiry.txt
+          echo "Date: $(date -u)" >> cert_expiry.txt
+          echo "" >> cert_expiry.txt
+          echo | openssl s_client -servername "${HOST_ONLY}" \
+            -connect "${HOST_PORT}" 2>/dev/null \
+            | openssl x509 -noout -dates 2>&1 \
+            | tee -a cert_expiry.txt || true
+
+      - name: Upload TLS Evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: tls-evidence-${{ github.run_number }}
+          path: |
+            openssl_tls12.txt
+            openssl_tls13.txt
+            curl_tls12.txt
+            nmap_ciphers.txt
+            cert_expiry.txt
+          retention-days: 90
