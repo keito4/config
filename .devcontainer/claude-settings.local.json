@@ -329,7 +329,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/block_git_no_verify.py"
+            "command": "python3 /home/vscode/.claude/hooks/block_git_no_verify.py"
           }
         ]
       },
@@ -338,7 +338,27 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/pre_git_quality_gates.py"
+            "command": "python3 /home/vscode/.claude/hooks/pre_git_quality_gates.py"
+          }
+        ]
+      },
+      {
+        "matcher": "tool_name == 'ExitPlanMode'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/vscode/.claude/hooks/pre_exit_plan_ai_review.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/vscode/.claude/hooks/post_pr_ai_review.py"
           }
         ]
       }
