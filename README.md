@@ -640,9 +640,9 @@ The repository includes a complete DevContainer setup (`.devcontainer/`) that pr
 - Integrated Claude Code configuration with specialized agents and commands
 - Bell notification system for development workflow events
 
-**Latest Version**: `ghcr.io/keito4/config-base:1.45.3`
+**Latest Version**: `ghcr.io/keito4/config-base:1.48.0`
 
-**Pre-installed Plugins** (v1.45.3):
+**Pre-installed Plugins** (v1.48.0):
 
 - Official plugins: `commit-commands`, `hookify`, `plugin-dev`, `typescript-lsp`, `code-review`
 - Workflow plugins: `code-refactoring`, `kubernetes-operations`, `javascript-typescript`, `backend-development`, `full-stack-orchestration`, `database-design`, `database-migrations`

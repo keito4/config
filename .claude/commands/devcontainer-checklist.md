@@ -350,4 +350,4 @@ npm run format:check && npm run lint && npm test
 ---
 
 **最終更新**: 2026-01-04
-**対象バージョン**: Claude Code 2.0.76+, DevContainer config-base 1.43.0+
+**対象バージョン**: Claude Code 2.0.76+, DevContainer config-base 1.48.0+
