@@ -6,11 +6,11 @@
       "overridden": false
     },
     "@commitlint/cli": {
-      "version": "20.3.0",
+      "version": "20.3.1",
       "overridden": false
     },
     "@commitlint/config-conventional": {
-      "version": "20.3.0",
+      "version": "20.3.1",
       "overridden": false
     },
     "@leonardsellem/n8n-mcp-server": {
@@ -18,7 +18,7 @@
       "overridden": false
     },
     "@openai/codex": {
-      "version": "0.79.0",
+      "version": "0.88.0",
       "overridden": false
     },
     "bash-language-server": {
@@ -54,11 +54,11 @@
       "overridden": false
     },
     "n8n": {
-      "version": "2.2.4",
+      "version": "2.4.4",
       "overridden": false
     },
     "npm": {
-      "version": "11.7.0",
+      "version": "11.8.0",
       "overridden": false
     },
     "pm2": {
@@ -66,7 +66,7 @@
       "overridden": false
     },
     "vercel": {
-      "version": "50.3.0",
+      "version": "50.4.9",
       "overridden": false
     }
   }
