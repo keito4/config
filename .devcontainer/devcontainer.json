@@ -27,6 +27,9 @@
     "ghcr.io/schlich/devcontainer-features/playwright:0": {},
     "ghcr.io/devcontainers-extra/features/supabase-cli": {
       "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "latest"
     }
   },
   "overrideCommand": true,
