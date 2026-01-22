@@ -1,0 +1,16 @@
+{
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+  ],
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "*.ts": "${capture}.js",
+    "*.tsx": "${capture}.js",
+    "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, .nvmrc",
+    ".eslintrc.*": ".eslintignore",
+    ".prettierrc.*": ".prettierignore",
+    "tsconfig.json": "tsconfig.*.json",
+    "next.config.*": "next-env.d.ts"
+  }
+}
