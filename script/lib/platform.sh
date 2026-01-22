@@ -37,10 +37,6 @@ platform::is_darwin() {
     [[ "$PLATFORM_OS" = "darwin" ]]
 }
 
-platform::is_windows() {
-    [[ "$PLATFORM_OS" = "windows" ]]
-}
-
 platform::is_devcontainer() {
     [[ -f /.dockerenv || -n "${REMOTE_CONTAINERS:-}" || -n "${CODESPACES:-}" ]]
 }
