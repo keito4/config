@@ -1,0 +1,119 @@
+# OWASP ZAP Baseline DAST Workflow
+# Dynamic Application Security Testing for web applications.
+#
+# Required repository variables:
+#   - TARGET_URL: The URL to scan (e.g., https://staging.example.com)
+#
+# Optional inputs for manual dispatch:
+#   - target_url: Override TARGET_URL for this run
+#   - login_url: URL for authenticated scanning
+#   - username/password: Credentials for authenticated scanning
+#
+# Setup:
+#   1. Create `.zap/rules.tsv` in your repository to customize alert rules
+#   2. Set TARGET_URL repository variable or use workflow_dispatch inputs
+
+name: ZAP Baseline Security Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'Target URL to scan (overrides TARGET_URL variable)'
+        required: false
+        type: string
+      login_url:
+        description: 'Login URL for authenticated scanning (optional)'
+        required: false
+        type: string
+      username:
+        description: 'Username for authenticated scanning (optional)'
+        required: false
+        type: string
+      password:
+        description: 'Password for authenticated scanning (optional)'
+        required: false
+        type: string
+  schedule:
+    # Run weekly on Monday at 03:00 UTC
+    - cron: '0 3 * * 1'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zap-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine target URL
+        id: target
+        env:
+          INPUT_URL: ${{ inputs.target_url }}
+          VAR_URL: ${{ vars.TARGET_URL }}
+        run: |
+          if [ -n "${INPUT_URL}" ]; then
+            echo "url=${INPUT_URL}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${VAR_URL}" ]; then
+            echo "url=${VAR_URL}" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::No target URL specified. Set TARGET_URL variable or provide target_url input."
+            exit 1
+          fi
+
+      - name: Create default rules file if not exists
+        run: |
+          mkdir -p .zap
+          if [ ! -f .zap/rules.tsv ]; then
+            printf '%s\n' \
+              '# ZAP Baseline Rules Configuration' \
+              '# Format: <rule_id>  <action>  <description>' \
+              '# Actions: IGNORE, WARN, FAIL' \
+              '# Example: 10038  IGNORE  Content Security Policy (CSP) Header Not Set' \
+              > .zap/rules.tsv
+          fi
+
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: ${{ steps.target.outputs.url }}
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+        continue-on-error: true
+
+      - name: Fail on high risk alerts
+        run: |
+          if [ -f report_json.json ]; then
+            if jq -e '.site[].alerts[] | select(.riskcode | tonumber >= 3)' report_json.json > /dev/null 2>&1; then
+              echo '::error::High risk security alerts found. See uploaded artifact for details.'
+              jq '.site[].alerts[] | select(.riskcode | tonumber >= 3) | {alert: .alert, risk: .riskdesc, count: .count}' report_json.json
+              exit 1
+            else
+              echo 'No high risk alerts found.'
+            fi
+          else
+            echo '::warning::No report file found.'
+          fi
+
+      - name: Upload HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report-html
+          path: report_html.html
+          retention-days: 30
+
+      - name: Upload JSON Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report-json
+          path: report_json.json
+          retention-days: 30
