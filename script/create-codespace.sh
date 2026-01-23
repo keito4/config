@@ -173,7 +173,14 @@ fi
 
 # マシンサイズのバリデーション
 valid_machines=("basicLinux32gb" "standardLinux32gb" "premiumLinux" "largePremiumLinux")
-if [[ ! " ${valid_machines[*]} " =~ " ${MACHINE} " ]]; then
+is_valid_machine=false
+for m in "${valid_machines[@]}"; do
+  if [[ "${MACHINE}" == "$m" ]]; then
+    is_valid_machine=true
+    break
+  fi
+done
+if [[ "${is_valid_machine}" == false ]]; then
   echo -e "${RED}Error: Invalid machine size '${MACHINE}'${NC}" >&2
   echo "Valid options: ${valid_machines[*]}"
   exit 1
