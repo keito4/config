@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+  "_comment": "config-base イメージに追加できるオプショナルな DevContainer Features",
+  "features": {
+    "python": {
+      "feature": "ghcr.io/devcontainers/features/python:1",
+      "options": {
+        "version": "latest"
+      },
+      "description": "Python 開発環境（pip, venv 含む）。注意: config-base には既に python3 がインストール済みですが、この feature は追加の Python バージョン管理を提供します。"
+    },
+    "ruby": {
+      "feature": "ghcr.io/devcontainers/features/ruby:1",
+      "options": {
+        "version": "latest"
+      },
+      "description": "Ruby 開発環境（rbenv, bundler 含む）"
+    },
+    "go": {
+      "feature": "ghcr.io/devcontainers/features/go:1",
+      "options": {
+        "version": "latest"
+      },
+      "description": "Go 開発環境"
+    },
+    "java": {
+      "feature": "ghcr.io/devcontainers/features/java:1",
+      "options": {
+        "version": "lts"
+      },
+      "description": "Java 開発環境（OpenJDK）"
+    },
+    "dotnet": {
+      "feature": "ghcr.io/devcontainers/features/dotnet:2",
+      "options": {
+        "version": "latest"
+      },
+      "description": ".NET 開発環境"
+    }
+  }
+}
