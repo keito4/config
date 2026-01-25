@@ -7,6 +7,7 @@ This directory contains Visual Studio Code configuration files and scripts for m
 - `extensions.txt`: List of VS Code extensions to be installed
 - `../vscode/extensions.json`: VS Code workspace extension recommendations
 - `../vscode/settings.json`: VS Code workspace settings
+- `templates/`: Project-specific settings templates including Tailwind CSS + CVA IntelliSense configuration. See [templates/README.md](templates/README.md) for available templates and usage instructions.
 
 ## DevContainer Integration
 
