@@ -18,6 +18,7 @@ The DevContainer configuration includes:
 - `Dockerfile`: Custom container image with development tools
 - `claude-settings.json`: Claude Code configuration for AI-assisted development
 - `VERSIONING.md`: Semantic versioning guidelines for container releases
+- `templates/`: Optional DevContainer features templates for additional language support (Python, Ruby, Go, Java, .NET). See [templates/README.md](templates/README.md) for usage instructions.
 
 ## Quick Start
 
