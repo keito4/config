@@ -1,6 +1,6 @@
 {
   "name": "Config Base Container",
-  "image": "ghcr.io/keito4/config-base:1.48.0",
+  "image": "ghcr.io/keito4/config-base:1.54.0",
   "features": {
     "ghcr.io/devcontainers-extra/features/homebrew-package:1": {},
     "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
@@ -31,17 +31,14 @@
   },
   "overrideCommand": true,
   "updateRemoteUserUID": false,
-  "initializeCommand": "mkdir -p ~/.claude ~/.cursor",
   "containerEnv": {
     "CLAUDE_ENV_FILE": "/home/vscode/.devcontainer.env"
   },
   "mounts": [
-    "source=${localEnv:HOME}/.devcontainer.env,target=/home/vscode/.devcontainer.env,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.cursor,target=/home/vscode/.cursor,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.codex,target=/home/vscode/.codex,type=bind,consistency=cached",
-    "source=${localWorkspaceFolderBasename}-next-node_modules,target=${containerWorkspaceFolder}/next/node_modules,type=volume"
+    "source=${localEnv:HOME}/.codex,target=/home/vscode/.codex,type=bind,consistency=cached"
   ],
   "customizations": {
     "vscode": {
@@ -50,7 +47,5 @@
         "npm.packageManager": "pnpm"
       }
     }
-  },
-  "postCreateCommand": "bash script/setup-env.sh && bash script/setup-mcp.sh && sudo chown -R vscode:vscode /workspaces/config && npm ci && npm run prepare && cp -r /tmp/.husky /workspaces/config/ && cp git/commitlint.config.js commitlint.config.js && bash script/sync-claude-commands.sh && bash script/setup-lsp.sh && /usr/local/bin/setup-claude.sh",
-  "postStartCommand": "bash script/sync-claude-commands.sh"
+  }
 }

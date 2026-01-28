@@ -52,6 +52,8 @@ credentials/secrets/
 .devcontainer.env
 .zsh/configs/pre/.env.secret
 
+secret.json
+
 # Test artifacts and libraries
 test/bats-libs/
 test/**/*.log
