@@ -1,5 +1,5 @@
 ---
-description: Sync Claude settings from Elu-co-jp projects to DevContainer configuration
+description: Sync Claude & Codex settings from Elu-co-jp projects to DevContainer configuration
 allowed-tools: Read, Write, Edit, Bash(find:*), Bash(ls:*), Bash(git:*), Bash(gh:*)
 argument-hint: [--create-pr] [--base-path PATH] [--claude-only] [--codex-only]
 ---
