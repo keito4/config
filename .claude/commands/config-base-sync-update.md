@@ -145,7 +145,7 @@ Read the reference configuration from this repository:
 - Read `/Users/keito4/develop/github.com/keito4/config/.devcontainer/devcontainer.json`
 - Read `/Users/keito4/develop/github.com/keito4/config/.devcontainer/codex-config.json`
 - Read `/Users/keito4/develop/github.com/keito4/config/.devcontainer/claude-settings.json`
-- Read `/Users/keito4/develop/github.com/keito4/config/.codex/devcontainer-recommendations.md`
+- Read `/Users/keito4/develop/github.com/keito4/config/.claude/devcontainer-recommendations.md`
 
 Extract recommended configuration based on `updateScope`:
 
