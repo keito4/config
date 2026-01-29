@@ -63,5 +63,13 @@ report.log
 .claude/settings.local.json
 .claude/plugins/known_marketplaces.json
 
+# Agent skills (installed via npx skills add)
+.agents/skills/
+.claude/skills/vercel-*
+.claude/skills/web-design-*
+.codex/skills/
+.cursor/skills/
+.github/skills/
+
 # MCP configuration
 .mcp.json
