@@ -1,9 +1,25 @@
+model = "gpt-5.2-codex"
+sandbox_mode = "workspace-write"
+[sandbox_workspace_write]
+network_access = true
 [features]
 rmcp_client = true
+web_search_request = true
 
 [mcp_servers.aws-docs]
 command = "uvx"
 args = ["awslabs.aws-documentation-mcp-server@latest"]
+
+[mcp_servers.aws-knowledge]
+url = "https://knowledge-mcp.global.api.aws"
+
+[mcp_servers.chrome-devtools]
+command = "npx"
+args = ["chrome-devtools-mcp@latest"]
+
+[mcp_servers.next-devtools]
+command = "npx"
+args = ["-y", "next-devtools-mcp@latest"]
 
 [mcp_servers.playwright]
 command = "npx"
@@ -15,7 +31,7 @@ args = ["o3-search-mcp"]
 env = { OPENAI_API_KEY = "${OPENAI_API_KEY}", SEARCH_CONTEXT_SIZE = "medium", REASONING_EFFORT = "medium" }
 
 [mcp_servers.supabase]
-url = "https://mcp.supabase.com/mcp"
+url = "https://mcp.supabase.com/mcp?project_ref=zjfngnetdzgofqmteqja"
 
 [mcp_servers.supabase.http_headers]
 Authorization = "Bearer ${SUPABASE_MCP_TOKEN}"
@@ -40,3 +56,40 @@ trust_level = "trusted"
 
 [projects."/Users/keito4/develop/github.com/keito4/config"]
 trust_level = "trusted"
+
+[projects."/Users/keito4/develop/github.com/Elu-co-jp/platform-infra"]
+trust_level = "trusted"
+
+[projects."/Users/keito4/develop/github.com/Elu-co-jp/opt_ai_manager"]
+trust_level = "trusted"
+
+[projects."/workspaces/management_tools"]
+trust_level = "trusted"
+
+[projects."/workspaces/cloud_provisioning"]
+trust_level = "trusted"
+
+[projects."/Users/keito4/develop/github.com/Elu-co-jp/cloud_provisioning"]
+trust_level = "trusted"
+
+[projects."/workspaces/opt_ai_manager"]
+trust_level = "trusted"
+
+[projects."/workspaces/job_description"]
+trust_level = "trusted"
+
+[projects."/workspaces/pulse_survey"]
+trust_level = "trusted"
+
+[projects."/Users/keito4/develop/github.com/Elu-co-jp/job_description"]
+trust_level = "trusted"
+
+[projects."/workspaces/raycast-extensions"]
+trust_level = "trusted"
+
+[notice]
+hide_gpt5_1_migration_prompt = true
+"hide_gpt-5.1-codex-max_migration_prompt" = true
+
+[notice.model_migrations]
+"gpt-5.1-codex-max" = "gpt-5.2-codex"
