@@ -358,6 +358,15 @@
         "hooks": [
           {
             "type": "command",
+            "command": "python3 /home/vscode/.claude/hooks/post_git_push_ci.py"
+          }
+        ]
+      },
+      {
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
             "command": "python3 /home/vscode/.claude/hooks/post_pr_ai_review.py"
           }
         ]
