@@ -31,12 +31,3 @@ url = "https://api.githubcopilot.com/mcp/"
 
 [mcp_servers.github.http_headers]
 Authorization = "Bearer ${GITHUB_COPILOT_MCP_TOKEN}"
-
-[projects."/workspaces/cyber_ace_1on1"]
-trust_level = "trusted"
-
-[projects."/workspaces/n8n_custom_node"]
-trust_level = "trusted"
-
-[projects."/Users/keito4/develop/github.com/keito4/config"]
-trust_level = "trusted"
