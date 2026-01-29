@@ -91,8 +91,8 @@ RUN echo "alias gco='git checkout'" >> /home/vscode/.bashrc \
  && echo "alias gpl='git pull'" >> /home/vscode/.bashrc \
  && echo 'export PATH="/usr/local/script:$PATH"' >> /home/vscode/.bashrc
 
-RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex \
- && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex
+RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex /home/vscode/.agents \
+ && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex /home/vscode/.agents
 
 COPY --chown=vscode:vscode .devcontainer/claude-settings.json /home/vscode/.claude/settings.json
 COPY --chown=vscode:vscode .devcontainer/claude-settings.local.json /home/vscode/.claude/settings.local.json
@@ -100,15 +100,27 @@ COPY --chown=vscode:vscode .devcontainer/codex-config.json /home/vscode/.codex/c
 COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
 COPY --chown=vscode:vscode .claude/agents /home/vscode/.claude/agents
 COPY --chown=vscode:vscode .claude/hooks /home/vscode/.claude/hooks
+COPY --chown=vscode:vscode .claude/skills/skills.txt /home/vscode/.claude/skills/skills.txt
 COPY --chown=vscode:vscode .claude/plugins/plugins.txt /home/vscode/.claude/plugins/plugins.txt
 COPY --chown=vscode:vscode .claude/plugins/known_marketplaces.json.template /home/vscode/.claude/plugins/known_marketplaces.json.template
 COPY --chown=vscode:vscode script/install-claude-plugins.sh /tmp/install-claude-plugins.sh
+COPY --chown=vscode:vscode script/install-skills.sh /tmp/install-skills.sh
 COPY --chown=root:root script/setup-claude.sh /usr/local/bin/setup-claude.sh
 COPY --chown=vscode:vscode script/setup-claude-build.sh /tmp/setup-claude-build.sh
 COPY --chown=vscode:vscode script/lib /tmp/script-lib
 COPY --chown=root:root script/lib /usr/local/script/lib
 COPY --chown=root:root script/*.sh /usr/local/script/
-RUN chmod +x /usr/local/bin/setup-claude.sh /tmp/setup-claude-build.sh /usr/local/script/*.sh
+RUN chmod +x /usr/local/bin/setup-claude.sh /tmp/setup-claude-build.sh /tmp/install-skills.sh /usr/local/script/*.sh
+
+# Install skills from skills.txt using npx skills add
+# Skills are installed to ~/.agents/skills/ with symlinks in ~/.claude/skills/
+USER vscode
+RUN env HOME=/home/vscode /tmp/install-skills.sh /home/vscode/.claude/skills/skills.txt || ( \
+        echo "[WARN] スキルのインストールに失敗しました" && \
+        echo "[INFO] コンテナ起動後に手動でインストールしてください: npx skills add <repo>" \
+    )
+USER root
+RUN chown -R vscode:vscode /home/vscode/.agents /home/vscode/.claude/skills
 
 # Install Claude plugins using BuildKit secret or environment variables
 # Build with: DOCKER_BUILDKIT=1 docker build --secret id=claude_credentials,src=$HOME/.claude/.credentials.json .

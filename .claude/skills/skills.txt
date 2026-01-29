@@ -1,0 +1,8 @@
+# Claude Code Skills List for DevContainer
+# このファイルに記載されたスキルは devcontainer ビルド時にインストールされます
+# 形式: GitHub リポジトリ（owner/repo）
+# 行頭 # はコメント
+
+# === Vercel Agent Skills ===
+# React/Next.js 開発のベストプラクティス
+vercel-labs/agent-skills
