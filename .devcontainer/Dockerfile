@@ -91,8 +91,8 @@ RUN echo "alias gco='git checkout'" >> /home/vscode/.bashrc \
  && echo "alias gpl='git pull'" >> /home/vscode/.bashrc \
  && echo 'export PATH="/usr/local/script:$PATH"' >> /home/vscode/.bashrc
 
-RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex \
- && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex
+RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex /home/vscode/.agents \
+ && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex /home/vscode/.agents
 
 COPY --chown=vscode:vscode .devcontainer/claude-settings.json /home/vscode/.claude/settings.json
 COPY --chown=vscode:vscode .devcontainer/claude-settings.local.json /home/vscode/.claude/settings.local.json
@@ -100,6 +100,7 @@ COPY --chown=vscode:vscode .devcontainer/codex-config.json /home/vscode/.codex/c
 COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
 COPY --chown=vscode:vscode .claude/agents /home/vscode/.claude/agents
 COPY --chown=vscode:vscode .claude/hooks /home/vscode/.claude/hooks
+COPY --chown=vscode:vscode .agents/skills /home/vscode/.agents/skills
 COPY --chown=vscode:vscode .claude/plugins/plugins.txt /home/vscode/.claude/plugins/plugins.txt
 COPY --chown=vscode:vscode .claude/plugins/known_marketplaces.json.template /home/vscode/.claude/plugins/known_marketplaces.json.template
 COPY --chown=vscode:vscode script/install-claude-plugins.sh /tmp/install-claude-plugins.sh
