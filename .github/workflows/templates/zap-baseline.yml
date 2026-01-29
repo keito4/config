@@ -51,7 +51,7 @@ jobs:
       security-events: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       - name: Determine target URL
         id: target
@@ -104,7 +104,7 @@ jobs:
 
       - name: Upload HTML Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: zap-report-html
           path: report_html.html
@@ -112,7 +112,7 @@ jobs:
 
       - name: Upload JSON Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: zap-report-json
           path: report_json.json
