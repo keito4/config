@@ -156,7 +156,46 @@ result = subprocess.run(
 )
 ```
 
-### 3. `post_pr_ai_review.py`
+### 3. `post_git_push_ci.py`
+
+**目的**: git push後にGitHub Actions CIの状態を監視し、結果を報告
+
+**トリガー**: `PostToolUse(Bash)` で `git push` の成功を検出
+
+**動作**:
+
+- `git push` 成功後に自動実行
+- GitHub Actions ワークフローの起動を確認
+- CIの実行状態を監視（最大5分）
+- 成功/失敗の結果を報告
+- ブロックはしない（結果を表示のみ）
+
+**前提条件**:
+
+- GitHub CLI (`gh`) がインストール済み
+- GitHub Actions ワークフローが設定済み
+
+**設定例**:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/post_git_push_ci.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 4. `post_pr_ai_review.py`
 
 **目的**: PR作成後にAI（Codex + Gemini）による自動コードレビューを実行
 
@@ -196,7 +235,7 @@ result = subprocess.run(
 }
 ```
 
-### 4. `pre_exit_plan_ai_review.py`
+### 5. `pre_exit_plan_ai_review.py`
 
 **目的**: プラン作成後、ExitPlanMode実行前にAI（Codex + Gemini）によるプランレビューを実行
 
