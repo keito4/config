@@ -309,7 +309,6 @@
       "Bash(supervisorctl stop:*)",
       "Bash(supervisord:*)",
       "Bash(act:*)",
-      "Bash(afplay:*)",
       "Bash(brew list:*)",
       "Bash(similarity-ts:*)",
       "Bash(shellcheck:*)",
