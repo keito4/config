@@ -48,45 +48,6 @@ url = "https://api.githubcopilot.com/mcp/"
 [mcp_servers.github.http_headers]
 Authorization = "Bearer ${GITHUB_COPILOT_MCP_TOKEN}"
 
-[projects."/workspaces/cyber_ace_1on1"]
-trust_level = "trusted"
-
-[projects."/workspaces/n8n_custom_node"]
-trust_level = "trusted"
-
-[projects."/Users/keito4/develop/github.com/keito4/config"]
-trust_level = "trusted"
-
-[projects."/Users/keito4/develop/github.com/Elu-co-jp/platform-infra"]
-trust_level = "trusted"
-
-[projects."/Users/keito4/develop/github.com/Elu-co-jp/opt_ai_manager"]
-trust_level = "trusted"
-
-[projects."/workspaces/management_tools"]
-trust_level = "trusted"
-
-[projects."/workspaces/cloud_provisioning"]
-trust_level = "trusted"
-
-[projects."/Users/keito4/develop/github.com/Elu-co-jp/cloud_provisioning"]
-trust_level = "trusted"
-
-[projects."/workspaces/opt_ai_manager"]
-trust_level = "trusted"
-
-[projects."/workspaces/job_description"]
-trust_level = "trusted"
-
-[projects."/workspaces/pulse_survey"]
-trust_level = "trusted"
-
-[projects."/Users/keito4/develop/github.com/Elu-co-jp/job_description"]
-trust_level = "trusted"
-
-[projects."/workspaces/raycast-extensions"]
-trust_level = "trusted"
-
 [notice]
 hide_gpt5_1_migration_prompt = true
 "hide_gpt-5.1-codex-max_migration_prompt" = true
