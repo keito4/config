@@ -1,5 +1,3 @@
-notify = ["bash", "-lc", "afplay /System/Library/Sounds/Glass.aiff"]
-
 [features]
 rmcp_client = true
 
