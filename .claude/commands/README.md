@@ -222,25 +222,6 @@ This directory contains pre-configured commands that provide automated workflows
 /container-health --verbose
 ```
 
-#### `setup-new-repo.md`
-
-**Purpose**: Bootstrap a new repository with this configuration
-**Features**:
-
-- DevContainer setup
-- Git configuration (commitlint, Husky)
-- GitHub Actions workflows
-- Development tools (ESLint, Prettier, Jest)
-- Documentation templates
-
-**Usage**:
-
-```
-/setup-new-repo /path/to/new/repo
-/setup-new-repo --minimal
-/setup-new-repo --no-devcontainer
-```
-
 ### Repository Management
 
 #### `branch-cleanup.md`
