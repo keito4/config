@@ -100,16 +100,26 @@ COPY --chown=vscode:vscode .devcontainer/codex-config.json /home/vscode/.codex/c
 COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
 COPY --chown=vscode:vscode .claude/agents /home/vscode/.claude/agents
 COPY --chown=vscode:vscode .claude/hooks /home/vscode/.claude/hooks
+COPY --chown=vscode:vscode .claude/skills/skills.txt /home/vscode/.claude/skills/skills.txt
 COPY --chown=vscode:vscode .agents/skills /home/vscode/.agents/skills
 COPY --chown=vscode:vscode .claude/plugins/plugins.txt /home/vscode/.claude/plugins/plugins.txt
 COPY --chown=vscode:vscode .claude/plugins/known_marketplaces.json.template /home/vscode/.claude/plugins/known_marketplaces.json.template
 COPY --chown=vscode:vscode script/install-claude-plugins.sh /tmp/install-claude-plugins.sh
+COPY --chown=vscode:vscode script/install-skills.sh /tmp/install-skills.sh
 COPY --chown=root:root script/setup-claude.sh /usr/local/bin/setup-claude.sh
 COPY --chown=vscode:vscode script/setup-claude-build.sh /tmp/setup-claude-build.sh
 COPY --chown=vscode:vscode script/lib /tmp/script-lib
 COPY --chown=root:root script/lib /usr/local/script/lib
 COPY --chown=root:root script/*.sh /usr/local/script/
-RUN chmod +x /usr/local/bin/setup-claude.sh /tmp/setup-claude-build.sh /usr/local/script/*.sh
+RUN chmod +x /usr/local/bin/setup-claude.sh /tmp/setup-claude-build.sh /tmp/install-skills.sh /usr/local/script/*.sh
+
+# Create symlinks from .claude/skills to .agents/skills for each installed skill
+RUN mkdir -p /home/vscode/.claude/skills \
+ && for skill_dir in /home/vscode/.agents/skills/*/; do \
+      skill_name=$(basename "$skill_dir"); \
+      ln -sf "../../.agents/skills/${skill_name}" "/home/vscode/.claude/skills/${skill_name}"; \
+    done \
+ && chown -R vscode:vscode /home/vscode/.claude/skills
 
 # Install Claude plugins using BuildKit secret or environment variables
 # Build with: DOCKER_BUILDKIT=1 docker build --secret id=claude_credentials,src=$HOME/.claude/.credentials.json .
