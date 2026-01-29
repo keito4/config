@@ -1,9 +1,25 @@
+model = "gpt-5.2-codex"
+sandbox_mode = "workspace-write"
+[sandbox_workspace_write]
+network_access = true
 [features]
 rmcp_client = true
+web_search_request = true
 
 [mcp_servers.aws-docs]
 command = "uvx"
 args = ["awslabs.aws-documentation-mcp-server@latest"]
+
+[mcp_servers.aws-knowledge]
+url = "https://knowledge-mcp.global.api.aws"
+
+[mcp_servers.chrome-devtools]
+command = "npx"
+args = ["chrome-devtools-mcp@latest"]
+
+[mcp_servers.next-devtools]
+command = "npx"
+args = ["-y", "next-devtools-mcp@latest"]
 
 [mcp_servers.playwright]
 command = "npx"
@@ -32,11 +48,9 @@ url = "https://api.githubcopilot.com/mcp/"
 [mcp_servers.github.http_headers]
 Authorization = "Bearer ${GITHUB_COPILOT_MCP_TOKEN}"
 
-[projects."/workspaces/cyber_ace_1on1"]
-trust_level = "trusted"
+[notice]
+hide_gpt5_1_migration_prompt = true
+"hide_gpt-5.1-codex-max_migration_prompt" = true
 
-[projects."/workspaces/n8n_custom_node"]
-trust_level = "trusted"
-
-[projects."/Users/keito4/develop/github.com/keito4/config"]
-trust_level = "trusted"
+[notice.model_migrations]
+"gpt-5.1-codex-max" = "gpt-5.2-codex"
