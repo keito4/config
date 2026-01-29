@@ -122,6 +122,8 @@ For detailed security guidelines and troubleshooting, see [SECURITY.md](SECURITY
 
 The `.claude/` directory contains Claude Code configuration that is partially version-controlled:
 
+> Note: This section is an overview. For authoritative development standards and AI workflow details, see `CLAUDE.md` and `AGENTS.md`.
+
 ### Version-Controlled Files
 
 - `settings.json` - Shared permissions, environment variables, and hooks

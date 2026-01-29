@@ -196,7 +196,7 @@ For npm registry instead of GitHub Packages:
 
 ```yaml
 - name: Setup Node.js
-  uses: actions/setup-node@v4
+  uses: actions/setup-node@v6.1.0
   with:
     node-version: '20'
     cache: 'npm'
@@ -243,7 +243,7 @@ jobs:
       code: ${{ steps.filter.outputs.code }}
       docs: ${{ steps.filter.outputs.docs }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
       - uses: dorny/paths-filter@v3
         id: filter
         with:

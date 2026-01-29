@@ -42,7 +42,12 @@
   ],
   "customizations": {
     "vscode": {
-      "extensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint", "mblode.pretty-formatter"],
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "mblode.pretty-formatter",
+        "SanjulaGanepola.github-local-actions"
+      ],
       "settings": {
         "npm.packageManager": "pnpm"
       }

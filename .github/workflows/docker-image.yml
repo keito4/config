@@ -41,13 +41,13 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v6.1.0
         with:
-          node-version: '22'
+          node-version-file: '.node-version'
 
       - name: Determine manual release version
         id: manual_release
@@ -181,7 +181,7 @@ jobs:
         run: |
           docker run --rm -v "$PWD":/workspace -w /workspace ghcr.io/${{ github.repository_owner }}/config-base:latest bash -lc '{ brew --version; terraform --version; jq --version; } > devcontainer-info.txt'
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v6.0.0
         if: steps.release.outputs.skip_release != 'true'
         with:
           name: devcontainer-info

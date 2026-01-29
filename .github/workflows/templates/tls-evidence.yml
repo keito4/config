@@ -37,7 +37,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       - name: Install nmap
         run: sudo apt-get update && sudo apt-get install -y nmap
@@ -133,7 +133,7 @@ jobs:
             | tee -a cert_expiry.txt || true
 
       - name: Upload TLS Evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: tls-evidence-${{ github.run_number }}
           path: |

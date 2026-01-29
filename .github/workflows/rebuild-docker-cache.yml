@@ -23,13 +23,13 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v6.1.0
         with:
-          node-version: '22'
+          node-version-file: '.node-version'
 
       - name: Log rebuild reason
         env:

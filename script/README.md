@@ -103,6 +103,17 @@ Add to `package.json`:
 - ✅ Clear error messages with fix commands
 - ✅ Lightweight (simple bash script, no dependencies)
 
+## ShellCheck Coverage
+
+`npm run shellcheck` intentionally excludes a small set of scripts that rely on Zsh-specific features or dynamic sourcing that ShellCheck cannot reliably analyze:
+
+- `script/import.sh` (Zsh-only)
+- `script/export.sh` (Zsh-only)
+- `script/credentials.sh` (dynamic credential providers)
+- `script/brew-deps.sh` (dynamic Homebrew metadata)
+
+If these scripts are refactored toward POSIX/Bash compatibility, they should be re-included in the ShellCheck target list.
+
 ## Configuration Management Scripts
 
 ### export.sh
