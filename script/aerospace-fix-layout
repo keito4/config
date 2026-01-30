@@ -1,0 +1,65 @@
+#!/bin/bash
+#
+# AeroSpace Layout Restoration Script
+# =====================================
+#
+# Purpose:
+#   Restore workspace layouts after reconnecting displays to fix layout disruptions.
+#
+# Usage:
+#   aerospace-fix-layout
+#
+#   Or if alias is configured in ~/.zshrc:
+#   aerospace-fix
+#
+# What it does:
+#   1. Reloads AeroSpace configuration (~/.aerospace.toml)
+#   2. Restores all workspaces with windows to vertical tile layout
+#
+# When to use:
+#   - After connecting/disconnecting external displays
+#   - When workspace layouts become disorganized
+#   - After AeroSpace crashes or restarts
+#
+# Prerequisites:
+#   - AeroSpace v0.20.0+ must be installed
+#   - ~/.aerospace.toml must be configured
+#
+# Configuration:
+#   Add to ~/.zshrc for quick access:
+#   alias aerospace-fix='~/develop/github.com/keito4/config/script/aerospace-fix-layout'
+#
+# Troubleshooting:
+#   - If layouts still don't fix, manually use: Alt+Shift+; then press 'r'
+#   - Check AeroSpace is running: aerospace --version
+#   - Verify config is valid: aerospace reload-config
+#
+
+set -euo pipefail
+
+echo "🔧 全ワークスペースのレイアウトを復元中..."
+
+# Reload configuration
+echo "  → 設定をリロード..."
+aerospace reload-config
+sleep 0.5
+
+# Get workspaces with windows
+mapfile -t workspaces < <(aerospace list-windows --all --format '%{workspace}' 2>/dev/null | sort -u)
+
+if [[ ${#workspaces[@]} -eq 0 ]]; then
+  echo "  ⚠️  ウィンドウのあるワークスペースが見つかりません"
+  exit 0
+fi
+
+echo "  → 対象ワークスペース: ${workspaces[*]}"
+echo ""
+
+for ws in "${workspaces[@]}"; do
+  echo "  → ワークスペース '$ws' を縦タイルに..."
+  aerospace flatten-workspace-tree --workspace "$ws" 2>/dev/null || true
+  aerospace layout v_tiles --workspace "$ws" 2>/dev/null || true
+done
+
+echo ""
+echo "✅ 全ワークスペースの復元完了!"
