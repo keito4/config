@@ -6,3 +6,15 @@
 # === Vercel Agent Skills ===
 # React/Next.js 開発のベストプラクティス
 vercel-labs/agent-skills
+
+# === Supabase Agent Skills ===
+# Supabase 開発のベストプラクティス
+supabase/agent-skills
+
+# === Vercel Skills (find-skills) ===
+# スキル検索・発見ツール
+vercel-labs/skills
+
+# === Vercel Agent Browser ===
+# ブラウザ自動化（テスト、フォーム、スクリーンショット、データ抽出）
+vercel-labs/agent-browser
