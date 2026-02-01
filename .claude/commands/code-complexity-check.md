@@ -65,11 +65,11 @@ This command analyzes code complexity metrics to identify complex code that may 
    Nesting: 5 levels
    ⚠️ Recommendation: Extract validation logic
 
-3. script/setup-new-repo.sh:copy_configuration()
+3. script/container-health.sh:check_container_status()
    Complexity: 11
    Length: 95 lines
    Nesting: 3 levels
-   ℹ️ Note: Consider extracting file operations
+   ℹ️ Note: Consider extracting validation logic
 
 ⚠️ Critical Complexity (> 20)
 
@@ -89,7 +89,7 @@ This command analyzes code complexity metrics to identify complex code that may 
 2. script/dependency-health-check.sh: 10.8 avg complexity
 3. script/pre-pr-checklist.sh: 9.5 avg complexity
 4. script/branch-cleanup.sh: 8.2 avg complexity
-5. script/setup-new-repo.sh: 7.1 avg complexity
+5. script/container-health.sh: 7.1 avg complexity
 
 💡 Recommendations
 

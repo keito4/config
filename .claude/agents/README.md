@@ -1,6 +1,6 @@
 # Claude Specialized Agents
 
-This directory contains 17 specialized AI agents designed to provide comprehensive code analysis, quality assurance, and development assistance. Each agent is optimized for specific aspects of software development and can be invoked proactively or on-demand.
+This directory contains 8 specialized AI agents designed to provide comprehensive code analysis, quality assurance, and development assistance. Each agent is optimized for specific aspects of software development and can be invoked proactively or on-demand.
 
 ## Agent Categories
 
@@ -18,48 +18,6 @@ This directory contains 17 specialized AI agents designed to provide comprehensi
 - Debugging workflow failures locally
 - Integrating act with development workflows (pre-commit hooks, VS Code tasks)
 
-### Architecture & Code Quality
-
-#### `ddd-architecture-validator.md`
-
-**Purpose**: Validates adherence to Domain-Driven Design, Clean Architecture, and Hexagonal Architecture principles
-**Use Cases**:
-
-- Review pull requests affecting domain models or architecture layers
-- Adding new entities, services, or use cases
-- Assessing boundary contexts and aggregate consistency
-- Quantifying technical debt
-
-#### `performance-analyzer.md`
-
-**Purpose**: Analyzes performance implications of code changes, particularly for C#/.NET applications
-**Use Cases**:
-
-- PRs with 50+ lines of algorithm changes
-- Database query additions or modifications
-- Loop processing improvements
-- LINQ, EF Core, or async I/O pattern optimization
-
-#### `concurrency-safety-analyzer.md`
-
-**Purpose**: Reviews async/await patterns, thread safety, and concurrency issues in C# code
-**Use Cases**:
-
-- Code using async/await, locks, or threading primitives
-- Pull requests with asynchronous processing changes
-- Thread safety validation and deadlock prevention
-- Cancellation token propagation analysis
-
-#### `testability-coverage-analyzer.md`
-
-**Purpose**: Evaluates testability and test coverage of new or modified code
-**Use Cases**:
-
-- Changes involving 100+ lines or public API modifications
-- Dependency injection analysis
-- Missing test scenario identification
-- Coverage reports below 80% threshold
-
 ### Documentation & Consistency
 
 #### `docs-consistency-checker.md`
@@ -71,64 +29,6 @@ This directory contains 17 specialized AI agents designed to provide comprehensi
 - Public API changes with Swagger/OpenAPI specs
 - PR descriptions shorter than 200 characters
 - Verifying Why/What/How/Risk structure compliance
-
-#### `accessibility-design-validator.md`
-
-**Purpose**: Validates accessibility compliance and design consistency in frontend code
-**Use Cases**:
-
-- HTML/Razor/Blazor/React component changes
-- WCAG compliance verification
-- ARIA attributes and semantic HTML validation
-- Color contrast and keyboard navigation checks
-- Figma specification adherence
-
-### Dependencies & Security
-
-#### `nuget-dependency-auditor.md`
-
-**Purpose**: Audits NuGet dependencies for licensing, maintenance, and architectural alignment
-**Use Cases**:
-
-- Pull requests modifying `*.csproj` files
-- NuGet package additions, updates, or removals
-- Licensing compliance verification
-- Package maintenance status assessment
-
-### Testing & Automation
-
-#### `playwright-test-planner.md`
-
-**Purpose**: Plans comprehensive test coverage strategies for Playwright E2E tests
-**Use Cases**:
-
-- Analyzing application flows to identify critical test scenarios
-- Creating test plan documentation with prioritized test cases
-- Identifying edge cases and boundary conditions
-- Recommending test data and fixture strategies
-- Planning test organization and structure
-
-#### `playwright-test-generator.md`
-
-**Purpose**: Generates Playwright test code from specifications and user flows
-**Use Cases**:
-
-- Converting test plans into executable Playwright tests
-- Auto-generating tests from UI component specifications
-- Creating data-driven test suites
-- Implementing page object models
-- Generating fixture and helper functions
-
-#### `playwright-test-healer.md`
-
-**Purpose**: Diagnoses and fixes failing Playwright tests automatically
-**Use Cases**:
-
-- Analyzing test failure logs and screenshots
-- Identifying flaky tests and root causes
-- Suggesting selector improvements for stability
-- Recommending wait strategies and timing adjustments
-- Auto-fixing common test issues
 
 ### Issue Resolution Workflow
 
@@ -198,19 +98,19 @@ This directory contains 17 specialized AI agents designed to provide comprehensi
 
 Agents are automatically invoked by Claude Code based on context and code changes:
 
-- **Architecture validators** trigger on domain model changes
-- **Performance analyzers** activate for algorithmic changes
+- **CI/CD managers** trigger on workflow configuration changes
 - **Security agents** engage for authentication/authorization code
 - **Documentation agents** respond to API or documentation changes
+- **Issue resolvers** activate based on issue type and complexity
 
 ### Manual Invocation
 
 You can explicitly request specific agents in Claude interactions:
 
 ```
-@claude please use the performance-analyzer agent to review this optimization
-@claude invoke the ddd-architecture-validator for this domain model change
-@claude run the accessibility-design-validator on these UI components
+@claude please use the issue-resolver-security agent to analyze this vulnerability
+@claude invoke the docs-consistency-checker for this documentation update
+@claude run the act-local-ci-manager to test these workflow changes
 ```
 
 ## Configuration

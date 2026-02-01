@@ -341,11 +341,10 @@ EOF
 chmod 600 ~/.devcontainer.env
 ```
 
-Then manually create `.mcp.json` from the template:
+The `.mcp.json` file is already configured with Linear MCP server. If you need to customize it:
 
 ```bash
-cp .mcp.json.template .mcp.json
-# Edit .mcp.json and replace ${OPENAI_API_KEY} with actual value
+# Edit .mcp.json to add additional MCP servers
 chmod 600 .mcp.json
 ```
 
