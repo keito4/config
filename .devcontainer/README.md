@@ -77,7 +77,7 @@ This DevContainer image is automatically built and versioned using semantic-rele
 - **Minor versions**: New features and enhancements (1.0.0 → 1.1.0)
 - **Major versions**: Breaking changes (1.0.0 → 2.0.0)
 
-**Latest Version**: `v1.48.0`
+**Latest Version**: `v1.54.0`
 
 Images are published to GitHub Container Registry: `ghcr.io/keito4/config-base`
 
@@ -102,7 +102,7 @@ Use the pre-built image without mounting host's `~/.claude` directory:
 ```json
 {
   "name": "My Project",
-  "image": "ghcr.io/keito4/config-base:1.48.0",
+  "image": "ghcr.io/keito4/config-base:1.54.0",
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
   }
@@ -124,7 +124,7 @@ Mount host's `~/.claude` to persist custom plugin installations:
 ```json
 {
   "name": "My Project",
-  "image": "ghcr.io/keito4/config-base:1.48.0",
+  "image": "ghcr.io/keito4/config-base:1.54.0",
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
   },
