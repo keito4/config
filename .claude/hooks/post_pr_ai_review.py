@@ -162,8 +162,19 @@ After listing findings, produce an overall correctness verdict ('patch is correc
         if result.stdout:
             print(result.stdout, file=sys.stderr)
 
-        if result.returncode != 0 and result.stderr:
-            print(f"⚠️  Geminiエラー: {result.stderr[:300]}", file=sys.stderr)
+        # returncode が 0 でない場合のみエラーとして扱う
+        # （Gemini CLI は警告を stderr に出力するが、これはエラーではない）
+        if result.returncode != 0:
+            # 致命的なエラーメッセージのみ抽出（認証エラーなど）
+            error_lines = [
+                line for line in result.stderr.split('\n')
+                if 'error' in line.lower() or 'auth' in line.lower() or 'api_key' in line.lower()
+            ]
+            if error_lines:
+                print(f"⚠️  Geminiエラー: {error_lines[0][:300]}", file=sys.stderr)
+            elif not result.stdout:
+                # stdout も空で returncode が 0 でない場合はエラー
+                print(f"⚠️  Geminiエラー: {result.stderr[:300]}", file=sys.stderr)
 
     except subprocess.TimeoutExpired:
         print("⚠️  Geminiレビューがタイムアウトしました（10分）", file=sys.stderr)
