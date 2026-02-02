@@ -4,6 +4,7 @@ PR作成後にAIレビューを自動実行するPostToolUseフック
 
 gh pr create 成功後に自動的にCodexとGeminiによるコードレビューを実行します。
 インストールされているツールのみ実行されます。
+クリティカルな問題（patch is incorrect）が検出された場合は警告を表示します。
 """
 import sys
 import json
@@ -64,13 +65,55 @@ After listing findings, produce an overall correctness verdict ('patch is correc
 Review the current branch against origin/main.
 Use git merge-base to find the merge base, then review the diff from that merge base to HEAD."""
 
-print("", file=sys.stderr)
-print("=" * 60, file=sys.stderr)
-print("🔍 PR作成完了。AIレビューを実行中...", file=sys.stderr)
-print("=" * 60, file=sys.stderr)
+# レビュー結果を格納
+review_results = []
 
 
-def run_codex_review():
+def parse_verdict(output: str) -> dict:
+    """レビュー結果から verdict と confidence を抽出"""
+    result = {
+        "verdict": None,
+        "confidence": None,
+        "is_incorrect": False,
+        "issues": []
+    }
+
+    if not output:
+        return result
+
+    output_lower = output.lower()
+
+    # verdict を検出
+    if "patch is incorrect" in output_lower:
+        result["verdict"] = "incorrect"
+        result["is_incorrect"] = True
+    elif "patch is correct" in output_lower:
+        result["verdict"] = "correct"
+
+    # confidence を抽出（様々なフォーマットに対応）
+    confidence_patterns = [
+        r"confidence[:\s]+([0-9]+(?:\.[0-9]+)?)",
+        r"confidence[:\s]+([0-9]+(?:\.[0-9]+)?)\s*/\s*1",
+        r"([0-9]+(?:\.[0-9]+)?)\s*/\s*1",
+    ]
+    for pattern in confidence_patterns:
+        match = re.search(pattern, output_lower)
+        if match:
+            try:
+                result["confidence"] = float(match.group(1))
+                break
+            except ValueError:
+                pass
+
+    # 問題点を抽出（行番号を含む行を検出）
+    issue_pattern = r"[-•]\s*(.+?(?:line|\.(?:py|js|ts|tsx|md|json|yml|yaml))[^\n]*)"
+    issues = re.findall(issue_pattern, output, re.IGNORECASE)
+    result["issues"] = issues[:5]  # 最大5件
+
+    return result
+
+
+def run_codex_review() -> str:
     """Codexによるレビューを実行"""
     print("", file=sys.stderr)
     print("## 🤖 Codex Review", file=sys.stderr)
@@ -91,20 +134,24 @@ def run_codex_review():
             timeout=600
         )
 
-        if result.stdout:
-            print(result.stdout, file=sys.stderr)
+        output = result.stdout or ""
+        if output:
+            print(output, file=sys.stderr)
 
         if result.returncode != 0 and result.stderr:
-            # エラー出力の先頭部分のみ表示
             print(f"⚠️  Codexエラー: {result.stderr[:300]}", file=sys.stderr)
+
+        return output
 
     except subprocess.TimeoutExpired:
         print("⚠️  Codexレビューがタイムアウトしました（10分）", file=sys.stderr)
+        return ""
     except Exception as e:
         print(f"⚠️  Codexレビュー実行エラー: {e}", file=sys.stderr)
+        return ""
 
 
-def run_gemini_review():
+def run_gemini_review() -> str:
     """Geminiによるレビューを実行（diffをstdinで渡す）"""
     print("", file=sys.stderr)
     print("## ✨ Gemini Review", file=sys.stderr)
@@ -122,7 +169,7 @@ def run_gemini_review():
 
         if not merge_base:
             print("⚠️  マージベースの取得に失敗しました", file=sys.stderr)
-            return
+            return ""
 
         # diffを取得
         diff_result = subprocess.run(
@@ -135,7 +182,7 @@ def run_gemini_review():
 
         if not diff_content:
             print("⚠️  diffが空です", file=sys.stderr)
-            return
+            return ""
 
         # Gemini用のプロンプト（diffを含める）
         gemini_prompt = f"""You are acting as a reviewer for a proposed code change.
@@ -159,40 +206,116 @@ After listing findings, produce an overall correctness verdict ('patch is correc
             timeout=600
         )
 
-        if result.stdout:
-            print(result.stdout, file=sys.stderr)
+        output = result.stdout or ""
+        if output:
+            print(output, file=sys.stderr)
 
-        # returncode が 0 でない場合のみエラーとして扱う
-        # （Gemini CLI は警告を stderr に出力するが、これはエラーではない）
+        # returncode が 0 でない場合はエラーとして扱う
+        # ただし、stdout に有効な出力がある場合は警告のみ
         if result.returncode != 0:
-            # 致命的なエラーメッセージのみ抽出（認証エラーなど）
-            error_lines = [
-                line for line in result.stderr.split('\n')
-                if 'error' in line.lower() or 'auth' in line.lower() or 'api_key' in line.lower()
+            stderr_content = result.stderr.strip() if result.stderr else ""
+
+            # 既知の警告パターン（致命的でないもの）
+            warning_patterns = [
+                "hook registry initialized",
+                "failed to connect to ide",
+                "extension is running"
             ]
-            if error_lines:
-                print(f"⚠️  Geminiエラー: {error_lines[0][:300]}", file=sys.stderr)
-            elif not result.stdout:
-                # stdout も空で returncode が 0 でない場合はエラー
-                print(f"⚠️  Geminiエラー: {result.stderr[:300]}", file=sys.stderr)
+            is_only_warning = stderr_content and all(
+                any(pattern in line.lower() for pattern in warning_patterns)
+                for line in stderr_content.split('\n') if line.strip()
+            )
+
+            if is_only_warning and output:
+                # 既知の警告のみで、かつ有効な出力がある場合はスキップ
+                pass
+            elif stderr_content:
+                # stderr に内容がある場合は最初の意味のある行を表示
+                first_line = next(
+                    (line.strip() for line in stderr_content.split('\n') if line.strip()),
+                    stderr_content[:100]
+                )
+                print(f"⚠️  Geminiエラー (exit {result.returncode}): {first_line[:300]}", file=sys.stderr)
+            else:
+                # stderr が空の場合
+                print(f"⚠️  Geminiエラー: 終了コード {result.returncode}", file=sys.stderr)
+
+        return output
 
     except subprocess.TimeoutExpired:
         print("⚠️  Geminiレビューがタイムアウトしました（10分）", file=sys.stderr)
+        return ""
     except Exception as e:
         print(f"⚠️  Geminiレビュー実行エラー: {e}", file=sys.stderr)
+        return ""
 
-
-# 利用可能なツールでレビューを実行
-if has_codex:
-    run_codex_review()
-
-if has_gemini:
-    run_gemini_review()
 
 print("", file=sys.stderr)
 print("=" * 60, file=sys.stderr)
-print("✅ AIレビュー完了", file=sys.stderr)
+print("🔍 PR作成完了。AIレビューを実行中...", file=sys.stderr)
+print("=" * 60, file=sys.stderr)
+
+# 利用可能なツールでレビューを実行し、結果を収集
+if has_codex:
+    codex_output = run_codex_review()
+    codex_result = parse_verdict(codex_output)
+    codex_result["reviewer"] = "Codex"
+    review_results.append(codex_result)
+
+if has_gemini:
+    gemini_output = run_gemini_review()
+    gemini_result = parse_verdict(gemini_output)
+    gemini_result["reviewer"] = "Gemini"
+    review_results.append(gemini_result)
+
+# レビュー結果の解析
+incorrect_reviews = [r for r in review_results if r["is_incorrect"]]
+has_critical_issues = len(incorrect_reviews) > 0
+
+print("", file=sys.stderr)
+print("=" * 60, file=sys.stderr)
+
+if has_critical_issues:
+    print("🚨 クリティカルな問題が検出されました！", file=sys.stderr)
+    print("=" * 60, file=sys.stderr)
+    print("", file=sys.stderr)
+
+    for review in incorrect_reviews:
+        reviewer = review.get("reviewer", "Unknown")
+        confidence = review.get("confidence")
+        confidence_str = f" (confidence: {confidence})" if confidence else ""
+        print(f"❌ {reviewer}: patch is incorrect{confidence_str}", file=sys.stderr)
+
+        if review.get("issues"):
+            print("   主な指摘事項:", file=sys.stderr)
+            for issue in review["issues"][:3]:
+                print(f"   • {issue[:100]}", file=sys.stderr)
+
+    print("", file=sys.stderr)
+    print("─" * 60, file=sys.stderr)
+    print("⚠️  対応が必要です:", file=sys.stderr)
+    print("   1. 上記の指摘事項を確認してください", file=sys.stderr)
+    print("   2. 必要に応じてコードを修正してください", file=sys.stderr)
+    print("   3. 修正後、PRを更新してください", file=sys.stderr)
+    print("─" * 60, file=sys.stderr)
+else:
+    print("✅ AIレビュー完了", file=sys.stderr)
+
+    # 成功した場合も verdict サマリーを表示
+    for review in review_results:
+        reviewer = review.get("reviewer", "Unknown")
+        verdict = review.get("verdict", "unknown")
+        confidence = review.get("confidence")
+        confidence_str = f" (confidence: {confidence})" if confidence else ""
+
+        if verdict == "correct":
+            print(f"   ✓ {reviewer}: patch is correct{confidence_str}", file=sys.stderr)
+        elif verdict:
+            print(f"   ? {reviewer}: {verdict}{confidence_str}", file=sys.stderr)
+
 print("=" * 60, file=sys.stderr)
 
 # PostToolUseフックは常に成功で終了（ブロックしない）
+# ※ PR は既に作成されているため、ブロックしても意味がない
+#   代わりに警告メッセージで対応を促す
 sys.exit(0)
