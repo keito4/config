@@ -100,6 +100,8 @@ COPY --chown=vscode:vscode .devcontainer/codex-config.json /home/vscode/.codex/c
 COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
 COPY --chown=vscode:vscode .claude/agents /home/vscode/.claude/agents
 COPY --chown=vscode:vscode .claude/hooks /home/vscode/.claude/hooks
+# Copy local skill files (*.md) and skills list
+COPY --chown=vscode:vscode .claude/skills/*.md /home/vscode/.claude/skills/
 COPY --chown=vscode:vscode .claude/skills/skills.txt /home/vscode/.claude/skills/skills.txt
 COPY --chown=vscode:vscode .claude/plugins/plugins.txt /home/vscode/.claude/plugins/plugins.txt
 COPY --chown=vscode:vscode .claude/plugins/known_marketplaces.json.template /home/vscode/.claude/plugins/known_marketplaces.json.template

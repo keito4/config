@@ -5,6 +5,12 @@ on:
     branches: [main]
     paths:
       - '.devcontainer/**'
+      - '.claude/commands/**'
+      - '.claude/agents/**'
+      - '.claude/hooks/**'
+      - '.claude/skills/**'
+      - '.claude/plugins/**'
+      - 'script/**'
       - 'npm/global.json'
       - 'package.json'
       - 'package-lock.json'
