@@ -281,10 +281,17 @@ The script performs the following actions:
 
 #### Update Claude Code Only
 
-- Run `npm run update:claude` (wrapper for `script/update-claude-code.sh`) to check and update **only** the `@anthropic-ai/claude-code` package to the latest version.
-- The script compares the current version in `npm/global.json` with the latest available version on npm registry.
-- If a newer version is available, it automatically updates `npm/global.json` and displays the release notes URL.
+- Run `npm run update:claude` (wrapper for `script/update-claude-code.sh`) to update Claude Code to the latest version.
+- Claude Code uses the **native installer** (npm installation is deprecated).
+- The script runs `claude update` command to update to the latest version.
 - Use `/update-claude-code` Claude command for interactive update within Claude Code sessions.
+- Claude Code supports automatic updates - manual updates may not be necessary if auto-update is enabled.
+
+**Installation (if not already installed):**
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
 
 #### Commit Requirements
 
@@ -292,9 +299,9 @@ The script performs the following actions:
 
 #### Global CLI version source of truth
 
-- `npm/global.json` is the single source of truth for both `@openai/codex` and `@anthropic-ai/claude-code` versions.
-- The DevContainer Dockerfile copies this file into the build context and reads the versions at build time, guaranteeing that `npm install -g ...` pins to the same versions used by local setups.
-- When bumping either CLI, update the version in `npm/global.json` (or run `npm run update:libs`) and rebuild the DevContainer image. No manual edits in `.devcontainer/Dockerfile` are required anymore.
+- `npm/global.json` is the single source of truth for `@openai/codex` and other npm-installed global packages.
+- **Note:** Claude Code is no longer managed via npm. It uses the native installer (`curl -fsSL https://claude.ai/install.sh | bash`) and updates via `claude update`.
+- The DevContainer Dockerfile copies `npm/global.json` into the build context and reads the versions at build time for npm-installed packages.
 - Rebuild the DevContainer image after updating CLI versions to ensure consistency across environments.
 
 ### Configuration Setup
