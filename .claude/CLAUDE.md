@@ -128,7 +128,13 @@ Git操作（commit/push）の前に自動的に品質チェックを実行する
 
 - `block_git_no_verify.py`: `--no-verify` や `HUSKY=0` の使用をブロック
 - `pre_git_quality_gates.py`: Git操作前にQuality Gatesを実行
+- `post_git_push_ci.py`: push後のCI監視
+- `post_pr_ai_review.py`: PR作成後のAIレビュー（Codex/Gemini）
+- `pre_exit_plan_ai_review.py`: プランモード終了前のレビュー
 
-これらは `.claude/settings.local.json` の `hooks` フィールドで設定されており、Claudeによる `git commit` や `git push` の実行前に自動的にトリガーされます。
+**DevContainer環境（v1.61.0以降）では、これらのHooksはデフォルトで有効化されています。**
+設定は `/home/vscode/.claude/settings.json` に含まれており、追加の設定なしで動作します。
+
+DevContainer以外の環境では、`.claude/settings.local.json` の `hooks` フィールドで手動設定が必要です。
 
 詳細は [.claude/hooks/README.md](./.claude/hooks/README.md) を参照してください。
