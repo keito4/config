@@ -83,12 +83,46 @@ def parse_verdict(output: str) -> dict:
 
     output_lower = output.lower()
 
-    # verdict を検出
-    if "patch is incorrect" in output_lower:
-        result["verdict"] = "incorrect"
-        result["is_incorrect"] = True
-    elif "patch is correct" in output_lower:
-        result["verdict"] = "correct"
+    # verdict を検出（より正確なパターンマッチング）
+    # 引用符で囲まれた文字列（例: "patch is incorrect" という説明文）を除外
+    # verdict/判定/結論の直後に出現するパターンを優先
+
+    # verdict 行を探す（"verdict:" や "**verdict**" の後）
+    verdict_patterns = [
+        r"verdict[:\s*]+\*{0,2}patch is (incorrect|correct)\*{0,2}",
+        r"overall[^:]*verdict[:\s*]+\*{0,2}patch is (incorrect|correct)\*{0,2}",
+        r"判定[:\s*]+patch is (incorrect|correct)",
+    ]
+
+    for pattern in verdict_patterns:
+        match = re.search(pattern, output_lower)
+        if match:
+            if match.group(1) == "incorrect":
+                result["verdict"] = "incorrect"
+                result["is_incorrect"] = True
+            else:
+                result["verdict"] = "correct"
+            break
+
+    # 上記で見つからない場合、文脈を考慮して検出
+    if result["verdict"] is None:
+        # 引用符で囲まれていない "patch is incorrect/correct" を検出
+        # 引用符内を除外するために、行単位で判定
+        for line in output.split('\n'):
+            line_lower = line.lower()
+            # 引用符内のテキストを除外
+            if '"patch is incorrect"' in line_lower or "'patch is incorrect'" in line_lower:
+                continue
+            if '("patch is incorrect")' in line_lower:
+                continue
+
+            if "patch is incorrect" in line_lower:
+                result["verdict"] = "incorrect"
+                result["is_incorrect"] = True
+                break
+            elif "patch is correct" in line_lower:
+                result["verdict"] = "correct"
+                break
 
     # confidence を抽出（様々なフォーマットに対応）
     confidence_patterns = [
