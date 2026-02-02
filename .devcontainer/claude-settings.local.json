@@ -322,6 +322,48 @@
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": ["playwright", "o3"],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/block_git_no_verify.py"
+          }
+        ]
+      },
+      {
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/pre_git_quality_gates.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/post_git_push_ci.py"
+          }
+        ]
+      },
+      {
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/post_pr_ai_review.py"
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "kubernetes-operations@claude-code-workflows": true
   }
