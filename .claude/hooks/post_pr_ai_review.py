@@ -5,6 +5,7 @@ PR作成後にAIレビューを自動実行するPostToolUseフック
 gh pr create 成功後に自動的にCodexとGeminiによるコードレビューを実行します。
 インストールされているツールのみ実行されます。
 レビュー結果はPRコメントとして投稿されます。
+問題が検出された場合は修正を促します。
 """
 import sys
 import json
@@ -13,6 +14,10 @@ import shutil
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+# 最上位モデルの設定
+CODEX_MODEL = "gpt-5.2-codex"  # OpenAI最上位モデル
+GEMINI_MODEL = "gemini-2.5-pro"  # Google最上位モデル
 
 # Read input from Claude
 data = json.load(sys.stdin)
@@ -84,6 +89,7 @@ def run_codex_review():
 
     codex_command = [
         "codex", "exec",
+        "-m", CODEX_MODEL,
         "--sandbox", "read-only",
         review_prompt
     ]
@@ -162,7 +168,7 @@ After listing findings, produce an overall correctness verdict ('patch is correc
 
 {diff_content[:50000]}"""
 
-        gemini_command = ["gemini", "-p", gemini_prompt]
+        gemini_command = ["gemini", "-m", GEMINI_MODEL, "-p", gemini_prompt]
 
         result = subprocess.run(
             gemini_command,
@@ -230,18 +236,40 @@ with ThreadPoolExecutor(max_workers=2) as executor:
         except Exception as e:
             print(f"⚠️  {reviewer}レビュー実行エラー: {e}", file=sys.stderr)
 
+def check_for_issues(review_text: str) -> bool:
+    """レビュー結果から問題が検出されたかをチェック"""
+    if not review_text:
+        return False
+    lower_text = review_text.lower()
+    # "patch is incorrect" または重大な問題の指摘を検出
+    return "patch is incorrect" in lower_text or "high:" in lower_text or "critical:" in lower_text
+
+
 # PRコメント用のマークダウンを生成
-comment_parts = ["## 🔍 AI Code Review (Local Hook)\n"]
+comment_parts = [f"## 🔍 AI Code Review (Local Hook)\n"]
+comment_parts.append(f"**Models:** Codex ({CODEX_MODEL}) / Gemini ({GEMINI_MODEL})\n")
+
+issues_found = False
 
 if review_results["codex"]:
     comment_parts.append("### 🤖 Codex Review\n")
     comment_parts.append(review_results["codex"])
     comment_parts.append("\n")
+    if check_for_issues(review_results["codex"]):
+        issues_found = True
 
 if review_results["gemini"]:
     comment_parts.append("### ✨ Gemini Review\n")
     comment_parts.append(review_results["gemini"])
     comment_parts.append("\n")
+    if check_for_issues(review_results["gemini"]):
+        issues_found = True
+
+# 問題が検出された場合、修正を促すメッセージを追加
+if issues_found:
+    comment_parts.append("\n---\n")
+    comment_parts.append("### ⚠️ 修正が必要です\n")
+    comment_parts.append("上記のレビューで問題が指摘されています。修正してからマージしてください。\n")
 
 # レビュー結果がある場合のみPRにコメント投稿
 if review_results["codex"] or review_results["gemini"]:
@@ -258,7 +286,10 @@ else:
 
 print("", file=sys.stderr)
 print("=" * 60, file=sys.stderr)
-print("✅ AIレビュー完了", file=sys.stderr)
+if issues_found:
+    print("⚠️  AIレビュー完了 - 問題が検出されました。修正を検討してください。", file=sys.stderr)
+else:
+    print("✅ AIレビュー完了", file=sys.stderr)
 print("=" * 60, file=sys.stderr)
 
 # PostToolUseフックは常に成功で終了（ブロックしない）
