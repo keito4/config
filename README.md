@@ -485,7 +485,7 @@ For setting up a complete CI/CD pipeline in a new repository following Elu-co-jp
 #### GitHub Actions Workflows
 
 - **CI Pipeline** (`.github/workflows/ci.yml`): Automated testing, linting, and quality checks (uses Node.js 22)
-- **Claude Code Integration** (`.github/workflows/claude.yml`): AI-assisted code review and issue management
+- **Claude Code Integration** (`.github/workflows/claude.yml`): AI-assisted code review and issue management with automatic PR comment posting and issue detection using top-tier models
 - **Docker Image Build** (`.github/workflows/docker-image.yml`): Containerized build and deployment pipeline
 - **Library Auto-Update** (`.github/workflows/update-libraries.yml`): Scheduled Codex/Claude tooling refresh that raises a PR when `npm run update:libs` produces changes
 
@@ -572,9 +572,9 @@ The repository includes a complete DevContainer setup (`.devcontainer/`) that pr
 - Integrated Claude Code configuration with specialized agents and commands
 - Bell notification system for development workflow events
 
-**Latest Version**: `ghcr.io/keito4/config-base:1.48.0`
+**Latest Version**: `ghcr.io/keito4/config-base:1.62.0`
 
-**Pre-installed Plugins** (v1.48.0):
+**Pre-installed Plugins** (v1.62.0):
 
 - Official plugins: `commit-commands`, `hookify`, `plugin-dev`, `typescript-lsp`, `code-review`
 - Workflow plugins: `code-refactoring`, `kubernetes-operations`, `javascript-typescript`, `backend-development`, `full-stack-orchestration`, `database-design`, `database-migrations`
