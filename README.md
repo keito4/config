@@ -274,27 +274,30 @@ The script performs the following actions:
 
 #### Update All Libraries
 
-- Run `npm run update:libs` (wrapper for `script/update-libraries.sh`) to refresh npm devDependencies together with Codex/Claude Code CLI definitions captured in `npm/global.json`.
+- Run `npm run update:libs` (wrapper for `script/update-libraries.sh`) to refresh npm devDependencies together with Codex CLI definitions captured in `npm/global.json`.
 - The script performs `npm-check-updates`, `npm install`, and re-synchronizes global CLI versions via `npm view <package> version` before running lint/tests to verify the updated toolchain.
 - Packages that currently require newer Node.js releases (`semantic-release`, `@semantic-release/github`) are excluded by default. Override the exclusion list with `UPDATE_LIBS_REJECT="pkg1,pkg2" npm run update:libs` when you are ready to bump them.
-- `.github/workflows/update-libraries.yml` executes the same script weekly and opens a PR whenever it produces changes, ensuring Codex/Claude Code tooling stays current without manual effort.
+- `.github/workflows/update-libraries.yml` executes the same script weekly and opens a PR whenever it produces changes, ensuring Codex tooling stays current without manual effort.
+- **Note**: Claude Code updates are now managed separately via `claude update` command (native installer).
 
 #### Update Claude Code Only
 
-- Run `npm run update:claude` (wrapper for `script/update-claude-code.sh`) to check and update **only** the `@anthropic-ai/claude-code` package to the latest version.
-- The script compares the current version in `npm/global.json` with the latest available version on npm registry.
-- If a newer version is available, it automatically updates `npm/global.json` and displays the release notes URL.
+- Run `npm run update:claude` (wrapper for `script/update-claude-code.sh`) to update Claude Code to the latest version via the native installer.
+- The script uses `claude update` command to check and install the latest version.
 - Use `/update-claude-code` Claude command for interactive update within Claude Code sessions.
+- **Note**: Claude Code has switched from npm to native installer. Use `claude install` for initial installation or see https://docs.anthropic.com/en/docs/claude-code/getting-started for more options.
 
 #### Commit Requirements
 
 - Commits that touch release-critical files (`package*.json`, `npm/global.json`, `.devcontainer/codex*`, `.codex/**`) **must** use a release-triggering Conventional Commit type (`feat`, `fix`, `perf`, `revert`, or `docs`). Commitlint enforces this so semantic-release can publish automatically when tooling versions change.
+- **Note**: `npm/global.json` now only tracks `@openai/codex` versions. Claude Code uses native installer and is not tracked in this file.
 
 #### Global CLI version source of truth
 
-- `npm/global.json` is the single source of truth for both `@openai/codex` and `@anthropic-ai/claude-code` versions.
-- The DevContainer Dockerfile copies this file into the build context and reads the versions at build time, guaranteeing that `npm install -g ...` pins to the same versions used by local setups.
-- When bumping either CLI, update the version in `npm/global.json` (or run `npm run update:libs`) and rebuild the DevContainer image. No manual edits in `.devcontainer/Dockerfile` are required anymore.
+- `npm/global.json` is the single source of truth for `@openai/codex` versions.
+- **Claude Code**: Now uses native installer instead of npm. Install with `claude install` or update with `claude update`. See https://docs.anthropic.com/en/docs/claude-code/getting-started for details.
+- The DevContainer Dockerfile copies `npm/global.json` into the build context and reads the Codex version at build time.
+- When bumping Codex CLI, update the version in `npm/global.json` (or run `npm run update:libs`) and rebuild the DevContainer image.
 - Rebuild the DevContainer image after updating CLI versions to ensure consistency across environments.
 
 ### Configuration Setup
