@@ -66,8 +66,11 @@ USER root
 COPY npm/global.json /tmp/npm-global.json
 
 # Install Claude Code using native installer (npm installation deprecated)
+# Must run as vscode user so claude installs to /home/vscode/.claude/local/bin
+USER vscode
 RUN curl -fsSL https://claude.ai/install.sh | bash \
  && echo 'export PATH="$HOME/.claude/local/bin:$PATH"' >> /home/vscode/.bashrc
+USER root
 
 # Install other global npm packages
 RUN CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@openai/codex'].version") \
