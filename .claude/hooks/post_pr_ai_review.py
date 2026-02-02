@@ -64,15 +64,17 @@ if not has_codex and not has_gemini:
     print("⚠️  AIレビューツール（Codex/Gemini）がインストールされていません。スキップします。", file=sys.stderr)
     sys.exit(0)
 
-# レビュープロンプト
-review_prompt = """You are acting as a reviewer for a proposed code change made by another engineer.
-Focus on issues that impact correctness, performance, security, maintainability, or developer experience.
-Flag only actionable issues introduced by the change.
-When you flag an issue, provide a short, direct explanation and cite the affected file and line range.
-Prioritize severe issues and avoid nit-level comments unless they block understanding of the diff.
-After listing findings, produce an overall correctness verdict ('patch is correct' or 'patch is incorrect') with a concise justification and a confidence score between 0 and 1.
-Review the current branch against origin/main.
-Use git merge-base to find the merge base, then review the diff from that merge base to HEAD."""
+# レビュープロンプト（日本語で出力）
+review_prompt = """あなたは他のエンジニアが作成したコード変更のレビュアーとして行動してください。
+正確性、パフォーマンス、セキュリティ、保守性、開発者体験に影響する問題に焦点を当ててください。
+変更によって導入されたアクション可能な問題のみを指摘してください。
+問題を指摘する際は、簡潔で直接的な説明と、影響を受けるファイルと行範囲を記載してください。
+重大な問題を優先し、diffの理解を妨げない限りは細かい指摘は避けてください。
+発見事項をリストした後、全体的な正確性の判定（'patch is correct' または 'patch is incorrect'）を簡潔な理由と0から1の信頼度スコアとともに出力してください。
+現在のブランチをorigin/mainと比較してレビューしてください。
+git merge-baseを使用してマージベースを見つけ、そのマージベースからHEADまでのdiffをレビューしてください。
+
+**重要: 必ず日本語で回答してください。**"""
 
 print("", file=sys.stderr)
 print("=" * 60, file=sys.stderr)
@@ -156,15 +158,17 @@ def run_gemini_review():
             print("⚠️  diffが空です", file=sys.stderr)
             return None
 
-        # Gemini用のプロンプト（diffを含める）
-        gemini_prompt = f"""You are acting as a reviewer for a proposed code change.
-Focus on issues that impact correctness, performance, security, maintainability, or developer experience.
-Flag only actionable issues introduced by the change.
-When you flag an issue, provide a short, direct explanation and cite the affected file and line range.
-Prioritize severe issues and avoid nit-level comments unless they block understanding of the diff.
-After listing findings, produce an overall correctness verdict ('patch is correct' or 'patch is incorrect') with a concise justification and a confidence score between 0 and 1.
+        # Gemini用のプロンプト（diffを含める、日本語で出力）
+        gemini_prompt = f"""あなたはコード変更のレビュアーとして行動してください。
+正確性、パフォーマンス、セキュリティ、保守性、開発者体験に影響する問題に焦点を当ててください。
+変更によって導入されたアクション可能な問題のみを指摘してください。
+問題を指摘する際は、簡潔で直接的な説明と、影響を受けるファイルと行範囲を記載してください。
+重大な問題を優先し、diffの理解を妨げない限りは細かい指摘は避けてください。
+発見事項をリストした後、全体的な正確性の判定（'patch is correct' または 'patch is incorrect'）を簡潔な理由と0から1の信頼度スコアとともに出力してください。
 
-## Git Diff to Review:
+**重要: 必ず日本語で回答してください。**
+
+## レビュー対象のGit Diff:
 
 {diff_content[:50000]}"""
 
