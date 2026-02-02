@@ -11,6 +11,7 @@ import subprocess
 import shutil
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Read input from Claude
 data = json.load(sys.stdin)
@@ -171,12 +172,20 @@ After listing findings, produce an overall correctness verdict ('patch is correc
         print(f"⚠️  Geminiレビュー実行エラー: {e}", file=sys.stderr)
 
 
-# 利用可能なツールでレビューを実行
-if has_codex:
-    run_codex_review()
+# 利用可能なツールでレビューを並列実行
+with ThreadPoolExecutor(max_workers=2) as executor:
+    futures = {}
+    if has_codex:
+        futures[executor.submit(run_codex_review)] = "Codex"
+    if has_gemini:
+        futures[executor.submit(run_gemini_review)] = "Gemini"
 
-if has_gemini:
-    run_gemini_review()
+    for future in as_completed(futures):
+        reviewer = futures[future]
+        try:
+            future.result()
+        except Exception as e:
+            print(f"⚠️  {reviewer}レビュー実行エラー: {e}", file=sys.stderr)
 
 print("", file=sys.stderr)
 print("=" * 60, file=sys.stderr)
