@@ -1,8 +1,43 @@
 # Claude Specialized Agents
 
-This directory contains 8 specialized AI agents designed to provide comprehensive code analysis, quality assurance, and development assistance. Each agent is optimized for specific aspects of software development and can be invoked proactively or on-demand.
+This directory contains 11 specialized AI agents designed to provide comprehensive code analysis, quality assurance, and development assistance. Each agent is optimized for specific aspects of software development and can be invoked proactively or on-demand.
 
 ## Agent Categories
+
+### Test Automation & E2E Testing
+
+#### `playwright-test-generator.md`
+
+**Purpose**: Automatically generates Playwright test code by executing browser operations step-by-step
+**Use Cases**:
+
+- Creating E2E tests for user workflows
+- Generating test code from manual browser interactions
+- Building comprehensive test suites for web applications
+- Capturing complex user flows as automated tests
+- Generating tests with proper selectors and assertions
+
+#### `playwright-test-healer.md`
+
+**Purpose**: Automatically debugs and fixes failing Playwright tests
+**Use Cases**:
+
+- Fixing broken selectors after UI changes
+- Resolving timing and flakiness issues
+- Updating tests after behavior changes
+- Debugging test failures in CI/CD pipelines
+- Maintaining test stability over time
+
+#### `playwright-test-planner.md`
+
+**Purpose**: Explores web applications and creates comprehensive test plans
+**Use Cases**:
+
+- Planning E2E testing strategy for new features
+- Identifying test coverage gaps
+- Analyzing user flows and edge cases
+- Creating detailed test scenario documentation
+- Prioritizing test implementation by risk and impact
 
 ### DevOps & CI/CD
 
