@@ -97,13 +97,14 @@ def run_codex_review():
             timeout=600
         )
 
-        if result.stdout:
+        # returncode == 0 の場合のみ結果を返す
+        if result.returncode == 0 and result.stdout:
             print(result.stdout, file=sys.stderr)
             return result.stdout.strip()
 
-        if result.returncode != 0 and result.stderr:
-            error_msg = f"⚠️  Codexエラー: {result.stderr[:300]}"
-            print(error_msg, file=sys.stderr)
+        if result.returncode != 0:
+            error_msg = result.stderr[:300] if result.stderr else "不明なエラー"
+            print(f"⚠️  Codexエラー: {error_msg}", file=sys.stderr)
             return None
 
     except subprocess.TimeoutExpired:
@@ -171,12 +172,14 @@ After listing findings, produce an overall correctness verdict ('patch is correc
             timeout=600
         )
 
-        if result.stdout:
+        # returncode == 0 の場合のみ結果を返す
+        if result.returncode == 0 and result.stdout:
             print(result.stdout, file=sys.stderr)
             return result.stdout.strip()
 
-        if result.returncode != 0 and result.stderr:
-            print(f"⚠️  Geminiエラー: {result.stderr[:300]}", file=sys.stderr)
+        if result.returncode != 0:
+            error_msg = result.stderr[:300] if result.stderr else "不明なエラー"
+            print(f"⚠️  Geminiエラー: {error_msg}", file=sys.stderr)
             return None
 
     except subprocess.TimeoutExpired:
