@@ -85,9 +85,23 @@ Hooksは、Claude Codeの特定のイベント（ツール実行前後、タス�
 
 ## Hooksの設定方法
 
-### ステップ1: settings.local.json に設定を追加
+### DevContainer環境（v1.61.0以降）
 
-`.claude/settings.local.json` ファイルに `hooks` フィールドを追加します：
+**v1.61.0以降のDevContainerイメージでは、Hooksはデフォルトで有効化されています。**
+
+DevContainerを使用している場合、以下のHooksが自動的に設定されます：
+
+- `block_git_no_verify.py` - `--no-verify` のブロック
+- `pre_git_quality_gates.py` - Git操作前の品質チェック
+- `post_git_push_ci.py` - push後のCI監視
+- `post_pr_ai_review.py` - PR作成後のAIレビュー
+- `pre_exit_plan_ai_review.py` - プランモード終了前のレビュー
+
+これらは `/home/vscode/.claude/settings.json` に設定されており、追加の設定なしで動作します。
+
+### 手動設定（DevContainer以外の環境）
+
+DevContainer以外の環境では、`.claude/settings.local.json` ファイルに `hooks` フィールドを追加します：
 
 ```json
 {
