@@ -1,5 +1,7 @@
 # Claude Configuration
 
+> **Last verified**: 2026-02-02 - All AI hooks (Codex/Gemini review) operational
+
 ## Development Quality Standards
 
 This repository implements comprehensive development quality standards and AI-assisted workflows including:
