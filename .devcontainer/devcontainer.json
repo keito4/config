@@ -1,6 +1,6 @@
 {
   "name": "Config Base Container",
-  "image": "ghcr.io/keito4/config-base:1.61.0",
+  "image": "ghcr.io/keito4/config-base:1.61.2",
   "features": {
     "ghcr.io/devcontainers-extra/features/homebrew-package:1": {},
     "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
