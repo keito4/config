@@ -65,14 +65,17 @@ USER root
 
 COPY npm/global.json /tmp/npm-global.json
 
-RUN CLAUDE_CODE_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@anthropic-ai/claude-code'].version") \
- && CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@openai/codex'].version") \
+# Install Claude Code using native installer (npm installation deprecated)
+RUN curl -fsSL https://claude.ai/install.sh | bash \
+ && echo 'export PATH="$HOME/.claude/local/bin:$PATH"' >> /home/vscode/.bashrc
+
+# Install other global npm packages
+RUN CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@openai/codex'].version") \
  && VERCEL_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['vercel'].version") \
  && GEMINI_CLI_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@google/gemini-cli'].version") \
  && npm install -g eslint \
     typescript \
     typescript-language-server \
-    @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
     @openai/codex@${CODEX_VERSION} \
     vercel@${VERCEL_VERSION} \
     @google/gemini-cli@${GEMINI_CLI_VERSION}

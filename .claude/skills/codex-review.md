@@ -16,7 +16,7 @@ PR作成後、OpenAI Codexによるコードレビューを実行します。
 以下のコマンドでCodexレビューを実行：
 
 ```bash
-codex exec --sandbox read-only "You are acting as a reviewer for a proposed code change made by another engineer. Focus on issues that impact correctness, performance, security, maintainability, or developer experience. Flag only actionable issues introduced by the change. When you flag an issue, provide a short, direct explanation and cite the affected file and line range. Prioritize severe issues and avoid nit-level comments unless they block understanding of the diff. After listing findings, produce an overall correctness verdict ('patch is correct' or 'patch is incorrect') with a concise justification and a confidence score between 0 and 1. Review the current branch against origin/main. Use git merge-base to find the merge base, then review the diff from that merge base to HEAD."
+codex exec --sandbox read-only "あなたは他のエンジニアが作成したコード変更のレビュアーとして行動してください。正確性、パフォーマンス、セキュリティ、保守性、開発者体験に影響する問題に焦点を当ててください。変更によって導入されたアクション可能な問題のみを指摘してください。問題を指摘する際は、簡潔で直接的な説明と、影響を受けるファイルと行範囲を記載してください。重大な問題を優先し、diffの理解を妨げない限りは細かい指摘は避けてください。発見事項をリストした後、全体的な正確性の判定（'patch is correct' または 'patch is incorrect'）を簡潔な理由と0から1の信頼度スコアとともに出力してください。現在のブランチをorigin/mainと比較してレビューしてください。git merge-baseを使用してマージベースを見つけ、そのマージベースからHEADまでのdiffをレビューしてください。必ず日本語で回答してください。"
 ```
 
 ## レビュー結果の対応
