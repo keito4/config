@@ -23,7 +23,7 @@ log_info "Claude Code バージョン更新を開始します..."
 # claudeコマンドの存在確認
 if ! command -v claude &> /dev/null; then
     log_error "Claude CLI が見つかりません。"
-    log_info "インストール方法: curl -fsSL https://claude.ai/install.sh | bash"
+    log_info "インストール方法: curl -fsSL https://claude.ai/install.sh | bash -s 2.1.25"
     exit 1
 fi
 
@@ -43,7 +43,7 @@ if claude update; then
     fi
 else
     log_warn "claude update に失敗しました。再インストールを試みます..."
-    if curl -fsSL https://claude.ai/install.sh | bash; then
+    if curl -fsSL https://claude.ai/install.sh | bash -s 2.1.25; then
         new_version=$(claude --version 2>/dev/null | head -1 || echo "unknown")
         log_success "Claude Code を再インストールしました (${new_version})"
     else
