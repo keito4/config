@@ -1,10 +1,6 @@
 {
   "name": "lib",
   "dependencies": {
-    "@anthropic-ai/claude-code": {
-      "version": "2.1.22",
-      "overridden": false
-    },
     "@commitlint/cli": {
       "version": "20.3.1",
       "overridden": false
