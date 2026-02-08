@@ -103,7 +103,7 @@ PR作成後にCIが失敗した場合、**そのブランチで解決できる�
 ## 5. 環境作成
 
 基本的にdevcontainerを使用する。
-またベースはghcr.io/keito4/config-base:1.54.0を使用する。
+またベースはghcr.io/keito4/config-base:1.62.2を使用する。
 
 ## 6. デプロイ
 

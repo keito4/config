@@ -19,7 +19,7 @@
 // .devcontainer/devcontainer.json
 {
   "name": "My Project",
-  "image": "ghcr.io/keito4/config-base:1.54.0",
+  "image": "ghcr.io/keito4/config-base:1.62.2",
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
   }
@@ -82,7 +82,7 @@ claude --help
 // .devcontainer/devcontainer.json
 {
   "name": "My Project",
-  "image": "ghcr.io/keito4/config-base:1.54.0",
+  "image": "ghcr.io/keito4/config-base:1.62.2",
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
   },
@@ -133,7 +133,7 @@ my-plugin@marketplace
 ```json
 {
   "name": "My Project",
-  "image": "ghcr.io/keito4/config-base:1.54.0",
+  "image": "ghcr.io/keito4/config-base:1.62.2",
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
   },

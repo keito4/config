@@ -579,7 +579,7 @@ The repository includes a complete DevContainer setup (`.devcontainer/`) that pr
 - Integrated Claude Code configuration with specialized agents and commands
 - Bell notification system for development workflow events
 
-**Latest Version**: `ghcr.io/keito4/config-base:1.62.1`
+**Latest Version**: `ghcr.io/keito4/config-base:1.62.2`
 
 **Pre-installed Plugins** (v1.62.1):
 
