@@ -156,10 +156,21 @@ if ! gh auth status &>/dev/null; then
 fi
 
 # マシンサイズのバリデーション
-valid_machines=("basicLinux32gb" "standardLinux32gb" "premiumLinux" "largePremiumLinux")
-if [[ ! " ${valid_machines[*]} " =~ " ${MACHINE} " ]]; then
+is_valid_machine() {
+  local machine="$1"
+  case "${machine}" in
+    basicLinux32gb|standardLinux32gb|premiumLinux|largePremiumLinux)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+if ! is_valid_machine "${MACHINE}"; then
   echo -e "${RED}Error: Invalid machine size '${MACHINE}'${NC}" >&2
-  echo "Valid options: ${valid_machines[*]}"
+  echo "Valid options: basicLinux32gb, standardLinux32gb, premiumLinux, largePremiumLinux"
   exit 1
 fi
 
