@@ -61,18 +61,27 @@ print(f"🔍 プラン '{plan_name}' をAIでレビュー中...", file=sys.stder
 print("=" * 60, file=sys.stderr)
 
 # レビュープロンプト
-review_prompt = f"""You are reviewing an implementation plan before it is approved for execution.
-Analyze the following plan and provide feedback on:
+review_prompt = f"""You are reviewing a software implementation plan before it is approved for execution.
 
-1. **Completeness**: Are all requirements addressed? Are there missing steps?
-2. **Technical Feasibility**: Is the approach technically sound? Are there better alternatives?
-3. **Risks**: What potential issues might arise during implementation?
-4. **Dependencies**: Are all dependencies and prerequisites identified?
-5. **Order of Operations**: Is the implementation order logical and efficient?
+Focus your review on **code-level technical correctness**. Evaluate:
+
+1. **Completeness**: Are the code changes well-identified? Are critical files and functions listed?
+2. **Technical Feasibility**: Is the approach technically sound? Will the changes compile and pass tests?
+3. **Risks**: Are there code-level risks (broken imports, missing references, type errors)?
+4. **Dependencies**: Are code-level dependencies between changes identified?
+5. **Verification**: Are there adequate automated checks (type-check, lint, test, build)?
+
+**Important guidelines for your review:**
+- Focus on whether the plan will produce correct, working code changes
+- Do NOT flag operational/organizational concerns (access logs, stakeholder communication, Postman collections, monitoring dashboards, team notifications) as blocking issues
+- Do NOT require steps that are outside the scope of code changes (e.g., checking external services, reviewing analytics, contacting team members)
+- If the plan includes comprehensive automated verification (type-check, lint, test, build), that is sufficient for validating correctness
+- Only mark 'plan needs revision' for genuine technical flaws that would cause the implementation to fail
+- Mark 'plan is ready' if the code changes are well-identified, the approach is sound, and verification steps are adequate
 
 After your analysis, provide:
-- A list of issues found (if any)
-- Recommendations for improvement
+- A list of **code-level** issues found (if any)
+- Recommendations for improvement (optional, non-blocking suggestions are fine)
 - An overall verdict: 'plan is ready' or 'plan needs revision'
 - A confidence score between 0 and 1
 
