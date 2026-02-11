@@ -3,6 +3,7 @@
 Git操作前のQuality Gatesチェック
 
 git commit や git push の前に以下のチェックを実行：
+0. npm install の確認（node_modules の存在チェック）
 1. npm run format:check
 2. npm run lint
 3. npm run test
@@ -15,6 +16,7 @@ import json
 import shlex
 import subprocess
 import os
+from pathlib import Path
 
 # Read input from Claude
 data = json.load(sys.stdin)
@@ -40,6 +42,20 @@ for i, token in enumerate(tokens):
 # git commit または git push でない場合はスルー
 if not (is_git_commit or is_git_push):
     sys.exit(0)
+
+# node_modules の存在チェック（npm install が実行されているか確認）
+node_modules_path = Path(os.getcwd()) / "node_modules"
+if not node_modules_path.exists():
+    print("=" * 60, file=sys.stderr)
+    print("❌ npm install が実行されていません", file=sys.stderr)
+    print("=" * 60, file=sys.stderr)
+    print("", file=sys.stderr)
+    print("node_modules ディレクトリが見つかりません。", file=sys.stderr)
+    print("以下のコマンドを実行してから再度お試しください：", file=sys.stderr)
+    print("", file=sys.stderr)
+    print("  npm install", file=sys.stderr)
+    print("", file=sys.stderr)
+    sys.exit(2)
 
 # Quality Gatesを実行
 print("🔍 Git操作前のQuality Gatesを実行中...\n", file=sys.stderr)
