@@ -15,9 +15,9 @@ import os
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# 最上位モデルの設定
-CODEX_MODEL = "gpt-5.2-codex"  # OpenAI最上位モデル
-GEMINI_MODEL = "gemini-2.5-pro"  # Google最上位モデル
+# モデル設定（空文字列の場合はCLIのデフォルトモデルを使用）
+CODEX_MODEL = ""  # デフォルトモデルを使用
+GEMINI_MODEL = ""  # デフォルトモデルを使用
 
 # Read input from Claude
 data = json.load(sys.stdin)
@@ -89,12 +89,10 @@ def run_codex_review():
     print("## 🤖 Codex Review", file=sys.stderr)
     print("-" * 40, file=sys.stderr)
 
-    codex_command = [
-        "codex", "exec",
-        "-m", CODEX_MODEL,
-        "--sandbox", "read-only",
-        review_prompt
-    ]
+    codex_command = ["codex", "exec", "--sandbox", "read-only"]
+    if CODEX_MODEL:
+        codex_command.extend(["-m", CODEX_MODEL])
+    codex_command.append(review_prompt)
 
     try:
         result = subprocess.run(
@@ -172,7 +170,10 @@ def run_gemini_review():
 
 {diff_content[:50000]}"""
 
-        gemini_command = ["gemini", "-m", GEMINI_MODEL, "-p", gemini_prompt]
+        gemini_command = ["gemini", "-p", gemini_prompt]
+        if GEMINI_MODEL:
+            gemini_command.insert(1, GEMINI_MODEL)
+            gemini_command.insert(1, "-m")
 
         result = subprocess.run(
             gemini_command,
@@ -251,7 +252,9 @@ def check_for_issues(review_text: str) -> bool:
 
 # PRコメント用のマークダウンを生成
 comment_parts = [f"## 🔍 AI Code Review (Local Hook)\n"]
-comment_parts.append(f"**Models:** Codex ({CODEX_MODEL}) / Gemini ({GEMINI_MODEL})\n")
+codex_model_display = CODEX_MODEL or "default"
+gemini_model_display = GEMINI_MODEL or "default"
+comment_parts.append(f"**Models:** Codex ({codex_model_display}) / Gemini ({gemini_model_display})\n")
 
 issues_found = False
 
