@@ -57,8 +57,17 @@
     },
     "CLAUDE_CODE_OAUTH_TOKEN": {
       "description": "Claude Code OAuth token"
+    },
+    "CODEX_AUTH_JSON": {
+      "description": "Codex CLI auth.json (base64 encoded)"
+    },
+    "GEMINI_OAUTH_CREDS": {
+      "description": "Gemini CLI oauth_creds.json (base64 encoded)"
+    },
+    "GEMINI_GOOGLE_ACCOUNTS": {
+      "description": "Gemini CLI google_accounts.json (base64 encoded)"
     }
   },
   "postCreateCommand": "npm install -g happy-coder@0.13.0",
-  "postStartCommand": "/usr/local/script/install-skills.sh"
+  "postStartCommand": "/usr/local/script/install-skills.sh && /usr/local/script/restore-cli-auth.sh"
 }
