@@ -61,17 +61,17 @@ GUI (https://github.com/settings/codespaces) を使わずに、Codespaces シー
 ```
 === Codespaces シークレット一覧 ===
 
-LINEAR_API_KEY
-  - Elu-co-jp/project-a
-  - keito4/my-project
+MY_API_KEY
+  - your-org/project-a
+  - your-name/my-project
 
-NODE_AUTH_TOKEN
-  - Elu-co-jp/project-a
+DATABASE_URL
+  - your-org/project-a
 
-OP_SERVICE_ACCOUNT_TOKEN
-  - Elu-co-jp/project-a
-  - Elu-co-jp/project-b
-  - keito4/my-project
+SECRET_TOKEN
+  - your-org/project-a
+  - your-org/project-b
+  - your-name/my-project
 ```
 
 ## Workflow
