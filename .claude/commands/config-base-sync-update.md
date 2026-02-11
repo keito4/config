@@ -8,11 +8,23 @@ argument-hint: [--version X.Y.Z]
 
 このコマンドは以下を自動実行します：
 
-- config-baseイメージの最新バージョンへの更新
+- config-baseイメージの最新バージョンへの更新（ローカル・Codespaces両方）
 - プロジェクトタイプに基づいた推奨featuresの自動追加
 - Claude Code動作に必要な設定の確保（mounts, postCreateCommand）
 - 重複featuresの検出と報告
 - GitHub PRの自動作成
+
+## 💡 Codespaces推奨
+
+**GitHub Codespacesの利用を強く推奨します。**
+
+- ✅ ローカル環境の汚染なし
+- ✅ どこからでもアクセス可能
+- ✅ 高速なビルド環境（プリビルド対応）
+- ✅ チーム間で統一された開発環境
+- ✅ Claude Code、Codex、Geminiがプリインストール済み
+
+Codespaceの作成: `./script/create-codespace.sh` または GitHub Web UI から作成
 
 ## Step 1: Load Settings
 
@@ -45,14 +57,30 @@ If the file does not exist or cannot be read:
 
 ## Step 3: Check Current Version
 
-Read `.devcontainer/devcontainer.json` to check current image version.
+Read both DevContainer configuration files:
+
+1. `.devcontainer/devcontainer.json` (ローカル開発用)
+2. `.devcontainer/codespaces/devcontainer.json` (GitHub Codespaces用)
 
 Extract current version from `image` field (format: `ghcr.io/keito4/config-base:X.Y.Z`)
 
-If current version == target version:
+Report version status for each file:
+
+```
+📦 Current Versions:
+- Local:      ghcr.io/keito4/config-base:X.Y.Z
+- Codespaces: ghcr.io/keito4/config-base:X.Y.Z (or "Not found")
+```
+
+If both versions == target version:
 
 - Report: "Already on latest version X.Y.Z. No update needed."
 - Stop execution
+
+If versions differ between files:
+
+- Report: "⚠️ Version mismatch detected between local and Codespaces configs"
+- Continue with update to synchronize both
 
 ## Step 4: Check Git Status
 
@@ -178,13 +206,18 @@ From `devcontainer-recommendations.md`, identify:
    - Terraformプロジェクト（\*.tfファイルが存在）:
      - `ghcr.io/devcontainers/features/terraform:1`
 
-## Step 7: Update devcontainer.json
+## Step 7: Update devcontainer.json Files
 
-Based on `updateScope`, update `.devcontainer/devcontainer.json`:
+Based on `updateScope`, update both DevContainer configuration files:
+
+1. `.devcontainer/devcontainer.json` (ローカル開発用)
+2. `.devcontainer/codespaces/devcontainer.json` (GitHub Codespaces用) - 存在する場合
 
 ### 7.1: Update Image Version
 
-Update `image` field to `ghcr.io/keito4/config-base:{target-version}`
+Update `image` field in **both files** to `ghcr.io/keito4/config-base:{target-version}`
+
+**Note**: Codespaces用設定が存在しない場合はスキップし、ローカル設定のみ更新
 
 ### 7.2: Update Features (if updateScope is "all" or "minimal")
 
@@ -332,10 +365,15 @@ git add .devcontainer/
 git commit -m "feat: Update config-base image to v{target-version}
 
 - Update DevContainer image from v{old-version} to v{target-version}
+- Update both local and Codespaces configurations
 - Sync configuration with latest recommended settings
 - Add {count} new features based on project type detection
 - Ensure Claude Code compatibility (mounts, postCreateCommand)
 - Update features and mounts
+
+Updated files:
+- .devcontainer/devcontainer.json (local)
+- .devcontainer/codespaces/devcontainer.json (Codespaces)
 
 Features added: {list-of-added-features}
 
@@ -423,6 +461,10 @@ Provide a complete summary including features changes:
 📦 Image Version
 - ghcr.io/keito4/config-base:{old-version} → v{target-version}
 
+📁 Updated Files
+- .devcontainer/devcontainer.json (local): ✅ Updated
+- .devcontainer/codespaces/devcontainer.json: ✅ Updated (or "Not found - skipped")
+
 🔧 Features Summary
 - Added: {count} features
 - Updated: {count} features
@@ -453,6 +495,12 @@ Provide a complete summary including features changes:
 - Run `claude help` to verify Claude Code is working
 - Check logs if container build fails
 - Review `.devcontainer/devcontainer.json` for any conflicts
+
+🚀 Codespaces推奨
+GitHub Codespacesを使用すると、よりスムーズな開発体験が得られます：
+- Codespace作成: ./script/create-codespace.sh
+- または GitHub Web UI から "Code" → "Codespaces" → "Create codespace"
+- Claude Code、Codex、Gemini CLI がプリインストール済み
 ```
 
 ---
