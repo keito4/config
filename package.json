@@ -12,7 +12,7 @@
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "shellcheck": "find script -name '*.sh' -type f | grep -v 'import.sh\\|export.sh\\|credentials.sh\\|brew-deps.sh\\|/lib/\\|credentials/providers/' | xargs -r shellcheck -x",
+    "shellcheck": "find script -name '*.sh' -type f | grep -v 'import.sh\\|export.sh\\|credentials.sh\\|brew-deps.sh\\|codespaces-secrets.sh\\|/lib/\\|credentials/providers/' | xargs -r shellcheck -x",
     "test": "jest --runInBand",
     "test:integration": "bats test/integration/",
     "test:all": "npm test && npm run test:integration",
