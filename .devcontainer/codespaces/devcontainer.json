@@ -59,5 +59,6 @@
       "description": "Claude Code OAuth token"
     }
   },
+  "postCreateCommand": "npm install -g happy-coder@0.13.0",
   "postStartCommand": "/usr/local/script/install-skills.sh"
 }
