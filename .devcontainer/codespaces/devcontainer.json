@@ -57,5 +57,6 @@
     "CLAUDE_CODE_OAUTH_TOKEN": {
       "description": "Claude Code OAuth token"
     }
-  }
+  },
+  "postStartCommand": "/usr/local/script/install-skills.sh"
 }
