@@ -2,6 +2,7 @@
   "name": "Config Base (Codespaces)",
   "image": "ghcr.io/keito4/config-base:1.62.2",
   "features": {
+    "ghcr.io/devcontainers/features/sshd:1": {},
     "ghcr.io/devcontainers-extra/features/homebrew-package:1": {},
     "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
     "ghcr.io/devcontainers/features/node:1": {
