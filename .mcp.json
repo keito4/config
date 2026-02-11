@@ -22,6 +22,15 @@
       "headers": {
         "Authorization": "Bearer ${LINEAR_API_KEY}"
       }
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp",
+      "headers": {}
     }
   }
 }

@@ -111,11 +111,52 @@ Linearプロジェクト管理ツールとの統合。Issue/Project操作が可�
 
 ### GitHub
 
-GitHub操作の統合（Claude Code組み込み機能）。
+GitHub操作の統合。
 
 **設定:**
-Claude Codeには GitHub MCP が組み込まれているため、追加設定不要です。
-`gh` CLIの認証があれば自動的に利用可能です。
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    }
+  }
+}
+```
+
+**利用可能な操作:**
+
+- リポジトリの操作
+- Issue/PRの管理
+- GitHub Copilot連携
+
+**注意:** Claude Codeには GitHub MCP が組み込まれているため、`gh` CLI認証があれば追加設定不要です。
+
+### Figma
+
+Figmaデザインツールとの統合。
+
+**設定:**
+
+```json
+{
+  "mcpServers": {
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp",
+      "headers": {}
+    }
+  }
+}
+```
+
+**利用可能な操作:**
+
+- デザインファイルの読み取り
+- コンポーネント情報の取得
+- デザインからコード生成のサポート
 
 ### Supabase
 
@@ -171,6 +212,15 @@ Supabaseデータベースとの統合。
       "headers": {
         "Authorization": "Bearer ${LINEAR_API_KEY}"
       }
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp",
+      "headers": {}
     }
   }
 }
