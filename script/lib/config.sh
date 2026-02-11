@@ -10,9 +10,10 @@ typeset -ga CONFIG_CLAUDE_PLUGIN_FILES=(config.json known_marketplaces.json)
 
 # Constants for Codex configuration
 typeset -ga CONFIG_CODEX_SHARED_FILES=(config.toml)
-typeset -ga CONFIG_CODEX_SHARED_DIRS=(prompts)
+typeset -ga CONFIG_CODEX_SHARED_DIRS=(prompts rules)
 
 # Constants for Cursor configuration
+typeset -ga CONFIG_CURSOR_SHARED_FILES=(mcp.json)
 typeset -ga CONFIG_CURSOR_SHARED_DIRS=(rules)
 
 # Claude設定のインポート
@@ -203,6 +204,14 @@ config::import_cursor() {
 
   mkdir -p "$target_dir"
 
+  # 共有設定ファイル
+  for file in "${CONFIG_CURSOR_SHARED_FILES[@]}"; do
+    if [[ -f "$source_dir/$file" ]]; then
+      cp "$source_dir/$file" "$target_dir/$file"
+      echo "✅ Imported cursor/$file"
+    fi
+  done
+
   # ディレクトリのコピー
   for dir in "${CONFIG_CURSOR_SHARED_DIRS[@]}"; do
     if [[ -d "$source_dir/$dir" ]]; then
@@ -224,6 +233,14 @@ config::export_cursor() {
   fi
 
   mkdir -p "$target_dir"
+
+  # 共有設定ファイル
+  for file in "${CONFIG_CURSOR_SHARED_FILES[@]}"; do
+    if [[ -f "$source_dir/$file" ]]; then
+      cp "$source_dir/$file" "$target_dir/$file"
+      echo "✅ Exported cursor/$file"
+    fi
+  done
 
   # ディレクトリのエクスポート
   for dir in "${CONFIG_CURSOR_SHARED_DIRS[@]}"; do
