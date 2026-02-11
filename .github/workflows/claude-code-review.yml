@@ -2,7 +2,7 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, ready_for_review]
     # Optional: Only run on specific file changes
     # paths:
     #   - "src/**/*.ts"
@@ -17,8 +17,11 @@ concurrency:
 jobs:
   # CIが完了しているかチェック
   check-ci-status:
+    # Draft PRはスキップ
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 20 # CIの完了を待つため延長
+    continue-on-error: true # ワークフローファイル変更時の初回PR用
     outputs:
       ci_passed: ${{ steps.check.outputs.ci_passed }}
     permissions:
@@ -114,8 +117,8 @@ jobs:
           exit 0
 
   claude-review:
-    # CIが成功した場合のみ実行（Dependabotはシークレットにアクセスできないためスキップ）
-    if: needs.check-ci-status.outputs.ci_passed == 'true' && github.actor != 'dependabot[bot]'
+    # CIが成功した場合のみ実行（Draft PR、Dependabotはスキップ）
+    if: github.event.pull_request.draft == false && needs.check-ci-status.outputs.ci_passed == 'true' && github.actor != 'dependabot[bot]'
     needs: [check-ci-status]
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -134,6 +137,7 @@ jobs:
 
       - name: Run Claude Code Review
         id: claude-review
+        continue-on-error: true
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -155,3 +159,12 @@ jobs:
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
           claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
+
+      - name: Report success
+        if: always()
+        run: |
+          if [ "${{ steps.claude-review.outcome }}" == "failure" ]; then
+            echo "⚠️ Claude Code Review encountered an issue but this is non-blocking"
+          else
+            echo "✅ Claude Code Review completed successfully"
+          fi
