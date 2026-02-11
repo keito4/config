@@ -7,7 +7,7 @@ source "$SCRIPT_DIR/lib/platform.sh"
 source "$SCRIPT_DIR/lib/config.sh"
 
 REPO_PATH="${REPO_PATH:-$(pwd)}"
-mkdir -p "$REPO_PATH/brew" "$REPO_PATH/vscode" "$REPO_PATH/git" "$REPO_PATH/npm" "$REPO_PATH/.zsh" "$REPO_PATH/dot" "$REPO_PATH/.claude"
+mkdir -p "$REPO_PATH/brew" "$REPO_PATH/vscode" "$REPO_PATH/git" "$REPO_PATH/npm" "$REPO_PATH/.zsh" "$REPO_PATH/dot" "$REPO_PATH/.claude" "$REPO_PATH/.codex" "$REPO_PATH/.cursor"
 
 export_extensions_darwin() {
 	if type cursor >/dev/null 2>&1; then
@@ -63,4 +63,19 @@ fi
 # Claude Code shared configuration (exclude local-only files)
 if [[ -d ~/.claude ]]; then
 	config::export_claude ~/.claude "$REPO_PATH/.claude"
+fi
+
+# MCP configuration (replace API keys with placeholders)
+if [[ -f ~/.mcp.json ]]; then
+	config::export_mcp ~/.mcp.json "$REPO_PATH/.mcp.json"
+fi
+
+# Codex configuration
+if [[ -d ~/.codex ]]; then
+	config::export_codex ~/.codex "$REPO_PATH/.codex"
+fi
+
+# Cursor configuration
+if [[ -d ~/.cursor ]]; then
+	config::export_cursor ~/.cursor "$REPO_PATH/.cursor"
 fi

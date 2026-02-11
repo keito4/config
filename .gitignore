@@ -71,5 +71,5 @@ report.log
 .cursor/skills/
 .github/skills/
 
-# MCP configuration
-.mcp.json
+# MCP local overrides (use .mcp.local.json for personal settings)
+.mcp.local.json
