@@ -1,9 +1,6 @@
 {
-  "name": "Config Base (Local)",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
+  "name": "Config Base (Codespaces)",
+  "image": "ghcr.io/keito4/config-base:1.62.2",
   "features": {
     "ghcr.io/devcontainers-extra/features/homebrew-package:1": {},
     "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
@@ -37,14 +34,6 @@
   "containerEnv": {
     "CLAUDE_ENV_FILE": "/home/vscode/.devcontainer.env"
   },
-  "mounts": [
-    "source=${localEnv:HOME}/.cursor,target=/home/vscode/.cursor,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.codex,target=/home/vscode/.codex,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.gemini,target=/home/vscode/.gemini,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.happy,target=/home/vscode/.happy,type=bind,consistency=cached"
-  ],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -56,6 +45,17 @@
       "settings": {
         "npm.packageManager": "pnpm"
       }
+    },
+    "codespaces": {
+      "openFiles": ["README.md"]
+    }
+  },
+  "secrets": {
+    "ANTHROPIC_API_KEY": {
+      "description": "Anthropic API key for Claude Code"
+    },
+    "CLAUDE_CODE_OAUTH_TOKEN": {
+      "description": "Claude Code OAuth token"
     }
   }
 }

@@ -25,6 +25,10 @@
       "version": "0.26.0",
       "overridden": false
     },
+    "happy-coder": {
+      "version": "0.13.0",
+      "overridden": false
+    },
     "bash-language-server": {
       "version": "5.6.0",
       "overridden": false

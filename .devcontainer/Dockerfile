@@ -76,12 +76,14 @@ USER root
 RUN CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@openai/codex'].version") \
  && VERCEL_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['vercel'].version") \
  && GEMINI_CLI_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@google/gemini-cli'].version") \
+ && HAPPY_CODER_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['happy-coder'].version") \
  && npm install -g eslint \
     typescript \
     typescript-language-server \
     @openai/codex@${CODEX_VERSION} \
     vercel@${VERCEL_VERSION} \
-    @google/gemini-cli@${GEMINI_CLI_VERSION}
+    @google/gemini-cli@${GEMINI_CLI_VERSION} \
+    happy-coder@${HAPPY_CODER_VERSION}
 
 USER vscode
 RUN bash -lc "cargo install similarity-ts" || true \
@@ -97,8 +99,8 @@ RUN echo "alias gco='git checkout'" >> /home/vscode/.bashrc \
  && echo "alias gpl='git pull'" >> /home/vscode/.bashrc \
  && echo 'export PATH="/usr/local/script:$PATH"' >> /home/vscode/.bashrc
 
-RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex /home/vscode/.agents \
- && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex /home/vscode/.agents
+RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex /home/vscode/.agents /home/vscode/.happy \
+ && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex /home/vscode/.agents /home/vscode/.happy
 
 COPY --chown=vscode:vscode .devcontainer/claude-settings.json /home/vscode/.claude/settings.json
 COPY --chown=vscode:vscode .devcontainer/claude-settings.local.json /home/vscode/.claude/settings.local.json
