@@ -90,6 +90,21 @@ if [[ -d "$REPO_PATH/.claude" ]]; then
 	config::import_claude "$REPO_PATH/.claude" ~/.claude
 fi
 
+# MCP configuration
+if [[ -f "$REPO_PATH/.mcp.json" ]]; then
+	config::import_mcp "$REPO_PATH/.mcp.json" ~/.mcp.json
+fi
+
+# Codex configuration
+if [[ -d "$REPO_PATH/.codex" ]]; then
+	config::import_codex "$REPO_PATH/.codex" ~/.codex
+fi
+
+# Cursor configuration
+if [[ -d "$REPO_PATH/.cursor" ]]; then
+	config::import_cursor "$REPO_PATH/.cursor" ~/.cursor
+fi
+
 if devcontainer::is_active; then
 	devcontainer::bootstrap
 fi
