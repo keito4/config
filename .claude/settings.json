@@ -175,7 +175,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/vscode/.claude/hooks/block_git_no_verify.py"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 .claude/hooks/block_git_no_verify.py'"
           }
         ]
       },
@@ -184,7 +184,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/vscode/.claude/hooks/pre_git_quality_gates.py"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 .claude/hooks/pre_git_quality_gates.py'"
           }
         ]
       },
@@ -193,7 +193,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/vscode/.claude/hooks/pre_exit_plan_ai_review.py"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 .claude/hooks/pre_exit_plan_ai_review.py'"
           }
         ]
       }
@@ -204,7 +204,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/vscode/.claude/hooks/post_git_push_ci.py"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 .claude/hooks/post_git_push_ci.py'"
           }
         ]
       },
@@ -213,7 +213,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/vscode/.claude/hooks/post_pr_ai_review.py"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 .claude/hooks/post_pr_ai_review.py'"
           }
         ]
       }

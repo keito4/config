@@ -53,6 +53,7 @@ if block:
         "✅ 代わりに次のコマンドを実行してください:\n"
         f"{sanitized_cmd}\n"
     )
+    sys.stderr.flush()
     sys.exit(2)
 
 sys.exit(0)
