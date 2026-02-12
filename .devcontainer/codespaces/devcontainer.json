@@ -1,6 +1,6 @@
 {
   "name": "Config Base (Codespaces)",
-  "image": "ghcr.io/keito4/config-base:1.62.2",
+  "image": "ghcr.io/keito4/config-base:1.62.3",
   "features": {
     "ghcr.io/devcontainers/features/sshd:1": {},
     "ghcr.io/devcontainers-extra/features/homebrew-package:1": {},
