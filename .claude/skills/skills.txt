@@ -18,3 +18,7 @@ vercel-labs/skills
 # === Vercel Agent Browser ===
 # ブラウザ自動化（テスト、フォーム、スクリーンショット、データ抽出）
 vercel-labs/agent-browser
+
+# === Context7 ===
+# ライブラリ・フレームワークの最新ドキュメント取得
+intellectronica/agent-skills
