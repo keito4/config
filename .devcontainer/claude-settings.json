@@ -231,8 +231,6 @@
       "mcp__supabase__list_edge_functions",
       "mcp__linear__get_issue",
       "mcp__o3__o3-search",
-      "mcp__context7__resolve-library-id",
-      "mcp__context7__get-library-docs",
       "Bash(psql:*)",
       "Bash(PGPASSWORD=postgres psql:*)",
       "Bash(docker:*)",

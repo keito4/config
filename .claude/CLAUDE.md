@@ -109,9 +109,9 @@ PR作成後にCIが失敗した場合、**そのブランチで解決できる�
 
 基本的にgithub actionsを使用する。
 
-## 6.1 Context7 MCPによるドキュメント参照
+## 6.1 Context7 スキルによるドキュメント参照
 
-ライブラリやフレームワークの使い方を調べる際は、**Context7 MCP**を自動的に使用して最新ドキュメントを取得する。
+ライブラリやフレームワークの使い方を調べる際は、**Context7 スキル**を使用して最新ドキュメントを取得する。
 
 ### 自動利用トリガー
 
@@ -127,14 +127,21 @@ PR作成後にCIが失敗した場合、**そのブランチで解決できる�
 
 ### 使用手順
 
-1. `resolve-library-id` でライブラリIDを取得
-2. `get-library-docs` で最新ドキュメントを取得
+1. ライブラリIDを検索:
+   ```bash
+   curl -s "https://context7.com/api/v1/search?libraryName=<library>&query=<topic>"
+   ```
+2. 取得したIDでドキュメントを取得:
+   ```bash
+   curl -s "https://context7.com/api/v1/<library-id>?query=<topic>&type=txt"
+   ```
 3. 取得した情報に基づいて回答
 
 ### 注意事項
 
 - 古い知識に頼らず、必ずContext7で最新情報を確認する
 - ドキュメントが見つからない場合のみ、既存知識で回答する
+- APIキー不要で利用可能
 
 ## 7. Quality Gates（品質ゲート）
 

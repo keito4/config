@@ -67,6 +67,9 @@ while IFS= read -r line || [[ -n "$line" ]]; do
         "vercel-labs/agent-browser")
             check_skills=("agent-browser" "skill-creator")
             ;;
+        "intellectronica/agent-skills")
+            check_skills=("context7")
+            ;;
         *)
             # 不明なリポジトリは basename を使用
             check_skills=("$(basename "$skill")")
