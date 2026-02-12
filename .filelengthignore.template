@@ -1,0 +1,16 @@
+# .filelengthignore - 行数チェック (check-file-length.sh) の除外パターン
+#
+# .gitignore と同じ記法でパターンを指定できます。
+#   - 空行とコメント行 (#) は無視されます
+#   - glob パターンが使えます（*, **, ? など）
+#   - パスはリポジトリルートからの相対パスで評価されます
+#
+# 例:
+#   src/lib/types/database.ts   # 完全パス指定
+#   **/*.generated.ts           # glob パターン
+#   **/schema.sql               # 任意の階層
+
+# 自動生成パターン
+**/*.generated.*
+**/*.gen.*
+**/database.types.ts
