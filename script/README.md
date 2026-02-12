@@ -4,12 +4,13 @@ This directory contains utility scripts for managing configuration, credentials,
 
 ## Quick Reference
 
-| Script                | Purpose                          | Used By                |
-| --------------------- | -------------------------------- | ---------------------- |
-| `setup-claude.sh`     | Claude Code CLI setup            | Makefile, DevContainer |
-| `credentials.sh`      | 1Password credential management  | Makefile               |
-| `update-libraries.sh` | Library updates for Codex/Claude | package.json           |
-| `version.sh`          | Semantic versioning              | Makefile               |
+| Script                   | Purpose                          | Used By                |
+| ------------------------ | -------------------------------- | ---------------------- |
+| `setup-claude.sh`        | Claude Code CLI setup            | Makefile, DevContainer |
+| `credentials.sh`         | 1Password credential management  | Makefile               |
+| `update-libraries.sh`    | Library updates for Codex/Claude | package.json           |
+| `version.sh`             | Semantic versioning              | Makefile               |
+| `check-image-version.sh` | Show DevContainer image version  | Manual                 |
 
 ## Configuration Management
 
@@ -246,6 +247,19 @@ Comprehensive DevContainer health check.
 **Usage**: `./script/container-health.sh [--json]`
 
 **Claude command**: `/container-health`
+
+### check-image-version.sh
+
+Displays the config-base DevContainer image version.
+
+**Usage**:
+
+```bash
+./script/check-image-version.sh        # Show version
+./script/check-image-version.sh -v     # Show version with additional info
+```
+
+**Note**: Version tracking was added in v1.64.0. Older images will show "unknown".
 
 ### install-npm-globals.sh
 

@@ -1,8 +1,15 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu
 
-# Build arguments for Claude Code authentication
+# Build arguments
 ARG CLAUDE_CODE_OAUTH_TOKEN
 ARG ANTHROPIC_API_KEY
+ARG IMAGE_VERSION="dev"
+
+# OCI Image Labels for version tracking
+LABEL org.opencontainers.image.version="${IMAGE_VERSION}" \
+      org.opencontainers.image.source="https://github.com/keito4/config" \
+      org.opencontainers.image.title="config-base" \
+      org.opencontainers.image.description="DevContainer base image with Claude Code, Codex, and development tools"
 
 # Install dependencies and Node.js using official binaries
 RUN apt-get update && apt-get install -y \
@@ -153,6 +160,10 @@ RUN chsh -s /bin/bash vscode
 
 RUN echo 'source ~/.bashrc' >> /home/vscode/.bash_profile \
  && chown vscode:vscode /home/vscode/.bash_profile
+
+# Write version file for easy version checking
+RUN echo "${IMAGE_VERSION}" > /etc/config-base-version \
+ && chmod 644 /etc/config-base-version
 
 COPY package.json package-lock.json /tmp/
 COPY .husky /tmp/.husky/
