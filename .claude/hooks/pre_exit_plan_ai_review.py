@@ -26,7 +26,7 @@ has_codex = shutil.which("codex") is not None
 has_gemini = shutil.which("gemini") is not None
 
 if not has_codex and not has_gemini:
-    print("⚠️  AIレビューツール（Codex/Gemini）がインストールされていません。スキップします。", file=sys.stderr)
+    print("⚠️  AIレビューツール（Codex/Gemini）がインストールされていません。スキップします。", file=sys.stderr, flush=True)
     sys.exit(0)
 
 # プランファイルを検出
@@ -41,7 +41,7 @@ if os.path.isdir(plan_dir):
     )
 
 if not plan_files:
-    print("⚠️  プランファイルが見つかりません。スキップします。", file=sys.stderr)
+    print("⚠️  プランファイルが見つかりません。スキップします。", file=sys.stderr, flush=True)
     sys.exit(0)
 
 latest_plan = plan_files[0]
@@ -52,13 +52,13 @@ try:
     with open(latest_plan, 'r', encoding='utf-8') as f:
         plan_content = f.read()
 except Exception as e:
-    print(f"⚠️  プランファイル読み込みエラー: {e}", file=sys.stderr)
+    print(f"⚠️  プランファイル読み込みエラー: {e}", file=sys.stderr, flush=True)
     sys.exit(0)
 
-print("", file=sys.stderr)
-print("=" * 60, file=sys.stderr)
-print(f"🔍 プラン '{plan_name}' をAIでレビュー中...", file=sys.stderr)
-print("=" * 60, file=sys.stderr)
+print("", file=sys.stderr, flush=True)
+print("=" * 60, file=sys.stderr, flush=True)
+print(f"🔍 プラン '{plan_name}' をAIでレビュー中...", file=sys.stderr, flush=True)
+print("=" * 60, file=sys.stderr, flush=True)
 
 # レビュープロンプト
 review_prompt = f"""You are reviewing a software implementation plan before it is approved for execution.
@@ -99,9 +99,9 @@ review_results = {
 
 def run_codex_review():
     """Codexによるプランレビューを実行"""
-    print("", file=sys.stderr)
-    print("## 🤖 Codex Plan Review", file=sys.stderr)
-    print("-" * 40, file=sys.stderr)
+    print("", file=sys.stderr, flush=True)
+    print("## 🤖 Codex Plan Review", file=sys.stderr, flush=True)
+    print("-" * 40, file=sys.stderr, flush=True)
 
     codex_command = [
         "codex", "exec",
@@ -119,7 +119,7 @@ def run_codex_review():
         )
 
         if result.stdout:
-            print(result.stdout, file=sys.stderr)
+            print(result.stdout, file=sys.stderr, flush=True)
             output = result.stdout.lower()
 
             review_results["codex"]["success"] = True
@@ -129,19 +129,19 @@ def run_codex_review():
                 review_results["codex"]["ready"] = True
 
         if result.returncode != 0:
-            print(f"⚠️  Codex実行エラー (exit code: {result.returncode})", file=sys.stderr)
+            print(f"⚠️  Codex実行エラー (exit code: {result.returncode})", file=sys.stderr, flush=True)
 
     except subprocess.TimeoutExpired:
-        print("⚠️  Codexレビューがタイムアウトしました（10分）", file=sys.stderr)
+        print("⚠️  Codexレビューがタイムアウトしました（10分）", file=sys.stderr, flush=True)
     except Exception as e:
-        print(f"⚠️  Codexレビュー実行エラー: {e}", file=sys.stderr)
+        print(f"⚠️  Codexレビュー実行エラー: {e}", file=sys.stderr, flush=True)
 
 
 def run_gemini_review():
     """Geminiによるプランレビューを実行"""
-    print("", file=sys.stderr)
-    print("## ✨ Gemini Plan Review", file=sys.stderr)
-    print("-" * 40, file=sys.stderr)
+    print("", file=sys.stderr, flush=True)
+    print("## ✨ Gemini Plan Review", file=sys.stderr, flush=True)
+    print("-" * 40, file=sys.stderr, flush=True)
 
     gemini_command = [
         "gemini",
@@ -158,7 +158,7 @@ def run_gemini_review():
         )
 
         if result.stdout:
-            print(result.stdout, file=sys.stderr)
+            print(result.stdout, file=sys.stderr, flush=True)
             output = result.stdout.lower()
 
             review_results["gemini"]["success"] = True
@@ -168,12 +168,12 @@ def run_gemini_review():
                 review_results["gemini"]["ready"] = True
 
         if result.returncode != 0:
-            print(f"⚠️  Gemini実行エラー (exit code: {result.returncode})", file=sys.stderr)
+            print(f"⚠️  Gemini実行エラー (exit code: {result.returncode})", file=sys.stderr, flush=True)
 
     except subprocess.TimeoutExpired:
-        print("⚠️  Geminiレビューがタイムアウトしました（10分）", file=sys.stderr)
+        print("⚠️  Geminiレビューがタイムアウトしました（10分）", file=sys.stderr, flush=True)
     except Exception as e:
-        print(f"⚠️  Geminiレビュー実行エラー: {e}", file=sys.stderr)
+        print(f"⚠️  Geminiレビュー実行エラー: {e}", file=sys.stderr, flush=True)
 
 
 # 利用可能なツールでレビューを実行
@@ -198,20 +198,20 @@ any_success = (
 )
 
 # 結果の表示と判定
-print("", file=sys.stderr)
-print("=" * 60, file=sys.stderr)
+print("", file=sys.stderr, flush=True)
+print("=" * 60, file=sys.stderr, flush=True)
 
 if any_needs_revision:
-    print("❌ プランに修正が必要です。上記の指摘を確認してください。", file=sys.stderr)
-    print("=" * 60, file=sys.stderr)
+    print("❌ プランに修正が必要です。上記の指摘を確認してください。", file=sys.stderr, flush=True)
+    print("=" * 60, file=sys.stderr, flush=True)
     sys.exit(2)
 
 if any_ready:
-    print("✅ AIプランレビュー完了 - 問題なし", file=sys.stderr)
+    print("✅ AIプランレビュー完了 - 問題なし", file=sys.stderr, flush=True)
 elif any_success:
-    print("⚠️  AIプランレビュー完了 - 明確な承認なし（続行を許可）", file=sys.stderr)
+    print("⚠️  AIプランレビュー完了 - 明確な承認なし（続行を許可）", file=sys.stderr, flush=True)
 else:
-    print("⚠️  AIレビューが実行できませんでした（続行を許可）", file=sys.stderr)
+    print("⚠️  AIレビューが実行できませんでした（続行を許可）", file=sys.stderr, flush=True)
 
-print("=" * 60, file=sys.stderr)
+print("=" * 60, file=sys.stderr, flush=True)
 sys.exit(0)
