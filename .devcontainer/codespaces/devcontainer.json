@@ -68,6 +68,6 @@
       "description": "Gemini CLI google_accounts.json (base64 encoded)"
     }
   },
-  "postCreateCommand": "/workspaces/config/script/install-npm-globals.sh",
-  "postStartCommand": "/usr/local/script/install-skills.sh && /usr/local/script/restore-cli-auth.sh"
+  "postCreateCommand": "cd /workspaces/*/ && ./script/install-npm-globals.sh",
+  "postStartCommand": "/usr/local/script/install-skills.sh; cd /workspaces/*/ && ./script/restore-cli-auth.sh || true"
 }
