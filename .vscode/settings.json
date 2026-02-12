@@ -8,15 +8,11 @@
       "mode": "auto"
     }
   ],
-  "typescript.tsdk": "node_modules/typescript/lib",
   "files.eol": "\n",
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[json]": {
