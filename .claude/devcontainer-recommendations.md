@@ -10,12 +10,11 @@ Elu-co-jp配下の全リポジトリで統一されたDevContainer環境を提�
 
 ```json
 {
-  "image": "ghcr.io/keito4/config-base:1.54.0"
+  "image": "ghcr.io/keito4/config-base:latest"
 }
 ```
 
-**最新バージョン**: 1.54.0
-**推奨バージョン**: 1.54.0+（安定版として広く採用）
+**推奨**: `latest` タグを使用（常に最新の安定版が自動適用）
 
 ## Claude Code動作のための必須設定
 
@@ -25,7 +24,7 @@ Claude Code（AI開発アシスタント）を動作させるための最小限�
 
 ```json
 {
-  "image": "ghcr.io/keito4/config-base:1.54.0"
+  "image": "ghcr.io/keito4/config-base:latest"
 }
 ```
 
@@ -155,7 +154,7 @@ OPENAI_API_KEY=***  # o3 MCP用
 ```json
 {
   "name": "Project Name",
-  "image": "ghcr.io/keito4/config-base:1.54.0",
+  "image": "ghcr.io/keito4/config-base:latest",
   "mounts": [
     "source=${localEnv:HOME}/.codex,target=/home/vscode/.codex,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
@@ -737,7 +736,7 @@ NODE_ENV=development
 
    ```json
    - "image": "ghcr.io/keito4/config-base:1.0.40"
-   + "image": "ghcr.io/keito4/config-base:1.54.0"
+   + "image": "ghcr.io/keito4/config-base:latest"
    ```
 
 2. **非推奨Feature削除**
