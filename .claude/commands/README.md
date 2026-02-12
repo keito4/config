@@ -2,6 +2,35 @@
 
 This directory contains pre-configured commands that provide automated workflows for common development tasks. These commands can be invoked directly by Claude or triggered automatically based on repository events and context.
 
+## Quick Reference
+
+| カテゴリ              | コマンド                        | 説明                                         |
+| --------------------- | ------------------------------- | -------------------------------------------- |
+| **Maintenance**       | `/repo-maintenance`             | 包括的なリポジトリメンテナンス               |
+| **Git Workflow**      | `/git-sync`                     | Git 同期とブランチ管理                       |
+|                       | `/branch-cleanup`               | マージ済み・古いブランチのクリーンアップ     |
+|                       | `/create-pr`                    | ベースブランチをマージして PR 作成           |
+| **Code Analysis**     | `/similarity-analysis`          | コードの類似性分析と重複検出                 |
+|                       | `/code-complexity-check`        | コード複雑度分析とリファクタリング候補の特定 |
+| **Quality & Testing** | `/pre-pr-checklist`             | PR 作成前の品質チェック                      |
+|                       | `/test-coverage-trend`          | テストカバレッジのトレンド追跡               |
+| **Security**          | `/dependency-health-check`      | 依存関係の健全性分析                         |
+|                       | `/security-credential-scan`     | ハードコードされた認証情報のスキャン         |
+|                       | `/security-review`              | セキュリティレビューと改善提案               |
+| **DevContainer**      | `/container-health`             | コンテナ環境の健全性確認                     |
+|                       | `/devcontainer-checklist`       | DevContainer 再起動後の確認チェックリスト    |
+|                       | `/config-base-sync-check`       | config-base イメージのバージョン確認         |
+|                       | `/config-base-sync-update`      | DevContainer を最新に更新して PR 作成        |
+| **Setup**             | `/setup-new-repo`               | 新規リポジトリのセットアップ                 |
+|                       | `/setup-ci`                     | CI/CD ワークフローのセットアップ             |
+|                       | `/setup-husky`                  | Git hooks (Husky) のセットアップ             |
+|                       | `/setup-team-protection`        | GitHub リポジトリ保護ルールの設定            |
+| **Codespaces**        | `/codespaces-secrets`           | Codespaces シークレットの管理                |
+| **Config Sync**       | `/sync-settings`                | Claude/Codex 設定の同期                      |
+|                       | `/config-contribution-discover` | 新機能の発見と取り込み                       |
+| **Updates**           | `/update-claude-code`           | Claude Code の更新                           |
+| **Documentation**     | `/changelog-generator`          | Conventional Commits から CHANGELOG を生成   |
+
 ## Available Commands
 
 ### Maintenance
@@ -222,6 +251,113 @@ This directory contains pre-configured commands that provide automated workflows
 /container-health --verbose
 ```
 
+#### `devcontainer-checklist.md`
+
+**Purpose**: DevContainer 再起動後の確認チェックリスト
+**Features**:
+
+- Node.js/npm 環境の確認
+- Git 設定の確認
+- Docker 動作確認
+- LSP (Language Server Protocol) 設定確認
+- 環境変数とクレデンシャルの確認
+- Codespaces 環境の確認
+
+**Usage**:
+
+```
+/devcontainer-checklist
+```
+
+#### `config-base-sync-check.md`
+
+**Purpose**: Check current and latest config-base image versions
+**Features**:
+
+- 現在の DevContainer イメージバージョン確認
+- 最新リリースバージョンの取得
+- バージョン差分の表示
+
+**Usage**:
+
+```
+/config-base-sync-check
+```
+
+#### `config-base-sync-update.md`
+
+**Purpose**: Update DevContainer to latest config-base image, sync recommended features, and create PR
+**Features**:
+
+- config-base イメージの最新バージョンへの更新
+- プロジェクトタイプに基づいた推奨 features の自動追加
+- Claude Code 動作に必要な設定の確保
+- 重複 features の検出と報告
+- GitHub PR の自動作成
+- Codespaces シークレット同期のリマインダー
+
+**Usage**:
+
+```
+/config-base-sync-update
+/config-base-sync-update --version 1.60.0
+```
+
+#### `update-claude-code.md`
+
+**Purpose**: Update Claude Code to the latest version
+**Features**:
+
+- npm/global.json の Claude Code バージョン更新
+- 最新バージョンの自動検出
+- 更新 PR の作成
+
+**Usage**:
+
+```
+/update-claude-code
+```
+
+#### `setup-new-repo.md`
+
+**Purpose**: Setup new repository with DevContainer, CI/CD, and development tools from config template
+**Features**:
+
+- Git リポジトリの初期化
+- DevContainer 設定のコピー
+- GitHub Actions ワークフローの設定
+- 開発ツール（ESLint, Prettier, Jest, Husky）の設定
+- ドキュメント（README, CLAUDE.md, SECURITY.md）の作成
+- Codespaces シークレット紐付けの案内
+
+**Usage**:
+
+```
+/setup-new-repo /path/to/new-repo
+/setup-new-repo /path/to/new-repo --minimal
+/setup-new-repo /path/to/new-repo --no-devcontainer
+/setup-new-repo /path/to/new-repo --license Apache-2.0
+```
+
+#### `codespaces-secrets.md`
+
+**Purpose**: GitHub Codespaces のシークレットとリポジトリの紐付けを CLI で管理
+**Features**:
+
+- シークレット一覧と紐付けリポジトリの表示
+- 管理対象リポジトリの追加・削除
+- 設定ファイルのリポジトリを全シークレットに一括紐付け
+- 設定と現在の状態の差分確認
+
+**Usage**:
+
+```
+/codespaces-secrets list
+/codespaces-secrets repos add owner/repo
+/codespaces-secrets sync
+/codespaces-secrets diff
+```
+
 ### Repository Management
 
 #### `branch-cleanup.md`
@@ -280,6 +416,114 @@ This directory contains pre-configured commands that provide automated workflows
 /setup-team-protection --reviewers 2
 /setup-team-protection owner/repo --dry-run
 ```
+
+#### `create-pr.md`
+
+**Purpose**: Create PR with latest base branch changes merged
+**Features**:
+
+- ベースブランチの最新変更をマージ
+- 競合がある場合は解決を支援
+- PR の自動作成
+
+**Usage**:
+
+```
+/create-pr
+/create-pr --base main
+```
+
+### Configuration Sync
+
+#### `sync-settings.md`
+
+**Purpose**: Sync Claude & Codex settings from Elu-co-jp projects to DevContainer configuration
+**Features**:
+
+- Claude/Codex 設定ファイルの同期
+- DevContainer 設定との統合
+- プロジェクト間の設定統一
+
+**Usage**:
+
+```
+/sync-settings
+```
+
+#### `config-contribution-discover.md`
+
+**Purpose**: Discover useful features in current repository and create issues for config repository
+**Features**:
+
+- リポジトリ内の有用な機能の発見
+- config リポジトリへの Issue 作成
+- 新機能の取り込み提案
+
+**Usage**:
+
+```
+/config-contribution-discover
+```
+
+### Code Review
+
+#### `security-review.md`
+
+**Purpose**: コードのセキュリティレビューと改善提案
+**Features**:
+
+- セキュリティ観点でのコードレビュー
+- 10 個の改善案の提示
+- OWASP Top 10 に基づく脆弱性チェック
+
+**Usage**:
+
+```
+/security-review
+/security-review path/to/file.ts
+```
+
+## Scripts Used by Commands
+
+以下のスクリプトがコマンドから呼び出されます。詳細は [script/README.md](../../script/README.md) を参照してください。
+
+| スクリプト                    | 使用するコマンド            | 説明                                     |
+| ----------------------------- | --------------------------- | ---------------------------------------- |
+| `branch-cleanup.sh`           | `/branch-cleanup`           | マージ済み・古いブランチのクリーンアップ |
+| `changelog-generator.sh`      | `/changelog-generator`      | Conventional Commits から CHANGELOG 生成 |
+| `code-complexity-check.sh`    | `/code-complexity-check`    | コード複雑度分析                         |
+| `codespaces-secrets.sh`       | `/codespaces-secrets`       | Codespaces シークレット管理              |
+| `container-health.sh`         | `/container-health`         | コンテナ環境の健全性確認                 |
+| `dependency-health-check.sh`  | `/dependency-health-check`  | 依存関係の健全性分析                     |
+| `pre-pr-checklist.sh`         | `/pre-pr-checklist`         | PR 作成前の品質チェック                  |
+| `security-credential-scan.sh` | `/security-credential-scan` | 認証情報のスキャン                       |
+| `setup-team-protection.sh`    | `/setup-team-protection`    | GitHub 保護ルールの設定                  |
+| `test-coverage-trend.sh`      | `/test-coverage-trend`      | テストカバレッジのトレンド追跡           |
+| `update-claude-code.sh`       | `/update-claude-code`       | Claude Code の更新                       |
+
+### DevContainer・インフラ用スクリプト（コマンド経由では使用しない）
+
+| スクリプト                  | 使用場所                  | 説明                                    |
+| --------------------------- | ------------------------- | --------------------------------------- |
+| `setup-claude.sh`           | DevContainer postCreate   | Claude Code CLI の初期設定              |
+| `setup-claude-build.sh`     | DevContainer Dockerfile   | ビルド時の Claude Code セットアップ     |
+| `setup-env.sh`              | DevContainer postCreate   | 環境変数のセットアップ                  |
+| `setup-mcp.sh`              | DevContainer postCreate   | MCP 設定のセットアップ                  |
+| `setup-lsp.sh`              | DevContainer postCreate   | LSP サーバーのセットアップ              |
+| `install-npm-globals.sh`    | DevContainer postCreate   | グローバル npm パッケージのインストール |
+| `install-skills.sh`         | DevContainer postStart    | Claude スキルのインストール             |
+| `install-claude-plugins.sh` | DevContainer build        | Claude プラグインのインストール         |
+| `restore-cli-auth.sh`       | DevContainer postStart    | CLI 認証状態の復元                      |
+| `verify-container-setup.sh` | DevContainer validation   | セットアップ完了の検証                  |
+| `fix-container-plugins.sh`  | DevContainer troubleshoot | プラグイン権限の修正                    |
+| `create-codespace.sh`       | 手動実行                  | Codespace の作成                        |
+| `credentials.sh`            | Makefile                  | 1Password 認証情報管理                  |
+| `export.sh`                 | 手動実行                  | 設定ファイルのエクスポート              |
+| `import.sh`                 | 手動実行                  | 設定ファイルのインポート                |
+| `brew-deps.sh`              | Makefile                  | Homebrew 依存関係管理                   |
+| `update-libraries.sh`       | npm scripts               | ライブラリの更新                        |
+| `version.sh`                | Makefile                  | セマンティックバージョニング            |
+| `check-docs-sync.sh`        | CI                        | ドキュメント同期の確認                  |
 
 ## Additional Commands
 
