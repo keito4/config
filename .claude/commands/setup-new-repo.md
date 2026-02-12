@@ -320,14 +320,6 @@ Next Steps:
 | `--license TYPE`    | ライセンス種別             | MIT        |
 | `--no-install`      | npm installをスキップ      | false      |
 
-## Alternative: Use Shell Script
-
-シェルスクリプトを直接実行することも可能：
-
-```bash
-/path/to/config/script/setup-new-repo.sh TARGET_DIR [OPTIONS]
-```
-
 ## Related Commands
 
 | コマンド                   | 説明                           |

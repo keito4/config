@@ -483,6 +483,48 @@ This directory contains pre-configured commands that provide automated workflows
 /security-review path/to/file.ts
 ```
 
+## Scripts Used by Commands
+
+以下のスクリプトがコマンドから呼び出されます。詳細は [script/README.md](../../script/README.md) を参照してください。
+
+| スクリプト                    | 使用するコマンド            | 説明                                     |
+| ----------------------------- | --------------------------- | ---------------------------------------- |
+| `branch-cleanup.sh`           | `/branch-cleanup`           | マージ済み・古いブランチのクリーンアップ |
+| `changelog-generator.sh`      | `/changelog-generator`      | Conventional Commits から CHANGELOG 生成 |
+| `code-complexity-check.sh`    | `/code-complexity-check`    | コード複雑度分析                         |
+| `codespaces-secrets.sh`       | `/codespaces-secrets`       | Codespaces シークレット管理              |
+| `container-health.sh`         | `/container-health`         | コンテナ環境の健全性確認                 |
+| `dependency-health-check.sh`  | `/dependency-health-check`  | 依存関係の健全性分析                     |
+| `pre-pr-checklist.sh`         | `/pre-pr-checklist`         | PR 作成前の品質チェック                  |
+| `security-credential-scan.sh` | `/security-credential-scan` | 認証情報のスキャン                       |
+| `setup-team-protection.sh`    | `/setup-team-protection`    | GitHub 保護ルールの設定                  |
+| `test-coverage-trend.sh`      | `/test-coverage-trend`      | テストカバレッジのトレンド追跡           |
+| `update-claude-code.sh`       | `/update-claude-code`       | Claude Code の更新                       |
+
+### DevContainer・インフラ用スクリプト（コマンド経由では使用しない）
+
+| スクリプト                  | 使用場所                  | 説明                                    |
+| --------------------------- | ------------------------- | --------------------------------------- |
+| `setup-claude.sh`           | DevContainer postCreate   | Claude Code CLI の初期設定              |
+| `setup-claude-build.sh`     | DevContainer Dockerfile   | ビルド時の Claude Code セットアップ     |
+| `setup-env.sh`              | DevContainer postCreate   | 環境変数のセットアップ                  |
+| `setup-mcp.sh`              | DevContainer postCreate   | MCP 設定のセットアップ                  |
+| `setup-lsp.sh`              | DevContainer postCreate   | LSP サーバーのセットアップ              |
+| `install-npm-globals.sh`    | DevContainer postCreate   | グローバル npm パッケージのインストール |
+| `install-skills.sh`         | DevContainer postStart    | Claude スキルのインストール             |
+| `install-claude-plugins.sh` | DevContainer build        | Claude プラグインのインストール         |
+| `restore-cli-auth.sh`       | DevContainer postStart    | CLI 認証状態の復元                      |
+| `verify-container-setup.sh` | DevContainer validation   | セットアップ完了の検証                  |
+| `fix-container-plugins.sh`  | DevContainer troubleshoot | プラグイン権限の修正                    |
+| `create-codespace.sh`       | 手動実行                  | Codespace の作成                        |
+| `credentials.sh`            | Makefile                  | 1Password 認証情報管理                  |
+| `export.sh`                 | 手動実行                  | 設定ファイルのエクスポート              |
+| `import.sh`                 | 手動実行                  | 設定ファイルのインポート                |
+| `brew-deps.sh`              | Makefile                  | Homebrew 依存関係管理                   |
+| `update-libraries.sh`       | npm scripts               | ライブラリの更新                        |
+| `version.sh`                | Makefile                  | セマンティックバージョニング            |
+| `check-docs-sync.sh`        | CI                        | ドキュメント同期の確認                  |
+
 ## Additional Commands
 
 For a comprehensive set of automated development commands, see the `.codex/prompts/` directory which contains 11 specialized prompts for:
