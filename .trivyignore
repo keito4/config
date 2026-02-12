@@ -29,3 +29,12 @@ CVE-2023-24540
 # Reason: Transitive dependency via Vercel CLI, esbuild only used at build-time
 # Expected resolution: Wait for Vercel to update esbuild
 CVE-2024-24790
+
+# CVE-2025-68121: golang: crypto/tls: session resumption vulnerability
+# Severity: CRITICAL
+# Affected: stdlib v1.24.12 (doppler binary)
+# Fixed in: 1.24.13, 1.25.7, 1.26.0-rc.3
+# Reason: Doppler CLI is built with older Go stdlib, waiting for upstream update
+# Expected resolution: Wait for Doppler to rebuild with patched Go version
+# Tracking: https://github.com/DopplerHQ/cli/issues (monitor for Go version update)
+CVE-2025-68121

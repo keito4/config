@@ -27,13 +27,13 @@ RUN apt-get update && apt-get install -y \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-# Install Doppler CLI
+# Install Doppler CLI from GitHub releases for latest security patches
 # https://docs.doppler.com/docs/install-cli
-RUN curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg \
- && echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | tee /etc/apt/sources.list.d/doppler-cli.list \
- && apt-get update && apt-get install -y doppler \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
+RUN DOPPLER_VERSION="3.75.2" \
+ && ARCH=$(dpkg --print-architecture) \
+ && curl -sLo /tmp/doppler.deb "https://github.com/DopplerHQ/cli/releases/download/${DOPPLER_VERSION}/doppler_${DOPPLER_VERSION}_linux_${ARCH}.deb" \
+ && dpkg -i /tmp/doppler.deb \
+ && rm /tmp/doppler.deb
 
 # Install Node.js
 RUN NODE_VERSION=v22.14.0 \
