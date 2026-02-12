@@ -413,7 +413,54 @@ If `autoCreatePR` is false:
 - Report: "Branch pushed successfully. Create PR manually with:"
 - Show gh pr create command for user to run
 
-## Step 12: Final Report
+## Step 12: Sync Codespaces Secrets (Optional)
+
+PRマージ後、GitHub Codespacesでリポジトリを使用する場合は、シークレットの紐付けが必要です。
+
+### 12.1: Check Codespaces Script Availability
+
+```bash
+# codespaces-secrets.sh スクリプトの存在確認
+test -f ./script/codespaces-secrets.sh && echo "available" || echo "not_available"
+```
+
+If available, proceed with Codespaces sync steps.
+
+### 12.2: Display Codespaces Reminder
+
+PR作成後に以下のリマインダーを表示：
+
+```
+📦 Codespaces シークレット同期のリマインダー
+
+GitHub Codespacesでこのリポジトリを使用する場合、
+PRマージ後にシークレットの紐付けを確認してください。
+
+確認コマンド:
+  ./script/codespaces-secrets.sh diff
+
+同期コマンド:
+  ./script/codespaces-secrets.sh sync
+
+詳細: /codespaces-secrets help
+```
+
+### 12.3: Optional Auto-Sync
+
+ユーザー設定で `syncCodespacesSecrets: true` が設定されている場合：
+
+```bash
+# 現在の設定と差分を確認
+./script/codespaces-secrets.sh diff
+
+# 差分がある場合はユーザーに確認
+# 確認後、同期を実行
+./script/codespaces-secrets.sh sync
+```
+
+**注意**: シークレット同期は機密情報を扱うため、自動実行せずユーザー確認を推奨。
+
+## Step 13: Final Report
 
 Provide a complete summary including features changes:
 
@@ -448,6 +495,9 @@ Provide a complete summary including features changes:
    Consider removing duplicate features before merging
    {endif}
 4. Merge when all checks pass
+5. Sync Codespaces secrets (if using GitHub Codespaces):
+   - Run: ./script/codespaces-secrets.sh diff
+   - Run: ./script/codespaces-secrets.sh sync
 
 💡 Tips
 - Run `claude help` to verify Claude Code is working

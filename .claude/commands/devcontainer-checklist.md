@@ -293,6 +293,40 @@ act -l
 - [ ] VS Code拡張機能がインストールされている
 - [ ] ターミナルのデフォルトシェルが正しい（bash/zsh）
 
+### GitHub Codespaces（Codespaces環境の場合）
+
+```bash
+# Codespaces環境かどうか確認
+[[ -n "$CODESPACES" ]] && echo "Running in Codespaces" || echo "Not Codespaces"
+
+# シークレットが正しく設定されているか確認
+env | grep -E "OPENAI_API_KEY|ANTHROPIC_API_KEY|GEMINI_API_KEY" | sed 's/=.*/=***/'
+```
+
+**確認ポイント:**
+
+- [ ] 必要な環境変数がCodespacesシークレットから読み込まれている
+- [ ] リポジトリがシークレットに紐付けられている
+- [ ] `~/.devcontainer.env` が自動生成されている（該当する場合）
+
+**シークレット紐付けの確認（ローカルから実行）:**
+
+```bash
+# シークレットとリポジトリの紐付け状況を確認
+./script/codespaces-secrets.sh list
+
+# 現在のリポジトリが紐付けされているか確認
+./script/codespaces-secrets.sh diff
+```
+
+**トラブルシューティング:**
+
+シークレットが読み込まれない場合:
+
+1. GitHub Settings > Codespaces > Secrets でリポジトリが紐付けられているか確認
+2. `./script/codespaces-secrets.sh sync` で一括紐付け
+3. Codespacesを再起動
+
 ## ⚠️ トラブルシューティング
 
 ### LSPが動作しない場合

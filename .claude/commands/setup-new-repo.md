@@ -239,7 +239,40 @@ npm install
 npx husky init
 ```
 
-## Step 11: Generate Summary
+## Step 11: Add to Codespaces Secrets (Optional)
+
+GitHub Codespacesでリポジトリを使用する場合、シークレットの紐付けが必要です。
+
+### 11.1: Check if codespaces-secrets.sh is available
+
+```bash
+test -f CONFIG_REPO/script/codespaces-secrets.sh && echo "available" || echo "not_available"
+```
+
+### 11.2: Add repository to Codespaces secrets
+
+If available and user chooses to enable Codespaces:
+
+```bash
+# リポジトリをシークレット管理対象に追加
+CONFIG_REPO/script/codespaces-secrets.sh repos add {owner}/{repo-name}
+
+# 全シークレットに紐付け
+CONFIG_REPO/script/codespaces-secrets.sh sync
+```
+
+### 11.3: Display Codespaces reminder
+
+```
+📦 Codespaces 設定のリマインダー
+
+GitHub Codespacesでこのリポジトリを使用する場合：
+1. シークレットを紐付け: ./script/codespaces-secrets.sh repos add {owner}/{repo-name}
+2. 同期実行: ./script/codespaces-secrets.sh sync
+3. 確認: ./script/codespaces-secrets.sh list
+```
+
+## Step 12: Generate Summary
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -271,6 +304,9 @@ Next Steps:
 4. git add . && git commit -m "chore: initial setup"
 5. gh repo create (optional)
 6. git push -u origin main
+7. Add to Codespaces secrets (if using GitHub Codespaces):
+   - Run: ./script/codespaces-secrets.sh repos add {owner}/{repo-name}
+   - Run: ./script/codespaces-secrets.sh sync
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
