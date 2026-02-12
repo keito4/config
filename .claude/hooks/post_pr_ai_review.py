@@ -61,7 +61,7 @@ has_codex = shutil.which("codex") is not None
 has_gemini = shutil.which("gemini") is not None
 
 if not has_codex and not has_gemini:
-    print("⚠️  AIレビューツール（Codex/Gemini）がインストールされていません。スキップします。", file=sys.stderr)
+    print("⚠️  AIレビューツール（Codex/Gemini）がインストールされていません。スキップします。", file=sys.stderr, flush=True)
     sys.exit(0)
 
 # レビュープロンプト（日本語で出力）
@@ -76,18 +76,18 @@ git merge-baseを使用してマージベースを見つけ、そのマージベ
 
 **重要: 必ず日本語で回答してください。**"""
 
-print("", file=sys.stderr)
-print("=" * 60, file=sys.stderr)
-print("🔍 PR作成完了。AIレビューを実行中...", file=sys.stderr)
-print(f"📎 PR: {pr_url}", file=sys.stderr)
-print("=" * 60, file=sys.stderr)
+print("", file=sys.stderr, flush=True)
+print("=" * 60, file=sys.stderr, flush=True)
+print("🔍 PR作成完了。AIレビューを実行中...", file=sys.stderr, flush=True)
+print(f"📎 PR: {pr_url}", file=sys.stderr, flush=True)
+print("=" * 60, file=sys.stderr, flush=True)
 
 
 def run_codex_review():
     """Codexによるレビューを実行し、結果を返す"""
-    print("", file=sys.stderr)
-    print("## 🤖 Codex Review", file=sys.stderr)
-    print("-" * 40, file=sys.stderr)
+    print("", file=sys.stderr, flush=True)
+    print("## 🤖 Codex Review", file=sys.stderr, flush=True)
+    print("-" * 40, file=sys.stderr, flush=True)
 
     codex_command = ["codex", "exec", "--sandbox", "read-only"]
     if CODEX_MODEL:
@@ -105,19 +105,19 @@ def run_codex_review():
 
         # returncode == 0 の場合のみ結果を返す
         if result.returncode == 0 and result.stdout:
-            print(result.stdout, file=sys.stderr)
+            print(result.stdout, file=sys.stderr, flush=True)
             return result.stdout.strip()
 
         if result.returncode != 0:
             error_msg = result.stderr[:300] if result.stderr else "不明なエラー"
-            print(f"⚠️  Codexエラー: {error_msg}", file=sys.stderr)
+            print(f"⚠️  Codexエラー: {error_msg}", file=sys.stderr, flush=True)
             return None
 
     except subprocess.TimeoutExpired:
-        print("⚠️  Codexレビューがタイムアウトしました（10分）", file=sys.stderr)
+        print("⚠️  Codexレビューがタイムアウトしました（10分）", file=sys.stderr, flush=True)
         return None
     except Exception as e:
-        print(f"⚠️  Codexレビュー実行エラー: {e}", file=sys.stderr)
+        print(f"⚠️  Codexレビュー実行エラー: {e}", file=sys.stderr, flush=True)
         return None
 
     return None
@@ -125,9 +125,9 @@ def run_codex_review():
 
 def run_gemini_review():
     """Geminiによるレビューを実行し、結果を返す"""
-    print("", file=sys.stderr)
-    print("## ✨ Gemini Review", file=sys.stderr)
-    print("-" * 40, file=sys.stderr)
+    print("", file=sys.stderr, flush=True)
+    print("## ✨ Gemini Review", file=sys.stderr, flush=True)
+    print("-" * 40, file=sys.stderr, flush=True)
 
     try:
         # マージベースを取得
@@ -140,7 +140,7 @@ def run_gemini_review():
         merge_base = merge_base_result.stdout.strip()
 
         if not merge_base:
-            print("⚠️  マージベースの取得に失敗しました", file=sys.stderr)
+            print("⚠️  マージベースの取得に失敗しました", file=sys.stderr, flush=True)
             return None
 
         # diffを取得
@@ -153,7 +153,7 @@ def run_gemini_review():
         diff_content = diff_result.stdout
 
         if not diff_content:
-            print("⚠️  diffが空です", file=sys.stderr)
+            print("⚠️  diffが空です", file=sys.stderr, flush=True)
             return None
 
         # Gemini用のプロンプト（diffを含める、日本語で出力）
@@ -185,19 +185,19 @@ def run_gemini_review():
 
         # returncode == 0 の場合のみ結果を返す
         if result.returncode == 0 and result.stdout:
-            print(result.stdout, file=sys.stderr)
+            print(result.stdout, file=sys.stderr, flush=True)
             return result.stdout.strip()
 
         if result.returncode != 0:
             error_msg = result.stderr[:300] if result.stderr else "不明なエラー"
-            print(f"⚠️  Geminiエラー: {error_msg}", file=sys.stderr)
+            print(f"⚠️  Geminiエラー: {error_msg}", file=sys.stderr, flush=True)
             return None
 
     except subprocess.TimeoutExpired:
-        print("⚠️  Geminiレビューがタイムアウトしました（10分）", file=sys.stderr)
+        print("⚠️  Geminiレビューがタイムアウトしました（10分）", file=sys.stderr, flush=True)
         return None
     except Exception as e:
-        print(f"⚠️  Geminiレビュー実行エラー: {e}", file=sys.stderr)
+        print(f"⚠️  Geminiレビュー実行エラー: {e}", file=sys.stderr, flush=True)
         return None
 
     return None
@@ -213,13 +213,13 @@ def post_pr_comment(pr_url: str, comment_body: str):
             timeout=60
         )
         if result.returncode == 0:
-            print("✅ PRコメント投稿成功", file=sys.stderr)
+            print("✅ PRコメント投稿成功", file=sys.stderr, flush=True)
             return True
         else:
-            print(f"⚠️  PRコメント投稿失敗: {result.stderr[:200]}", file=sys.stderr)
+            print(f"⚠️  PRコメント投稿失敗: {result.stderr[:200]}", file=sys.stderr, flush=True)
             return False
     except Exception as e:
-        print(f"⚠️  PRコメント投稿エラー: {e}", file=sys.stderr)
+        print(f"⚠️  PRコメント投稿エラー: {e}", file=sys.stderr, flush=True)
         return False
 
 
@@ -239,7 +239,7 @@ with ThreadPoolExecutor(max_workers=2) as executor:
         try:
             review_results[reviewer] = future.result()
         except Exception as e:
-            print(f"⚠️  {reviewer}レビュー実行エラー: {e}", file=sys.stderr)
+            print(f"⚠️  {reviewer}レビュー実行エラー: {e}", file=sys.stderr, flush=True)
 
 def check_for_issues(review_text: str) -> bool:
     """レビュー結果から問題が検出されたかをチェック"""
@@ -284,20 +284,20 @@ if review_results["codex"] or review_results["gemini"]:
     comment_parts.append("*🤖 Generated by post_pr_ai_review.py hook*")
     comment_body = "\n".join(comment_parts)
 
-    print("", file=sys.stderr)
-    print("📝 PRにレビューコメントを投稿中...", file=sys.stderr)
+    print("", file=sys.stderr, flush=True)
+    print("📝 PRにレビューコメントを投稿中...", file=sys.stderr, flush=True)
     post_pr_comment(pr_url, comment_body)
 else:
-    print("", file=sys.stderr)
-    print("⚠️  レビュー結果がないため、PRコメントはスキップします", file=sys.stderr)
+    print("", file=sys.stderr, flush=True)
+    print("⚠️  レビュー結果がないため、PRコメントはスキップします", file=sys.stderr, flush=True)
 
-print("", file=sys.stderr)
-print("=" * 60, file=sys.stderr)
+print("", file=sys.stderr, flush=True)
+print("=" * 60, file=sys.stderr, flush=True)
 if issues_found:
-    print("⚠️  AIレビュー完了 - 問題が検出されました。修正を検討してください。", file=sys.stderr)
+    print("⚠️  AIレビュー完了 - 問題が検出されました。修正を検討してください。", file=sys.stderr, flush=True)
 else:
-    print("✅ AIレビュー完了", file=sys.stderr)
-print("=" * 60, file=sys.stderr)
+    print("✅ AIレビュー完了", file=sys.stderr, flush=True)
+print("=" * 60, file=sys.stderr, flush=True)
 
 # PostToolUseフックは常に成功で終了（ブロックしない）
 sys.exit(0)
