@@ -3,13 +3,19 @@
 # 形式: GitHub リポジトリ（owner/repo）
 # 行頭 # はコメント
 
+# === React ===
+# React 公式スキル
+facebook/react@fix
+
 # === Vercel Agent Skills ===
 # React/Next.js 開発のベストプラクティス
 vercel-labs/agent-skills
+vercel-labs/agent-skills@vercel-composition-patterns
 
 # === Supabase Agent Skills ===
 # Supabase 開発のベストプラクティス
 supabase/agent-skills
+supabase/agent-skills@supabase-postgres-best-practices
 
 # === Vercel Skills (find-skills) ===
 # スキル検索・発見ツール

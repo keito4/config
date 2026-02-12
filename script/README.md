@@ -119,6 +119,24 @@ Updates Claude Code CLI to the latest version.
 
 ## Quality & CI Scripts
 
+### check-file-length.sh
+
+Checks staged TS/JS files for excessive line counts.
+
+**Usage**: `./script/check-file-length.sh`
+
+**Behavior**:
+
+| Line Count | Behavior                         |
+| ---------- | -------------------------------- |
+| ~349       | Pass (no output)                 |
+| 350-499    | Warning displayed, commit passes |
+| 500+       | Error, commit blocked            |
+
+**Configuration**: Create `.filelengthignore` (same syntax as `.gitignore`) to exclude files.
+
+**Template**: `.filelengthignore.template`
+
 ### pre-pr-checklist.sh
 
 Runs pre-PR quality checklist before creating pull requests.
