@@ -8,11 +8,11 @@ set -euo pipefail
 
 # Determine script directory and source libraries
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LIB_DIR="${SCRIPT_DIR}/../script-lib"
+LIB_DIR="${SCRIPT_DIR}/lib"
 
-# Dockerビルド時は /tmp/script-lib を使用
-if [[ -d "/tmp/script-lib" ]]; then
-    LIB_DIR="/tmp/script-lib"
+# Dockerビルド時は /tmp/script/lib を使用
+if [[ -d "/tmp/script/lib" ]]; then
+    LIB_DIR="/tmp/script/lib"
 fi
 
 # shellcheck source=script/lib/output.sh
