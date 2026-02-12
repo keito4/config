@@ -220,6 +220,29 @@ The `.claude-plugin/plugin.json` file defines LSP server configurations. Languag
 
 For more information about LSP support in Claude Code, see [Claude Code LSP Guide](https://blog.lai.so/claude-code-lsp/).
 
+### Claude Code Hooks
+
+Hooksは、Claude Codeの特定のイベントに自動実行されるスクリプトです。`.claude/hooks/` ディレクトリに格納されています。
+
+| Hook                         | トリガー                   | 目的                                        |
+| ---------------------------- | -------------------------- | ------------------------------------------- |
+| `block_git_no_verify.py`     | `PreToolUse(Bash)`         | `--no-verify` や `HUSKY=0` の使用をブロック |
+| `pre_git_quality_gates.py`   | `PreToolUse(Bash)`         | git commit/push 前に品質チェックを実行      |
+| `post_git_push_ci.py`        | `PostToolUse(Bash)`        | git push 後に CI 状態を監視・報告           |
+| `post_pr_ai_review.py`       | `PostToolUse(Bash)`        | PR 作成後に AI レビューを実行               |
+| `pre_exit_plan_ai_review.py` | `PreToolUse(ExitPlanMode)` | プラン承認前に AI レビューを実行            |
+
+**Quality Gates で実行されるチェック:**
+
+1. Format Check (`npm run format:check`)
+2. Lint (`npm run lint`)
+3. Test (`npm run test`)
+4. ShellCheck (`npm run shellcheck`)
+5. Security Credential Scan (`./script/security-credential-scan.sh`)
+6. Code Complexity Check (`./script/code-complexity-check.sh`)
+
+詳細は [.claude/hooks/README.md](.claude/hooks/README.md) を参照してください。
+
 ## Usage
 
 Before using these configuration settings, you should review them and adjust as necessary for your specific environment and preferences. For credentials, we use environment variables managed by 1Password.
