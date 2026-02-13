@@ -23,3 +23,12 @@ backend-development@claude-code-workflows
 full-stack-orchestration@claude-code-workflows
 database-design@claude-code-workflows
 database-migrations@claude-code-workflows
+
+# === Supabase Agent Skills (Plugin) ===
+postgres-best-practices@supabase-agent-skills
+
+# === Vercel Agent Browser (Plugin) ===
+agent-browser@agent-browser
+
+# === Context7 (Plugin) ===
+context7@intellectronica-skills

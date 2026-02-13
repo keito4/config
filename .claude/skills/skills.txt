@@ -14,6 +14,7 @@ vercel-labs/agent-skills@vercel-composition-patterns
 
 # === Supabase Agent Skills ===
 # Supabase 開発のベストプラクティス
+# Plugin 併用: postgres-best-practices@supabase-agent-skills
 supabase/agent-skills
 supabase/agent-skills@supabase-postgres-best-practices
 
@@ -23,8 +24,10 @@ vercel-labs/skills
 
 # === Vercel Agent Browser ===
 # ブラウザ自動化（テスト、フォーム、スクリーンショット、データ抽出）
+# Plugin 併用: agent-browser@agent-browser
 vercel-labs/agent-browser
 
 # === Context7 ===
 # ライブラリ・フレームワークの最新ドキュメント取得
+# Plugin 併用: context7@intellectronica-skills
 intellectronica/agent-skills
