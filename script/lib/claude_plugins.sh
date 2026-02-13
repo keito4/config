@@ -10,12 +10,15 @@ set -euo pipefail
 # Fallback marketplace list (synced with known_marketplaces.json.template)
 # Format: "name:repo" for GitHub repos, "name:url:https://..." for full URLs
 readonly PLUGINS_KNOWN_MARKETPLACES_FALLBACK=(
+    "agent-browser:vercel-labs/agent-browser"
     "anthropic-agent-skills:url:https://github.com/anthropics/skills.git"
     "claude-code-plugins:anthropics/claude-code"
     "claude-code-templates:url:https://github.com/davila7/claude-code-templates.git"
     "claude-code-workflows:wshobson/agents"
     "claude-plugins-official:anthropics/claude-plugins-official"
+    "intellectronica-skills:intellectronica/agent-skills"
     "playwright-skill:lackeyjb/playwright-skill"
+    "supabase-agent-skills:supabase/agent-skills"
 )
 
 # コマンド・エージェント・フックの同期

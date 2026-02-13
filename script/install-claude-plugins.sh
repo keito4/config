@@ -2,6 +2,7 @@
 # ============================================================================
 # Claude Code Plugin Installer (for Docker build)
 # Docker ビルド時にプラグインをインストールするスクリプト
+# ライブラリ (claude_plugins.sh) を使用して管理
 # ============================================================================
 
 set -euo pipefail
@@ -10,25 +11,52 @@ PLUGINS_FILE="${1:-/home/vscode/.claude/plugins/plugins.txt}"
 CLAUDE_DIR="/home/vscode/.claude"
 CREDENTIALS_SECRET="/run/secrets/claude_credentials"
 
-echo "[INFO] Claude プラグインのインストールを開始します..."
+# --- PATH フォールバック ---
+# Dockerfile の ENV PATH で設定されるが、念のため確認
+for _bin_dir in "/home/vscode/.claude/local/bin" "${HOME}/.claude/local/bin"; do
+    if [[ -d "$_bin_dir" ]] && [[ ":${PATH}:" != *":${_bin_dir}:"* ]]; then
+        export PATH="${_bin_dir}:${PATH}"
+    fi
+done
 
-# プラグインリストが存在するか確認
+# --- ライブラリ読み込み ---
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR=""
+
+for _candidate in "/tmp/script/lib" "/usr/local/script/lib" "${SCRIPT_DIR}/lib"; do
+    if [[ -d "$_candidate" ]] && [[ -f "${_candidate}/output.sh" ]]; then
+        LIB_DIR="$_candidate"
+        break
+    fi
+done
+
+if [[ -z "$LIB_DIR" ]]; then
+    echo "[ERROR] ライブラリディレクトリが見つかりません"
+    exit 1
+fi
+
+# shellcheck source=script/lib/output.sh
+source "${LIB_DIR}/output.sh"
+# shellcheck source=script/lib/claude_plugins.sh
+source "${LIB_DIR}/claude_plugins.sh"
+
+log_info "Claude プラグインのインストールを開始します..."
+
+# --- プラグインリスト確認 ---
 if [[ ! -f "$PLUGINS_FILE" ]]; then
-    echo "[WARN] plugins.txt が見つかりません: ${PLUGINS_FILE}"
+    log_warn "plugins.txt が見つかりません: ${PLUGINS_FILE}"
     exit 0
 fi
 
-# 認証情報の設定
+# --- 認証情報の設定 ---
 mkdir -p "$CLAUDE_DIR"
 
-# 方法1: BuildKit secret からコピー（推奨）
 if [[ -f "$CREDENTIALS_SECRET" ]]; then
-    echo "[INFO] BuildKit secret から認証情報を読み込み中..."
+    log_info "BuildKit secret から認証情報を読み込み中..."
     cp "$CREDENTIALS_SECRET" "${CLAUDE_DIR}/.credentials.json"
     chmod 600 "${CLAUDE_DIR}/.credentials.json"
-# 方法2: 環境変数から作成（OAuth トークンまたは API キー）
 elif [[ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]]; then
-    echo "[INFO] CLAUDE_CODE_OAUTH_TOKEN から認証情報を作成中..."
+    log_info "CLAUDE_CODE_OAUTH_TOKEN から認証情報を作成中..."
     cat > "${CLAUDE_DIR}/.credentials.json" << EOF
 {
   "claudeAiOauth": {
@@ -38,7 +66,7 @@ elif [[ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]]; then
 }
 EOF
 elif [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
-    echo "[INFO] ANTHROPIC_API_KEY から認証情報を作成中..."
+    log_info "ANTHROPIC_API_KEY から認証情報を作成中..."
     cat > "${CLAUDE_DIR}/.credentials.json" << EOF
 {
   "claudeAiOauth": {
@@ -48,50 +76,32 @@ elif [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
 }
 EOF
 else
-    echo "[ERROR] 認証情報が見つかりません"
+    log_warn "認証情報が見つかりません"
     echo "  - BuildKit secret: $CREDENTIALS_SECRET"
     echo "  - 環境変数: CLAUDE_CODE_OAUTH_TOKEN または ANTHROPIC_API_KEY"
     exit 1
 fi
 
-echo "[INFO] マーケットプレイスを初期化中..."
-# 必須マーケットプレイスを追加（完全なHTTPS URLを使用）
-claude plugin marketplace add https://github.com/anthropics/claude-plugins-official.git 2>&1 || echo "[WARN] claude-plugins-official already exists or failed to add"
-claude plugin marketplace add https://github.com/anthropics/claude-code.git 2>&1 || echo "[WARN] claude-code-plugins already exists or failed to add"
-claude plugin marketplace add https://github.com/wshobson/agents.git 2>&1 || echo "[WARN] claude-code-workflows already exists or failed to add"
-claude plugin marketplace add https://github.com/lackeyjb/playwright-skill.git 2>&1 || echo "[WARN] playwright-skill already exists or failed to add"
+# --- known_marketplaces.json 生成 ---
+TEMPLATE="${CLAUDE_DIR}/plugins/known_marketplaces.json.template"
+KNOWN_MARKETPLACES="${CLAUDE_DIR}/plugins/known_marketplaces.json"
 
-echo "[INFO] プラグインをインストール中..."
-echo "[DEBUG] Claude version: $(claude --version 2>&1 || echo 'not found')"
-echo "[DEBUG] Marketplaces directory: ${CLAUDE_DIR}/plugins/marketplaces"
-ls -la "${CLAUDE_DIR}/plugins/marketplaces" 2>/dev/null || echo "[WARN] Marketplaces directory not found"
+if [[ -f "$TEMPLATE" ]]; then
+    log_info "テンプレートから known_marketplaces.json を生成中..."
+    sed "s|{{HOME}}|${HOME}|g" "$TEMPLATE" > "$KNOWN_MARKETPLACES"
+    log_success "known_marketplaces.json を生成しました"
+fi
 
-installed=0
-failed=0
+# --- Claude CLI 確認 ---
+log_info "Claude version: $(claude --version 2>&1 || echo 'not found')"
 
-while IFS= read -r line || [[ -n "$line" ]]; do
-    # 空行とコメント行をスキップ
-    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+# --- マーケットプレイス追加 ---
+plugins::detect_and_add_marketplaces "$PLUGINS_FILE" "$KNOWN_MARKETPLACES"
 
-    # 前後の空白を除去
-    plugin=$(echo "$line" | xargs)
-    [[ -z "$plugin" ]] && continue
+# --- プラグインインストール ---
+plugins::install_from_manifest "$PLUGINS_FILE"
 
-    echo "[INFO]   インストール中: ${plugin}"
-
-    # エラー出力をキャプチャ
-    if output=$(claude plugin install "$plugin" 2>&1); then
-        echo "[SUCCESS]   完了: ${plugin}"
-        installed=$((installed + 1))
-    else
-        echo "[ERROR]   失敗: ${plugin}"
-        echo "[ERROR]   エラー詳細: ${output}"
-        failed=$((failed + 1))
-    fi
-done < "$PLUGINS_FILE"
-
-# 認証情報を削除（セキュリティのため）
+# --- 認証情報を削除（セキュリティ） ---
 rm -f "${CLAUDE_DIR}/.credentials.json"
 
-echo "[INFO] プラグイン: ${installed} インストール完了、${failed} 失敗/スキップ"
-echo "[SUCCESS] Claude プラグインのインストールが完了しました"
+log_success "Claude プラグインのインストールが完了しました"

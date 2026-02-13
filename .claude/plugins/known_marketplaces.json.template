@@ -1,4 +1,12 @@
 {
+  "agent-browser": {
+    "source": {
+      "source": "github",
+      "repo": "vercel-labs/agent-browser"
+    },
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/agent-browser",
+    "lastUpdated": "2025-01-01T00:00:00.000Z"
+  },
   "anthropic-agent-skills": {
     "source": {
       "source": "git",
@@ -39,12 +47,28 @@
     "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-plugins-official",
     "lastUpdated": "2025-01-01T00:00:00.000Z"
   },
+  "intellectronica-skills": {
+    "source": {
+      "source": "github",
+      "repo": "intellectronica/agent-skills"
+    },
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/intellectronica-skills",
+    "lastUpdated": "2025-01-01T00:00:00.000Z"
+  },
   "playwright-skill": {
     "source": {
       "source": "github",
       "repo": "lackeyjb/playwright-skill"
     },
     "installLocation": "{{HOME}}/.claude/plugins/marketplaces/playwright-skill",
+    "lastUpdated": "2025-01-01T00:00:00.000Z"
+  },
+  "supabase-agent-skills": {
+    "source": {
+      "source": "github",
+      "repo": "supabase/agent-skills"
+    },
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/supabase-agent-skills",
     "lastUpdated": "2025-01-01T00:00:00.000Z"
   }
 }

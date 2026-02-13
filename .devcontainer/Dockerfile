@@ -12,7 +12,7 @@ LABEL org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.description="DevContainer base image with Claude Code, Codex, and development tools"
 
 # Install dependencies and Node.js using official binaries
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
     git \
     alsa-utils \
@@ -77,6 +77,7 @@ COPY npm/global.json /tmp/npm-global.json
 USER vscode
 RUN curl -fsSL https://claude.ai/install.sh | bash -s 2.1.39 \
  && echo 'export PATH="$HOME/.claude/local/bin:$PATH"' >> /home/vscode/.bashrc
+ENV PATH="/home/vscode/.claude/local/bin:${PATH}"
 USER root
 
 # Install other global npm packages
@@ -124,7 +125,7 @@ COPY --chown=vscode:vscode script/install-claude-plugins.sh /tmp/install-claude-
 COPY --chown=vscode:vscode script/install-skills.sh /tmp/install-skills.sh
 COPY --chown=root:root script/setup-claude.sh /usr/local/bin/setup-claude.sh
 COPY --chown=vscode:vscode script/setup-claude-build.sh /tmp/setup-claude-build.sh
-COPY --chown=vscode:vscode script/lib /tmp/script-lib
+COPY --chown=vscode:vscode script/lib /tmp/script/lib
 COPY --chown=root:root script/lib /usr/local/script/lib
 COPY --chown=root:root script/*.sh /usr/local/script/
 RUN chmod +x /usr/local/bin/setup-claude.sh /tmp/setup-claude-build.sh /tmp/install-skills.sh /usr/local/script/*.sh
