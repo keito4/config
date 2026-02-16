@@ -196,7 +196,7 @@ For npm registry instead of GitHub Packages:
 
 ```yaml
 - name: Setup Node.js
-  uses: actions/setup-node@v6.1.0
+  uses: actions/setup-node@v6.2.0
   with:
     node-version: '20'
     cache: 'npm'
