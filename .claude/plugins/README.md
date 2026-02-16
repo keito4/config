@@ -102,9 +102,15 @@ make claude-plugins
 
 現在このリポジトリで管理されているマーケットプレイス：
 
-- **anthropics/claude-code** - 公式Claude Codeプラグイン
-- **davila7/claude-code-templates** - コミュニティテンプレート
-- **wshobson/agents** - ワークフロー自動化プラグイン
+- **anthropics/claude-code** (`claude-code-plugins`) - 公式Claude Codeプラグイン
+- **anthropics/claude-plugins-official** (`claude-plugins-official`) - 公式プラグイン（commit-commands, hookify, etc.）
+- **davila7/claude-code-templates** (`claude-code-templates`) - コミュニティテンプレート
+- **wshobson/agents** (`claude-code-workflows`) - ワークフロー自動化プラグイン
+- **supabase/agent-skills** (`supabase-agent-skills`) - Supabase/PostgreSQL開発ベストプラクティス
+- **vercel-labs/agent-browser** (`agent-browser`) - ブラウザ自動化（テスト、フォーム、スクリーンショット）
+- **intellectronica/agent-skills** (`intellectronica-skills`) - ライブラリ・フレームワークの最新ドキュメント
+- **anthropics/skills** (`anthropic-agent-skills`) - Anthropic公式スキル
+- **lackeyjb/playwright-skill** (`playwright-skill`) - Playwright自動化スキル
 
 ## 推奨プラグイン
 
