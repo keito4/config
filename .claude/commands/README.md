@@ -304,40 +304,6 @@ This directory contains pre-configured commands that provide automated workflows
 /config-base-sync-update --version 1.60.0
 ```
 
-#### `update-claude-code.md`
-
-**Purpose**: Update Claude Code to the latest version
-**Features**:
-
-- npm/global.json の Claude Code バージョン更新
-- 最新バージョンの自動検出
-- 更新 PR の作成
-
-**Usage**:
-
-```
-/update-claude-code
-```
-
-#### `update-actions.md`
-
-**Purpose**: Update GitHub Actions to the latest versions
-**Features**:
-
-- `.github/workflows/` 配下の全ワークフローファイルをスキャン
-- SemVer タグのアクションを最新バージョンに更新
-- メジャータグ固定・SHA ピンニング・ブランチ固定はスキップ
-- `npm run update:all` で全依存関係の一括更新も可能
-
-**Usage**:
-
-```
-/update-actions
-npm run update:actions
-npm run update:all              # 全依存関係の一括更新
-npm run update:all -- --skip-libs --skip-claude  # Actions のみ
-```
-
 #### `setup-new-repo.md`
 
 **Purpose**: Setup new repository with DevContainer, CI/CD, and development tools from config template
@@ -501,6 +467,51 @@ npm run update:all -- --skip-libs --skip-claude  # Actions のみ
 ```
 /security-review
 /security-review path/to/file.ts
+```
+
+### Updates
+
+#### `update-claude-code.md`
+
+**Purpose**: Update Claude Code to the latest version
+**Features**:
+
+- npm/global.json の Claude Code バージョン更新
+- Dockerfile のバージョン更新
+- 最新バージョンの自動検出
+
+**Usage**:
+
+```
+/update-claude-code
+```
+
+#### `update-actions.md`
+
+**Purpose**: Update GitHub Actions to the latest versions
+**Features**:
+
+- `.github/workflows/` 配下の全ワークフローファイルをスキャン
+- SemVer タグのアクションを最新バージョンに更新
+- メジャータグ固定・SHA ピンニング・ブランチ固定はスキップ
+
+**Usage**:
+
+```
+/update-actions
+npm run update:actions
+```
+
+#### 一括更新 (`npm run update:all`)
+
+全依存関係を一括更新するオーケストレーター:
+
+```bash
+npm run update:all                              # 全更新
+npm run update:all -- --skip-libs               # Claude + Actions のみ
+npm run update:all -- --skip-claude             # libs + Actions のみ
+npm run update:all -- --skip-actions            # libs + Claude のみ
+npm run update:all -- --skip-libs --skip-claude # Actions のみ
 ```
 
 ## Scripts Used by Commands
