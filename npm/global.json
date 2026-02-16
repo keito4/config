@@ -18,7 +18,7 @@
       "overridden": false
     },
     "@openai/codex": {
-      "version": "0.99.0",
+      "version": "0.101.0",
       "overridden": false
     },
     "@google/gemini-cli": {
@@ -62,7 +62,7 @@
       "overridden": false
     },
     "n8n": {
-      "version": "2.7.4",
+      "version": "2.7.5",
       "overridden": false
     },
     "npm": {
@@ -74,7 +74,7 @@
       "overridden": false
     },
     "vercel": {
-      "version": "50.16.0",
+      "version": "50.17.1",
       "overridden": false
     }
   }
