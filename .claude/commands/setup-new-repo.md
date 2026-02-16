@@ -1,7 +1,7 @@
 ---
 description: Setup new repository with DevContainer, CI/CD, and development tools from config template
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(mkdir:*), Bash(cp:*), Bash(ls:*), Bash(cat:*), Bash(test:*), Task, Glob, Grep
-argument-hint: '<TARGET_DIR> [--minimal] [--no-devcontainer] [--license MIT|Apache-2.0] [--no-install]'
+argument-hint: '<TARGET_DIR> [--minimal] [--no-devcontainer] [--no-codespaces] [--license MIT|Apache-2.0] [--no-install]'
 ---
 
 # New Repository Setup Command
@@ -13,11 +13,12 @@ argument-hint: '<TARGET_DIR> [--minimal] [--no-devcontainer] [--license MIT|Apac
 以下をセットアップします：
 
 1. **Git初期化** - リポジトリの初期化
-2. **DevContainer** - `.devcontainer/` と `.vscode/` 設定
+2. **DevContainer** - `.devcontainer/` と `.vscode/` 設定（Codespaces 対応含む）
 3. **Git設定** - commitlint, `.gitignore`
 4. **GitHub Actions** - CI workflow, Issue/PRテンプレート
 5. **開発ツール** - ESLint, Prettier, Jest, Husky
 6. **ドキュメント** - README.md, CLAUDE.md, SECURITY.md
+7. **Codespaces シークレット** - リポジトリへのシークレット紐付け
 
 ## Step 1: Parse Arguments
 
@@ -26,6 +27,7 @@ argument-hint: '<TARGET_DIR> [--minimal] [--no-devcontainer] [--license MIT|Apac
 - `TARGET_DIR`: 新規リポジトリのパス（必須）
 - `--minimal`: GitHub Actionsをスキップ
 - `--no-devcontainer`: DevContainer設定をスキップ
+- `--no-codespaces`: Codespacesシークレット紐付けをスキップ
 - `--license TYPE`: ライセンス種別（デフォルト: MIT）
 - `--no-install`: npm install をスキップ
 
@@ -56,21 +58,101 @@ cd TARGET_DIR
 git init
 ```
 
-## Step 5: Copy DevContainer Configuration (unless --no-devcontainer)
+## Step 5: Create DevContainer Configuration (unless --no-devcontainer)
+
+DevContainer設定をプロジェクトに合わせて新規作成する。ローカル用と Codespaces 用の2つを作成する。
+
+### 5.1 `.devcontainer/devcontainer.json`（ローカル用）を作成
+
+ローカル DevContainer 用。Codespaces 固有設定（`secrets`, `codespaces` カスタマイゼーション）は含めない。
+
+```json
+{
+  "name": "{project-name}",
+  "image": "ghcr.io/keito4/config-base:latest",
+  "features": {
+    // プロジェクトに必要な追加 features をここに記載
+  },
+  "remoteEnv": {
+    "TMPDIR": "/home/vscode/.claude/tmp"
+  },
+  "postCreateCommand": "npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "ms-vscode.vscode-typescript-next"
+        // プロジェクトに応じた拡張機能を追加
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "files.eol": "\n",
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true
+      }
+    }
+  }
+}
+```
+
+### 5.2 `.devcontainer/codespaces/devcontainer.json`（Codespaces 用）を作成
+
+GitHub Codespaces 用。`secrets`, `codespaces` カスタマイゼーション、`sshd` feature を含める。
+
+```json
+{
+  "name": "{project-name} (Codespaces)",
+  "image": "ghcr.io/keito4/config-base:latest",
+  "features": {
+    "ghcr.io/devcontainers/features/sshd:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+    // プロジェクトに必要な追加 features をここに記載
+  },
+  "remoteEnv": {
+    "TMPDIR": "/home/vscode/.claude/tmp"
+  },
+  "postCreateCommand": "npm install",
+  "customizations": {
+    "vscode": {
+      // ローカル用と同じ extensions / settings
+    },
+    "codespaces": {
+      "openFiles": ["README.md"]
+    }
+  },
+  "secrets": {
+    "ANTHROPIC_API_KEY": {
+      "description": "Anthropic API key for Claude Code"
+    }
+    // プロジェクト固有のシークレットを追加
+  }
+}
+```
+
+**重要**: 2つの devcontainer.json を常にセットで作成する。
+
+### 5.3 `.vscode/` 設定を作成
 
 ```bash
-# .devcontainer をコピー
-cp -r CONFIG_REPO/.devcontainer TARGET_DIR/
-
-# .vscode をコピー
-cp -r CONFIG_REPO/.vscode TARGET_DIR/
+mkdir -p TARGET_DIR/.vscode
 ```
+
+- `extensions.json`: 推奨拡張機能
+- `settings.json`: エディタ設定（formatOnSave, ESLint, Prettier）
 
 ### DevContainer 設定内容
 
 - `ghcr.io/keito4/config-base:latest` ベースイメージ
 - Node.js 22+
 - 推奨VS Code拡張機能
+- ローカル用: 軽量構成
+- Codespaces 用: sshd, secrets, codespaces カスタマイゼーション
+- `postCreateCommand` による自動依存関係インストール
 
 ## Step 6: Setup Git Configuration
 
@@ -239,9 +321,10 @@ npm install
 npx husky init
 ```
 
-## Step 11: Add to Codespaces Secrets (Optional)
+## Step 11: Add to Codespaces Secrets (Default)
 
-GitHub Codespacesでリポジトリを使用する場合、シークレットの紐付けが必要です。
+Codespaces でリポジトリを使用できるように、シークレットの紐付けをデフォルトで実行する。
+`--no-codespaces` オプションが指定された場合のみスキップ。
 
 ### 11.1: Check if codespaces-secrets.sh is available
 
@@ -251,8 +334,6 @@ test -f CONFIG_REPO/script/codespaces-secrets.sh && echo "available" || echo "no
 
 ### 11.2: Add repository to Codespaces secrets
 
-If available and user chooses to enable Codespaces:
-
 ```bash
 # リポジトリをシークレット管理対象に追加
 CONFIG_REPO/script/codespaces-secrets.sh repos add {owner}/{repo-name}
@@ -261,16 +342,14 @@ CONFIG_REPO/script/codespaces-secrets.sh repos add {owner}/{repo-name}
 CONFIG_REPO/script/codespaces-secrets.sh sync
 ```
 
-### 11.3: Display Codespaces reminder
+### 11.3: Verify setup
 
+```bash
+# 紐付け状態を確認
+CONFIG_REPO/script/codespaces-secrets.sh list
 ```
-📦 Codespaces 設定のリマインダー
 
-GitHub Codespacesでこのリポジトリを使用する場合：
-1. シークレットを紐付け: ./script/codespaces-secrets.sh repos add {owner}/{repo-name}
-2. 同期実行: ./script/codespaces-secrets.sh sync
-3. 確認: ./script/codespaces-secrets.sh list
-```
+シークレットスクリプトが利用できない場合は、手動設定のガイドを表示する。
 
 ## Step 12: Generate Summary
 
@@ -313,12 +392,13 @@ Next Steps:
 
 ## Options Summary
 
-| オプション          | 説明                       | デフォルト |
-| ------------------- | -------------------------- | ---------- |
-| `--minimal`         | GitHub Actionsをスキップ   | false      |
-| `--no-devcontainer` | DevContainer設定をスキップ | false      |
-| `--license TYPE`    | ライセンス種別             | MIT        |
-| `--no-install`      | npm installをスキップ      | false      |
+| オプション          | 説明                                   | デフォルト |
+| ------------------- | -------------------------------------- | ---------- |
+| `--minimal`         | GitHub Actionsをスキップ               | false      |
+| `--no-devcontainer` | DevContainer設定をスキップ             | false      |
+| `--no-codespaces`   | Codespacesシークレット紐付けをスキップ | false      |
+| `--license TYPE`    | ライセンス種別                         | MIT        |
+| `--no-install`      | npm installをスキップ                  | false      |
 
 ## Related Commands
 
