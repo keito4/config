@@ -60,11 +60,11 @@ git init
 
 ## Step 5: Create DevContainer Configuration (unless --no-devcontainer)
 
-DevContainer設定をプロジェクトに合わせて新規作成する。configリポジトリからコピーせず、プロジェクト固有の設定を生成する。
+DevContainer設定をプロジェクトに合わせて新規作成する。ローカル用と Codespaces 用の2つを作成する。
 
-### 5.1 `.devcontainer/devcontainer.json` を作成
+### 5.1 `.devcontainer/devcontainer.json`（ローカル用）を作成
 
-以下をすべて含める（Codespaces 対応がデフォルト）：
+ローカル DevContainer 用。Codespaces 固有設定（`secrets`, `codespaces` カスタマイゼーション）は含めない。
 
 ```json
 {
@@ -95,6 +95,31 @@ DevContainer設定をプロジェクトに合わせて新規作成する。confi
         "files.trimTrailingWhitespace": true,
         "files.insertFinalNewline": true
       }
+    }
+  }
+}
+```
+
+### 5.2 `.devcontainer/codespaces/devcontainer.json`（Codespaces 用）を作成
+
+GitHub Codespaces 用。`secrets`, `codespaces` カスタマイゼーション、`sshd` feature を含める。
+
+```json
+{
+  "name": "{project-name} (Codespaces)",
+  "image": "ghcr.io/keito4/config-base:latest",
+  "features": {
+    "ghcr.io/devcontainers/features/sshd:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+    // プロジェクトに必要な追加 features をここに記載
+  },
+  "remoteEnv": {
+    "TMPDIR": "/home/vscode/.claude/tmp"
+  },
+  "postCreateCommand": "npm install",
+  "customizations": {
+    "vscode": {
+      // ローカル用と同じ extensions / settings
     },
     "codespaces": {
       "openFiles": ["README.md"]
@@ -109,9 +134,9 @@ DevContainer設定をプロジェクトに合わせて新規作成する。confi
 }
 ```
 
-**重要**: `codespaces` カスタマイゼーションと `secrets` セクションは常にデフォルトで含める。
+**重要**: 2つの devcontainer.json を常にセットで作成する。
 
-### 5.2 `.vscode/` 設定を作成
+### 5.3 `.vscode/` 設定を作成
 
 ```bash
 mkdir -p TARGET_DIR/.vscode
@@ -125,7 +150,8 @@ mkdir -p TARGET_DIR/.vscode
 - `ghcr.io/keito4/config-base:latest` ベースイメージ
 - Node.js 22+
 - 推奨VS Code拡張機能
-- Codespaces 対応（シークレット定義、openFiles）
+- ローカル用: 軽量構成
+- Codespaces 用: sshd, secrets, codespaces カスタマイゼーション
 - `postCreateCommand` による自動依存関係インストール
 
 ## Step 6: Setup Git Configuration
