@@ -117,13 +117,35 @@ npm view @anthropic-ai/claude-code version
 
 MODE が `full` の場合は `/update-claude-code` コマンドを実行。
 
-### 2.5 Claude Settings Sync Check (full mode only)
+### 2.5 GitHub Actions Version Check
+
+GitHub Actions のバージョンを確認・更新：
+
+```bash
+npm run update:actions
+```
+
+または一括更新（npm + Claude Code + Actions）:
+
+```bash
+npm run update:all
+npm run update:all -- --skip-libs --skip-claude  # Actions のみ
+```
+
+結果:
+
+- ✅ 全アクション最新
+- ⚠️ 更新可能なアクションあり
+
+MODE が `full` の場合は `/update-actions` コマンドを実行。
+
+### 2.6 Claude Settings Sync Check (full mode only)
 
 このリポジトリが config リポジトリの場合のみ実行:
 
 `/sync-claude-settings` の実行を確認。
 
-### 2.6 Claude Code LSP Setup Check
+### 2.7 Claude Code LSP Setup Check
 
 Claude Code の LSP（Language Server Protocol）サポートの設定状況を確認：
 
@@ -210,7 +232,7 @@ ENABLE_LSP_TOOL=1 npx @anthropic-ai/claude-code@stable
 - [Claude Code LSP 設定ガイド](https://blog.lai.so/claude-code-lsp/)
 - [公式プラグイン](https://github.com/anthropics/claude-plugins-official)
 
-### 2.7 Codespaces Secrets Sync Check
+### 2.8 Codespaces Secrets Sync Check
 
 GitHub Codespaces を使用する場合のシークレット紐付け状況を確認：
 
@@ -392,6 +414,7 @@ config リポジトリから取り込み可能な新機能を発見：
 ├── Container Health: ✅ Healthy (Score: 95/100)
 ├── DevContainer: ⚠️ Update available (v1.13.1 → v1.15.0)
 ├── Claude Code: ✅ Up to date
+├── GitHub Actions: ✅ All actions up to date
 ├── Claude Settings: ✅ Synced
 ├── Claude Code LSP: ⚠️ Not configured (TypeScript detected)
 └── Codespaces Secrets: ✅ Synced (or ⏭️ Skipped)
@@ -573,18 +596,19 @@ Run this command regularly to maintain repository health:
 
 このコマンドは以下のコマンドを内部的に呼び出します：
 
-| カテゴリ    | コマンド                        | 説明                        |
-| ----------- | ------------------------------- | --------------------------- |
-| Environment | `/container-health`             | コンテナ健全性              |
-| Environment | `/config-base-sync-check`       | DevContainer バージョン     |
-| Environment | `/config-base-sync-update`      | DevContainer 更新           |
-| Environment | `/update-claude-code`           | Claude Code 更新            |
-| Environment | `/sync-claude-settings`         | Claude 設定同期             |
-| Environment | (Claude Code LSP setup)         | LSP 設定                    |
-| Environment | `/codespaces-secrets`           | Codespaces シークレット同期 |
-| Setup       | `/setup-team-protection`        | GitHub保護ルール設定        |
-| Setup       | `/setup-husky`                  | Git hooks設定               |
-| Setup       | `/pre-pr-checklist`             | PR前チェックリスト          |
-| Setup       | `/setup-ci`                     | CI/CDワークフロー設定       |
-| Cleanup     | `/branch-cleanup`               | ブランチクリーンアップ      |
-| Discovery   | `/config-contribution-discover` | 新機能発見                  |
+| カテゴリ    | コマンド                        | 説明                          |
+| ----------- | ------------------------------- | ----------------------------- |
+| Environment | `/container-health`             | コンテナ健全性                |
+| Environment | `/config-base-sync-check`       | DevContainer バージョン       |
+| Environment | `/config-base-sync-update`      | DevContainer 更新             |
+| Environment | `/update-claude-code`           | Claude Code 更新              |
+| Environment | `/update-actions`               | GitHub Actions バージョン更新 |
+| Environment | `/sync-claude-settings`         | Claude 設定同期               |
+| Environment | (Claude Code LSP setup)         | LSP 設定                      |
+| Environment | `/codespaces-secrets`           | Codespaces シークレット同期   |
+| Setup       | `/setup-team-protection`        | GitHub保護ルール設定          |
+| Setup       | `/setup-husky`                  | Git hooks設定                 |
+| Setup       | `/pre-pr-checklist`             | PR前チェックリスト            |
+| Setup       | `/setup-ci`                     | CI/CDワークフロー設定         |
+| Cleanup     | `/branch-cleanup`               | ブランチクリーンアップ        |
+| Discovery   | `/config-contribution-discover` | 新機能発見                    |

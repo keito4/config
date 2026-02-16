@@ -29,6 +29,7 @@ This directory contains pre-configured commands that provide automated workflows
 | **Config Sync**       | `/sync-settings`                | Claude/Codex 設定の同期                      |
 |                       | `/config-contribution-discover` | 新機能の発見と取り込み                       |
 | **Updates**           | `/update-claude-code`           | Claude Code の更新                           |
+|                       | `/update-actions`               | GitHub Actions バージョンの更新              |
 | **Documentation**     | `/changelog-generator`          | Conventional Commits から CHANGELOG を生成   |
 
 ## Available Commands
@@ -318,6 +319,25 @@ This directory contains pre-configured commands that provide automated workflows
 /update-claude-code
 ```
 
+#### `update-actions.md`
+
+**Purpose**: Update GitHub Actions to the latest versions
+**Features**:
+
+- `.github/workflows/` 配下の全ワークフローファイルをスキャン
+- SemVer タグのアクションを最新バージョンに更新
+- メジャータグ固定・SHA ピンニング・ブランチ固定はスキップ
+- `npm run update:all` で全依存関係の一括更新も可能
+
+**Usage**:
+
+```
+/update-actions
+npm run update:actions
+npm run update:all              # 全依存関係の一括更新
+npm run update:all -- --skip-libs --skip-claude  # Actions のみ
+```
+
 #### `setup-new-repo.md`
 
 **Purpose**: Setup new repository with DevContainer, CI/CD, and development tools from config template
@@ -500,6 +520,8 @@ This directory contains pre-configured commands that provide automated workflows
 | `setup-team-protection.sh`    | `/setup-team-protection`    | GitHub 保護ルールの設定                  |
 | `test-coverage-trend.sh`      | `/test-coverage-trend`      | テストカバレッジのトレンド追跡           |
 | `update-claude-code.sh`       | `/update-claude-code`       | Claude Code の更新                       |
+| `update-actions.sh`           | `/update-actions`           | GitHub Actions バージョンの更新          |
+| `update-all.sh`               | npm scripts                 | 全依存関係の一括更新                     |
 
 ### DevContainer・インフラ用スクリプト（コマンド経由では使用しない）
 
