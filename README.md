@@ -604,10 +604,13 @@ The repository includes a complete DevContainer setup (`.devcontainer/`) that pr
 
 **推奨**: `ghcr.io/keito4/config-base:latest`（常に最新の安定版）
 
-**Pre-installed Plugins** (v1.62.1):
+**Pre-installed Plugins**:
 
 - Official plugins: `commit-commands`, `hookify`, `plugin-dev`, `typescript-lsp`, `code-review`
 - Workflow plugins: `code-refactoring`, `kubernetes-operations`, `javascript-typescript`, `backend-development`, `full-stack-orchestration`, `database-design`, `database-migrations`
+- Supabase plugins: `postgres-best-practices`
+- Vercel plugins: `agent-browser`
+- Community plugins: `context7`
 
 **Recommended Usage**: For new projects, use the pre-built image without mounting host's `~/.claude` directory. This ensures the image configuration works immediately. See [docs/using-config-base-image.md](docs/using-config-base-image.md) for detailed usage instructions.
 
