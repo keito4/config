@@ -1,40 +1,10 @@
 # Web アプリ (Next.js) セットアップガイド
 
-## 対象範囲
-
-本ガイドは組織横断の Next.js プロジェクト全般を対象とする。
-複数リポジトリの実態調査に基づき、共通パターンと残課題を整理している。
-
-## 全プロジェクト品質ゲート整備状況
-
-2026-02 時点の実態調査に基づく。
-
-| 品質ゲート             | プロジェクト A | プロジェクト B | プロジェクト C | プロジェクト D | プロジェクト E | プロジェクト F | プロジェクト G |
-| ---------------------- | :------------: | :------------: | :------------: | :------------: | :------------: | :------------: | :------------: |
-| **テスト (Unit)**      |    o (Jest)    |   o (Vitest)   |    o (Jest)    |    o (Jest)    |    o (Jest)    |   o (Vitest)   |       x        |
-| **カバレッジ 70%**     |   △ (8-60%)    |  **o (70%)**   |  **o (70%)**   |  **o (70%)**   |  △ (閾値なし)  |  △ (閾値なし)  |       x        |
-| **E2E テスト**         | o (Playwright) |       x        |       x        | o (Playwright) |       x        |       x        |       x        |
-| **ESLint**             |    o (Flat)    |    o (Flat)    |    o (Flat)    |    o (Flat)    |    o (Flat)    |    o (Flat)    |   △ (Biome)    |
-| **Prettier / fmt**     |       o        |       o        |       o        |       o        |       o        |       x        |   △ (Biome)    |
-| **CI/CD**              |       o        |       o        |       o        |       o        |       o        |       o        |       o        |
-| **husky + commitlint** |       o        |       o        |       o        | △ (husky のみ) |       o        |       x        |       x        |
-| **lint-staged**        |       o        |       o        |       x        |       x        |       o        |       x        |       x        |
-| **CLAUDE.md**          |       x        |     **o**      |       x        |       x        |       x        |       x        |       x        |
-| **DevContainer**       |   o (1.54.0)   |   o (latest)   |       x        |       x        |   o (latest)   |   o (1.48.0)   |       x        |
-
-**模範プロジェクト**: プロジェクト B — 70% カバレッジ、CLAUDE.md、DevContainer latest、全品質ゲート達成
-
-## 共通セットアップ項目
-
-以下はすべての Next.js プロジェクトに適用すべき項目。
-
-### 優先度: 高
-
-#### 1. テスト環境構築とカバレッジ 70% 達成
+## テスト環境構築とカバレッジ 70% 達成
 
 テストフレームワークの選択は 2 パターンが確立されている。
 
-**パターン A: Jest + Testing Library**（4 プロジェクトで採用）
+**パターン A: Jest + Testing Library**
 
 ```bash
 npm install -D jest @jest/globals jest-environment-jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event @types/jest
@@ -57,7 +27,7 @@ module.exports = createJestConfig({
 });
 ```
 
-**パターン B: Vitest**（2 プロジェクトで採用）
+**パターン B: Vitest**
 
 ```bash
 npm install -D vitest @vitest/coverage-v8 @testing-library/react @testing-library/jest-dom jsdom
@@ -81,15 +51,13 @@ export default defineConfig({
 });
 ```
 
-**既存プロジェクトのカバレッジ引き上げ**（閾値が低いプロジェクト向け）:
+**既存プロジェクトのカバレッジ引き上げ**:
 
 1. `npm run test:coverage` で現在の実カバレッジを計測
 2. 各指標を +10% ずつ段階的に引き上げ
-3. 最終目標: 全指標 70%（模範プロジェクトと同水準）
+3. 最終目標: 全指標 70%
 
-#### 2. ESLint Flat Config + Prettier 統一
-
-全プロジェクトで ESLint Flat Config (`eslint.config.mjs`) への統一が進んでいる。
+## ESLint Flat Config + Prettier
 
 ```bash
 npm install -D eslint @eslint/js typescript-eslint eslint-config-prettier prettier
@@ -108,9 +76,7 @@ npm install -D eslint @eslint/js typescript-eslint eslint-config-prettier pretti
 
 > `--max-warnings 999` や `continue-on-error: true` は使わない。明示的に `--max-warnings 0` を設定する。
 
-#### 3. CI/CD パイプライン構築
-
-確立されたパイプラインパターン:
+## CI/CD パイプライン
 
 ```
 typecheck → lint → format:check → test (coverage) → build → e2e → security
@@ -136,13 +102,13 @@ jobs:
       - run: npm run build
 ```
 
-**発展構成**:
+**発展構成**（ワークフロー分割）:
 
 - `code-quality.yml`: lint + format + typecheck
 - `security.yml`: npm audit + CodeQL
 - `deploy.yml`: Vercel / その他プラットフォーム
 
-#### 4. husky + commitlint + lint-staged 導入
+## husky + commitlint + lint-staged
 
 **参考**: `/setup-husky` コマンドで最小構成を導入可能。
 
@@ -171,17 +137,13 @@ module.exports = {
 };
 ```
 
-**pre-push hook**（typecheck + lint + format + test を実行）:
+**pre-push hook**:
 
 ```bash
 npm run typecheck && npm run lint && npm run format:check && npm run test
 ```
 
-### 優先度: 中
-
-#### 5. CLAUDE.md 作成
-
-7 プロジェクト中 1 プロジェクトのみ作成済み。他の全プロジェクトで未作成。
+## CLAUDE.md
 
 **含めるべき内容**:
 
@@ -191,9 +153,7 @@ npm run typecheck && npm run lint && npm run format:check && npm run test
 - **デプロイ先**: Vercel / その他
 - **品質ゲート**: pre-commit / pre-push の実行内容
 
-#### 6. E2E テスト導入（Playwright）
-
-2 プロジェクトで導入済み。他プロジェクトへの展開を推奨。
+## E2E テスト（Playwright）
 
 ```bash
 npm install -D @playwright/test
@@ -224,47 +184,21 @@ export default defineConfig({
 });
 ```
 
-> CI では Chromium のみに限定しフィードバックを高速化するパターンが実績あり。
+> CI では Chromium のみに限定しフィードバックを高速化する。
 
-#### 7. Claude Code ワークフロー導入
-
-4 プロジェクトで導入済み。
+## Claude Code ワークフロー
 
 - `claude.yml`: `@claude` メンション対応
 - `claude-code-review.yml`: PR 自動レビュー
 
 **参考**: config リポジトリの `.github/workflows/claude.yml` をテンプレートとして使用。
 
-### 優先度: 低
+## DevContainer
 
-#### 8. DevContainer 整備
+- **ベースイメージ**: `ghcr.io/keito4/config-base:latest`
+- **冗長 Features の削除**: ベースイメージに含まれるもの（git, pnpm, github-cli, jq-likes, supabase-cli）は削除
+- **残すべき Features**: docker-in-docker, playwright（プロジェクト固有）
 
-| 状態                       | ベースイメージ | プロジェクト数 |
-| -------------------------- | -------------- | :------------: |
-| **模範**（latest）         | latest         |       2        |
-| 整備済み（旧バージョン）   | 1.48.0〜1.64.0 |       2        |
-| 更新 + Features 整理が必要 | 1.54.0         |       1        |
-| 未作成                     | なし           |       2        |
+## Biome 採用プロジェクト
 
-**冗長 Features の削除**（一部プロジェクト向け）:
-
-- 削除候補: git, pnpm, github-cli, jq-likes, supabase-cli（ベースイメージに含まれるもの）
-- 残すべき Features: docker-in-docker, playwright（プロジェクト固有）
-
-#### 9. Biome 採用プロジェクトの対応
-
-一部プロジェクトでは ESLint + Prettier の代わりに Biome を採用している。Biome は lint + format を 1 ツールで提供するが、テスト環境が未整備。
-
-**優先対応**: テスト環境の構築（Vitest 推奨）とカバレッジ閾値の設定。
-
-## プロジェクト別の残課題サマリー
-
-| プロジェクト | 主な残課題                                                 |
-| ------------ | ---------------------------------------------------------- |
-| **A**        | カバレッジ閾値引き上げ（8→70%）、lint 厳格化、CLAUDE.md    |
-| **B**        | （模範 — 残課題なし）                                      |
-| **C**        | lint-staged 導入、CLAUDE.md、DevContainer 新規作成         |
-| **D**        | commitlint 追加、lint-staged 導入、CLAUDE.md、DevContainer |
-| **E**        | カバレッジ閾値設定（70%）、CLAUDE.md                       |
-| **F**        | Prettier・husky・commitlint 導入、CLAUDE.md                |
-| **G**        | テスト環境構築、husky・commitlint 導入、CLAUDE.md          |
+ESLint + Prettier の代わりに Biome を採用する場合も、テスト環境（Vitest 推奨）とカバレッジ閾値 70% は必須。
