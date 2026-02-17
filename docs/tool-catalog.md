@@ -112,30 +112,30 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 ### 4.1 DevContainer 利用リポジトリ
 
-|                        | config             | ohana (ohana-ops)                             | notion_orm     | ai_topic_decomposer | raycast-extensions | calendar_alerm         | intent-gate-android |
-| ---------------------- | ------------------ | --------------------------------------------- | -------------- | ------------------- | ------------------ | ---------------------- | ------------------- |
-| **ベースイメージ ver** | ローカルビルド     | 1.54.0                                        | 1.0.13         | 1.0.13              | 1.58.0             | 1.0.13                 | 1.0.13              |
-| **言語**               | JS/Shell           | TypeScript                                    | TypeScript     | TypeScript          | TypeScript         | Dart/Flutter           | Kotlin              |
-| **フレームワーク**     | -                  | Next.js 15                                    | - (CLI)        | React 19 + Vite     | Raycast API        | Flutter 3.27           | Jetpack Compose     |
-| **PKG マネージャ**     | npm                | npm                                           | pnpm           | npm                 | pnpm               | pub                    | Gradle              |
-| **テスト (Unit)**      | Jest + BATS        | Jest                                          | Jest           | -                   | -                  | flutter_test + mockito | -                   |
-| **テスト (E2E)**       | -                  | Playwright                                    | -              | -                   | -                  | Patrol                 | -                   |
-| **リンター**           | ESLint             | ESLint + next lint                            | ESLint         | -                   | -                  | very_good_analysis     | -                   |
-| **フォーマッター**     | Prettier           | Prettier                                      | Prettier       | -                   | Prettier           | dart format            | -                   |
-| **Git hooks**          | husky + commitlint | husky + commitlint                            | husky          | -                   | husky + commitlint | -                      | -                   |
-| **CI/CD**              | GitHub Actions     | GitHub Actions                                | GitHub Actions | -                   | GitHub Actions     | GitHub Actions         | -                   |
-| **追加 Features**      | 全 Features        | git, pnpm, gh, jq, supabase, dind, playwright | node(20), gh   | -                   | gh, dind, pnpm, jq | flutter, java(17)      | java(17) + gradle   |
+|                        | 共通基盤 (config)  | Web アプリ (Next.js)                          | npm ライブラリ (CLI) | SPA (React + Vite) | デスクトップ拡張 (TS) | モバイル (Flutter)     | モバイル (Android) |
+| ---------------------- | ------------------ | --------------------------------------------- | -------------------- | ------------------ | --------------------- | ---------------------- | ------------------ |
+| **ベースイメージ ver** | ローカルビルド     | 1.54.0                                        | 1.0.13               | 1.0.13             | 1.58.0                | 1.0.13                 | 1.0.13             |
+| **言語**               | JS/Shell           | TypeScript                                    | TypeScript           | TypeScript         | TypeScript            | Dart/Flutter           | Kotlin             |
+| **フレームワーク**     | -                  | Next.js 15                                    | - (CLI)              | React 19 + Vite    | Raycast API           | Flutter 3.27           | Jetpack Compose    |
+| **PKG マネージャ**     | npm                | npm                                           | pnpm                 | npm                | pnpm                  | pub                    | Gradle             |
+| **テスト (Unit)**      | Jest + BATS        | Jest                                          | Jest                 | -                  | -                     | flutter_test + mockito | -                  |
+| **テスト (E2E)**       | -                  | Playwright                                    | -                    | -                  | -                     | Patrol                 | -                  |
+| **リンター**           | ESLint             | ESLint + next lint                            | ESLint               | -                  | -                     | very_good_analysis     | -                  |
+| **フォーマッター**     | Prettier           | Prettier                                      | Prettier             | -                  | Prettier              | dart format            | -                  |
+| **Git hooks**          | husky + commitlint | husky + commitlint                            | husky                | -                  | husky + commitlint    | -                      | -                  |
+| **CI/CD**              | GitHub Actions     | GitHub Actions                                | GitHub Actions       | -                  | GitHub Actions        | GitHub Actions         | -                  |
+| **追加 Features**      | 全 Features        | git, pnpm, gh, jq, supabase, dind, playwright | node(20), gh         | -                  | gh, dind, pnpm, jq    | flutter, java(17)      | java(17) + gradle  |
 
 ### 4.2 主要な追加依存（注目ポイント）
 
-| リポジトリ          | 注目する依存                                                                   |
-| ------------------- | ------------------------------------------------------------------------------ |
-| config              | semantic-release, jest-junit, bats                                             |
-| ohana (ohana-ops)   | `@supabase/ssr`, Tailwind CSS 4, Zod 4, Testing Library, Playwright, LangSmith |
-| notion_orm          | `@notionhq/client`, commander, ts-jest, semantic-release                       |
-| ai_topic_decomposer | `@google/genai`, D3.js, React 19                                               |
-| raycast-extensions  | lint-staged, monorepo (pnpm workspaces)                                        |
-| calendar_alerm      | Riverpod, Drift (SQLite), Freezed, go_router                                   |
+| 種別                  | 注目する依存                                                                   |
+| --------------------- | ------------------------------------------------------------------------------ |
+| 共通基盤 (config)     | semantic-release, jest-junit, bats                                             |
+| Web アプリ (Next.js)  | `@supabase/ssr`, Tailwind CSS 4, Zod 4, Testing Library, Playwright, LangSmith |
+| npm ライブラリ (CLI)  | `@notionhq/client`, commander, ts-jest, semantic-release                       |
+| SPA (React + Vite)    | `@google/genai`, D3.js, React 19                                               |
+| デスクトップ拡張 (TS) | lint-staged, monorepo (pnpm workspaces)                                        |
+| モバイル (Flutter)    | Riverpod, Drift (SQLite), Freezed, go_router                                   |
 
 ## 5. macOS ローカルツール（Brewfile）
 
@@ -188,29 +188,29 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 ### 6.1 ベースイメージバージョンの乖離
 
-4 リポジトリ（notion_orm, ai_topic_decomposer, calendar_alerm, intent-gate-android）が **1.0.13** のまま。
+4 リポジトリ（npm ライブラリ、SPA、モバイル Flutter、モバイル Android）が **1.0.13** のまま。
 最新は **1.58.0+** であり、AI CLI やセキュリティパッチが大幅に遅れている。
 
 > **推奨**: `/config-base-sync-update` コマンドで一括更新、または Dependabot/Renovate で自動化。
 
 ### 6.2 Features の重複
 
-ohana, raycast-extensions で `pnpm`, `gh`, `jq` などベースイメージに含まれるツールを Features で再インストールしている。
+Web アプリ、デスクトップ拡張で `pnpm`, `gh`, `jq` などベースイメージに含まれるツールを Features で再インストールしている。
 ベースイメージ更新後は Features の棚卸しが必要。
 
 ### 6.3 テスト未設定のリポジトリ
 
-| リポジトリ          | 状態                                           |
-| ------------------- | ---------------------------------------------- |
-| ai_topic_decomposer | Unit / E2E ともに未設定                        |
-| raycast-extensions  | テストスクリプトなし（Raycast 固有の制約あり） |
-| intent-gate-android | テスト未設定                                   |
+| 種別                  | 状態                                           |
+| --------------------- | ---------------------------------------------- |
+| SPA (React + Vite)    | Unit / E2E ともに未設定                        |
+| デスクトップ拡張 (TS) | テストスクリプトなし（Raycast 固有の制約あり） |
+| モバイル (Android)    | テスト未設定                                   |
 
 > **推奨**: TDD ベースライン（70%+ カバレッジ）に合わせ、最低限 Unit テストを追加。
 
 ### 6.4 リンター/フォーマッター未設定
 
-ai_topic_decomposer と intent-gate-android は lint / format スクリプトが未定義。
+SPA (React + Vite) とモバイル (Android) は lint / format スクリプトが未定義。
 コード品質の最低保証が欠けている。
 
 ### 6.5 Brewfile の肥大化
@@ -222,7 +222,7 @@ ai_topic_decomposer と intent-gate-android は lint / format スクリプトが
 
 ### 6.6 Git hooks の統一
 
-config, ohana, notion_orm は husky + commitlint を使用しているが、
-calendar_alerm, intent-gate-android, ai_topic_decomposer では Git hooks が未設定。
+共通基盤、Web アプリ、npm ライブラリは husky + commitlint を使用しているが、
+SPA、モバイル (Flutter/Android) では Git hooks が未設定。
 
 > **推奨**: `/setup-husky` コマンドで Conventional Commits を全リポに展開。
