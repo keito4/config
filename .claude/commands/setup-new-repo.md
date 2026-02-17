@@ -15,11 +15,13 @@ argument-hint: '<TARGET_DIR> [--minimal] [--no-devcontainer] [--no-codespaces] [
 1. **Git初期化** - リポジトリの初期化
 2. **DevContainer** - `.devcontainer/` と `.vscode/` 設定（Codespaces 対応含む）
 3. **Git設定** - commitlint, `.gitignore`
-4. **GitHub Actions** - CI workflow, Claude Code workflow, Issue/PRテンプレート
-5. **開発ツール** - ESLint, Prettier, Jest, Husky
-6. **ドキュメント** - README.md, CLAUDE.md, SECURITY.md
-7. **Codespaces シークレット** - リポジトリへのシークレット紐付け
-8. **ブランチ保護 & リポジトリ設定** - main ブランチ保護、セキュリティ設定
+4. **GitHub Actions** - CI, Claude Code, Security, Code Review workflow, Issue/PRテンプレート
+5. **Claude Code Hooks** - `.claude/hooks/` と `.claude/settings.json`
+6. **開発ツール** - ESLint, Prettier, Jest, Husky, lint-staged, `.node-version`
+7. **ドキュメント** - README.md, CLAUDE.md, SECURITY.md
+8. **依存関係インストール & Husky フック** - npm install, commit-msg / pre-commit / pre-push
+9. **Codespaces シークレット** - リポジトリへのシークレット紐付け
+10. **ブランチ保護 & リポジトリ設定** - main ブランチ保護、セキュリティ設定
 
 ## Step 1: Parse Arguments
 
@@ -211,6 +213,8 @@ Thumbs.db
 mkdir -p TARGET_DIR/.github/workflows
 cp CONFIG_REPO/.github/workflows/ci.yml TARGET_DIR/.github/workflows/
 cp CONFIG_REPO/.github/workflows/claude.yml TARGET_DIR/.github/workflows/
+cp CONFIG_REPO/.github/workflows/security.yml TARGET_DIR/.github/workflows/
+cp CONFIG_REPO/.github/workflows/claude-code-review.yml TARGET_DIR/.github/workflows/
 
 mkdir -p TARGET_DIR/.github/ISSUE_TEMPLATE
 cp -r CONFIG_REPO/.github/ISSUE_TEMPLATE/* TARGET_DIR/.github/ISSUE_TEMPLATE/
@@ -225,9 +229,75 @@ CI workflow と合わせて必ずコピーする。
 
 **前提**: リポジトリの Secrets に `CLAUDE_CODE_OAUTH_TOKEN` の設定が必要。
 
-## Step 8: Setup Development Tools
+### 7.2 Security workflow
 
-### 8.1 package.json 作成
+`security.yml` はセキュリティ関連の自動チェック（依存脆弱性スキャン等）を実行する workflow。
+
+**前提**: リポジトリの Secrets に `SLACK_CI_CHANNEL_ID`, `SLACK_BOT_TOKEN` の設定が必要。
+
+### 7.3 Claude Code Review workflow
+
+`claude-code-review.yml` は PR に対して Claude による自動コードレビューを実行する workflow。
+
+## Step 8: Setup Claude Code Hooks
+
+Claude Code の品質ゲートフックをセットアップする。
+
+### 8.1 hooks ディレクトリ作成とファイルコピー
+
+```bash
+mkdir -p TARGET_DIR/.claude/hooks
+cp CONFIG_REPO/.claude/hooks/block_git_no_verify.py TARGET_DIR/.claude/hooks/
+cp CONFIG_REPO/.claude/hooks/pre_git_quality_gates.py TARGET_DIR/.claude/hooks/
+cp CONFIG_REPO/.claude/hooks/post_git_push_ci.py TARGET_DIR/.claude/hooks/
+```
+
+### 8.2 `.claude/settings.json` 作成
+
+hooks セクションのみ含める。permissions セクションはプロジェクト固有のため含めない（ユーザーが後から設定）。
+
+```json
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 .claude/hooks/block_git_no_verify.py'"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 .claude/hooks/pre_git_quality_gates.py'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 .claude/hooks/post_git_push_ci.py'"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Step 9: Setup Development Tools
+
+### 9.1 package.json 作成
 
 ```json
 {
@@ -242,6 +312,7 @@ CI workflow と合わせて必ずコピーする。
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "typecheck": "tsc --noEmit",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -250,12 +321,13 @@ CI workflow と合わせて必ずコピーする。
     "eslint": "^9.0.0",
     "husky": "^9.0.0",
     "jest": "^29.0.0",
+    "lint-staged": "^15.0.0",
     "prettier": "^3.0.0"
   }
 }
 ```
 
-### 8.2 設定ファイルをコピー
+### 9.2 設定ファイルをコピー
 
 ```bash
 cp CONFIG_REPO/eslint.config.mjs TARGET_DIR/
@@ -263,9 +335,33 @@ cp CONFIG_REPO/.prettierrc TARGET_DIR/
 cp CONFIG_REPO/jest.config.js TARGET_DIR/
 ```
 
-## Step 9: Create Documentation
+### 9.3 ESLint 複雑度ルールを強化
 
-### 9.1 README.md
+コピーした `eslint.config.mjs` の `files: ['**/*.{js,jsx}']` ブロック内の `rules` で、`complexity` と `max-depth` を `warn` から `error` に変更する。
+
+Edit を使用して以下のルールを変更：
+
+- `complexity: ['warn', { max: 15 }]` → `complexity: ['error', 10]`
+- `'max-depth': ['warn', 4]` → `'max-depth': ['error', 4]`
+
+### 9.4 `.node-version` ファイル作成
+
+```
+22
+```
+
+### 9.5 `lint-staged.config.js` 作成
+
+```js
+module.exports = {
+  '*.{ts,tsx,js,jsx}': ['eslint --fix', 'prettier --write'],
+  '*.{json,md,yml,yaml,css}': ['prettier --write'],
+};
+```
+
+## Step 10: Create Documentation
+
+### 10.1 README.md
 
 プロジェクト名を含むREADMEを作成：
 
@@ -313,17 +409,17 @@ Please read [CLAUDE.md](./CLAUDE.md) for development guidelines.
 This project is licensed under the {LICENSE} License.
 ```
 
-### 9.2 CLAUDE.md
+### 10.2 CLAUDE.md
 
 ```bash
 cp CONFIG_REPO/.claude/CLAUDE.md TARGET_DIR/
 ```
 
-### 9.3 SECURITY.md
+### 10.3 SECURITY.md
 
 セキュリティポリシーを作成。
 
-## Step 10: Install Dependencies (unless --no-install)
+## Step 11: Install Dependencies & Setup Husky Hooks (unless --no-install)
 
 ```bash
 cd TARGET_DIR
@@ -331,18 +427,28 @@ npm install
 npx husky init
 ```
 
-## Step 11: Add to Codespaces Secrets (Default)
+### 11.1 Husky フック作成
+
+Husky v9+ では `.husky.sh` ヘッダは不要。フックは plain shell script として動作する。
+
+```bash
+echo 'npx commitlint --edit "$1"' > .husky/commit-msg
+echo 'npx lint-staged' > .husky/pre-commit
+echo 'npm run typecheck && npm run lint && npm run test' > .husky/pre-push
+```
+
+## Step 12: Add to Codespaces Secrets (Default)
 
 Codespaces でリポジトリを使用できるように、シークレットの紐付けをデフォルトで実行する。
 `--no-codespaces` オプションが指定された場合のみスキップ。
 
-### 11.1: Check if codespaces-secrets.sh is available
+### 12.1: Check if codespaces-secrets.sh is available
 
 ```bash
 test -f CONFIG_REPO/script/codespaces-secrets.sh && echo "available" || echo "not_available"
 ```
 
-### 11.2: Add repository to Codespaces secrets
+### 12.2: Add repository to Codespaces secrets
 
 ```bash
 # リポジトリをシークレット管理対象に追加
@@ -352,7 +458,7 @@ CONFIG_REPO/script/codespaces-secrets.sh repos add {owner}/{repo-name}
 CONFIG_REPO/script/codespaces-secrets.sh sync
 ```
 
-### 11.3: Verify setup
+### 12.3: Verify setup
 
 ```bash
 # 紐付け状態を確認
@@ -361,12 +467,12 @@ CONFIG_REPO/script/codespaces-secrets.sh list
 
 シークレットスクリプトが利用できない場合は、手動設定のガイドを表示する。
 
-## Step 12: Branch Protection & Repository Settings (unless --no-protection)
+## Step 13: Branch Protection & Repository Settings (unless --no-protection)
 
 リモートリポジトリが存在する場合、ブランチ保護とリポジトリ設定を自動適用する。
 リモートが設定されていない場合はスキップし、Summary の Next Steps に手動設定のガイドを表示する。
 
-### 12.1: リモートリポジトリの存在確認
+### 13.1: リモートリポジトリの存在確認
 
 ```bash
 # リモートが設定されているか確認
@@ -375,7 +481,7 @@ git -C TARGET_DIR remote get-url origin 2>/dev/null
 
 リモートが存在しない場合はこのステップ全体をスキップする。
 
-### 12.2: リポジトリ設定を更新
+### 13.2: リポジトリ設定を更新
 
 ```bash
 gh api repos/{owner}/{repo} --method PATCH --input - <<'EOF'
@@ -401,7 +507,7 @@ EOF
 - Secret scanning: 有効
 - Push protection: 有効
 
-### 12.3: main ブランチ保護ルールを設定
+### 13.3: main ブランチ保護ルールを設定
 
 ```bash
 gh api repos/{owner}/{repo}/branches/main/protection --method PUT --input - <<'EOF'
@@ -433,7 +539,7 @@ EOF
 - ブランチ更新必須（strict）
 - Force push / ブランチ削除: 禁止
 
-### 12.4: 設定結果を確認
+### 13.4: 設定結果を確認
 
 ```bash
 gh api repos/{owner}/{repo}/branches/main/protection --jq '{
@@ -443,7 +549,7 @@ gh api repos/{owner}/{repo}/branches/main/protection --jq '{
 }'
 ```
 
-## Step 13: Generate Summary
+## Step 14: Generate Summary
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -457,14 +563,23 @@ Files Created:
 ✅ .vscode/
 ✅ .github/workflows/ci.yml
 ✅ .github/workflows/claude.yml
+✅ .github/workflows/security.yml
+✅ .github/workflows/claude-code-review.yml
 ✅ .github/ISSUE_TEMPLATE/
 ✅ .github/PULL_REQUEST_TEMPLATE.md
+✅ .claude/hooks/ (3 ファイル)
+✅ .claude/settings.json
 ✅ package.json
 ✅ eslint.config.mjs
 ✅ .prettierrc
 ✅ jest.config.js
 ✅ commitlint.config.js
+✅ .node-version
+✅ lint-staged.config.js
 ✅ .gitignore
+✅ .husky/commit-msg
+✅ .husky/pre-commit
+✅ .husky/pre-push
 ✅ README.md
 ✅ CLAUDE.md
 ✅ SECURITY.md
@@ -482,6 +597,8 @@ Next Steps:
 5. gh repo create (if not yet created)
 6. git push -u origin main
 7. Set CLAUDE_CODE_OAUTH_TOKEN in repository secrets
+8. Set SLACK_CI_CHANNEL_ID in repository secrets (security.yml 用)
+9. Set SLACK_BOT_TOKEN in repository secrets (security.yml 用)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
