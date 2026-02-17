@@ -57,29 +57,108 @@ export default defineConfig({
 2. 各指標を +10% ずつ段階的に引き上げ
 3. 最終目標: 全指標 70%
 
-## ESLint Flat Config + Prettier
+## Biome（Lint + Format）
+
+ESLint + Prettier の代わりに **Biome を推奨**する。1 ツールで lint + format を高速に実行できる。
 
 ```bash
-npm install -D eslint @eslint/js typescript-eslint eslint-config-prettier prettier
+npm install -D --save-exact @biomejs/biome
+npx @biomejs/biome init
+```
+
+`biome.json`:
+
+```json
+{
+  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
+  "organizeImports": {
+    "enabled": true
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "linter": {
+    "rules": {
+      "recommended": true
+    }
+  },
+  "files": {
+    "ignore": [".next", "node_modules", "coverage"]
+  }
+}
 ```
 
 **推奨スクリプト**:
 
 ```json
 {
-  "lint": "next lint --max-warnings 0",
-  "lint:fix": "next lint --fix",
-  "format": "prettier --write .",
-  "format:check": "prettier --check ."
+  "check": "biome check .",
+  "check:fix": "biome check --write .",
+  "lint": "biome lint .",
+  "format": "biome format .",
+  "format:check": "biome format ."
 }
 ```
 
-> `--max-warnings 999` や `continue-on-error: true` は使わない。明示的に `--max-warnings 0` を設定する。
+> `biome check` は lint + format + import 整理を一括実行する。CI では `biome check .` を使う。
+
+### 既存の ESLint + Prettier からの移行
+
+```bash
+npx @biomejs/biome migrate eslint
+npx @biomejs/biome migrate prettier
+```
+
+移行後、不要になったパッケージと設定ファイルを削除する:
+
+- `eslint`, `eslint-config-*`, `eslint-plugin-*`, `@eslint/*`, `typescript-eslint`
+- `prettier`, `eslint-config-prettier`
+- `eslint.config.mjs` / `.eslintrc.*` / `.prettierrc*`
+
+## Knip（未使用コード検出）
+
+未使用の依存関係・ファイル・export を検出する **Knip を推奨**する。
+
+```bash
+npm install -D knip
+```
+
+`knip.json`:
+
+```json
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignore": ["!src/generated/**"],
+  "ignoreDependencies": [],
+  "next": {
+    "entry": ["next.config.{js,ts,mjs}", "src/app/**/*.{ts,tsx}", "src/middleware.ts"]
+  }
+}
+```
+
+> Knip は Next.js プラグインを内蔵しており、`next.config.*` や App Router のエントリを自動検出する。
+
+**推奨スクリプト**:
+
+```json
+{
+  "knip": "knip"
+}
+```
+
+CI にも追加:
+
+```yaml
+- name: Check unused code
+  run: npm run knip
+```
 
 ## CI/CD パイプライン
 
 ```
-typecheck → lint → format:check → test (coverage) → build → e2e → security
+typecheck → biome check → knip → test (coverage) → build → e2e → security
 ```
 
 **最小構成** (`ci.yml`):
@@ -89,22 +168,22 @@ jobs:
   typecheck:
     steps:
       - run: npm run typecheck
-  lint:
+  quality:
     steps:
-      - run: npm run lint
-      - run: npm run format:check
+      - run: npx biome check .
+      - run: npm run knip
   test:
     steps:
       - run: npm run test:ci
   build:
-    needs: [typecheck, lint, test]
+    needs: [typecheck, quality, test]
     steps:
       - run: npm run build
 ```
 
 **発展構成**（ワークフロー分割）:
 
-- `code-quality.yml`: lint + format + typecheck
+- `code-quality.yml`: typecheck + biome check + knip
 - `security.yml`: npm audit + CodeQL
 - `deploy.yml`: Vercel / その他プラットフォーム
 
@@ -131,16 +210,15 @@ module.exports = {
 
 ```js
 module.exports = {
-  '*.{ts,tsx,js,jsx}': ['eslint --fix', 'prettier --write'],
-  '*.{json,md,yml,yaml}': ['prettier --write'],
-  '*.{css,scss}': ['prettier --write'],
+  '*.{ts,tsx,js,jsx,json,css}': ['biome check --write --no-errors-on-unmatched'],
+  '*.{md,yml,yaml}': ['biome format --write --no-errors-on-unmatched'],
 };
 ```
 
 **pre-push hook**:
 
 ```bash
-npm run typecheck && npm run lint && npm run format:check && npm run test
+npm run typecheck && npx biome check . && npm run test
 ```
 
 ## CLAUDE.md
@@ -198,7 +276,3 @@ export default defineConfig({
 - **ベースイメージ**: `ghcr.io/keito4/config-base:latest`
 - **冗長 Features の削除**: ベースイメージに含まれるもの（git, pnpm, github-cli, jq-likes, supabase-cli）は削除
 - **残すべき Features**: docker-in-docker, playwright（プロジェクト固有）
-
-## Biome 採用プロジェクト
-
-ESLint + Prettier の代わりに Biome を採用する場合も、テスト環境（Vitest 推奨）とカバレッジ閾値 70% は必須。
