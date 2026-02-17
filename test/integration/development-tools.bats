@@ -127,13 +127,6 @@ EOF
   [[ "$status" -eq 0 ]] || [[ "$status" -eq 1 ]]
 }
 
-@test "setup-new-repo.sh should show help message" {
-  run bash "$ORIGINAL_DIR/script/setup-new-repo.sh" --help
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "Usage:" ]]
-  [[ "$output" =~ "TARGET_DIR" ]]
-}
-
 @test "all development tool scripts should have executable permissions" {
   scripts=(
     "changelog-generator.sh"
@@ -141,7 +134,6 @@ EOF
     "container-health.sh"
     "security-credential-scan.sh"
     "test-coverage-trend.sh"
-    "setup-new-repo.sh"
   )
 
   for script in "${scripts[@]}"; do
@@ -156,7 +148,6 @@ EOF
     "container-health.sh"
     "security-credential-scan.sh"
     "test-coverage-trend.sh"
-    "setup-new-repo.sh"
   )
 
   for script in "${scripts[@]}"; do
