@@ -179,7 +179,7 @@ for workflow_file in "${workflow_files[@]}"; do
       # 全ワークフローファイルで置換
       escaped_action=$(escape_sed "$full_action")
       for wf in "${workflow_files[@]}"; do
-        sed -i '' "s|\(uses:.*\)${escaped_action}@${current_ref}|\1${escaped_action}@${new_ref}|g" "$wf"
+        sed -i.bak "s|\(uses:.*\)${escaped_action}@${current_ref}|\1${escaped_action}@${new_ref}|g" "$wf" && rm -f "$wf.bak"
       done
 
       updated_actions+=("${full_action}: ${current_ref} -> ${new_ref}")

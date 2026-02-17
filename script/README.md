@@ -176,19 +176,6 @@ Generates changelog from conventional commits.
 
 **Claude command**: `/changelog-generator`
 
-### check-docs-sync.sh
-
-Verifies that generated documentation is synchronized with code changes.
-
-**Usage**: `./script/check-docs-sync.sh`
-
-**Configuration**:
-
-```bash
-export DOC_GENERATE_CMD="npm run docs:generate"  # Documentation generation command
-export DOCS_DIR="docs"                            # Documentation directory
-```
-
 ## Infrastructure & DevContainer
 
 ### version.sh
@@ -358,7 +345,6 @@ Shared library functions used by multiple scripts:
 | `devcontainer.sh`    | DevContainer-specific utilities                            |
 | `claude_plugins.sh`  | Claude plugin management utilities                         |
 | `brew_categories.py` | Homebrew package categorization                            |
-| `docs-common.js`     | Documentation generation utilities                         |
 
 ## Credential Providers (credentials/providers/)
 

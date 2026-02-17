@@ -186,7 +186,7 @@ jobs:
       - name: Run Bats integration tests
         run: |
           mkdir -p reports
-          bats test/integration/*.bats --formatter tap > reports/bats-results.tap || true
+          bats test/integration/*.bats --formatter tap > reports/bats-results.tap
 
       - name: Upload integration test results
         uses: actions/upload-artifact@v6.0.0
@@ -364,7 +364,7 @@ jobs:
         uses: slackapi/slack-github-action@v2.1.1
         with:
           channel-id: ${{ vars.SLACK_CI_CHANNEL_ID }}
-          payload-file-path: '.github/slack-ci-failure.json'
+          payload-template-file-path: '.github/slack-ci-failure.json'
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           REPO: ${{ github.repository }}

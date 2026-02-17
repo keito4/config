@@ -12,6 +12,7 @@
 # Fixed in: 1.19.8, 1.20.3
 # Reason: Transitive dependency via Vercel CLI, esbuild only used at build-time
 # Expected resolution: Wait for Vercel to update esbuild
+# Review date: 2026-02-17
 CVE-2023-24538
 
 # CVE-2023-24540: golang: html/template: improper handling of JavaScript whitespace
@@ -20,6 +21,7 @@ CVE-2023-24538
 # Fixed in: 1.19.9, 1.20.4
 # Reason: Transitive dependency via Vercel CLI, esbuild only used at build-time
 # Expected resolution: Wait for Vercel to update esbuild
+# Review date: 2026-02-17
 CVE-2023-24540
 
 # CVE-2024-24790: golang: net/netip: Unexpected behavior from Is methods for IPv4-mapped IPv6 addresses
@@ -28,6 +30,7 @@ CVE-2023-24540
 # Fixed in: 1.21.11, 1.22.4
 # Reason: Transitive dependency via Vercel CLI, esbuild only used at build-time
 # Expected resolution: Wait for Vercel to update esbuild
+# Review date: 2026-02-17
 CVE-2024-24790
 
 # CVE-2025-68121: golang: crypto/tls: session resumption vulnerability
@@ -37,6 +40,7 @@ CVE-2024-24790
 # Reason: Doppler CLI is built with older Go stdlib, waiting for upstream update
 # Expected resolution: Wait for Doppler to rebuild with patched Go version
 # Tracking: https://github.com/DopplerHQ/cli/issues (monitor for Go version update)
+# Review date: 2026-02-17
 CVE-2025-68121
 
 # Vercel CLI path-to-regexp vulnerability
@@ -50,4 +54,5 @@ CVE-2025-68121
 # Reason: Transitive dependency via Vercel CLI, cannot override without upstream fix
 # Expected resolution: Wait for Vercel to complete migration to path-to-regexp@6.3.0+
 # Tracking: https://github.com/vercel/vercel/issues
+# Review date: 2026-02-17
 CVE-2024-45296

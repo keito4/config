@@ -96,7 +96,7 @@ jobs:
       code: ${{ steps.filter.outputs.code }}
       scripts: ${{ steps.filter.outputs.scripts }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -185,7 +185,7 @@ notify-failure:
     - uses: slackapi/slack-github-action@v2
       with:
         channel-id: ${{ vars.SLACK_CI_CHANNEL_ID }}
-        payload-file-path: '.github/slack-ci-failure.json'
+        payload-template-file-path: '.github/slack-ci-failure.json'
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 ```
@@ -368,7 +368,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: npm update
       - uses: peter-evans/create-pull-request@v7
         with:
