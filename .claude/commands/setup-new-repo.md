@@ -1,7 +1,7 @@
 ---
 description: Setup new repository with DevContainer, CI/CD, and development tools from config template
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(mkdir:*), Bash(cp:*), Bash(ls:*), Bash(cat:*), Bash(test:*), Task, Glob, Grep
-argument-hint: '<TARGET_DIR> [--minimal] [--no-devcontainer] [--no-codespaces] [--license MIT|Apache-2.0] [--no-install]'
+argument-hint: '<TARGET_DIR> [--minimal] [--no-devcontainer] [--no-codespaces] [--no-protection] [--license MIT|Apache-2.0] [--no-install]'
 ---
 
 # New Repository Setup Command
@@ -15,10 +15,11 @@ argument-hint: '<TARGET_DIR> [--minimal] [--no-devcontainer] [--no-codespaces] [
 1. **Git初期化** - リポジトリの初期化
 2. **DevContainer** - `.devcontainer/` と `.vscode/` 設定（Codespaces 対応含む）
 3. **Git設定** - commitlint, `.gitignore`
-4. **GitHub Actions** - CI workflow, Issue/PRテンプレート
+4. **GitHub Actions** - CI workflow, Claude Code workflow, Issue/PRテンプレート
 5. **開発ツール** - ESLint, Prettier, Jest, Husky
 6. **ドキュメント** - README.md, CLAUDE.md, SECURITY.md
 7. **Codespaces シークレット** - リポジトリへのシークレット紐付け
+8. **ブランチ保護 & リポジトリ設定** - main ブランチ保護、セキュリティ設定
 
 ## Step 1: Parse Arguments
 
@@ -28,6 +29,7 @@ argument-hint: '<TARGET_DIR> [--minimal] [--no-devcontainer] [--no-codespaces] [
 - `--minimal`: GitHub Actionsをスキップ
 - `--no-devcontainer`: DevContainer設定をスキップ
 - `--no-codespaces`: Codespacesシークレット紐付けをスキップ
+- `--no-protection`: ブランチ保護・リポジトリ設定をスキップ
 - `--license TYPE`: ライセンス種別（デフォルト: MIT）
 - `--no-install`: npm install をスキップ
 
@@ -208,12 +210,20 @@ Thumbs.db
 ```bash
 mkdir -p TARGET_DIR/.github/workflows
 cp CONFIG_REPO/.github/workflows/ci.yml TARGET_DIR/.github/workflows/
+cp CONFIG_REPO/.github/workflows/claude.yml TARGET_DIR/.github/workflows/
 
 mkdir -p TARGET_DIR/.github/ISSUE_TEMPLATE
 cp -r CONFIG_REPO/.github/ISSUE_TEMPLATE/* TARGET_DIR/.github/ISSUE_TEMPLATE/
 
 cp CONFIG_REPO/.github/PULL_REQUEST_TEMPLATE.md TARGET_DIR/.github/
 ```
+
+### 7.1 Claude Code workflow
+
+`claude.yml` は `@claude` メンションで Claude Code を自動起動する workflow。
+CI workflow と合わせて必ずコピーする。
+
+**前提**: リポジトリの Secrets に `CLAUDE_CODE_OAUTH_TOKEN` の設定が必要。
 
 ## Step 8: Setup Development Tools
 
@@ -351,7 +361,89 @@ CONFIG_REPO/script/codespaces-secrets.sh list
 
 シークレットスクリプトが利用できない場合は、手動設定のガイドを表示する。
 
-## Step 12: Generate Summary
+## Step 12: Branch Protection & Repository Settings (unless --no-protection)
+
+リモートリポジトリが存在する場合、ブランチ保護とリポジトリ設定を自動適用する。
+リモートが設定されていない場合はスキップし、Summary の Next Steps に手動設定のガイドを表示する。
+
+### 12.1: リモートリポジトリの存在確認
+
+```bash
+# リモートが設定されているか確認
+git -C TARGET_DIR remote get-url origin 2>/dev/null
+```
+
+リモートが存在しない場合はこのステップ全体をスキップする。
+
+### 12.2: リポジトリ設定を更新
+
+```bash
+gh api repos/{owner}/{repo} --method PATCH --input - <<'EOF'
+{
+  "delete_branch_on_merge": true,
+  "allow_auto_merge": false,
+  "allow_merge_commit": true,
+  "allow_squash_merge": true,
+  "allow_rebase_merge": false,
+  "security_and_analysis": {
+    "secret_scanning": { "status": "enabled" },
+    "secret_scanning_push_protection": { "status": "enabled" }
+  }
+}
+EOF
+```
+
+設定内容：
+
+- マージ後ブランチ自動削除: 有効
+- 自動マージ: 無効
+- マージ方法: Merge commit + Squash merge（Rebase 無効）
+- Secret scanning: 有効
+- Push protection: 有効
+
+### 12.3: main ブランチ保護ルールを設定
+
+```bash
+gh api repos/{owner}/{repo}/branches/main/protection --method PUT --input - <<'EOF'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["Quality Gate"]
+  },
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": false
+  },
+  "enforce_admins": false,
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "required_linear_history": false
+}
+EOF
+```
+
+設定内容：
+
+- 直接プッシュ禁止（管理者はバイパス可）
+- PR 必須、レビュー承認 1名以上
+- 古いレビューの自動却下
+- 必須ステータスチェック: Quality Gate
+- ブランチ更新必須（strict）
+- Force push / ブランチ削除: 禁止
+
+### 12.4: 設定結果を確認
+
+```bash
+gh api repos/{owner}/{repo}/branches/main/protection --jq '{
+  status_checks: .required_status_checks.contexts,
+  reviews: .required_pull_request_reviews.required_approving_review_count,
+  force_push: .allow_force_pushes.enabled
+}'
+```
+
+## Step 13: Generate Summary
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -361,9 +453,10 @@ CONFIG_REPO/script/codespaces-secrets.sh list
 📁 Target: {TARGET_DIR}
 
 Files Created:
-✅ .devcontainer/
+✅ .devcontainer/ (ローカル + Codespaces)
 ✅ .vscode/
 ✅ .github/workflows/ci.yml
+✅ .github/workflows/claude.yml
 ✅ .github/ISSUE_TEMPLATE/
 ✅ .github/PULL_REQUEST_TEMPLATE.md
 ✅ package.json
@@ -376,16 +469,19 @@ Files Created:
 ✅ CLAUDE.md
 ✅ SECURITY.md
 
+Repository Settings (if remote exists):
+✅ Branch protection (main)
+✅ Repository settings (auto-delete branch, secret scanning)
+✅ Codespaces secrets
+
 Next Steps:
 1. cd {TARGET_DIR}
 2. Update README.md with project details
 3. Update package.json (name, description)
-4. git add . && git commit -m "chore: initial setup"
-5. gh repo create (optional)
+4. git add . && git commit -m "feat: initial setup"
+5. gh repo create (if not yet created)
 6. git push -u origin main
-7. Add to Codespaces secrets (if using GitHub Codespaces):
-   - Run: ./script/codespaces-secrets.sh repos add {owner}/{repo-name}
-   - Run: ./script/codespaces-secrets.sh sync
+7. Set CLAUDE_CODE_OAUTH_TOKEN in repository secrets
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -397,6 +493,7 @@ Next Steps:
 | `--minimal`         | GitHub Actionsをスキップ               | false      |
 | `--no-devcontainer` | DevContainer設定をスキップ             | false      |
 | `--no-codespaces`   | Codespacesシークレット紐付けをスキップ | false      |
+| `--no-protection`   | ブランチ保護・リポジトリ設定をスキップ | false      |
 | `--license TYPE`    | ライセンス種別                         | MIT        |
 | `--no-install`      | npm installをスキップ                  | false      |
 
