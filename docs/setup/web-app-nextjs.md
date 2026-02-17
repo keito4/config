@@ -3,26 +3,26 @@
 ## 対象範囲
 
 本ガイドは組織横断の Next.js プロジェクト全般を対象とする。
-代表リポジトリとして `ohana`（keito4）を基準に、`calendar_management`・`nomad_japan`・`ai_interviewer`・`goal_dashboard` 等の実態も反映している。
+複数リポジトリの実態調査に基づき、共通パターンと残課題を整理している。
 
 ## 全プロジェクト品質ゲート整備状況
 
 2026-02 時点の実態調査に基づく。
 
-| 品質ゲート             |     ohana      | calendar_management | nomad_japan | ai_interviewer | goal_dashboard | job_description |   gyoza   |
-| ---------------------- | :------------: | :-----------------: | :---------: | :------------: | :------------: | :-------------: | :-------: |
-| **テスト (Unit)**      |    o (Jest)    |     o (Vitest)      |  o (Jest)   |    o (Jest)    |    o (Jest)    |   o (Vitest)    |     x     |
-| **カバレッジ 70%**     |   △ (8-60%)    |     **o (70%)**     | **o (70%)** |  **o (70%)**   |  △ (閾値なし)  |  △ (閾値なし)   |     x     |
-| **E2E テスト**         | o (Playwright) |          x          |      x      | o (Playwright) |       x        |        x        |     x     |
-| **ESLint**             |    o (Flat)    |      o (Flat)       |  o (Flat)   |    o (Flat)    |    o (Flat)    |    o (Flat)     | △ (Biome) |
-| **Prettier / fmt**     |       o        |          o          |      o      |       o        |       o        |        x        | △ (Biome) |
-| **CI/CD**              |       o        |          o          |      o      |       o        |       o        |        o        |     o     |
-| **husky + commitlint** |       o        |          o          |      o      | △ (husky のみ) |       o        |        x        |     x     |
-| **lint-staged**        |       o        |          o          |      x      |       x        |       o        |        x        |     x     |
-| **CLAUDE.md**          |       x        |        **o**        |      x      |       x        |       x        |        x        |     x     |
-| **DevContainer**       |   o (1.54.0)   |     o (latest)      |      x      |       x        |   o (latest)   |   o (1.48.0)    |     x     |
+| 品質ゲート             | プロジェクト A | プロジェクト B | プロジェクト C | プロジェクト D | プロジェクト E | プロジェクト F | プロジェクト G |
+| ---------------------- | :------------: | :------------: | :------------: | :------------: | :------------: | :------------: | :------------: |
+| **テスト (Unit)**      |    o (Jest)    |   o (Vitest)   |    o (Jest)    |    o (Jest)    |    o (Jest)    |   o (Vitest)   |       x        |
+| **カバレッジ 70%**     |   △ (8-60%)    |  **o (70%)**   |  **o (70%)**   |  **o (70%)**   |  △ (閾値なし)  |  △ (閾値なし)  |       x        |
+| **E2E テスト**         | o (Playwright) |       x        |       x        | o (Playwright) |       x        |       x        |       x        |
+| **ESLint**             |    o (Flat)    |    o (Flat)    |    o (Flat)    |    o (Flat)    |    o (Flat)    |    o (Flat)    |   △ (Biome)    |
+| **Prettier / fmt**     |       o        |       o        |       o        |       o        |       o        |       x        |   △ (Biome)    |
+| **CI/CD**              |       o        |       o        |       o        |       o        |       o        |       o        |       o        |
+| **husky + commitlint** |       o        |       o        |       o        | △ (husky のみ) |       o        |       x        |       x        |
+| **lint-staged**        |       o        |       o        |       x        |       x        |       o        |       x        |       x        |
+| **CLAUDE.md**          |       x        |     **o**      |       x        |       x        |       x        |       x        |       x        |
+| **DevContainer**       |   o (1.54.0)   |   o (latest)   |       x        |       x        |   o (latest)   |   o (1.48.0)   |       x        |
 
-**模範プロジェクト**: `calendar_management` — 70% カバレッジ、CLAUDE.md、DevContainer latest、全品質ゲート達成
+**模範プロジェクト**: プロジェクト B — 70% カバレッジ、CLAUDE.md、DevContainer latest、全品質ゲート達成
 
 ## 共通セットアップ項目
 
@@ -34,7 +34,7 @@
 
 テストフレームワークの選択は 2 パターンが確立されている。
 
-**パターン A: Jest + Testing Library**（ohana, nomad_japan, ai_interviewer, goal_dashboard）
+**パターン A: Jest + Testing Library**（4 プロジェクトで採用）
 
 ```bash
 npm install -D jest @jest/globals jest-environment-jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event @types/jest
@@ -57,7 +57,7 @@ module.exports = createJestConfig({
 });
 ```
 
-**パターン B: Vitest**（calendar_management, job_description）
+**パターン B: Vitest**（2 プロジェクトで採用）
 
 ```bash
 npm install -D vitest @vitest/coverage-v8 @testing-library/react @testing-library/jest-dom jsdom
@@ -81,11 +81,11 @@ export default defineConfig({
 });
 ```
 
-**既存プロジェクトのカバレッジ引き上げ**（ohana 等、閾値が低いプロジェクト向け）:
+**既存プロジェクトのカバレッジ引き上げ**（閾値が低いプロジェクト向け）:
 
 1. `npm run test:coverage` で現在の実カバレッジを計測
 2. 各指標を +10% ずつ段階的に引き上げ
-3. 最終目標: 全指標 70%（calendar_management と同水準）
+3. 最終目標: 全指標 70%（模範プロジェクトと同水準）
 
 #### 2. ESLint Flat Config + Prettier 統一
 
@@ -106,11 +106,11 @@ npm install -D eslint @eslint/js typescript-eslint eslint-config-prettier pretti
 }
 ```
 
-> `--max-warnings 999` や `continue-on-error: true` は使わない。ohana の `lint:strict` のように明示的に `--max-warnings 0` を設定する。
+> `--max-warnings 999` や `continue-on-error: true` は使わない。明示的に `--max-warnings 0` を設定する。
 
 #### 3. CI/CD パイプライン構築
 
-確立されたパイプラインパターン（ohana, ai_interviewer を参考）:
+確立されたパイプラインパターン:
 
 ```
 typecheck → lint → format:check → test (coverage) → build → e2e → security
@@ -136,7 +136,7 @@ jobs:
       - run: npm run build
 ```
 
-**発展構成**（ai_interviewer パターン）:
+**発展構成**:
 
 - `code-quality.yml`: lint + format + typecheck
 - `security.yml`: npm audit + CodeQL
@@ -161,7 +161,7 @@ module.exports = {
 };
 ```
 
-**lint-staged.config.js**（ohana パターン）:
+**lint-staged.config.js**:
 
 ```js
 module.exports = {
@@ -171,7 +171,7 @@ module.exports = {
 };
 ```
 
-**pre-push hook**（ohana パターン — typecheck + lint + format + test を実行）:
+**pre-push hook**（typecheck + lint + format + test を実行）:
 
 ```bash
 npm run typecheck && npm run lint && npm run format:check && npm run test
@@ -181,7 +181,7 @@ npm run typecheck && npm run lint && npm run format:check && npm run test
 
 #### 5. CLAUDE.md 作成
 
-**模範**: `calendar_management` が唯一 CLAUDE.md を作成済み。他の全プロジェクトで未作成。
+7 プロジェクト中 1 プロジェクトのみ作成済み。他の全プロジェクトで未作成。
 
 **含めるべき内容**:
 
@@ -193,14 +193,14 @@ npm run typecheck && npm run lint && npm run format:check && npm run test
 
 #### 6. E2E テスト導入（Playwright）
 
-ohana と ai_interviewer で導入済み。他プロジェクトへの展開を推奨。
+2 プロジェクトで導入済み。他プロジェクトへの展開を推奨。
 
 ```bash
 npm install -D @playwright/test
 npx playwright install
 ```
 
-**playwright.config.ts**（ohana パターン）:
+**playwright.config.ts**:
 
 ```ts
 export default defineConfig({
@@ -228,10 +228,10 @@ export default defineConfig({
 
 #### 7. Claude Code ワークフロー導入
 
-ohana, job_description, goal_dashboard, nomad_japan で導入済み。
+4 プロジェクトで導入済み。
 
 - `claude.yml`: `@claude` メンション対応
-- `claude-code-review.yml`: PR 自動レビュー（ohana, pulse_survey）
+- `claude-code-review.yml`: PR 自動レビュー
 
 **参考**: config リポジトリの `.github/workflows/claude.yml` をテンプレートとして使用。
 
@@ -239,34 +239,32 @@ ohana, job_description, goal_dashboard, nomad_japan で導入済み。
 
 #### 8. DevContainer 整備
 
-| プロジェクト        | ベースイメージ | 状態                       |
-| ------------------- | -------------- | -------------------------- |
-| calendar_management | latest         | **模範**                   |
-| goal_dashboard      | latest         | 整備済み                   |
-| ohana               | 1.54.0         | 更新 + Features 整理が必要 |
-| job_description     | 1.48.0         | 更新が必要                 |
-| pulse_survey        | 1.64.0         | 整備済み                   |
-| nomad_japan 他      | なし           | 新規作成が必要             |
+| 状態                       | ベースイメージ | プロジェクト数 |
+| -------------------------- | -------------- | :------------: |
+| **模範**（latest）         | latest         |       2        |
+| 整備済み（旧バージョン）   | 1.48.0〜1.64.0 |       2        |
+| 更新 + Features 整理が必要 | 1.54.0         |       1        |
+| 未作成                     | なし           |       2        |
 
-**ohana の冗長 Features 削除**:
+**冗長 Features の削除**（一部プロジェクト向け）:
 
-- 削除候補（5 項目）: git, pnpm, github-cli, jq-likes, supabase-cli
-- 残すべき Features: docker-in-docker, playwright
+- 削除候補: git, pnpm, github-cli, jq-likes, supabase-cli（ベースイメージに含まれるもの）
+- 残すべき Features: docker-in-docker, playwright（プロジェクト固有）
 
-#### 9. Biome 採用プロジェクトの対応（gyoza）
+#### 9. Biome 採用プロジェクトの対応
 
-gyoza は ESLint + Prettier の代わりに Biome を採用している。Biome は lint + format を 1 ツールで提供するが、テスト環境が未整備。
+一部プロジェクトでは ESLint + Prettier の代わりに Biome を採用している。Biome は lint + format を 1 ツールで提供するが、テスト環境が未整備。
 
 **優先対応**: テスト環境の構築（Vitest 推奨）とカバレッジ閾値の設定。
 
 ## プロジェクト別の残課題サマリー
 
-| プロジェクト            | 主な残課題                                                 |
-| ----------------------- | ---------------------------------------------------------- |
-| **ohana**               | カバレッジ閾値引き上げ（8→70%）、lint 厳格化、CLAUDE.md    |
-| **calendar_management** | （模範 — 残課題なし）                                      |
-| **nomad_japan**         | lint-staged 導入、CLAUDE.md、DevContainer 新規作成         |
-| **ai_interviewer**      | commitlint 追加、lint-staged 導入、CLAUDE.md、DevContainer |
-| **goal_dashboard**      | カバレッジ閾値設定（70%）、CLAUDE.md                       |
-| **job_description**     | Prettier・husky・commitlint 導入、CLAUDE.md                |
-| **gyoza**               | テスト環境構築、husky・commitlint 導入、CLAUDE.md          |
+| プロジェクト | 主な残課題                                                 |
+| ------------ | ---------------------------------------------------------- |
+| **A**        | カバレッジ閾値引き上げ（8→70%）、lint 厳格化、CLAUDE.md    |
+| **B**        | （模範 — 残課題なし）                                      |
+| **C**        | lint-staged 導入、CLAUDE.md、DevContainer 新規作成         |
+| **D**        | commitlint 追加、lint-staged 導入、CLAUDE.md、DevContainer |
+| **E**        | カバレッジ閾値設定（70%）、CLAUDE.md                       |
+| **F**        | Prettier・husky・commitlint 導入、CLAUDE.md                |
+| **G**        | テスト環境構築、husky・commitlint 導入、CLAUDE.md          |

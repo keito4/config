@@ -2,7 +2,7 @@
 
 ## 現状サマリー
 
-[docs/tool-catalog.md](../tool-catalog.md) セクション 4.1 および `intent-gate-android` リポジトリの実態調査に基づく。
+[docs/tool-catalog.md](../tool-catalog.md) セクション 4.1 および代表リポジトリの実態調査に基づく。
 
 - [x] Kotlin 2.2.10 + Jetpack Compose (BOM 2026.01.01) 構成済み
 - [x] Gradle 9.1.0 + AGP 9.0.0 + Version Catalog (`libs.versions.toml`) で依存一元管理
@@ -104,14 +104,14 @@ kover {
 
 **なぜ**: AI 支援開発の品質を一定に保つ。既存のアーキテクチャや技術スタックを明記する。
 
-**含めるべき内容**（実リポジトリの構成に基づく）:
+**含めるべき内容**:
 
-- **技術スタック**: Kotlin 2.2.10, Jetpack Compose, Hilt DI, Room (SQLCipher), Coroutines
-- **アーキテクチャ**: Clean Architecture（domain/data/presentation 層分離）
-- **依存管理**: Version Catalog (`gradle/libs.versions.toml`) で一元管理
-- **テスト戦略**: JUnit 4 + Truth + MockK + Turbine (Unit), Espresso + Compose UI Test (Integration)
-- **リリースフロー**: CI で自動バージョンバンプ → Firebase App Distribution
-- **ビルド設定**: `version.properties` による動的バージョン管理
+- **技術スタック**: Kotlin / Jetpack Compose / DI フレームワーク / DB / Coroutines
+- **アーキテクチャ**: レイヤー分離の方針（domain/data/presentation 等）
+- **依存管理**: Version Catalog (`gradle/libs.versions.toml`) の運用方針
+- **テスト戦略**: Unit テスト（JUnit + アサーション + モック）、Integration テストのフレームワーク
+- **リリースフロー**: CI でのバージョン管理とデプロイ先
+- **ビルド設定**: バージョン管理の仕組み
 
 ### 優先度: 中
 

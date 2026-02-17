@@ -2,7 +2,7 @@
 
 ## 現状サマリー
 
-[docs/tool-catalog.md](../tool-catalog.md) セクション 4.1 および `calendar_alerm` リポジトリの実態調査に基づく。
+[docs/tool-catalog.md](../tool-catalog.md) セクション 4.1 および代表リポジトリの実態調査に基づく。
 
 - [x] Flutter 3.27 + Dart (SDK >=3.6.0) 構成済み
 - [x] flutter_riverpod + riverpod_annotation で状態管理

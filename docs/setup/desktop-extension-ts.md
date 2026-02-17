@@ -2,18 +2,18 @@
 
 ## 現状サマリー
 
-[docs/tool-catalog.md](../tool-catalog.md) セクション 4.1 および `raycast-extensions` リポジトリの実態調査に基づく。
+[docs/tool-catalog.md](../tool-catalog.md) セクション 4.1 および代表リポジトリの実態調査に基づく。
 
 - [x] TypeScript 5.7.3 + Raycast API 構成済み
-- [x] pnpm 10.28.1 workspaces monorepo（8 拡張: claude-code, n8n, supabase, ghq 等）
+- [x] pnpm 10.28.1 workspaces monorepo（8 拡張）
 - [x] ESLint 設定あり（各拡張で `@raycast/eslint-config` を継承）
 - [x] Prettier 3.5.3 設定あり (`.prettierrc.json`: singleQuote: true, printWidth: 120)
 - [x] husky 9 + commitlint 20 導入済み（`subject-case` 無効化で日本語対応）
 - [x] lint-staged 導入済み（Prettier のみ: `prettier --write`）
 - [x] CI ワークフロー（Format → Lint → Type check → Build）
 - [x] Release ワークフロー（日付ベースバージョニング + zip パッケージング）
-- [x] n8n 拡張に Vitest テスト環境あり（Raycast API モック実装の参考例）
-- [ ] テスト環境（n8n 以外の拡張で未設定）
+- [x] 1 拡張に Vitest テスト環境あり（Raycast API モック実装の参考例）
+- [ ] テスト環境（他の拡張で未設定）
 - [ ] CI の lint に `continue-on-error: true`（`@raycast/eslint-config` 互換性問題のため）
 - [ ] lint-staged に ESLint 未追加
 - [ ] pre-push hook（未設定）
@@ -28,14 +28,14 @@
 
 #### 1. テスト環境を全拡張に展開
 
-**何を**: n8n 拡張の Vitest 設定を参考に、他の拡張にもテスト環境を構築する。
+**何を**: 既存の Vitest 設定を参考に、他の拡張にもテスト環境を構築する。
 
-**なぜ**: TDD ベースライン（70%+ カバレッジ）を満たすための前提条件。n8n 拡張に参考実装があるため、パターンを横展開できる。
+**なぜ**: TDD ベースライン（70%+ カバレッジ）を満たすための前提条件。1 拡張に参考実装があるため、パターンを横展開できる。
 
-**n8n の既存実装（参考パターン）**:
+**既存実装（参考パターン）**:
 
 ```ts
-// extensions/n8n/vitest.config.ts
+// extensions/<extension>/vitest.config.ts
 import { defineConfig } from 'vitest/config';
 import path from 'path';
 
@@ -137,10 +137,10 @@ echo 'pnpm test && pnpm -r exec tsc --noEmit' > .husky/pre-push
 
 **何を**: プロジェクト固有の開発コンテキストを CLAUDE.md に記載する。
 
-**含めるべき内容**（実リポジトリの構成に基づく）:
+**含めるべき内容**:
 
 - **構成**: pnpm workspaces monorepo（`extensions/*`）
-- **拡張一覧**: claude-code, n8n, supabase, ghq, quick_notion, tldv, devcontainer-features, skills-sh (submodule)
+- **拡張一覧**: 各拡張の名前と用途
 - **Raycast API**: 各拡張が `@raycast/api` + `@raycast/utils` に依存
 - **ESLint**: `@raycast/eslint-config` を各拡張で継承
 - **commitlint**: `subject-case` を無効化（日本語コミットメッセージ対応）

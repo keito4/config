@@ -2,7 +2,7 @@
 
 ## 現状サマリー
 
-[docs/tool-catalog.md](../tool-catalog.md) セクション 4.1 および `ai_topic_decomposer` リポジトリの実態調査に基づく。
+[docs/tool-catalog.md](../tool-catalog.md) セクション 4.1 および代表リポジトリの実態調査に基づく。
 
 - [x] React 19.1.0 + Vite 6.3.5 + TypeScript 5.7.3 でプロジェクト構成済み
 - [x] DevContainer 設定あり（ベースイメージ 1.0.13、Features なし）
@@ -119,13 +119,13 @@ Lint → Format Check → Test (with coverage) → Build
 
 **何を**: プロジェクト固有の開発コンテキストを CLAUDE.md に記載する。
 
-**含めるべき内容**（実リポジトリの構成に基づく）:
+**含めるべき内容**:
 
-- **用途**: AI トピック分解・ナレッジマップ生成アプリ
-- **技術スタック**: React 19, Vite 6, TypeScript 5.7, @google/genai (Gemini API), D3.js
-- **環境変数**: `GEMINI_API_KEY`（`.env.local` で管理、vite.config.ts で `process.env` に注入）
-- **コンポーネント設計**: `components/` 配下に 18 ファイル（D3 グラフ、モーダル等）
-- **パスエイリアス**: `@/*` → `./*`
+- **用途**: アプリケーションの概要
+- **技術スタック**: React / Vite / TypeScript のバージョン、主要ライブラリ
+- **環境変数**: 必要な API キーと管理方法（`.env.local`）
+- **コンポーネント設計**: ディレクトリ構成と設計方針
+- **パスエイリアス**: `@/*` の解決先
 
 ### 優先度: 中
 

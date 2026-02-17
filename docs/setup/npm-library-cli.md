@@ -2,7 +2,7 @@
 
 ## 現状サマリー
 
-[docs/tool-catalog.md](../tool-catalog.md) セクション 4.1 および `notion_orm` リポジトリの実態調査に基づく。
+[docs/tool-catalog.md](../tool-catalog.md) セクション 4.1 および代表リポジトリの実態調査に基づく。
 
 - [x] TypeScript 5.9.2 + Jest 30 (ts-jest) でテスト環境構築済み
 - [x] ESLint 9 設定あり（Flat Config `eslint.config.mjs`）
@@ -120,14 +120,14 @@ pnpm exec lint-staged
 
 **何を**: プロジェクト固有の開発コンテキストを CLAUDE.md に記載する。
 
-**含めるべき内容**（実リポジトリの構成に基づく）:
+**含めるべき内容**:
 
-- **用途**: Notion API の ORM + CLI ツール（`notion-orm` コマンド）
-- **技術スタック**: TypeScript, @notionhq/client 4, commander 14, chalk 5
-- **テスト戦略**: ts-jest, jest.setup.js で chalk ESM モック化
-- **リリースフロー**: semantic-release（main ブランチ push → npm publish）
-- **ビルド**: `tsc` → `dist/` (declaration 付き)
-- **公開設定**: `bin.notion-orm`, `files: ["dist", "README.md", "LICENSE"]`
+- **用途**: ライブラリ / CLI の概要
+- **技術スタック**: TypeScript バージョン、主要依存パッケージ
+- **テスト戦略**: テストフレームワーク、ESM モック化の要否
+- **リリースフロー**: semantic-release の設定と対象ブランチ
+- **ビルド**: `tsc` → `dist/` の設定、declaration の有無
+- **公開設定**: `bin`、`files`、`exports` の構成
 
 #### 6. ESLint 設定の重複解消
 
