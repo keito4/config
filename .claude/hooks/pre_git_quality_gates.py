@@ -169,16 +169,25 @@ if failed_checks:
     print("=" * 60, file=sys.stderr, flush=True)
     print("", file=sys.stderr, flush=True)
 
+    MAX_LINES = 15  # 失敗時の出力を最大行数に制限
+
     for failed in failed_checks:
         print(f"【{failed['name']}】", file=sys.stderr, flush=True)
 
         if "error" in failed:
             print(f"  エラー: {failed['error']}", file=sys.stderr, flush=True)
         else:
-            if failed.get("stdout"):
-                print(f"  標準出力:\n{failed['stdout']}", file=sys.stderr, flush=True)
-            if failed.get("stderr"):
-                print(f"  標準エラー:\n{failed['stderr']}", file=sys.stderr, flush=True)
+            for label, key in [("stdout", "stdout"), ("stderr", "stderr")]:
+                output = failed.get(key, "").strip()
+                if not output:
+                    continue
+                lines = output.splitlines()
+                if len(lines) <= MAX_LINES:
+                    print(f"  {label}:\n{output}", file=sys.stderr, flush=True)
+                else:
+                    truncated = "\n".join(lines[-MAX_LINES:])
+                    print(f"  {label} (末尾{MAX_LINES}行 / 全{len(lines)}行):", file=sys.stderr, flush=True)
+                    print(truncated, file=sys.stderr, flush=True)
 
         print("", file=sys.stderr, flush=True)
 

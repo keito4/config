@@ -103,6 +103,20 @@ EXCLUDE_PATTERNS=(
   "*.md"
   ".env.example"
   ".env.template"
+  "*.jsonl"
+  "*.lock.json"
+  "*.bats"
+)
+
+# Directories to exclude (--exclude-dir)
+EXCLUDE_DIRS=(
+  "node_modules"
+  ".git"
+  ".claude"
+  "coverage"
+  "dist"
+  "build"
+  "__tests__"
 )
 
 # Build grep exclude arguments
@@ -110,11 +124,14 @@ GREP_EXCLUDE=""
 for pattern in "${EXCLUDE_PATTERNS[@]}"; do
   GREP_EXCLUDE="$GREP_EXCLUDE --exclude=$pattern"
 done
+for dir in "${EXCLUDE_DIRS[@]}"; do
+  GREP_EXCLUDE="$GREP_EXCLUDE --exclude-dir=$dir"
+done
 
 # Scan results
 CRITICAL_COUNT=0
 WARNING_COUNT=0
-declare -a FINDINGS
+FINDINGS=()
 
 # Scan for patterns
 for pattern_name in "${!PATTERNS[@]}"; do
@@ -128,13 +145,18 @@ for pattern_name in "${!PATTERNS[@]}"; do
       continue
     fi
 
+    # Skip gitignored files
+    if git check-ignore -q "$file" 2>/dev/null; then
+      continue
+    fi
+
     # Determine severity
     SEVERITY="WARNING"
     if [[ "$pattern_name" == *"AWS"* ]] || [[ "$pattern_name" == *"GitHub Token"* ]] || [[ "$pattern_name" == *"Private Key"* ]]; then
       SEVERITY="CRITICAL"
-      ((CRITICAL_COUNT++))
+      CRITICAL_COUNT=$((CRITICAL_COUNT + 1))
     else
-      ((WARNING_COUNT++))
+      WARNING_COUNT=$((WARNING_COUNT + 1))
     fi
 
     # Mask sensitive part
@@ -258,7 +280,7 @@ else
       echo -e "  ${GREEN}✓${NC} .env in .gitignore"
     else
       echo -e "  ${RED}✗${NC} .env NOT in .gitignore (CRITICAL)"
-      ((CRITICAL_COUNT++))
+      CRITICAL_COUNT=$((CRITICAL_COUNT + 1))
     fi
     echo ""
   fi
