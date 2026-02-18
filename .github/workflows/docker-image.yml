@@ -178,7 +178,6 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/config-base:cache,mode=max
           build-args: |
             IMAGE_VERSION=${{ steps.release.outputs.version }}
-            CLAUDE_CODE_OAUTH_TOKEN=${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           secrets: |
             claude_credentials=${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 

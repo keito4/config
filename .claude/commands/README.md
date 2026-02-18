@@ -556,7 +556,6 @@ npm run update:all -- --skip-libs --skip-claude # Actions のみ
 | `brew-deps.sh`              | Makefile                  | Homebrew 依存関係管理                   |
 | `update-libraries.sh`       | npm scripts               | ライブラリの更新                        |
 | `version.sh`                | Makefile                  | セマンティックバージョニング            |
-| `check-docs-sync.sh`        | CI                        | ドキュメント同期の確認                  |
 
 ## Additional Commands
 
