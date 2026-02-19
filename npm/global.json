@@ -33,10 +33,6 @@
       "version": "5.6.0",
       "overridden": false
     },
-    "codex": {
-      "version": "0.2.3",
-      "overridden": false
-    },
     "typescript": {
       "version": "5.9.3",
       "overridden": false
