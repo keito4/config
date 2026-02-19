@@ -196,7 +196,7 @@ GitHub Codespaces 用。`secrets`, `codespaces` カスタマイゼーション�
 2. `preset.features` のみを DevContainer に設定（base は空なので結合不要）
 3. features が空 `{}` のプロジェクトタイプでは、features セクションを空にする
 
-### 5.3 `.vscode/` 設定を作成
+### 5.4 `.vscode/` 設定を作成
 
 ```bash
 mkdir -p TARGET_DIR/.vscode

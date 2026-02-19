@@ -1,6 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "_comment": "プロジェクトタイプ別の DevContainer features, skills, plugins 推奨設定",
+  "_detectionLogic": "detection 内の複数条件は AND で結合される（files のいずれか AND packageDependencies の全て）",
   "base": {
     "_comment": "全プロジェクト共通の設定。各プリセットと結合される",
     "features": {},
@@ -46,7 +46,7 @@
       },
       "features": {},
       "vscodeExtensions": ["ms-vscode.vscode-typescript-next"],
-      "skills": ["vercel-labs/agent-skills", "facebook/react@fix", "millionco/react-doctor"],
+      "skills": ["vercel-labs/agent-skills"],
       "plugins": [
         "typescript-lsp@claude-plugins-official",
         "code-review@claude-plugins-official",
@@ -57,7 +57,7 @@
       "displayName": "npm ライブラリ / CLI",
       "description": "npm パッケージとして公開するライブラリまたは CLI ツール",
       "detection": {
-        "packageFields": ["bin", "exports", "main"]
+        "packageFields": ["bin", "exports"]
       },
       "features": {},
       "vscodeExtensions": ["ms-vscode.vscode-typescript-next"],
@@ -133,7 +133,7 @@
       "features": {
         "ghcr.io/devcontainers/features/terraform:1": {},
         "ghcr.io/devcontainers/features/aws-cli:1": {},
-        "ghcr.io/devcontainers/features/gcloud-cli:1": {}
+        "ghcr.io/dhoeric/features/google-cloud-cli:1": {}
       },
       "vscodeExtensions": ["hashicorp.terraform"],
       "skills": [],
