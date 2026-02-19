@@ -18,7 +18,7 @@ argument-hint: '<TARGET_DIR> [--minimal] [--no-devcontainer] [--no-codespaces] [
 4. **GitHub Actions** - CI, Claude Code, Security, Code Review workflow, Issue/PRテンプレート
 5. **Claude Code Hooks** - `.claude/hooks/` と `.claude/settings.json`
 6. **開発ツール** - ESLint, Prettier, Jest, Husky, lint-staged, `.node-version`
-7. **ドキュメント** - README.md, CLAUDE.md, SECURITY.md
+7. **ドキュメント** - README.md, AGENTS.md, CLAUDE.md (symlink), SECURITY.md
 8. **依存関係インストール & Husky フック** - npm install, commit-msg / pre-commit / pre-push
 9. **Codespaces シークレット** - リポジトリへのシークレット紐付け
 10. **ブランチ保護 & リポジトリ設定** - main ブランチ保護、セキュリティ設定
@@ -409,13 +409,49 @@ Please read [CLAUDE.md](./CLAUDE.md) for development guidelines.
 This project is licensed under the {LICENSE} License.
 ```
 
-### 10.2 CLAUDE.md
+### 10.2 AGENTS.md
 
-```bash
-cp CONFIG_REPO/.claude/CLAUDE.md TARGET_DIR/
+AI エージェント向けの設定ファイル。以下の内容を含める：
+
+**推奨構造:**
+
+```markdown
+# Agent Guidelines
+
+Always prefer simplicity over pathological complexity. YAGNI, KISS, DRY, and SOLID.
+No backward-compat shims or fallback paths unless they come free without adding cyclomatic complexity.
+
+---
+
+# Project Configuration
+
+## Development Quality Standards
+
+[プロジェクト固有の品質基準]
+
+## Technical Assistance
+
+[技術的なガイドライン]
 ```
 
-### 10.3 SECURITY.md
+```bash
+cp CONFIG_REPO/AGENTS.md TARGET_DIR/
+```
+
+**Note**: プロジェクト固有の設定は `# Project Configuration` 以降に追記する。
+冒頭の `# Agent Guidelines` セクションは全プロジェクト共通の指針。
+
+### 10.3 CLAUDE.md (Symlink)
+
+CLAUDE.md を AGENTS.md へのシンボリックリンクとして作成。
+これにより、Claude Code も AGENTS.md と同じ設定を参照できる。
+
+```bash
+cd TARGET_DIR
+ln -s AGENTS.md CLAUDE.md
+```
+
+### 10.4 SECURITY.md
 
 セキュリティポリシーを作成。
 
@@ -581,7 +617,8 @@ Files Created:
 ✅ .husky/pre-commit
 ✅ .husky/pre-push
 ✅ README.md
-✅ CLAUDE.md
+✅ AGENTS.md
+✅ CLAUDE.md → AGENTS.md
 ✅ SECURITY.md
 
 Repository Settings (if remote exists):

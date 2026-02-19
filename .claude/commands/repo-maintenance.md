@@ -325,7 +325,64 @@ PR 作成前のチェック項目を検証：
 - ✅ すべてのチェック項目が設定済み
 - ⚠️ 不足している項目あり（詳細をリスト）
 
-### 3.4 CI/CD Setup Check (full mode only)
+### 3.4 CLAUDE.md Symlink Check
+
+CLAUDE.md が AGENTS.md へのシンボリックリンクであることを確認：
+
+**背景:**
+多くの AI コーディングエージェント（Codex、Gemini CLI など）は `AGENTS.md` を参照し、
+Claude Code は `CLAUDE.md` を参照します。`AGENTS.md` を主ファイルとし、
+`CLAUDE.md` をシンボリックリンクとして管理することで、両方のエージェントが同じ設定を参照できます。
+
+**確認項目:**
+
+1. `AGENTS.md` の存在確認（主ファイル）
+2. `CLAUDE.md` がシンボリックリンクかどうか確認
+3. リンク先が `AGENTS.md` であることを確認
+
+**実行コマンド:**
+
+```bash
+# シンボリックリンク確認
+if [ -L "CLAUDE.md" ]; then
+  target=$(readlink CLAUDE.md)
+  if [ "$target" = "AGENTS.md" ]; then
+    echo "✅ CLAUDE.md -> AGENTS.md"
+  else
+    echo "⚠️ CLAUDE.md -> $target (expected: AGENTS.md)"
+  fi
+elif [ -f "CLAUDE.md" ]; then
+  echo "⚠️ CLAUDE.md is a regular file (should be symlink to AGENTS.md)"
+else
+  echo "❌ CLAUDE.md not found"
+fi
+```
+
+**結果:**
+
+- ✅ CLAUDE.md は AGENTS.md へのシンボリックリンク
+- ⚠️ CLAUDE.md は通常ファイル → シンボリックリンク化を提案
+- ⚠️ CLAUDE.md のリンク先が異なる → 修正を提案
+- ❌ CLAUDE.md が存在しない → 作成を提案
+
+**MODE が `full` かつシンボリックリンクでない場合:**
+
+```bash
+# AGENTS.md が存在しない場合は CLAUDE.md を AGENTS.md にリネーム
+if [ -f "CLAUDE.md" ] && [ ! -L "CLAUDE.md" ] && [ ! -f "AGENTS.md" ]; then
+  mv CLAUDE.md AGENTS.md
+  ln -s AGENTS.md CLAUDE.md
+  echo "✅ CLAUDE.md を AGENTS.md へのシンボリックリンクに変換しました"
+fi
+
+# 両方が通常ファイルの場合はマージを提案
+if [ -f "CLAUDE.md" ] && [ ! -L "CLAUDE.md" ] && [ -f "AGENTS.md" ]; then
+  echo "⚠️ AGENTS.md と CLAUDE.md が両方存在します"
+  echo "   手動でマージしてからシンボリックリンクを作成してください"
+fi
+```
+
+### 3.5 CI/CD Setup Check (full mode only)
 
 CI/CD ワークフローの設定状況を確認：
 
@@ -423,6 +480,7 @@ config リポジトリから取り込み可能な新機能を発見：
 ├── Team Protection: ✅ Branch protection enabled
 ├── Husky: ✅ Git hooks configured
 ├── Pre-PR Checklist: ✅ CI workflow exists
+├── CLAUDE.md: ✅ Symlink to AGENTS.md
 └── CI/CD: ✅ Standard level configured
 
 ## Cleanup (3/4)
@@ -609,6 +667,7 @@ Run this command regularly to maintain repository health:
 | Setup       | `/setup-team-protection`        | GitHub保護ルール設定          |
 | Setup       | `/setup-husky`                  | Git hooks設定                 |
 | Setup       | `/pre-pr-checklist`             | PR前チェックリスト            |
+| Setup       | (CLAUDE.md symlink check)       | CLAUDE.md シンボリックリンク  |
 | Setup       | `/setup-ci`                     | CI/CDワークフロー設定         |
 | Cleanup     | `/branch-cleanup`               | ブランチクリーンアップ        |
 | Discovery   | `/config-contribution-discover` | 新機能発見                    |
