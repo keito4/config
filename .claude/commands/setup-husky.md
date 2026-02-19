@@ -1,12 +1,13 @@
-Husky + lint-staged + commitlint 最小構成
+Husky + lint-staged + commitlint + file-length 最小構成
 
 コミット前に軽量な自動整形と静的チェックを行い、プッシュ前とCIで重い検証を実行します。
 
 方針
-• pre-commit: ステージ済みファイルに対して ESLint 自動修正と Prettier 整形を高速実行
+• pre-commit: ステージ済みファイルに対して ESLint 自動修正、Prettier 整形、ファイル行数チェックを高速実行
 • pre-push: 型チェックとテストを実行
 • commit-msg: Conventional Commits を commitlint で検証
 • npm --prefix next で一貫して next/ の依存を使用
+• file-length: 500行以上のファイルはコミットをブロック、350行以上は警告
 
 ⸻
 
@@ -15,9 +16,25 @@ Husky + lint-staged + commitlint 最小構成
 npm i -D husky lint-staged @commitlint/cli @commitlint/config-conventional
 npm pkg set scripts.prepare="husky"
 npm run prepare
-npx husky add .husky/pre-commit "npx lint-staged"
+npx husky add .husky/pre-commit "npx lint-staged && bash scripts/check-file-length.sh"
 npx husky add .husky/commit-msg "npx commitlint --edit \$1"
 npx husky add .husky/pre-push "npm --prefix next run type-check && npm --prefix next run test:ci"
+
+# ファイル行数チェックの設定
+
+mkdir -p scripts
+
+# DevContainer 環境の場合
+
+if [ -f /usr/local/script/check-file-length.sh ]; then
+cp /usr/local/script/check-file-length.sh scripts/
+fi
+
+# テンプレートから .filelengthignore をコピー
+
+if [ -f /usr/local/share/config-templates/.filelengthignore.template ]; then
+cp /usr/local/share/config-templates/.filelengthignore.template .filelengthignore
+fi
 
 ⸻
 
@@ -119,9 +136,28 @@ Husky の再初期化
 
 rm -rf .husky
 npm run prepare
-npx husky add .husky/pre-commit "npx lint-staged"
+npx husky add .husky/pre-commit "npx lint-staged && bash scripts/check-file-length.sh"
 npx husky add .husky/commit-msg "npx commitlint --edit \$1"
 npx husky add .husky/pre-push "npm --prefix next run type-check && npm --prefix next run test:ci"
+
+⸻
+
+ファイル行数チェックの設定
+
+• 警告閾値: FILE_LENGTH_WARN_LIMIT=350 (デフォルト)
+• エラー閾値: FILE_LENGTH_HARD_LIMIT=500 (デフォルト)
+• 除外設定: .filelengthignore（.gitignore と同じ記法）
+
+.filelengthignore の例:
+
+# 自動生成ファイル
+
+**/_.generated._
+**/database.types.ts
+
+# 複雑なステートマシン
+
+src/contexts/complex-context.tsx
 
 一時的にフックをスキップ
 

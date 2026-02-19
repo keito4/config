@@ -1,21 +1,22 @@
 #!/usr/bin/env bash
-#
+# ============================================================================
 # check-file-length.sh - ステージされたファイルの行数チェック
 #
+# ファイルが長すぎる場合に警告またはエラーを出力します。
 # 除外パターンは .filelengthignore で管理（.gitignore と同じ記法）
-#
+# ============================================================================
 
 set -euo pipefail
 
-HARD_LIMIT=500
-WARN_LIMIT=350
-REPO_ROOT="$(git rev-parse --show-toplevel)"
+HARD_LIMIT=${FILE_LENGTH_HARD_LIMIT:-500}
+WARN_LIMIT=${FILE_LENGTH_WARN_LIMIT:-350}
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 IGNORE_FILE="$REPO_ROOT/.filelengthignore"
 
 # ステージされた TS/JS ファイル（削除以外）を取得
 staged_files() {
   git diff --cached --name-only --diff-filter=d -- \
-    '*.ts' '*.tsx' '*.js' '*.jsx'
+    '*.ts' '*.tsx' '*.js' '*.jsx' 2>/dev/null || true
 }
 
 # .filelengthignore のパターンで除外判定（git check-ignore を .gitignore 記法で流用）
@@ -33,7 +34,7 @@ while IFS= read -r file; do
   [ -z "$file" ] && continue
   is_ignored "$file" && continue
 
-  line_count=$(git show ":$file" 2>/dev/null | wc -l)
+  line_count=$(git show ":$file" 2>/dev/null | wc -l | tr -d ' ')
 
   if [ "$line_count" -ge "$HARD_LIMIT" ]; then
     errors+=("  ❌ ${file} (${line_count}行)")
@@ -60,3 +61,5 @@ if [ ${#errors[@]} -gt 0 ]; then
   echo "  2. .filelengthignore に除外パターンを追加する"
   exit 1
 fi
+
+exit 0
