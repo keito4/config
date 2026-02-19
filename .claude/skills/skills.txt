@@ -7,6 +7,9 @@
 # React 公式スキル
 facebook/react@fix
 
+# React コードベース診断・修正ツール
+millionco/react-doctor
+
 # === Vercel Agent Skills ===
 # React/Next.js 開発のベストプラクティス
 vercel-labs/agent-skills
