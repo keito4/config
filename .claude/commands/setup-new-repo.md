@@ -1,7 +1,7 @@
 ---
 description: Setup new repository with DevContainer, CI/CD, and development tools from config template
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(mkdir:*), Bash(cp:*), Bash(ls:*), Bash(cat:*), Bash(test:*), Task, Glob, Grep
-argument-hint: '<TARGET_DIR> [--minimal] [--no-devcontainer] [--no-codespaces] [--no-protection] [--license MIT|Apache-2.0] [--no-install]'
+argument-hint: '<TARGET_DIR> [--type TYPE] [--interactive] [--minimal] [--no-devcontainer] [--no-codespaces] [--no-protection] [--license MIT|Apache-2.0] [--no-install]'
 ---
 
 # New Repository Setup Command
@@ -28,6 +28,8 @@ argument-hint: '<TARGET_DIR> [--minimal] [--no-devcontainer] [--no-codespaces] [
 引数から設定を読み取る：
 
 - `TARGET_DIR`: 新規リポジトリのパス（必須）
+- `--type TYPE`: プロジェクトタイプを指定（nextjs|spa-react|npm-library|monorepo|flutter|android|raycast|terraform|nodejs）
+- `--interactive`: プロジェクトタイプを対話的に選択
 - `--minimal`: GitHub Actionsをスキップ
 - `--no-devcontainer`: DevContainer設定をスキップ
 - `--no-codespaces`: Codespacesシークレット紐付けをスキップ
@@ -55,6 +57,53 @@ ls -la TARGET_DIR 2>/dev/null || echo "Directory will be created"
 git rev-parse --show-toplevel
 ```
 
+## Step 3.5: Detect or Select Project Type
+
+プロジェクトタイプを決定する。プリセット定義は `CONFIG_REPO/.devcontainer/templates/project-presets.json` を参照。
+
+### 3.5.1 タイプ指定の確認
+
+1. `--type TYPE` が指定されている場合、その値を使用
+2. `--interactive` が指定されている場合、ユーザーに選択肢を提示
+
+### 3.5.2 自動検出（--type / --interactive なしの場合）
+
+ターゲットディレクトリ内のファイルパターンで検出：
+
+```
+検出順序:
+1. next.config.* が存在 → nextjs
+2. pubspec.yaml が存在 → flutter
+3. build.gradle* + app/src/main/ が存在 → android
+4. vite.config.* + package.json に @vitejs/plugin-react → spa-react
+5. package.json に @raycast/api 依存 → raycast
+6. pnpm-workspace.yaml / lerna.json が存在 → monorepo
+7. *.tf ファイルが存在 → terraform
+8. package.json に bin / exports フィールド → npm-library
+9. package.json のみ → nodejs
+10. いずれも該当しない → unknown（ユーザーに確認）
+```
+
+### 3.5.3 検出結果の確認
+
+自動検出された場合、結果をユーザーに表示して確認：
+
+```
+検出されたプロジェクトタイプ: {displayName}
+このタイプで続行しますか？ (y/n/他のタイプを入力)
+```
+
+`unknown` の場合は選択肢を一覧表示。
+
+### 3.5.4 プリセットの読み込み
+
+決定したプロジェクトタイプに基づき、`project-presets.json` から以下を読み込む：
+
+- `features`: DevContainer に追加する features
+- `vscodeExtensions`: VS Code 拡張機能
+- `skills`: インストールする Claude Code skills
+- `plugins`: インストールする Claude Code plugins
+
 ## Step 4: Initialize Git Repository
 
 ```bash
@@ -64,18 +113,23 @@ git init
 
 ## Step 5: Create DevContainer Configuration (unless --no-devcontainer)
 
-DevContainer設定をプロジェクトに合わせて新規作成する。ローカル用と Codespaces 用の2つを作成する。
+DevContainer設定をプロジェクトタイプに応じて新規作成する。ローカル用と Codespaces 用の2つを作成する。
+
+**Step 3.5 で決定したプロジェクトタイプのプリセットを使用する。**
 
 ### 5.1 `.devcontainer/devcontainer.json`（ローカル用）を作成
 
-ローカル DevContainer 用。Codespaces 固有設定（`secrets`, `codespaces` カスタマイゼーション）は含めない。
+ローカル DevContainer 用。Codespaces 固有設定は含めない。
 
 ```json
 {
   "name": "{project-name}",
   "image": "ghcr.io/keito4/config-base:latest",
   "features": {
-    // プロジェクトに必要な追加 features をここに記載
+    // ← project-presets.json の preset.features を展開
+    // 例: nextjs の場合
+    // "ghcr.io/devcontainers/features/docker-in-docker:2": { "moby": true },
+    // "ghcr.io/schlich/devcontainer-features/playwright:0": {}
   },
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
@@ -84,10 +138,7 @@ DevContainer設定をプロジェクトに合わせて新規作成する。ロ�
   "customizations": {
     "vscode": {
       "extensions": [
-        "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint",
-        "ms-vscode.vscode-typescript-next"
-        // プロジェクトに応じた拡張機能を追加
+        // ← base.vscodeExtensions + preset.vscodeExtensions を結合
       ],
       "settings": {
         "editor.formatOnSave": true,
@@ -106,7 +157,7 @@ DevContainer設定をプロジェクトに合わせて新規作成する。ロ�
 
 ### 5.2 `.devcontainer/codespaces/devcontainer.json`（Codespaces 用）を作成
 
-GitHub Codespaces 用。`secrets`, `codespaces` カスタマイゼーション、`sshd` feature を含める。
+GitHub Codespaces 用。`secrets`, `codespaces` カスタマイゼーション、`sshd` feature を追加。
 
 ```json
 {
@@ -115,10 +166,11 @@ GitHub Codespaces 用。`secrets`, `codespaces` カスタマイゼーション�
   "features": {
     "ghcr.io/devcontainers/features/sshd:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
-    // プロジェクトに必要な追加 features をここに記載
+    // ← + project-presets.json の preset.features を展開
   },
   "remoteEnv": {
-    "TMPDIR": "/home/vscode/.claude/tmp"
+    "TMPDIR": "/home/vscode/.claude/tmp",
+    "CLAUDE_CONFIG_DIR": "${containerWorkspaceFolder}/.claude-data"
   },
   "postCreateCommand": "npm install",
   "customizations": {
@@ -133,14 +185,19 @@ GitHub Codespaces 用。`secrets`, `codespaces` カスタマイゼーション�
     "ANTHROPIC_API_KEY": {
       "description": "Anthropic API key for Claude Code"
     }
-    // プロジェクト固有のシークレットを追加
   }
 }
 ```
 
 **重要**: 2つの devcontainer.json を常にセットで作成する。
 
-### 5.3 `.vscode/` 設定を作成
+### 5.3 features の決定ルール
+
+1. `project-presets.json` から該当プロジェクトタイプのプリセットを読み込む
+2. `preset.features` のみを DevContainer に設定（base は空なので結合不要）
+3. features が空 `{}` のプロジェクトタイプでは、features セクションを空にする
+
+### 5.4 `.vscode/` 設定を作成
 
 ```bash
 mkdir -p TARGET_DIR/.vscode
@@ -205,6 +262,10 @@ npm-debug.log*
 
 # OS
 Thumbs.db
+
+# Claude (local config, Codespaces)
+.claude/settings.local.json
+.claude-data/
 ```
 
 ## Step 7: Copy GitHub Actions (unless --minimal)
@@ -358,6 +419,44 @@ module.exports = {
   '*.{json,md,yml,yaml,css}': ['prettier --write'],
 };
 ```
+
+## Step 9.5: Generate Skills/Plugins Configuration
+
+プロジェクトタイプに応じた Claude Code skills と plugins の設定ファイルを生成する。
+
+### 9.5.1 `.claude/plugins.txt` を作成
+
+`project-presets.json` の `base.plugins` と `preset.plugins` を結合して生成。
+
+```txt
+# Claude Code Plugins for {project-type} project
+# Generated by /setup-new-repo
+
+# === Core Plugins (all projects) ===
+{base.plugins の内容}
+
+# === {project-type} Plugins ===
+{preset.plugins の内容}
+```
+
+### 9.5.2 `.claude/skills.txt` を作成
+
+`project-presets.json` の `base.skills` と `preset.skills` を結合して生成。
+
+```txt
+# Claude Code Skills for {project-type} project
+# Generated by /setup-new-repo
+
+# === Core Skills (all projects) ===
+{base.skills の内容}
+
+# === {project-type} Skills ===
+{preset.skills の内容}
+```
+
+### 9.5.3 Summary 用にリストを保存
+
+生成した skills / plugins の一覧を Step 14 の Summary で表示するために保存。
 
 ## Step 10: Create Documentation
 
@@ -593,6 +692,16 @@ gh api repos/{owner}/{repo}/branches/main/protection --jq '{
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📁 Target: {TARGET_DIR}
+📦 Project Type: {project-type} ({displayName})
+
+DevContainer Features:
+{preset.features の一覧、または "なし (ベースイメージのみ)"}
+
+Claude Code Skills:
+{base.skills + preset.skills の一覧}
+
+Claude Code Plugins:
+{base.plugins + preset.plugins の一覧}
 
 Files Created:
 ✅ .devcontainer/ (ローカル + Codespaces)
@@ -605,6 +714,8 @@ Files Created:
 ✅ .github/PULL_REQUEST_TEMPLATE.md
 ✅ .claude/hooks/ (3 ファイル)
 ✅ .claude/settings.json
+✅ .claude/plugins.txt
+✅ .claude/skills.txt
 ✅ package.json
 ✅ eslint.config.mjs
 ✅ .prettierrc
@@ -642,14 +753,16 @@ Next Steps:
 
 ## Options Summary
 
-| オプション          | 説明                                   | デフォルト |
-| ------------------- | -------------------------------------- | ---------- |
-| `--minimal`         | GitHub Actionsをスキップ               | false      |
-| `--no-devcontainer` | DevContainer設定をスキップ             | false      |
-| `--no-codespaces`   | Codespacesシークレット紐付けをスキップ | false      |
-| `--no-protection`   | ブランチ保護・リポジトリ設定をスキップ | false      |
-| `--license TYPE`    | ライセンス種別                         | MIT        |
-| `--no-install`      | npm installをスキップ                  | false      |
+| オプション          | 説明                                                                                                              | デフォルト |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------- |
+| `--type TYPE`       | プロジェクトタイプを指定 (nextjs\|spa-react\|npm-library\|monorepo\|flutter\|android\|raycast\|terraform\|nodejs) | 自動検出   |
+| `--interactive`     | プロジェクトタイプを対話的に選択                                                                                  | false      |
+| `--minimal`         | GitHub Actionsをスキップ                                                                                          | false      |
+| `--no-devcontainer` | DevContainer設定をスキップ                                                                                        | false      |
+| `--no-codespaces`   | Codespacesシークレット紐付けをスキップ                                                                            | false      |
+| `--no-protection`   | ブランチ保護・リポジトリ設定をスキップ                                                                            | false      |
+| `--license TYPE`    | ライセンス種別                                                                                                    | MIT        |
+| `--no-install`      | npm installをスキップ                                                                                             | false      |
 
 ## Related Commands
 

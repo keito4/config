@@ -1,0 +1,48 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/packages/cspell-types/cspell.schema.json",
+  "version": "0.2",
+  "language": "en,ja",
+  "dictionaries": ["custom-words"],
+  "dictionaryDefinitions": [
+    {
+      "name": "custom-words",
+      "path": "./.vscode/cspell-custom-words.txt",
+      "addWords": true
+    }
+  ],
+  "words": [
+    "esbenp",
+    "dbaeumer",
+    "bradlc",
+    "vscjava",
+    "dhoeric",
+    "joshspicer",
+    "schlich",
+    "intellectronica",
+    "hookify",
+    "moby",
+    "supabase",
+    "planetscale",
+    "pubspec",
+    "devcontainer",
+    "devcontainers",
+    "codex",
+    "raycast",
+    "fullstack",
+    "monorepo",
+    "workspaces",
+    "commitlint",
+    "husky",
+    "vitest",
+    "pnpm",
+    "npx",
+    "tsx",
+    "nextjs",
+    "tailwindcss",
+    "vercel",
+    "keito",
+    "ghcr"
+  ],
+  "ignorePaths": ["node_modules", ".git", "dist", "build", ".next", "*.lock", "package-lock.json", "pnpm-lock.yaml"],
+  "ignoreRegExpList": ["/[a-z0-9]{40}/gi", "sha256:[a-f0-9]{64}"]
+}

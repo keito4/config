@@ -31,6 +31,7 @@ __pycache__/
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+!.vscode/cspell-custom-words.txt
 !.vscode/templates/
 .vscode/*.log
 .idea/
@@ -62,6 +63,9 @@ report.log
 # Claude settings (local overrides)
 .claude/settings.local.json
 .claude/plugins/known_marketplaces.json
+
+# Claude config directory (Codespaces)
+.claude-data/
 
 # Agent skills (installed via npx skills add)
 .agents/skills/
