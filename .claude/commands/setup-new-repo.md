@@ -169,7 +169,8 @@ GitHub Codespaces 用。`secrets`, `codespaces` カスタマイゼーション�
     // ← + project-presets.json の preset.features を展開
   },
   "remoteEnv": {
-    "TMPDIR": "/home/vscode/.claude/tmp"
+    "TMPDIR": "/home/vscode/.claude/tmp",
+    "CLAUDE_CONFIG_DIR": "${containerWorkspaceFolder}/.claude-data"
   },
   "postCreateCommand": "npm install",
   "customizations": {
@@ -261,6 +262,10 @@ npm-debug.log*
 
 # OS
 Thumbs.db
+
+# Claude (local config, Codespaces)
+.claude/settings.local.json
+.claude-data/
 ```
 
 ## Step 7: Copy GitHub Actions (unless --minimal)
