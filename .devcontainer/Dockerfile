@@ -45,7 +45,7 @@ RUN DOPPLER_VERSION="3.75.2" \
 
 # Install 1Password CLI (op)
 # https://developer.1password.com/docs/cli/get-started/
-RUN OP_VERSION="2.30.3" \
+RUN OP_VERSION="2.32.1" \
  && ARCH=$(dpkg --print-architecture) \
  && curl -sSfo /tmp/op.zip "https://cache.agilebits.com/dist/1P/op2/pkg/v${OP_VERSION}/op_linux_${ARCH}_v${OP_VERSION}.zip" \
  && unzip -od /usr/local/bin/ /tmp/op.zip \

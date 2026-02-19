@@ -65,9 +65,11 @@ fi
 # Husky pre-commit に追加（.husky/pre-commit が存在する場合）
 if [ -f .husky/pre-commit ]; then
   if ! grep -q "check-file-length.sh" .husky/pre-commit; then
-    echo "" >> .husky/pre-commit
-    echo "echo \"[husky] Running file length check...\"" >> .husky/pre-commit
-    echo "bash scripts/check-file-length.sh || exit 1" >> .husky/pre-commit
+    {
+      echo ""
+      echo "echo \"[husky] Running file length check...\""
+      echo "bash scripts/check-file-length.sh || exit 1"
+    } >> .husky/pre-commit
     echo "[SUCCESS] .husky/pre-commit に filelength チェックを追加しました"
   else
     echo "[INFO] .husky/pre-commit には既に filelength チェックが含まれています"
