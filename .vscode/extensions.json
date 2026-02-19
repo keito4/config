@@ -9,9 +9,6 @@
     "eamodio.gitlens",
     "gruntfuggly.todo-tree",
     "editorconfig.editorconfig",
-    "yoavbls.pretty-ts-errors",
-    "ms-azuretools.vscode-docker",
-    "bradlc.vscode-tailwindcss"
-  ],
-  "unwantedRecommendations": []
+    "yoavbls.pretty-ts-errors"
+  ]
 }

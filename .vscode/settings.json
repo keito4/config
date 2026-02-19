@@ -1,8 +1,7 @@
 {
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.organizeImports": "explicit"
+    "source.fixAll.eslint": "explicit"
   },
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": true,
@@ -10,7 +9,6 @@
   "editor.stickyScroll.enabled": true,
   "editor.inlayHints.enabled": "onUnlessPressed",
   "editor.minimap.enabled": false,
-  "editor.wordWrap": "on",
   "editor.suggestSelection": "first",
   "editor.quickSuggestions": {
     "strings": true
@@ -24,7 +22,6 @@
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "files.exclude": {
-    "**/.git": true,
     "**/node_modules": true,
     "**/.next": true,
     "**/dist": true,
