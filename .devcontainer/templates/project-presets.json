@@ -27,7 +27,8 @@
         "vercel-labs/agent-skills",
         "vercel-labs/agent-skills@vercel-composition-patterns",
         "supabase/agent-skills",
-        "supabase/agent-skills@supabase-postgres-best-practices"
+        "supabase/agent-skills@supabase-postgres-best-practices",
+        "planetscale/database-skills"
       ],
       "plugins": [
         "typescript-lsp@claude-plugins-official",
