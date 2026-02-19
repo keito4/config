@@ -1,103 +1,95 @@
-# AI-Assisted Development Overview
+# Agent Guidelines
 
-このリポジトリでは、Claude Code を使用して開発プロセスを支援しています。`CLAUDE.md` に定義されている開発品質基準に従って、AI による効率的な開発ワークフローを実現します。
+Always prefer simplicity over pathological complexity. YAGNI, KISS, DRY, and SOLID. No backward-compat shims or fallback paths unless they come free without adding cyclomatic complexity.
 
-## 現在の構成
+---
 
-このリポジトリには豊富な AI 支援機能が含まれています：
+# Claude Configuration
 
-### Claude Code エージェント (`.claude/agents/`)
+## Development Quality Standards
 
-17個の専門エージェントが利用可能：
+This repository implements comprehensive development quality standards and AI-assisted workflows including:
 
-- **アーキテクチャ・品質**: DDD検証、パフォーマンス分析、並行処理安全性分析、テスト可能性分析
-- **ドキュメント・一貫性**: ドキュメント一貫性チェック、アクセシビリティ検証
-- **依存関係・セキュリティ**: NuGet監査、セキュリティ分析
-- **テスト・自動化**: Playwrightテスト計画、生成、修復
-- **イシュー解決**: コード品質、依存関係、ドキュメント、セキュリティ、テストカバレッジ専門エージェント
-- **DevOps・CI/CD**: act ローカルCI管理
+### Code Quality Requirements
 
-### Claude コマンド (`.claude/commands/`)
+- **Test-Driven Development (TDD)**: Red → Green → Refactor methodology with 70%+ line coverage requirement
+- **Static Quality Gates**: Automated linting, formatting, security analysis, and license checking
+- **Git Workflow**: Conventional commits, branch naming conventions, and pull request requirements
+- **Release Types Required for Tooling Changes**: Commits that touch `.codex/**`, `.devcontainer/codex*`, `package*.json`, or `npm/global.json` must use release-triggering types (`feat` / `fix` / `perf` / `revert` / `docs`). commitlint blocks `chore`など非リリース型のメッセージを防止し、semantic-release の自動リリースと整合させます。
 
-22個の自動化コマンドが利用可能：
+### AI Prompt Design Guidelines
 
-- **メンテナンス**: リポジトリ全体の健全性チェック、ブランチクリーンアップ
-- **Git ワークフロー**: Git同期、PR作成、類似性分析
-- **コード分析**: 複雑度チェック、セキュリティレビュー、認証情報スキャン
-- **品質・テスト**: PR前チェックリスト、テストカバレッジ傾向、変更履歴生成
-- **DevContainer**: バージョンチェック、更新、チェックリスト、推奨設定の発見
-- **依存関係**: 依存関係健全性チェック、ライブラリ更新
-- **セキュリティ**: セキュリティレビュー、認証情報スキャン
-- **ツール設定**: CI/CDセットアップ、Husky設定、チーム保護設定、Claude設定同期
+- Structured approach for requirements definition, implementation, and bug reporting
+- Clear separation between requirements gathering and code generation phases
+- Emphasis on test-first development practices
 
-詳細は各ディレクトリの README.md を参照してください。
+### Definition of Ready/Done Criteria
 
-## Claude Code 統合
+- **Ready**: Acceptance criteria defined, dependencies resolved
+- **Done**: Quality gates passed, documentation updated, monitoring stable, release notes complete
 
-このリポジトリは Claude Code と GitHub Actions を通じて以下の機能を提供します：
+## Slack Notifications
 
-| 機能               | 説明                                                        |
-| ------------------ | ----------------------------------------------------------- |
-| Issue 自動解決     | `@claude` メンションによる GitHub Issue の自動対応          |
-| PR レビュー支援    | Pull Request に対する自動的なコードレビューとフィードバック |
-| 品質チェック自動化 | 継続的インテグレーションでの自動品質検証                    |
-| ドキュメント同期   | ドキュメントと実装の整合性確認                              |
+When completing tasks, Claude will automatically send a notification to Slack using the MCP Slack integration.
 
-## 開発ワークフロー
+### Configuration
 
-1. **Issue 作成**: 明確な要件定義と受け入れ基準を記載
-2. **Claude 支援**: `@claude` メンションで AI による実装支援を依頼
-3. **品質確認**: 自動テスト、リント、セキュリティチェックによる品質保証
-4. **レビュー**: Pull Request での人間によるコードレビュー
+Claude is configured to send notifications to the Slack workspace when tasks are completed. This uses the MCP (Model Context Protocol) Slack integration.
 
-## 非冗長にして重複を排除する
+## Development Tools & Automation
 
-### 目的
+This repository provides comprehensive development tooling through GitHub Actions workflows and automated scripts:
 
-同じ知識/意図の複数実装を一本化し、矛盾と修正漏れを防ぐ。
+## GitHub Actions Integration
 
-### 適用場面
+The repository includes comprehensive automated workflows for continuous integration and AI-assisted development:
 
-- 同一ロジックが3箇所以上で再実装
-- マジックナンバー/リテラルが散在
-- 類似ユーティリティ/ヘルパーの乱立
+### CI/CD Pipelines
 
-### 基本ルール
+- **CI Pipeline** (`.github/workflows/ci.yml`): Code quality validation with linting, formatting, testing, and building
+- **DevContainer Build** (`.github/workflows/docker-image.yml`): Automated container image building with semantic versioning and multi-platform support
+- **Library Auto-Update** (`.github/workflows/update-libraries.yml`): Scheduled execution of `npm run update:libs` that opens a pull request when dependencies or Codex/Claude tooling change
 
-- 真実の所在は一箇所
-- 定数・共通ロジックを共有点へ集約
-- 使われないコードは削除
+### AI-Assisted Development
 
-### 手順（最小リスク）
+- **Claude Code Integration** (`.github/workflows/claude.yml`): Automatic AI assistance triggered by `@claude` mentions in issues, PRs, and comments
 
-1. 重複箇所を洗い出し、唯一実装を決定
-2. 参照側を順次置換（小さなPRで段階移行）
-3. 旧実装を撤去し、テスト参照を一本化
+### Features
 
-### 測定指標（改善確認）
+- **Conventional Commits**: Automated versioning based on commit message patterns
+- **Quality Gates**: Enforced code standards and automated feedback
+- **Container Registry**: Published DevContainer images at `ghcr.io/keito4/config-base`
+- **Semantic Releases**: Automatic GitHub releases with generated release notes
 
-- 重複率↓、同義ヘルパー数↓
-- 修正時の変更箇所数↓
-- マジック値の出現回数↓
+## Technical Assistance with o3 MCP
 
-### アンチパターン
+When encountering technical challenges, unresolved errors, or implementation roadblocks during development, consult o3 MCP in English for advanced problem-solving assistance. o3 MCP specializes in:
 
-- 早すぎる共通化で可読性が下がる
-- 巨大全能ヘルパーの作成
+- Complex debugging scenarios
+- Architecture design decisions
+- Performance optimization strategies
+- Advanced algorithm implementation
+- Error resolution and root cause analysis
 
-### 関連タグ（refactor）
+### Usage Guidelines
 
-`refactor:dedupe`, `refactor:simplify`（定数化・命名整理）
+1. **When to consult o3 MCP**:
+   - Stuck on implementation details
+   - Encountering persistent errors
+   - Need architectural guidance
+   - Performance bottlenecks
+   - Complex algorithm design
 
-### コミット例
+2. **How to engage**:
+   - Formulate your question in English
+   - Provide relevant context and error messages
+   - Include code snippets if applicable
+   - Specify what solutions you've already attempted
 
-```
-refactor:dedupe date range handling across billing/reporting
-```
-
-## 参考ドキュメント
-
-- `CLAUDE.md`: 品質基準、AI プロンプト設計ガイド、CI 連携
-- `README.md`: リポジトリ全体の構成と使用方法
-
-このファイルは、AI 支援開発ワークフローを更新する際の説明にも利用してください。
+3. **Example consultation format**:
+   ```
+   I'm encountering [specific issue] while implementing [feature/functionality].
+   Error message: [exact error]
+   What I've tried: [attempted solutions]
+   Context: [relevant code or architecture details]
+   ```
