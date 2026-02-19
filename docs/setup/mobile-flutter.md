@@ -63,3 +63,10 @@ Dart 向けの CodeQL は限定的だが、依存関係スキャンは有効。
 - **ベースイメージ**: `ghcr.io/keito4/config-base:latest`
 - **Features**: `flutter`, `java(17)` — Flutter 固有のため維持
 - **postCreateCommand**: `flutter pub get && dart run build_runner build --delete-conflicting-outputs`
+
+## 関連ドキュメント
+
+| ドキュメント                                          | 説明                              |
+| ----------------------------------------------------- | --------------------------------- |
+| [ツールカタログ](../tool-catalog.md)                  | 環境×ツールのマトリクス           |
+| [config-base イメージ](../using-config-base-image.md) | DevContainer ベースイメージの詳細 |

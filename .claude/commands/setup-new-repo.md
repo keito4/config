@@ -660,6 +660,19 @@ Next Steps:
 | `/setup-team-protection`   | ブランチ保護ルールの設定       |
 | `/config-base-sync-update` | DevContainerを最新に更新       |
 
+## Project Type Guides
+
+プロジェクト種別に応じた詳細なセットアップガイドは [docs/setup/](../../docs/setup/README.md) を参照してください：
+
+| ガイド                                                              | 対象                  |
+| ------------------------------------------------------------------- | --------------------- |
+| [spa-react-vite.md](../../docs/setup/spa-react-vite.md)             | SPA (React + Vite)    |
+| [npm-library-cli.md](../../docs/setup/npm-library-cli.md)           | npm ライブラリ (CLI)  |
+| [web-app-nextjs.md](../../docs/setup/web-app-nextjs.md)             | Web アプリ (Next.js)  |
+| [mobile-flutter.md](../../docs/setup/mobile-flutter.md)             | モバイル (Flutter)    |
+| [mobile-android.md](../../docs/setup/mobile-android.md)             | モバイル (Android)    |
+| [desktop-extension-ts.md](../../docs/setup/desktop-extension-ts.md) | デスクトップ拡張 (TS) |
+
 ## Error Handling
 
 エラー発生時：

@@ -390,3 +390,14 @@ jobs:
 | `/security-credential-scan` | 認証情報の漏洩スキャン                          |
 | `/code-complexity-check`    | コード複雑度チェック                            |
 | `/dependency-health-check`  | 依存パッケージの健全性チェック                  |
+
+---
+
+## 関連ドキュメント
+
+| ドキュメント                                          | 説明                                              |
+| ----------------------------------------------------- | ------------------------------------------------- |
+| [ツールカタログ](../tool-catalog.md)                  | 環境×ツールのマトリクス（何がどこで使えるか一覧） |
+| [config-base イメージ](../using-config-base-image.md) | DevContainer ベースイメージの詳細                 |
+| [MCP サーバーガイド](../mcp-servers-guide.md)         | Linear, Playwright, Supabase 等の MCP 連携        |
+| [Sentry セットアップガイド](../sentry-setup-guide.md) | Next.js 14+ 向けの Sentry 設定                    |

@@ -276,3 +276,12 @@ export default defineConfig({
 - **ベースイメージ**: `ghcr.io/keito4/config-base:latest`
 - **冗長 Features の削除**: ベースイメージに含まれるもの（git, pnpm, github-cli, jq-likes, supabase-cli）は削除
 - **残すべき Features**: docker-in-docker, playwright（プロジェクト固有）
+
+## 関連ドキュメント
+
+| ドキュメント                                          | 説明                                  |
+| ----------------------------------------------------- | ------------------------------------- |
+| [Sentry セットアップガイド](../sentry-setup-guide.md) | Next.js 14+ 向けの Sentry 設定        |
+| [MCP サーバーガイド](../mcp-servers-guide.md)         | Linear, Playwright, Supabase 等の連携 |
+| [ツールカタログ](../tool-catalog.md)                  | 環境×ツールのマトリクス               |
+| [config-base イメージ](../using-config-base-image.md) | DevContainer ベースイメージの詳細     |

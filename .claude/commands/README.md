@@ -4,33 +4,34 @@ This directory contains pre-configured commands that provide automated workflows
 
 ## Quick Reference
 
-| カテゴリ              | コマンド                        | 説明                                         |
-| --------------------- | ------------------------------- | -------------------------------------------- |
-| **Maintenance**       | `/repo-maintenance`             | 包括的なリポジトリメンテナンス               |
-| **Git Workflow**      | `/git-sync`                     | Git 同期とブランチ管理                       |
-|                       | `/branch-cleanup`               | マージ済み・古いブランチのクリーンアップ     |
-|                       | `/create-pr`                    | ベースブランチをマージして PR 作成           |
-| **Code Analysis**     | `/similarity-analysis`          | コードの類似性分析と重複検出                 |
-|                       | `/code-complexity-check`        | コード複雑度分析とリファクタリング候補の特定 |
-| **Quality & Testing** | `/pre-pr-checklist`             | PR 作成前の品質チェック                      |
-|                       | `/test-coverage-trend`          | テストカバレッジのトレンド追跡               |
-| **Security**          | `/dependency-health-check`      | 依存関係の健全性分析                         |
-|                       | `/security-credential-scan`     | ハードコードされた認証情報のスキャン         |
-|                       | `/security-review`              | セキュリティレビューと改善提案               |
-| **DevContainer**      | `/container-health`             | コンテナ環境の健全性確認                     |
-|                       | `/devcontainer-checklist`       | DevContainer 再起動後の確認チェックリスト    |
-|                       | `/config-base-sync-check`       | config-base イメージのバージョン確認         |
-|                       | `/config-base-sync-update`      | DevContainer を最新に更新して PR 作成        |
-| **Setup**             | `/setup-new-repo`               | 新規リポジトリのセットアップ                 |
-|                       | `/setup-ci`                     | CI/CD ワークフローのセットアップ             |
-|                       | `/setup-husky`                  | Git hooks (Husky) のセットアップ             |
-|                       | `/setup-team-protection`        | GitHub リポジトリ保護ルールの設定            |
-| **Codespaces**        | `/codespaces-secrets`           | Codespaces シークレットの管理                |
-| **Config Sync**       | `/sync-settings`                | Claude/Codex 設定の同期                      |
-|                       | `/config-contribution-discover` | 新機能の発見と取り込み                       |
-| **Updates**           | `/update-claude-code`           | Claude Code の更新                           |
-|                       | `/update-actions`               | GitHub Actions バージョンの更新              |
-| **Documentation**     | `/changelog-generator`          | Conventional Commits から CHANGELOG を生成   |
+| カテゴリ              | コマンド                                  | 説明                                         |
+| --------------------- | ----------------------------------------- | -------------------------------------------- |
+| **Maintenance**       | `/repo-maintenance`                       | 包括的なリポジトリメンテナンス               |
+| **Git Workflow**      | `/git-sync`                               | Git 同期とブランチ管理                       |
+|                       | `/branch-cleanup`                         | マージ済み・古いブランチのクリーンアップ     |
+|                       | `/create-pr`                              | ベースブランチをマージして PR 作成           |
+| **Code Analysis**     | `/similarity-analysis`                    | コードの類似性分析と重複検出                 |
+|                       | `/code-complexity-check`                  | コード複雑度分析とリファクタリング候補の特定 |
+| **Quality & Testing** | `/pre-pr-checklist`                       | PR 作成前の品質チェック                      |
+|                       | `/test-coverage-trend`                    | テストカバレッジのトレンド追跡               |
+| **Security**          | `/dependency-health-check`                | 依存関係の健全性分析                         |
+|                       | `/security-credential-scan`               | ハードコードされた認証情報のスキャン         |
+|                       | `/security-review`                        | セキュリティレビューと改善提案               |
+| **DevContainer**      | `/container-health`                       | コンテナ環境の健全性確認                     |
+|                       | `/devcontainer-checklist`                 | DevContainer 再起動後の確認チェックリスト    |
+|                       | `/config-base-sync-check`                 | config-base イメージのバージョン確認         |
+|                       | `/config-base-sync-update`                | DevContainer を最新に更新して PR 作成        |
+| **Setup**             | `/setup-new-repo`                         | 新規リポジトリのセットアップ                 |
+|                       | `/setup-ci`                               | CI/CD ワークフローのセットアップ             |
+|                       | `/setup-husky`                            | Git hooks (Husky) のセットアップ             |
+|                       | `/setup-team-protection`                  | GitHub リポジトリ保護ルールの設定            |
+| **Documentation**     | [docs/setup/](../../docs/setup/README.md) | プロジェクト種別ごとのセットアップガイド     |
+| **Codespaces**        | `/codespaces-secrets`                     | Codespaces シークレットの管理                |
+| **Config Sync**       | `/sync-settings`                          | Claude/Codex 設定の同期                      |
+|                       | `/config-contribution-discover`           | 新機能の発見と取り込み                       |
+| **Updates**           | `/update-claude-code`                     | Claude Code の更新                           |
+|                       | `/update-actions`                         | GitHub Actions バージョンの更新              |
+| **Documentation**     | `/changelog-generator`                    | Conventional Commits から CHANGELOG を生成   |
 
 ## Available Commands
 

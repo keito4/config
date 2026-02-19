@@ -94,3 +94,11 @@ Lint → Format Check → Test (with coverage) → Build
 ## DevContainer
 
 - **ベースイメージ**: `ghcr.io/keito4/config-base:latest`
+
+## 関連ドキュメント
+
+| ドキュメント                                          | 説明                                  |
+| ----------------------------------------------------- | ------------------------------------- |
+| [ツールカタログ](../tool-catalog.md)                  | 環境×ツールのマトリクス               |
+| [MCP サーバーガイド](../mcp-servers-guide.md)         | Linear, Playwright, Supabase 等の連携 |
+| [config-base イメージ](../using-config-base-image.md) | DevContainer ベースイメージの詳細     |
