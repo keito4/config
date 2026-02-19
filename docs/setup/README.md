@@ -311,6 +311,8 @@ Claude Code の操作前後に品質チェックを自動実行する仕組み�
 | Android          | java(17) + Gradle            |
 | Raycast 拡張     | docker-in-docker             |
 
+> **Note**: `/setup-new-repo` コマンドはプロジェクトタイプを自動検出し、[project-presets.json](../../.devcontainer/templates/project-presets.json) の定義に基づいて適切な Features、Skills、Plugins を自動設定する。
+
 ### リリース管理（semantic-release）
 
 Node.js プロジェクトは **semantic-release** を標準とする。
@@ -390,3 +392,15 @@ jobs:
 | `/security-credential-scan` | 認証情報の漏洩スキャン                          |
 | `/code-complexity-check`    | コード複雑度チェック                            |
 | `/dependency-health-check`  | 依存パッケージの健全性チェック                  |
+
+---
+
+## 関連ドキュメント
+
+| ドキュメント                                                               | 説明                                              |
+| -------------------------------------------------------------------------- | ------------------------------------------------- |
+| [project-presets.json](../../.devcontainer/templates/project-presets.json) | プロジェクトタイプ別の推奨設定マスター            |
+| [ツールカタログ](../tool-catalog.md)                                       | 環境×ツールのマトリクス（何がどこで使えるか一覧） |
+| [config-base イメージ](../using-config-base-image.md)                      | DevContainer ベースイメージの詳細                 |
+| [MCP サーバーガイド](../mcp-servers-guide.md)                              | Linear, Playwright, Supabase 等の MCP 連携        |
+| [Sentry セットアップガイド](../sentry-setup-guide.md)                      | Next.js 14+ 向けの Sentry 設定                    |

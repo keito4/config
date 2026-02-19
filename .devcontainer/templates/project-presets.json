@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "_comment": "プロジェクトタイプ別の DevContainer features, skills, plugins 推奨設定",
+  "base": {
+    "_comment": "全プロジェクト共通の設定。各プリセットと結合される",
+    "features": {},
+    "vscodeExtensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint", "streetsidesoftware.code-spell-checker"],
+    "skills": ["intellectronica/agent-skills"],
+    "plugins": ["commit-commands@claude-plugins-official", "hookify@claude-plugins-official"]
+  },
+  "presets": {
+    "nextjs": {
+      "displayName": "Next.js Web アプリ",
+      "description": "Next.js + React + TypeScript のフルスタック Web アプリケーション",
+      "detection": {
+        "files": ["next.config.js", "next.config.mjs", "next.config.ts"]
+      },
+      "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+          "moby": true,
+          "dockerDashComposeVersion": "v2"
+        },
+        "ghcr.io/schlich/devcontainer-features/playwright:0": {}
+      },
+      "vscodeExtensions": ["ms-vscode.vscode-typescript-next", "bradlc.vscode-tailwindcss"],
+      "skills": [
+        "vercel-labs/agent-skills",
+        "vercel-labs/agent-skills@vercel-composition-patterns",
+        "supabase/agent-skills",
+        "supabase/agent-skills@supabase-postgres-best-practices"
+      ],
+      "plugins": [
+        "typescript-lsp@claude-plugins-official",
+        "code-review@claude-plugins-official",
+        "javascript-typescript@claude-code-workflows",
+        "full-stack-orchestration@claude-code-workflows",
+        "postgres-best-practices@supabase-agent-skills"
+      ]
+    },
+    "spa-react": {
+      "displayName": "SPA (React + Vite)",
+      "description": "Vite ベースの React シングルページアプリケーション",
+      "detection": {
+        "files": ["vite.config.ts", "vite.config.js"],
+        "packageDependencies": ["react", "@vitejs/plugin-react"]
+      },
+      "features": {},
+      "vscodeExtensions": ["ms-vscode.vscode-typescript-next"],
+      "skills": ["vercel-labs/agent-skills", "facebook/react@fix", "millionco/react-doctor"],
+      "plugins": [
+        "typescript-lsp@claude-plugins-official",
+        "code-review@claude-plugins-official",
+        "javascript-typescript@claude-code-workflows"
+      ]
+    },
+    "npm-library": {
+      "displayName": "npm ライブラリ / CLI",
+      "description": "npm パッケージとして公開するライブラリまたは CLI ツール",
+      "detection": {
+        "packageFields": ["bin", "exports", "main"]
+      },
+      "features": {},
+      "vscodeExtensions": ["ms-vscode.vscode-typescript-next"],
+      "skills": [],
+      "plugins": ["typescript-lsp@claude-plugins-official", "code-review@claude-plugins-official"]
+    },
+    "monorepo": {
+      "displayName": "Monorepo",
+      "description": "pnpm workspaces または Lerna による Monorepo 構成",
+      "detection": {
+        "files": ["pnpm-workspace.yaml", "lerna.json"]
+      },
+      "features": {},
+      "vscodeExtensions": ["ms-vscode.vscode-typescript-next"],
+      "skills": [],
+      "plugins": [
+        "typescript-lsp@claude-plugins-official",
+        "code-review@claude-plugins-official",
+        "javascript-typescript@claude-code-workflows"
+      ]
+    },
+    "flutter": {
+      "displayName": "モバイル (Flutter)",
+      "description": "Flutter によるクロスプラットフォームモバイルアプリ",
+      "detection": {
+        "files": ["pubspec.yaml"]
+      },
+      "features": {
+        "ghcr.io/joshspicer/features/flutter:1": {},
+        "ghcr.io/devcontainers/features/java:1": {
+          "version": "17"
+        }
+      },
+      "vscodeExtensions": ["Dart-Code.flutter", "Dart-Code.dart-code"],
+      "skills": [],
+      "plugins": []
+    },
+    "android": {
+      "displayName": "モバイル (Android)",
+      "description": "Kotlin による Android ネイティブアプリ",
+      "detection": {
+        "files": ["build.gradle", "build.gradle.kts"],
+        "directories": ["app/src/main"]
+      },
+      "features": {
+        "ghcr.io/devcontainers/features/java:1": {
+          "version": "17"
+        }
+      },
+      "vscodeExtensions": ["vscjava.vscode-java-pack"],
+      "skills": [],
+      "plugins": []
+    },
+    "raycast": {
+      "displayName": "Raycast 拡張",
+      "description": "Raycast 拡張機能（TypeScript）",
+      "detection": {
+        "packageDependencies": ["@raycast/api"]
+      },
+      "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+      },
+      "vscodeExtensions": ["ms-vscode.vscode-typescript-next"],
+      "skills": [],
+      "plugins": ["typescript-lsp@claude-plugins-official", "code-review@claude-plugins-official"]
+    },
+    "terraform": {
+      "displayName": "Terraform インフラ",
+      "description": "Terraform による Infrastructure as Code",
+      "detection": {
+        "extensions": [".tf"]
+      },
+      "features": {
+        "ghcr.io/devcontainers/features/terraform:1": {},
+        "ghcr.io/devcontainers/features/aws-cli:1": {},
+        "ghcr.io/devcontainers/features/gcloud-cli:1": {}
+      },
+      "vscodeExtensions": ["hashicorp.terraform"],
+      "skills": [],
+      "plugins": []
+    },
+    "nodejs": {
+      "displayName": "Node.js 汎用",
+      "description": "汎用 Node.js プロジェクト",
+      "detection": {
+        "files": ["package.json"]
+      },
+      "features": {},
+      "vscodeExtensions": ["ms-vscode.vscode-typescript-next"],
+      "skills": [],
+      "plugins": ["typescript-lsp@claude-plugins-official"]
+    }
+  },
+  "detectionOrder": [
+    "nextjs",
+    "flutter",
+    "android",
+    "spa-react",
+    "raycast",
+    "monorepo",
+    "terraform",
+    "npm-library",
+    "nodejs"
+  ]
+}
