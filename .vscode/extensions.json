@@ -1,3 +1,17 @@
 {
-  "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "ms-vscode.vscode-typescript-next"]
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-typescript-next",
+    "streetsidesoftware.code-spell-checker",
+    "usernamehw.errorlens",
+    "christian-kohler.path-intellisense",
+    "eamodio.gitlens",
+    "gruntfuggly.todo-tree",
+    "editorconfig.editorconfig",
+    "yoavbls.pretty-ts-errors",
+    "ms-azuretools.vscode-docker",
+    "bradlc.vscode-tailwindcss"
+  ],
+  "unwantedRecommendations": []
 }
