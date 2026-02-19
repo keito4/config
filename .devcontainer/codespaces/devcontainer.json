@@ -35,6 +35,9 @@
   "containerEnv": {
     "CLAUDE_ENV_FILE": "/home/vscode/.devcontainer.env"
   },
+  "remoteEnv": {
+    "CLAUDE_CONFIG_DIR": "${containerWorkspaceFolder}/.claude-data"
+  },
   "customizations": {
     "vscode": {
       "extensions": [

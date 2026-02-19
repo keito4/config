@@ -63,6 +63,9 @@ report.log
 .claude/settings.local.json
 .claude/plugins/known_marketplaces.json
 
+# Claude config directory (Codespaces)
+.claude-data/
+
 # Agent skills (installed via npx skills add)
 .agents/skills/
 .claude/skills/vercel-*
