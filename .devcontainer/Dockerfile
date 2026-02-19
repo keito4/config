@@ -31,6 +31,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     python3-venv \
     python3-dev \
     apt-transport-https \
+    unzip \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -41,6 +42,17 @@ RUN DOPPLER_VERSION="3.75.2" \
  && curl -sLo /tmp/doppler.deb "https://github.com/DopplerHQ/cli/releases/download/${DOPPLER_VERSION}/doppler_${DOPPLER_VERSION}_linux_${ARCH}.deb" \
  && dpkg -i /tmp/doppler.deb \
  && rm /tmp/doppler.deb
+
+# Install 1Password CLI (op)
+# https://developer.1password.com/docs/cli/get-started/
+RUN OP_VERSION="2.32.1" \
+ && ARCH=$(dpkg --print-architecture) \
+ && curl -sSfo /tmp/op.zip "https://cache.agilebits.com/dist/1P/op2/pkg/v${OP_VERSION}/op_linux_${ARCH}_v${OP_VERSION}.zip" \
+ && unzip -od /usr/local/bin/ /tmp/op.zip \
+ && rm /tmp/op.zip \
+ && groupadd -f onepassword-cli \
+ && chown root:onepassword-cli /usr/local/bin/op \
+ && chmod g+s /usr/local/bin/op
 
 # Install Node.js
 RUN NODE_VERSION=v22.14.0 \
