@@ -85,3 +85,10 @@ pnpm exec lint-staged
 
 - **ベースイメージ**: `ghcr.io/keito4/config-base:latest`
 - **冗長 Features の削除**: ベースイメージに含まれるもの（node, gh 等）は更新後に削除を検討
+
+## 関連ドキュメント
+
+| ドキュメント                                          | 説明                              |
+| ----------------------------------------------------- | --------------------------------- |
+| [ツールカタログ](../tool-catalog.md)                  | 環境×ツールのマトリクス           |
+| [config-base イメージ](../using-config-base-image.md) | DevContainer ベースイメージの詳細 |

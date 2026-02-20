@@ -782,6 +782,11 @@ Next Steps:
 | `/pre-pr-checklist`         | PR 作成前チェック       |
 | `/security-credential-scan` | 認証情報スキャン        |
 
+## Project Type Guides
+
+プロジェクト種別に応じた詳細なセットアップガイドは [docs/setup/](../../docs/setup/README.md) を参照してください。
+CI/CD 設定、共通パターン、品質ゲートなどの包括的な情報が含まれています。
+
 ## Error Handling
 
 エラー発生時：

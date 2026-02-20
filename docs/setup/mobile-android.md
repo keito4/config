@@ -97,3 +97,10 @@ config リポジトリの `.github/workflows/claude.yml` をテンプレート�
 - **ベースイメージ**: `ghcr.io/keito4/config-base:latest`
 - **Features**: `java(17)` + Gradle — Android 固有のため維持
 - **postCreateCommand**: `sdkmanager --install 'platforms;android-35' ...`
+
+## 関連ドキュメント
+
+| ドキュメント                                          | 説明                              |
+| ----------------------------------------------------- | --------------------------------- |
+| [ツールカタログ](../tool-catalog.md)                  | 環境×ツールのマトリクス           |
+| [config-base イメージ](../using-config-base-image.md) | DevContainer ベースイメージの詳細 |
