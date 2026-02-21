@@ -47,17 +47,28 @@ Hooksは、Claude Codeの特定のイベント（ツール実行前後、タス�
 
 **トリガー**: `PreToolUse(Bash)` で `git commit` または `git push` を検出
 
-**実行されるチェック**:
+**自動検出されるチェック**:
 
-1. **Format Check** (`npm run format:check`) - コードフォーマットの検証
-2. **Lint** (`npm run lint`) - コード品質の検証
-3. **Test** (`npm run test`) - ユニットテストの実行
-4. **ShellCheck** (`npm run shellcheck`) - シェルスクリプトの検証
-5. **Security Credential Scan** (`./script/security-credential-scan.sh --strict`) - 認証情報の漏洩チェック
-6. **Code Complexity Check** (`./script/code-complexity-check.sh --strict`) - コード複雑度の検証
+リポジトリの `package.json` の `scripts` を解析し、利用可能なチェックを自動で検出・実行します。
+
+| チェック     | 検出するスクリプト名             |
+| ------------ | -------------------------------- |
+| Format Check | `format:check`                   |
+| Lint         | `lint`, `lint:check`             |
+| Test         | `test`, `test:unit`              |
+| Type Check   | `typecheck`, `type-check`, `tsc` |
+| ShellCheck   | `shellcheck`                     |
+
+さらに以下のスクリプトが存在する場合も実行:
+
+- `script/security-credential-scan.sh --strict`
+- `script/code-complexity-check.sh --strict`
+
+**対応パッケージマネージャー**: npm / pnpm / yarn / bun（ロックファイルから自動判定）
 
 **動作**:
 
+- `package.json` がないリポジトリはスキップ
 - すべてのチェックに合格した場合のみ、Git操作を許可
 - 1つでも失敗した場合、exit code 2でツール実行を阻止
 - 失敗したチェックの詳細を標準エラー出力に表示

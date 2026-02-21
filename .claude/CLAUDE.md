@@ -115,20 +115,25 @@ Git操作（commit/push）の前に自動的に品質チェックを実行する
 
 ### 実行されるチェック
 
-1. **Format Check** - コードフォーマットの検証
-2. **Lint** - コード品質の検証
-3. **Test** - ユニットテストの実行
-4. **ShellCheck** - シェルスクリプトの検証
-5. **Security Credential Scan** - 認証情報の漏洩チェック
-6. **Code Complexity Check** - コード複雑度の検証
+`package.json` の `scripts` を自動解析し、利用可能なチェックを検出して実行します：
+
+1. **Format Check** (`format:check`) - コードフォーマットの検証
+2. **Lint** (`lint`, `lint:check`) - コード品質の検証
+3. **Test** (`test`, `test:unit`) - ユニットテストの実行
+4. **Type Check** (`typecheck`, `type-check`, `tsc`) - 型チェック
+5. **ShellCheck** (`shellcheck`) - シェルスクリプトの検証
+6. **Security Credential Scan** (`script/security-credential-scan.sh`) - 認証情報の漏洩チェック
+7. **Code Complexity Check** (`script/code-complexity-check.sh`) - コード複雑度の検証
+
+パッケージマネージャー（npm / pnpm / yarn / bun）はロックファイルから自動判定されます。
 
 ### Hooks設定
 
 `.claude/hooks/` ディレクトリに以下のHooksスクリプトが配置されています：
 
 - `block_git_no_verify.py`: `--no-verify` や `HUSKY=0` の使用をブロック
-- `pre_git_quality_gates.py`: Git操作前にQuality Gatesを実行
+- `pre_git_quality_gates.py`: Git操作前にQuality Gatesを自動検出・実行
 
-これらは `.claude/settings.local.json` の `hooks` フィールドで設定されており、Claudeによる `git commit` や `git push` の実行前に自動的にトリガーされます。
+これらは `.claude/settings.json` の `hooks` フィールドで設定されており、Claudeによる `git commit` や `git push` の実行前に自動的にトリガーされます。config-base イメージにも組み込まれているため、DevContainer/Codespaces 環境でもデフォルトで有効です。
 
 詳細は [.claude/hooks/README.md](./.claude/hooks/README.md) を参照してください。
