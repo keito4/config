@@ -787,8 +787,8 @@ NODE_ENV=development
      - 手動で実行: `bash script/setup-mcp.sh`
    - 環境変数が展開されているか確認:
      ```bash
-     cat .mcp.json | grep OPENAI_API_KEY
-     # ${OPENAI_API_KEY}が残っている場合は未展開
+     cat .mcp.json | grep '\${'
+     # ${VAR_NAME}が残っている場合は未展開
      ```
    - 推奨: `.mcp.json`を`.claude/.mcp.json`にコピー:
      ```bash

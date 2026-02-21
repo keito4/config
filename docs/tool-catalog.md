@@ -74,7 +74,6 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | ------------------------------- | ---------- | ---------------- |
 | mcp-remote                      | 0.1.38     | MCP リモート接続 |
 | `@leonardsellem/n8n-mcp-server` | 0.1.8      | n8n MCP サーバー |
-| `@mseep/linear-mcp`             | 78.0.1     | Linear MCP 連携  |
 
 ### 2.6 Git / CI 関連（Dockerfile 末尾でインストール）
 
