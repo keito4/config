@@ -1,0 +1,157 @@
+# Reusable Coverage Report Workflow
+#
+# Posts coverage summary as a PR comment. Supports multiple formats:
+# - jacoco: JaCoCo XML reports (Android/JVM)
+# - jest: coverage-summary.json (Jest/Vitest/c8)
+#
+# Usage:
+#   coverage-report:
+#     uses: keito4/config/.github/workflows/coverage-report.yml@main
+#     with:
+#       format: jest
+#       report-path: coverage/coverage-summary.json
+#       artifact-name: coverage-report
+
+name: Coverage Report
+
+on:
+  workflow_call:
+    inputs:
+      format:
+        description: 'Coverage report format (jacoco | jest)'
+        required: true
+        type: string
+      report-path:
+        description: 'Path to the coverage report file within the artifact'
+        required: true
+        type: string
+      artifact-name:
+        description: 'Name of the uploaded coverage artifact'
+        required: true
+        type: string
+      min-coverage-overall:
+        description: 'Minimum overall coverage threshold (%)'
+        required: false
+        type: number
+        default: 0
+      min-coverage-changed-files:
+        description: 'Minimum changed files coverage threshold (%)'
+        required: false
+        type: number
+        default: 0
+      title:
+        description: 'PR comment title'
+        required: false
+        type: string
+        default: 'Coverage Report'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  report-jacoco:
+    name: JaCoCo Coverage Report
+    runs-on: ubuntu-latest
+    if: inputs.format == 'jacoco'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: coverage-download
+
+      - name: Post JaCoCo coverage to PR
+        uses: madrapps/jacoco-report@v1.7.2
+        with:
+          paths: coverage-download/${{ inputs.report-path }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: ${{ inputs.min-coverage-overall }}
+          min-coverage-changed-files: ${{ inputs.min-coverage-changed-files }}
+          title: ${{ inputs.title }}
+
+  report-jest:
+    name: Jest Coverage Report
+    runs-on: ubuntu-latest
+    if: inputs.format == 'jest'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.2
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: coverage-download
+
+      - name: Post coverage comment
+        uses: actions/github-script@v8
+        env:
+          REPORT_PATH: ${{ inputs.report-path }}
+          COMMENT_TITLE: ${{ inputs.title }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const reportPath = process.env.REPORT_PATH;
+            const title = process.env.COMMENT_TITLE;
+            const coveragePath = path.join('coverage-download', reportPath);
+
+            if (!fs.existsSync(coveragePath)) {
+              console.log(`No coverage summary found at ${coveragePath}`);
+              return;
+            }
+
+            const coverage = JSON.parse(fs.readFileSync(coveragePath, 'utf8'));
+
+            // Build coverage table
+            let commentBody = `## ${title}\n\n`;
+
+            for (const [packageName, metrics] of Object.entries(coverage)) {
+              if (packageName === 'total') {
+                commentBody += '### Overall Coverage\n\n';
+              } else {
+                commentBody += `### ${packageName}\n\n`;
+              }
+
+              commentBody += '| Metric | Coverage |\n';
+              commentBody += '|--------|----------|\n';
+              commentBody += `| Statements | ${metrics.statements.pct}% |\n`;
+              commentBody += `| Branches | ${metrics.branches.pct}% |\n`;
+              commentBody += `| Functions | ${metrics.functions.pct}% |\n`;
+              commentBody += `| Lines | ${metrics.lines.pct}% |\n\n`;
+            }
+
+            // Find existing coverage comment by title
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' && comment.body.includes(title)
+            );
+
+            // Create or update comment
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }
