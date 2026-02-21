@@ -23,7 +23,6 @@
       "WebFetch(domain:docs.speechmatics.com)",
       "WebFetch(domain:docs.sentry.io)",
       "mcp__ide__getDiagnostics",
-      "mcp__o3__o3-search",
       "Bash(ls:*)",
       "Bash(cat:*)",
       "Bash(head:*)",

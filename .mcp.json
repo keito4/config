@@ -6,23 +6,6 @@
       "args": ["@playwright/mcp@latest"],
       "env": {}
     },
-    "o3": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["o3-search-mcp"],
-      "env": {
-        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
-        "SEARCH_CONTEXT_SIZE": "medium",
-        "REASONING_EFFORT": "medium"
-      }
-    },
-    "linear": {
-      "type": "http",
-      "url": "https://mcp.linear.app/mcp",
-      "headers": {
-        "Authorization": "Bearer ${LINEAR_API_KEY}"
-      }
-    },
     "github": {
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
