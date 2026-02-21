@@ -19,7 +19,6 @@
       "WebFetch(domain:www.assemblyai.com)",
       "WebFetch(domain:ai-sdk.dev)",
       "WebFetch(domain:vercel.com)",
-      "WebFetch(domain:linear.app)",
       "WebFetch(domain:docs.speechmatics.com)",
       "WebFetch(domain:docs.sentry.io)",
       "mcp__ide__getDiagnostics",
