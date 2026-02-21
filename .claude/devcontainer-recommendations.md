@@ -104,14 +104,6 @@ bash script/setup-mcp.sh
 ```json
 {
   "mcpServers": {
-    "o3": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["o3-search-mcp"],
-      "env": {
-        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
-      }
-    },
     "playwright": {
       "type": "stdio",
       "command": "npx",
@@ -122,17 +114,11 @@ bash script/setup-mcp.sh
 }
 ```
 
-#### 必須環境変数（`.devcontainer.env`）
-
-```bash
-OPENAI_API_KEY=***  # o3 MCP用
-```
-
 #### ⚠️ 重要な注意事項
 
 1. **セキュリティ**:
    - `.mcp.json`は`.gitignore`に追加必須
-   - API KEYは環境変数テンプレート（`${OPENAI_API_KEY}`）を使用
+   - API KEYは環境変数テンプレートを使用
    - 平文でのAPI KEY保存は避ける
 
 2. **配置場所の優先順位**:
@@ -810,22 +796,7 @@ NODE_ENV=development
      cp .mcp.json ~/.claude/.mcp.json
      ```
 
-8. **o3 MCP（OpenAI検索）が使えない**
-   - `OPENAI_API_KEY`の設定確認:
-     ```bash
-     echo $OPENAI_API_KEY
-     ```
-   - `credentials/mcp.env`に`OPENAI_API_KEY`が含まれているか確認
-   - 1Passwordから取得:
-     ```bash
-     OP_ACCOUNT=your.1password.com bash script/setup-env.sh
-     ```
-   - `.mcp.json`を再生成:
-     ```bash
-     bash script/setup-mcp.sh
-     ```
-
-9. **Playwright MCPが動作しない**
+8. **Playwright MCPが動作しない**
    - Node.jsとnpxが利用可能か確認:
      ```bash
      node --version
@@ -858,8 +829,7 @@ NODE_ENV=development
 
 - [MCP公式ドキュメント](https://modelcontextprotocol.io/)
 - [Playwright MCP](https://github.com/microsoft/playwright-mcp)
-- [o3 Search MCP](https://www.npmjs.com/package/o3-search-mcp)
-- 本リポジトリのMCP設定: [.mcp.json.template](./.mcp.json.template) および [credentials/templates/mcp.env.template](./credentials/templates/mcp.env.template)
+- 本リポジトリのMCP設定: [credentials/templates/mcp.env.template](../credentials/templates/mcp.env.template)
 
 ---
 
