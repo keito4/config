@@ -64,12 +64,6 @@ main() {
     source "$MCP_ENV"
     set +a
 
-    # 必須環境変数の確認
-    if [[ -z "${OPENAI_API_KEY:-}" ]]; then
-        print_warning "OPENAI_API_KEY が設定されていません"
-        print_info "MCP o3 機能は利用できません"
-    fi
-
     # envsubst で変数置換して .mcp.json を生成
     print_info ".mcp.json を生成中..."
 
