@@ -25,11 +25,6 @@ args = ["-y", "next-devtools-mcp@latest"]
 command = "npx"
 args = ["@playwright/mcp@latest"]
 
-[mcp_servers.o3]
-command = "npx"
-args = ["o3-search-mcp"]
-env = { OPENAI_API_KEY = "${OPENAI_API_KEY}", SEARCH_CONTEXT_SIZE = "medium", REASONING_EFFORT = "medium" }
-
 [mcp_servers.supabase]
 url = "https://mcp.supabase.com/mcp"
 

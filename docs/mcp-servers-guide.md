@@ -20,37 +20,6 @@ MCPサーバーは `.mcp.json` ファイルで設定します。このファイ�
 
 ## 利用可能なMCPサーバー
 
-### Linear
-
-Linearプロジェクト管理ツールとの統合。Issue/Project操作が可能になります。
-
-**設定:**
-
-```json
-{
-  "mcpServers": {
-    "linear": {
-      "type": "http",
-      "url": "https://mcp.linear.app/mcp",
-      "headers": {
-        "Authorization": "Bearer ${LINEAR_API_KEY}"
-      }
-    }
-  }
-}
-```
-
-**必要な環境変数:**
-
-- `LINEAR_API_KEY`: Linear APIキー（Settings > API > Personal API keysで取得）
-
-**利用可能な操作:**
-
-- Issueの作成・更新・検索
-- Projectの管理
-- Cycleの操作
-- チームメンバーの確認
-
 ### Playwright
 
 ブラウザ自動化とE2Eテスト支援。
@@ -76,38 +45,6 @@ Linearプロジェクト管理ツールとの統合。Issue/Project操作が可�
 - 要素のクリック・入力
 - スクリーンショット取得
 - アクセシビリティスナップショット
-
-### o3-search (OpenAI)
-
-高度なWeb検索とリサーチ機能。
-
-**設定:**
-
-```json
-{
-  "mcpServers": {
-    "o3": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["o3-search-mcp"],
-      "env": {
-        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
-        "SEARCH_CONTEXT_SIZE": "medium",
-        "REASONING_EFFORT": "medium"
-      }
-    }
-  }
-}
-```
-
-**必要な環境変数:**
-
-- `OPENAI_API_KEY`: OpenAI APIキー
-
-**オプション設定:**
-
-- `SEARCH_CONTEXT_SIZE`: `small`, `medium`, `large`
-- `REASONING_EFFORT`: `low`, `medium`, `high`
 
 ### GitHub
 
@@ -196,23 +133,6 @@ Supabaseデータベースとの統合。
       "args": ["@playwright/mcp@latest"],
       "env": {}
     },
-    "o3": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["o3-search-mcp"],
-      "env": {
-        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
-        "SEARCH_CONTEXT_SIZE": "medium",
-        "REASONING_EFFORT": "medium"
-      }
-    },
-    "linear": {
-      "type": "http",
-      "url": "https://mcp.linear.app/mcp",
-      "headers": {
-        "Authorization": "Bearer ${LINEAR_API_KEY}"
-      }
-    },
     "github": {
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
@@ -235,19 +155,19 @@ Supabaseデータベースとの統合。
 1. **シェルで直接設定**
 
    ```bash
-   export LINEAR_API_KEY="lin_api_xxx"
+   export SUPABASE_URL="https://xxx.supabase.co"
    ```
 
 2. **1Passwordなどのシークレット管理ツール**
 
    ```bash
-   export LINEAR_API_KEY=$(op read "op://vault/linear/api-key")
+   export SUPABASE_KEY=$(op read "op://vault/supabase/api-key")
    ```
 
 3. **direnvを使用**
    ```bash
    # .envrc
-   export LINEAR_API_KEY="lin_api_xxx"
+   export SUPABASE_URL="https://xxx.supabase.co"
    ```
 
 ## トラブルシューティング

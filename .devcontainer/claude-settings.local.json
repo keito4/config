@@ -244,7 +244,6 @@
       "Bash(supervisorctl stop:*)",
       "Bash(supervisord:*)",
       "Bash(act:*)",
-      "Bash(npx o3-search-mcp:*)",
       "Bash(cargo install:*)",
       "Bash(/home/vscode/.local/bin/mise trust)",
       "Bash(/home/vscode/.local/bin/mise ls)",
@@ -321,7 +320,7 @@
     "defaultMode": "acceptEdits"
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["playwright", "o3"],
+  "enabledMcpjsonServers": ["playwright"],
   "hooks": {
     "PreToolUse": [
       {

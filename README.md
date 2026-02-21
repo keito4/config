@@ -645,39 +645,6 @@ The `CLAUDE.md` file defines organization-wide development standards in Japanese
 - **Git Workflow**: Conventional commits, branch naming conventions, and pull request requirements
 - **AI Prompt Design Guidelines**: Structured approach for requirements definition and implementation
 
-#### Technical Assistance with o3 MCP
-
-When encountering technical challenges, unresolved errors, or implementation roadblocks during development, consult o3 MCP (integrated via Model Context Protocol) for advanced problem-solving assistance. o3 MCP specializes in:
-
-- Complex debugging scenarios and error resolution
-- Architecture design decisions and pattern recommendations
-- Performance optimization strategies
-- Advanced algorithm implementation
-- Real-time web search for latest documentation and solutions
-- Root cause analysis for persistent issues
-
-**Usage Guidelines:**
-
-1. **When to consult o3 MCP**:
-   - Stuck on complex implementation details
-   - Encountering persistent errors or bugs
-   - Need architectural guidance or design review
-   - Performance bottlenecks requiring optimization
-   - Complex algorithm design and implementation
-
-2. **Integration with Claude Code**:
-   - o3 MCP is accessible through Claude Code's MCP integration
-   - Formulate questions in English for optimal results
-   - Include relevant context, error messages, and code snippets
-   - Specify what solutions you've already attempted
-
-3. **Example consultation**:
-   ```
-   @claude Use o3 MCP to help debug this async/await deadlock issue
-   @claude Consult o3 MCP for optimizing this database query performance
-   @claude Ask o3 MCP about best practices for implementing this design pattern
-   ```
-
 #### Slack Notifications Integration
 
 The repository includes automated Slack notifications for development workflow events:
