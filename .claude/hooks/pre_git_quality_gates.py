@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
 """
-Git操作前のQuality Gatesチェック
+グローバル Quality Gates: git commit/push 前にローカル CI チェックを実行
 
-git commit や git push の前に以下のチェックを実行：
-0. npm install の確認（node_modules の存在チェック）
-1. npm run format:check
-2. npm run lint
-3. npm run test
-4. npm run shellcheck
-5. ./script/security-credential-scan.sh --strict
-6. ./script/code-complexity-check.sh --strict
+リポジトリの package.json を解析し、利用可能なチェックを自動検出して実行する。
+npm / pnpm / yarn / bun に対応。
 """
 import sys
 import json
@@ -31,149 +25,215 @@ is_git_commit = False
 is_git_push = False
 
 for i, token in enumerate(tokens):
-    if token == "git":
-        if i + 1 < len(tokens):
-            next_token = tokens[i + 1]
-            if next_token == "commit":
-                is_git_commit = True
-            elif next_token == "push":
-                is_git_push = True
+    if token == "git" and i + 1 < len(tokens):
+        next_token = tokens[i + 1]
+        if next_token == "commit":
+            is_git_commit = True
+        elif next_token == "push":
+            is_git_push = True
 
-# git commit または git push でない場合はスルー
 if not (is_git_commit or is_git_push):
     sys.exit(0)
 
-# node_modules の存在チェック（npm install が実行されているか確認）
-node_modules_path = Path(os.getcwd()) / "node_modules"
-if not node_modules_path.exists():
+# git リポジトリのルートを取得
+try:
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True, text=True, timeout=10
+    )
+    repo_root = result.stdout.strip()
+except Exception:
+    sys.exit(0)
+
+if not repo_root:
+    sys.exit(0)
+
+
+def detect_package_manager(root: str) -> str:
+    """パッケージマネージャーを検出"""
+    if (Path(root) / "bun.lockb").exists() or (Path(root) / "bun.lock").exists():
+        return "bun"
+    if (Path(root) / "pnpm-lock.yaml").exists():
+        return "pnpm"
+    if (Path(root) / "yarn.lock").exists():
+        return "yarn"
+    return "npm"
+
+
+def get_package_scripts(root: str) -> dict:
+    """package.json の scripts を取得"""
+    pkg_path = Path(root) / "package.json"
+    if not pkg_path.exists():
+        return {}
+    try:
+        with open(pkg_path) as f:
+            pkg = json.load(f)
+        return pkg.get("scripts", {})
+    except Exception:
+        return {}
+
+
+def has_node_modules(root: str) -> bool:
+    """node_modules の存在チェック"""
+    return (Path(root) / "node_modules").exists()
+
+
+# package.json のスクリプトを取得
+scripts = get_package_scripts(repo_root)
+if not scripts:
+    # package.json がない、または scripts が空 → Node.js プロジェクトでない
+    sys.exit(0)
+
+pm = detect_package_manager(repo_root)
+
+# node_modules の存在チェック
+if not has_node_modules(repo_root):
     print("=" * 60, file=sys.stderr, flush=True)
-    print("❌ npm install が実行されていません", file=sys.stderr, flush=True)
+    print(f"[Quality Gates] {pm} install が未実行です", file=sys.stderr, flush=True)
     print("=" * 60, file=sys.stderr, flush=True)
-    print("", file=sys.stderr, flush=True)
-    print("node_modules ディレクトリが見つかりません。", file=sys.stderr, flush=True)
-    print("以下のコマンドを実行してから再度お試しください：", file=sys.stderr, flush=True)
-    print("", file=sys.stderr, flush=True)
-    print("  npm install", file=sys.stderr, flush=True)
-    print("", file=sys.stderr, flush=True)
+    print(f"\n  {pm} install を実行してから再度お試しください\n",
+          file=sys.stderr, flush=True)
     sys.exit(2)
 
-# Quality Gatesを実行
-print("🔍 Git操作前のQuality Gatesを実行中...\n", file=sys.stderr, flush=True)
-
-checks = [
+# 実行するチェックを自動検出
+# 優先度順: format:check > format > lint > test > typecheck > shellcheck
+CHECK_CANDIDATES = [
     {
-        "name": "Format Check",
-        "command": ["npm", "run", "format:check"],
+        "script_names": ["format:check"],
+        "label": "Format Check",
         "description": "コードフォーマットの検証",
-        "install_hint": "npm install"
     },
     {
-        "name": "Lint",
-        "command": ["npm", "run", "lint"],
+        "script_names": ["lint", "lint:check"],
+        "label": "Lint",
         "description": "コード品質の検証",
-        "install_hint": "npm install"
     },
     {
-        "name": "Test",
-        "command": ["npm", "run", "test"],
+        "script_names": ["test", "test:unit"],
+        "label": "Test",
         "description": "ユニットテストの実行",
-        "install_hint": "npm install"
     },
     {
-        "name": "ShellCheck",
-        "command": ["npm", "run", "shellcheck"],
+        "script_names": ["typecheck", "type-check", "tsc"],
+        "label": "Type Check",
+        "description": "型チェック",
+    },
+    {
+        "script_names": ["shellcheck"],
+        "label": "ShellCheck",
         "description": "シェルスクリプトの検証",
-        "install_hint": "brew install shellcheck (macOS) / apt install shellcheck (Linux)"
     },
-    {
-        "name": "Security Credential Scan",
-        "command": ["./script/security-credential-scan.sh", "--strict"],
-        "description": "認証情報の漏洩チェック",
-        "install_hint": None
-    },
-    {
-        "name": "Code Complexity Check",
-        "command": ["./script/code-complexity-check.sh", "--strict"],
-        "description": "コード複雑度の検証",
-        "install_hint": None
-    }
 ]
+
+checks = []
+for candidate in CHECK_CANDIDATES:
+    for script_name in candidate["script_names"]:
+        if script_name in scripts:
+            checks.append({
+                "name": candidate["label"],
+                "command": [pm, "run", script_name],
+                "description": candidate["description"],
+            })
+            break  # 最初にマッチしたスクリプトを使用
+
+# スクリプトベースのチェック（リポジトリに存在する場合のみ）
+SCRIPT_CHECKS = [
+    {
+        "path": "script/security-credential-scan.sh",
+        "args": ["--strict"],
+        "label": "Security Credential Scan",
+        "description": "認証情報の漏洩チェック",
+    },
+    {
+        "path": "script/code-complexity-check.sh",
+        "args": ["--strict"],
+        "label": "Code Complexity Check",
+        "description": "コード複雑度の検証",
+    },
+]
+
+for sc in SCRIPT_CHECKS:
+    script_path = Path(repo_root) / sc["path"]
+    if script_path.exists() and os.access(script_path, os.X_OK):
+        checks.append({
+            "name": sc["label"],
+            "command": [str(script_path)] + sc["args"],
+            "description": sc["description"],
+        })
+
+if not checks:
+    sys.exit(0)
+
+# Quality Gates を実行
+op = "commit" if is_git_commit else "push"
+print(f"\n[Quality Gates] git {op} 前のチェックを実行中...\n",
+      file=sys.stderr, flush=True)
 
 failed_checks = []
 
 for check in checks:
-    print(f"▶ {check['name']}: {check['description']}", file=sys.stderr, flush=True)
+    print(f"  ▶ {check['name']}: {check['description']}",
+          file=sys.stderr, flush=True)
 
     try:
         result = subprocess.run(
             check["command"],
-            cwd=os.getcwd(),
+            cwd=repo_root,
             capture_output=True,
             text=True,
-            timeout=300  # 5分でタイムアウト
+            timeout=300,
         )
 
         if result.returncode != 0:
-            # returncode 127 またはコマンドが見つからないエラーはスキップ
+            # ツール未インストール等の場合はスキップ
             is_tool_missing = (
                 result.returncode == 127
-                or "No such file or directory" in result.stderr
                 or "command not found" in result.stderr
+                or "No such file or directory" in result.stderr
             )
-            # 出力が実質的に空（ヘッダーのみ）の場合もツール/環境の問題としてスキップ
-            stdout_lines = [l for l in result.stdout.strip().split('\n') if l.strip() and not l.startswith('━')]
-            is_empty_output = len(stdout_lines) <= 1 and not result.stderr.strip()
-
-            if is_tool_missing or is_empty_output:
-                hint = check.get("install_hint")
-                if hint:
-                    print(f"  ⚠️  スキップ (ツールまたは環境が見つかりません)", file=sys.stderr, flush=True)
-                    print(f"      💡 インストール: {hint}", file=sys.stderr, flush=True)
-                else:
-                    print(f"  ⚠️  スキップ (ツールまたは環境が見つかりません)", file=sys.stderr, flush=True)
+            if is_tool_missing:
+                print("    ⚠  スキップ (ツール未インストール)",
+                      file=sys.stderr, flush=True)
             else:
                 failed_checks.append({
                     "name": check["name"],
                     "stdout": result.stdout,
                     "stderr": result.stderr,
-                    "returncode": result.returncode
+                    "returncode": result.returncode,
                 })
-                print(f"  ❌ 失敗 (exit code: {result.returncode})", file=sys.stderr, flush=True)
+                print(f"    ✗  失敗 (exit code: {result.returncode})",
+                      file=sys.stderr, flush=True)
         else:
-            print(f"  ✅ 成功", file=sys.stderr, flush=True)
+            print("    ✓  成功", file=sys.stderr, flush=True)
 
     except subprocess.TimeoutExpired:
         failed_checks.append({
             "name": check["name"],
-            "error": "タイムアウト (5分)"
+            "error": "タイムアウト (5分)",
         })
-        print(f"  ❌ タイムアウト", file=sys.stderr, flush=True)
+        print("    ✗  タイムアウト", file=sys.stderr, flush=True)
 
     except FileNotFoundError:
-        # スクリプトが存在しない場合はスキップ
-        print(f"  ⚠️  スキップ (コマンドが見つかりません)", file=sys.stderr, flush=True)
+        print("    ⚠  スキップ (コマンド未検出)",
+              file=sys.stderr, flush=True)
 
     except Exception as e:
         failed_checks.append({
             "name": check["name"],
-            "error": str(e)
+            "error": str(e),
         })
-        print(f"  ❌ エラー: {e}", file=sys.stderr, flush=True)
+        print(f"    ✗  エラー: {e}", file=sys.stderr, flush=True)
 
-    print("", file=sys.stderr, flush=True)
-
-# 失敗したチェックがある場合はブロック
+# 失敗があればブロック
 if failed_checks:
-    print("=" * 60, file=sys.stderr, flush=True)
-    print("❌ Quality Gatesに失敗しました", file=sys.stderr, flush=True)
-    print("=" * 60, file=sys.stderr, flush=True)
-    print("", file=sys.stderr, flush=True)
+    print("\n" + "=" * 60, file=sys.stderr, flush=True)
+    print("[Quality Gates] チェックに失敗しました", file=sys.stderr, flush=True)
+    print("=" * 60 + "\n", file=sys.stderr, flush=True)
 
-    MAX_LINES = 15  # 失敗時の出力を最大行数に制限
+    MAX_LINES = 20
 
     for failed in failed_checks:
         print(f"【{failed['name']}】", file=sys.stderr, flush=True)
-
         if "error" in failed:
             print(f"  エラー: {failed['error']}", file=sys.stderr, flush=True)
         else:
@@ -186,13 +246,17 @@ if failed_checks:
                     print(f"  {label}:\n{output}", file=sys.stderr, flush=True)
                 else:
                     truncated = "\n".join(lines[-MAX_LINES:])
-                    print(f"  {label} (末尾{MAX_LINES}行 / 全{len(lines)}行):", file=sys.stderr, flush=True)
+                    print(
+                        f"  {label} (末尾{MAX_LINES}行 / 全{len(lines)}行):",
+                        file=sys.stderr, flush=True,
+                    )
                     print(truncated, file=sys.stderr, flush=True)
-
         print("", file=sys.stderr, flush=True)
 
-    print("修正してから再度コミット/プッシュしてください。", file=sys.stderr, flush=True)
+    print("修正してから再度コミット/プッシュしてください。",
+          file=sys.stderr, flush=True)
     sys.exit(2)
 
-print("✅ すべてのQuality Gatesに合格しました", file=sys.stderr, flush=True)
+print("\n[Quality Gates] すべてのチェックに合格しました\n",
+      file=sys.stderr, flush=True)
 sys.exit(0)
