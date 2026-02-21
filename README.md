@@ -11,7 +11,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 ## Directory Structure
 
 - `.claude/`: Claude Code configuration directory containing settings, commands, agents, and hooks. User-specific settings like `settings.local.json` are git-ignored while shared configurations are version-controlled.
-- `.codex/`: Contains MCP (Model Context Protocol) server configuration (`config.toml`) for Claude Code integration with external services like AWS, GitHub, Playwright, o3, Linear, n8n, Supabase, and Vercel.
+- `.codex/`: Contains MCP (Model Context Protocol) server configuration (`config.toml`) for Claude Code integration with external services like AWS, GitHub, Playwright, n8n, Supabase, and Vercel.
 - `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines. The `templates/` subdirectory contains optional DevContainer features templates for additional language support (Python, Ruby, Go, Java, .NET).
 - `.github/`: GitHub configuration including workflows for CI/CD, security scanning, and release automation. The `templates/` subdirectory contains reusable workflow templates for unified CI with coverage reporting and monorepo releases with change detection.
 - `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
@@ -108,8 +108,6 @@ For the automated setup to work, create items in your 1Password Vault "Dev":
 
 ```
 Vault: Dev
-├── OPENAI_API_KEY (Login)
-│   └── value: sk-proj-...
 ├── AWS (Login)
 │   ├── AWS_ACCESS_KEY_ID: AKIA...
 │   ├── AWS_SECRET_ACCESS_KEY: ...
@@ -364,7 +362,6 @@ If 1Password CLI is not available, you can manually create the environment file:
 
 ```bash
 cat <<'EOF' > ~/.devcontainer.env
-OPENAI_API_KEY=your_openai_api_key
 AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret_key
 AWS_REGION=ap-northeast-1
@@ -372,7 +369,7 @@ EOF
 chmod 600 ~/.devcontainer.env
 ```
 
-The `.mcp.json` file is already configured with Linear MCP server. If you need to customize it:
+If you need to customize `.mcp.json`:
 
 ```bash
 # Edit .mcp.json to add additional MCP servers
@@ -429,7 +426,6 @@ bash script/setup-mcp.sh
 #### How It Works
 
 - Environment variables are injected into DevContainer via `runArgs: ["--env-file=${localEnv:HOME}/.devcontainer.env"]`
-- MCP configuration references environment variables (e.g., `"OPENAI_API_KEY": "${OPENAI_API_KEY}"`)
 - Templates are version-controlled; generated files are git-ignored
 - Update tokens by re-running setup scripts; no repository changes required
 
@@ -496,7 +492,7 @@ This repository includes comprehensive GitHub Actions workflows and development 
 
 #### Setup Guide for New Projects
 
-For setting up a complete CI/CD pipeline in a new repository following Elu-co-jp organization standards, use the `setup-recommended-ci` command available in `.codex/prompts/setup-recommended-ci.md`. This comprehensive guide provides:
+For setting up a complete CI/CD pipeline in a new repository, use the `/setup-ci` Claude command. This provides:
 
 - Step-by-step CI/CD pipeline setup instructions
 - Quality checks (lint, format, type-check, complexity analysis)
@@ -506,12 +502,6 @@ For setting up a complete CI/CD pipeline in a new repository following Elu-co-jp
 - GitHub Secrets configuration guide
 - Husky Git hooks setup
 - Troubleshooting guidance
-
-**Quick Start:**
-
-```
-@claude use setup-recommended-ci to set up CI/CD pipeline
-```
 
 #### GitHub Actions Workflows
 
@@ -615,7 +605,7 @@ The repository includes a complete DevContainer setup (`.devcontainer/`) that pr
 
 **Recommended Usage**: For new projects, use the pre-built image without mounting host's `~/.claude` directory. This ensures the image configuration works immediately. See [docs/using-config-base-image.md](docs/using-config-base-image.md) for detailed usage instructions.
 
-**DevContainer推奨設定**: Elu-co-jp配下のリポジトリで統一されたDevContainer環境を構築するための推奨設定とベストプラクティスについては、[.codex/devcontainer-recommendations.md](.codex/devcontainer-recommendations.md)を参照してください。
+**DevContainer推奨設定**: Elu-co-jp配下のリポジトリで統一されたDevContainer環境を構築するための推奨設定とベストプラクティスについては、[.claude/devcontainer-recommendations.md](.claude/devcontainer-recommendations.md)を参照してください。
 
 ### Automated Releases
 
@@ -670,7 +660,7 @@ The repository includes automated Slack notifications for development workflow e
 - **op inject**: 1Password CLI command that replaces `op://Vault/Item/Field` references in templates with actual credential values.
 - **Environment Variable Template**: A template file (e.g., `*.env.template`) containing `op://` references that get expanded by 1Password CLI.
 - **Claude Code**: AI-powered development assistant with specialized agents for code review, architecture validation, and quality analysis.
-- **MCP (Model Context Protocol)**: Integration protocol enabling Claude Code to interact with external services like Slack, o3 search, and Playwright automation.
+- **MCP (Model Context Protocol)**: Integration protocol enabling Claude Code to interact with external services like Slack, n8n, and Playwright automation.
 - **DevContainer**: A containerized development environment that provides consistent tooling and configurations across different machines and platforms.
 - **ESLint**: A static analysis tool for identifying problematic patterns in JavaScript/TypeScript code.
 - **Git**: A distributed version control system for tracking changes in source code during software development.
