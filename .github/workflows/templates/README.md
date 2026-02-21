@@ -53,6 +53,148 @@ A comprehensive CI workflow with coverage reporting and PR size detection.
 | Lines      | 84.9%    |
 ```
 
+### coverage-report.yml (Reusable Workflow)
+
+A reusable workflow that posts coverage summary as PR comments. Supports multiple coverage formats.
+
+**Features**:
+
+- 📊 JaCoCo coverage report (Android/JVM) via `madrapps/jacoco-report`
+- 📊 Jest/Vitest coverage report (JS/TS) via `actions/github-script`
+- 📊 Cobertura coverage report (.NET/Python/Go) via `irongut/CodeCoverageSummary`
+- 📊 LCOV coverage report (Istanbul/nyc/c8) via `romeovs/lcov-reporter-action`
+- 🔄 Existing PR comment update (no duplicates)
+- 📈 Configurable coverage thresholds
+- 📦 Artifact-based report transfer (language-agnostic)
+
+**Supported Formats**:
+
+| format      | Tools                      | Parser                                |
+| ----------- | -------------------------- | ------------------------------------- |
+| `jacoco`    | JaCoCo (Android/JVM)       | `madrapps/jacoco-report@v1.7.2`       |
+| `jest`      | Jest, Vitest, c8 (JS/TS)   | `actions/github-script@v8`            |
+| `cobertura` | Cobertura (.NET/Python/Go) | `irongut/CodeCoverageSummary@v1.3.0`  |
+| `lcov`      | Istanbul, nyc, c8 (LCOV)   | `romeovs/lcov-reporter-action@v0.4.0` |
+
+**Usage (Jest)**:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - run: npm ci && npm test -- --coverage
+      - uses: actions/upload-artifact@v6.0.0
+        if: github.event_name == 'pull_request'
+        with:
+          name: coverage-report
+          path: coverage/coverage-summary.json
+
+  coverage:
+    needs: test
+    if: github.event_name == 'pull_request'
+    uses: keito4/config/.github/workflows/coverage-report.yml@main
+    with:
+      format: jest
+      report-path: coverage-summary.json
+      artifact-name: coverage-report
+    permissions:
+      contents: read
+      pull-requests: write
+```
+
+**Usage (JaCoCo)**:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+      - run: ./gradlew testDebugUnitTest createDebugUnitTestCoverageReport
+      - uses: actions/upload-artifact@v6.0.0
+        if: github.event_name == 'pull_request'
+        with:
+          name: jacoco-report
+          path: app/build/reports/coverage/test/debug/report.xml
+
+  coverage:
+    needs: test
+    if: github.event_name == 'pull_request'
+    uses: keito4/config/.github/workflows/coverage-report.yml@main
+    with:
+      format: jacoco
+      report-path: report.xml
+      artifact-name: jacoco-report
+    permissions:
+      contents: read
+      pull-requests: write
+```
+
+**Usage (Cobertura / .NET)**:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0'
+      - run: dotnet test --collect:"XPlat Code Coverage"
+      - uses: actions/upload-artifact@v6.0.0
+        if: github.event_name == 'pull_request'
+        with:
+          name: cobertura-report
+          path: '**/coverage.cobertura.xml'
+
+  coverage:
+    needs: test
+    if: github.event_name == 'pull_request'
+    uses: keito4/config/.github/workflows/coverage-report.yml@main
+    with:
+      format: cobertura
+      report-path: coverage.cobertura.xml
+      artifact-name: cobertura-report
+    permissions:
+      contents: read
+      pull-requests: write
+```
+
+**Usage (LCOV)**:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - run: npm ci && npm test -- --coverage --coverageReporters=lcov
+      - uses: actions/upload-artifact@v6.0.0
+        if: github.event_name == 'pull_request'
+        with:
+          name: lcov-report
+          path: coverage/lcov.info
+
+  coverage:
+    needs: test
+    if: github.event_name == 'pull_request'
+    uses: keito4/config/.github/workflows/coverage-report.yml@main
+    with:
+      format: lcov
+      report-path: lcov.info
+      artifact-name: lcov-report
+    permissions:
+      contents: read
+      pull-requests: write
+```
+
 ### monorepo-release.yml
 
 A sophisticated release workflow for monorepo projects with intelligent change detection.
@@ -152,13 +294,7 @@ Add or remove steps based on your project:
 
 **Coverage Format**:
 
-If your coverage tool doesn't generate `coverage-summary.json`, modify the script:
-
-```javascript
-// For lcov format
-const lcov = require('lcov-parse');
-// Parse and format coverage data
-```
+For multi-format coverage support, use the reusable `coverage-report.yml` workflow instead of the hardcoded coverage-report job. See the [coverage-report.yml](#coverage-reportyml-reusable-workflow) section above.
 
 ### monorepo-release.yml Customization
 
@@ -309,9 +445,14 @@ jobs:
 
 ### Coverage Report Not Appearing
 
-- Verify `coverage-summary.json` is generated in `coverage/` directory
-- Check test script includes `--coverage` flag
-- Ensure workflow has `pull-requests: write` permission
+- Verify coverage report file is uploaded as an artifact in the calling job
+- Ensure `artifact-name` matches the name used in `actions/upload-artifact`
+- Ensure `report-path` matches the file path within the artifact
+- Check that `pull-requests: write` permission is set in the calling workflow
+- For jest: verify `coverage-summary.json` is generated (use `--coverage` flag)
+- For jacoco: verify `report.xml` is generated by the Gradle coverage task
+- For cobertura: verify `coverage.cobertura.xml` is generated by the test runner
+- For lcov: verify `lcov.info` is generated (use `--coverageReporters=lcov` flag)
 
 ### PR Size Labels Not Working
 

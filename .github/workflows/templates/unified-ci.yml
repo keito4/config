@@ -7,7 +7,7 @@
 #
 # Features:
 # - Fail-fast sequential execution for quick feedback
-# - Coverage summary posted/updated as PR comment
+# - Coverage reporting via reusable workflow (coverage-report.yml)
 # - Automatic PR size labels (size/S, size/M, size/L, size/XL)
 # - Warning for XL PRs (>1000 lines or >30 files)
 # - Concurrency control to cancel outdated runs
@@ -101,88 +101,26 @@ jobs:
         run: npm test -- --coverage
         # Ensure this generates coverage-summary.json
 
+      - name: Upload coverage artifact
+        if: github.event_name == 'pull_request' && hashFiles('coverage/coverage-summary.json') != ''
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: coverage-report
+          path: coverage/coverage-summary.json
+          retention-days: 7
+
   coverage-report:
     name: Coverage Report
-    runs-on: ubuntu-latest
     needs: quality-checks
     if: github.event_name == 'pull_request'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6.0.2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6.2.0
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci --frozen-lockfile
-
-      - name: Run tests with coverage
-        run: npm test -- --coverage
-
-      - name: Post coverage comment
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-
-            // Read coverage summary
-            const coveragePath = path.join(process.cwd(), 'coverage/coverage-summary.json');
-            if (!fs.existsSync(coveragePath)) {
-              console.log('No coverage summary found');
-              return;
-            }
-
-            const coverage = JSON.parse(fs.readFileSync(coveragePath, 'utf8'));
-
-            // Build coverage table
-            let commentBody = '## Test Coverage Report\n\n';
-
-            for (const [packageName, metrics] of Object.entries(coverage)) {
-              if (packageName === 'total') {
-                commentBody += '### Overall Coverage\n\n';
-              } else {
-                commentBody += `### ${packageName}\n\n`;
-              }
-
-              commentBody += '| Metric | Coverage |\n';
-              commentBody += '|--------|----------|\n';
-              commentBody += `| Statements | ${metrics.statements.pct}% |\n`;
-              commentBody += `| Branches | ${metrics.branches.pct}% |\n`;
-              commentBody += `| Functions | ${metrics.functions.pct}% |\n`;
-              commentBody += `| Lines | ${metrics.lines.pct}% |\n\n`;
-            }
-
-            // Find existing coverage comment
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            const botComment = comments.find(comment =>
-              comment.user.type === 'Bot' && comment.body.includes('Test Coverage Report')
-            );
-
-            // Create or update comment
-            if (botComment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: commentBody
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: commentBody
-              });
-            }
+    uses: keito4/config/.github/workflows/coverage-report.yml@main
+    with:
+      format: jest
+      report-path: coverage-summary.json
+      artifact-name: coverage-report
+    permissions:
+      contents: read
+      pull-requests: write
 
   pr-size-labeler:
     name: PR Size Labeler
