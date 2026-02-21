@@ -3,6 +3,8 @@
 # Posts coverage summary as a PR comment. Supports multiple formats:
 # - jacoco: JaCoCo XML reports (Android/JVM)
 # - jest: coverage-summary.json (Jest/Vitest/c8)
+# - cobertura: Cobertura XML reports (.NET/Python/Go)
+# - lcov: LCOV info files (Istanbul/nyc/c8)
 #
 # Usage:
 #   coverage-report:
@@ -18,7 +20,7 @@ on:
   workflow_call:
     inputs:
       format:
-        description: 'Coverage report format (jacoco | jest)'
+        description: 'Coverage report format (jacoco | jest | cobertura | lcov)'
         required: true
         type: string
       report-path:
@@ -155,3 +157,59 @@ jobs:
                 body: commentBody
               });
             }
+
+  report-cobertura:
+    name: Cobertura Coverage Report
+    runs-on: ubuntu-latest
+    if: inputs.format == 'cobertura'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.2
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: coverage-download
+
+      - name: Generate coverage summary
+        id: coverage
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage-download/${{ inputs.report-path }}
+          badge: true
+          format: markdown
+          output: both
+          thresholds: '${{ inputs.min-coverage-overall }} ${{ inputs.min-coverage-changed-files }}'
+
+      - name: Post coverage comment
+        uses: marocchino/sticky-pull-request-comment@v2.9.4
+        with:
+          header: ${{ inputs.title }}
+          message: |
+            ## ${{ inputs.title }}
+
+            ${{ steps.coverage.outputs.markdown }}
+
+  report-lcov:
+    name: LCOV Coverage Report
+    runs-on: ubuntu-latest
+    if: inputs.format == 'lcov'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.2
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: coverage-download
+
+      - name: Post LCOV coverage to PR
+        uses: romeovs/lcov-reporter-action@v0.4.0
+        with:
+          lcov-file: coverage-download/${{ inputs.report-path }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          title: ${{ inputs.title }}
+          delete-old-comments: true
+          filter-changed-files: true

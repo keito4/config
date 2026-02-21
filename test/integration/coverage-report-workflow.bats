@@ -68,3 +68,25 @@ setup() {
   grep -q "process.env.REPORT_PATH" "$WORKFLOW"
   grep -q "process.env.COMMENT_TITLE" "$WORKFLOW"
 }
+
+@test "coverage-report.yml has cobertura report job" {
+  grep -q "report-cobertura:" "$WORKFLOW"
+  grep -q "irongut/CodeCoverageSummary@v" "$WORKFLOW"
+  grep -q "marocchino/sticky-pull-request-comment@v" "$WORKFLOW"
+}
+
+@test "coverage-report.yml has lcov report job" {
+  grep -q "report-lcov:" "$WORKFLOW"
+  grep -q "romeovs/lcov-reporter-action@v" "$WORKFLOW"
+}
+
+@test "coverage-report.yml passes GITHUB_TOKEN to lcov action" {
+  grep -q 'github-token:.*secrets.GITHUB_TOKEN' "$WORKFLOW"
+}
+
+@test "coverage-report.yml supports all four format conditions" {
+  grep -q "inputs.format == 'jacoco'" "$WORKFLOW"
+  grep -q "inputs.format == 'jest'" "$WORKFLOW"
+  grep -q "inputs.format == 'cobertura'" "$WORKFLOW"
+  grep -q "inputs.format == 'lcov'" "$WORKFLOW"
+}
