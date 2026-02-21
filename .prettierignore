@@ -1,2 +1,5 @@
 # External packages
 .agents/skills/
+
+# Symlinks (git core.symlinks=false stores as text files)
+CLAUDE.md
