@@ -111,9 +111,6 @@ config::import_mcp() {
 
   cp "$source_file" "$target_file"
   echo "✅ Imported .mcp.json"
-  echo "⚠️  注意: 環境変数を設定してください"
-  echo "    - OPENAI_API_KEY: o3-search用"
-  echo "    - LINEAR_API_KEY: Linear MCP用"
 }
 
 # MCP設定のエクスポート
@@ -126,9 +123,8 @@ config::export_mcp() {
     return 1
   fi
 
-  # APIキーをプレースホルダーに置換
-  sed -E 's/"(sk-[a-zA-Z0-9]+)"/"${OPENAI_API_KEY}"/g' "$source_file" > "$target_file"
-  echo "✅ Exported .mcp.json (API keys replaced with placeholders)"
+  cp "$source_file" "$target_file"
+  echo "✅ Exported .mcp.json"
 }
 
 # Codex設定のインポート

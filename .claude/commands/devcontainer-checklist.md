@@ -134,7 +134,7 @@ cat .claude-plugin/plugin.json | jq '.lspServers | keys'
 
 ```bash
 # 重要な環境変数の確認（値は表示しない）
-env | grep -E "OPENAI_API_KEY|AWS_|CLAUDE_CODE" | sed 's/=.*/=***/'
+env | grep -E "AWS_|CLAUDE_CODE" | sed 's/=.*/=***/'
 
 # DevContainer環境ファイルの確認
 ls -la ~/.devcontainer.env
@@ -145,7 +145,6 @@ ls -la .mcp.json
 
 **確認ポイント:**
 
-- [ ] `OPENAI_API_KEY` が設定されている
 - [ ] `AWS_ACCESS_KEY_ID` が設定されている（必要な場合）
 - [ ] `AWS_SECRET_ACCESS_KEY` が設定されている（必要な場合）
 - [ ] `~/.devcontainer.env` が存在し、権限が600
@@ -285,7 +284,7 @@ act -l
 
 - [ ] `/repo-maintenance` コマンドが実行可能
 - [ ] カスタムコマンド（`.claude/commands/`）が読み込まれている
-- [ ] MCPサーバー（Playwright, o3など）が利用可能
+- [ ] MCPサーバー（Playwrightなど）が利用可能
 
 ### DevContainer固有
 
@@ -300,7 +299,7 @@ act -l
 [[ -n "$CODESPACES" ]] && echo "Running in Codespaces" || echo "Not Codespaces"
 
 # シークレットが正しく設定されているか確認
-env | grep -E "OPENAI_API_KEY|ANTHROPIC_API_KEY|GEMINI_API_KEY" | sed 's/=.*/=***/'
+env | grep -E "ANTHROPIC_API_KEY|GEMINI_API_KEY" | sed 's/=.*/=***/'
 ```
 
 **確認ポイント:**

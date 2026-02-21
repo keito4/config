@@ -54,12 +54,10 @@ credentials/
 
 このリポジトリは以下のMCP (Model Context Protocol) サーバーをサポートしています：
 
-| MCPサーバー    | パッケージ                      | 必要な環境変数               | 説明                            |
-| -------------- | ------------------------------- | ---------------------------- | ------------------------------- |
-| **Playwright** | `@playwright/mcp@latest`        | なし                         | ブラウザ自動化とテスト          |
-| **o3 Search**  | `o3-search-mcp`                 | `OPENAI_API_KEY`             | OpenAI o3モデルによる高度な検索 |
-| **Linear**     | `@mseep/linear-mcp`             | `LINEAR_API_KEY`             | Linear イシュートラッキング     |
-| **n8n**        | `@leonardsellem/n8n-mcp-server` | `N8N_API_URL`, `N8N_API_KEY` | n8n ワークフロー自動化          |
+| MCPサーバー    | パッケージ                      | 必要な環境変数               | 説明                   |
+| -------------- | ------------------------------- | ---------------------------- | ---------------------- |
+| **Playwright** | `@playwright/mcp@latest`        | なし                         | ブラウザ自動化とテスト |
+| **n8n**        | `@leonardsellem/n8n-mcp-server` | `N8N_API_URL`, `N8N_API_KEY` | n8n ワークフロー自動化 |
 
 ### MCP環境変数の設定
 
@@ -69,8 +67,6 @@ credentials/
 
 ```bash
 # 例: 1Password "Dev" ボールトに以下のアイテムを作成
-- OPENAI_API_KEY
-- LINEAR_API_KEY
 - N8N_API_URL
 - N8N_API_KEY
 ```
@@ -161,8 +157,6 @@ export BUNDLE_RUBYGEMS__PKG__GITHUB__COM="op://Dev/GITHUB_TOKEN/credential"
 
 ```
 Vault: Dev
-├── OPENAI_API_KEY (Login)
-│   └── value: sk-proj-...
 ├── AWS (Login)
 │   ├── AWS_ACCESS_KEY_ID: AKIA...
 │   ├── AWS_SECRET_ACCESS_KEY: ...
@@ -173,12 +167,6 @@ Vault: Dev
 ### アイテムの作成例
 
 ```bash
-# OpenAI API Key を作成
-op item create --category=login \
-  --title="OPENAI_API_KEY" \
-  --vault=Dev \
-  value="sk-proj-your-api-key-here"
-
 # AWS クレデンシャルを作成
 op item create --category=login \
   --title="AWS" \
@@ -217,7 +205,7 @@ cp credentials/templates/devcontainer.env.template ~/.devcontainer.env
 
 ### .mcp.json が生成されない
 
-**症状**: `envsubst: command not found` または空の OPENAI_API_KEY
+**症状**: `envsubst: command not found`
 
 **解決策**:
 
