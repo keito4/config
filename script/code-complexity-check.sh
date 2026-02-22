@@ -78,12 +78,12 @@ estimate_complexity() {
   local and_count
   local or_count
 
-  if_count=$(grep -c "if \[" "$file" 2>/dev/null || echo "0")
-  case_count=$(grep -c "case " "$file" 2>/dev/null || echo "0")
-  while_count=$(grep -c "while " "$file" 2>/dev/null || echo "0")
-  for_count=$(grep -c "for " "$file" 2>/dev/null || echo "0")
-  and_count=$(grep -c " && " "$file" 2>/dev/null || echo "0")
-  or_count=$(grep -c " || " "$file" 2>/dev/null || echo "0")
+  if_count=$(grep -c "if \[" "$file" 2>/dev/null) || if_count=0
+  case_count=$(grep -c "case " "$file" 2>/dev/null) || case_count=0
+  while_count=$(grep -c "while " "$file" 2>/dev/null) || while_count=0
+  for_count=$(grep -c "for " "$file" 2>/dev/null) || for_count=0
+  and_count=$(grep -c " && " "$file" 2>/dev/null) || and_count=0
+  or_count=$(grep -c " || " "$file" 2>/dev/null) || or_count=0
 
   complexity=$((complexity + if_count + case_count + while_count + for_count + and_count + or_count))
 
@@ -131,7 +131,7 @@ CRITICAL_COMPLEXITY_COUNT=0
 # shellcheck disable=SC2086
 for file in $FILE_PATTERN; do
   if [ -f "$file" ]; then
-    ((TOTAL_FILES++))
+    TOTAL_FILES=$((TOTAL_FILES + 1))
 
     COMPLEXITY=$(estimate_complexity "$file")
     LENGTH=$(get_function_length "$file")
@@ -142,9 +142,9 @@ for file in $FILE_PATTERN; do
     FILE_NESTING["$file"]=$NESTING
 
     if [ "$COMPLEXITY" -ge 20 ]; then
-      ((CRITICAL_COMPLEXITY_COUNT++))
+      CRITICAL_COMPLEXITY_COUNT=$((CRITICAL_COMPLEXITY_COUNT + 1))
     elif [ "$COMPLEXITY" -ge "$THRESHOLD" ]; then
-      ((HIGH_COMPLEXITY_COUNT++))
+      HIGH_COMPLEXITY_COUNT=$((HIGH_COMPLEXITY_COUNT + 1))
     fi
   fi
 done
@@ -192,9 +192,9 @@ else
   MED_COUNT=0
   for complexity in "${FILE_COMPLEXITY[@]}"; do
     if [ "$complexity" -lt 5 ]; then
-      ((LOW_COUNT++))
+      LOW_COUNT=$((LOW_COUNT + 1))
     elif [ "$complexity" -lt 10 ]; then
-      ((MED_COUNT++))
+      MED_COUNT=$((MED_COUNT + 1))
     fi
   done
 

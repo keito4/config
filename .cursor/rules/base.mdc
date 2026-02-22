@@ -1,0 +1,28 @@
+---
+description: 全社横断の開発品質・コミュニケーション基準
+globs: "**/*"
+---
+
+# 基本ルール
+
+- 日本語で応答する（コード・ログ・エラーメッセージは原文保持）
+- 思考過程を Step-by-step で簡潔に示す
+- Markdown 見出しと箇条書きで構造化する
+
+# 開発方針
+
+- **TDD**: Red → Green → Refactor。70%+ 行カバレッジ必須
+- **Conventional Commits**: `feat|fix|chore/<issue#>-slug` のブランチ命名
+- **PR ガード**: Diff ≤ 400行、ファイル数 ≤ 25、Linked Issue 必須
+- **Quality Gates**: Lint Error=Fail、フォーマット違反=Fail、Critical 脆弱性=Fail
+
+# AI プロンプト設計
+
+- 要件定義: 前提・制約・成功基準を列挙してからコード生成
+- 実装: まずテストのみ作成、テスト＋実装の同時生成は禁止
+- バグ報告: 再現手順 → 原因推定 → 修正案の順序で対応
+
+# 環境
+
+- DevContainer ベースイメージ: `ghcr.io/keito4/config-base:latest`
+- CI/CD: GitHub Actions（Lint → Test → Build → SCA → Deploy）
