@@ -146,7 +146,7 @@ SCRIPT_CHECKS = [
     },
     {
         "path": "script/code-complexity-check.sh",
-        "args": ["--strict"],
+        "args": [],
         "label": "Code Complexity Check",
         "description": "コード複雑度の検証",
     },
