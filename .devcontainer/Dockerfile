@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/base:ubuntu
+FROM mcr.microsoft.com/devcontainers/base:1-ubuntu-24.04
 
 # Build arguments
 ARG CLAUDE_CODE_OAUTH_TOKEN
@@ -35,17 +35,21 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
+ARG DOPPLER_CLI_VERSION=3.75.2
+
 # Install Doppler CLI from GitHub releases for latest security patches
 # https://docs.doppler.com/docs/install-cli
-RUN DOPPLER_VERSION="3.75.2" \
+RUN DOPPLER_VERSION="${DOPPLER_CLI_VERSION}" \
  && ARCH=$(dpkg --print-architecture) \
  && curl -sLo /tmp/doppler.deb "https://github.com/DopplerHQ/cli/releases/download/${DOPPLER_VERSION}/doppler_${DOPPLER_VERSION}_linux_${ARCH}.deb" \
  && dpkg -i /tmp/doppler.deb \
  && rm /tmp/doppler.deb
 
+ARG OP_CLI_VERSION=2.32.1
+
 # Install 1Password CLI (op)
 # https://developer.1password.com/docs/cli/get-started/
-RUN OP_VERSION="2.32.1" \
+RUN OP_VERSION="${OP_CLI_VERSION}" \
  && ARCH=$(dpkg --print-architecture) \
  && curl -sSfo /tmp/op.zip "https://cache.agilebits.com/dist/1P/op2/pkg/v${OP_VERSION}/op_linux_${ARCH}_v${OP_VERSION}.zip" \
  && unzip -od /usr/local/bin/ /tmp/op.zip \

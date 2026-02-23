@@ -7,10 +7,6 @@
   "features": {
     "ghcr.io/devcontainers-extra/features/homebrew-package:1": {},
     "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
-    // TODO: Node.js is installed in Dockerfile (v22.14.0). This feature is kept solely for pnpm installation.
-    "ghcr.io/devcontainers/features/node:1": {
-      "pnpmVersion": "latest"
-    },
     "ghcr.io/itsmechlark/features/1password:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/git:1": {},
