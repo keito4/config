@@ -139,7 +139,7 @@ for file in "${HISTORY_FILES[@]}"; do
 
     if (( $(echo "$COV > 0" | bc -l) )); then
       TOTAL=$(echo "$TOTAL + $COV" | bc)
-      ((COUNT++))
+      COUNT=$((COUNT + 1))
 
       if (( $(echo "$COV < $MIN" | bc -l) )); then
         MIN=$COV

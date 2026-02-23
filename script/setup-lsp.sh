@@ -43,11 +43,11 @@ verify_command() {
 }
 
 errors=0
-verify_command "typescript-language-server" "TypeScript LSP" || ((errors++))
-verify_command "bash-language-server" "Bash LSP" || ((errors++))
-verify_command "yaml-language-server" "YAML LSP" || ((errors++))
-verify_command "vscode-json-language-server" "JSON LSP" || ((errors++))
-verify_command "tsc" "TypeScript Compiler" || ((errors++))
+verify_command "typescript-language-server" "TypeScript LSP" || errors=$((errors + 1))
+verify_command "bash-language-server" "Bash LSP" || errors=$((errors + 1))
+verify_command "yaml-language-server" "YAML LSP" || errors=$((errors + 1))
+verify_command "vscode-json-language-server" "JSON LSP" || errors=$((errors + 1))
+verify_command "tsc" "TypeScript Compiler" || errors=$((errors + 1))
 
 echo ""
 if [ $errors -eq 0 ]; then
