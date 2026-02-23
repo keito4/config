@@ -233,7 +233,7 @@ else
         echo "   Content: $content"
         echo -e "   ${RED}🔥 Action: Remove or move to environment variable${NC}"
         echo ""
-        ((i++))
+        i=$((i + 1))
       fi
     done
   fi
@@ -252,7 +252,7 @@ else
         echo "   Content: $content"
         echo -e "   ${YELLOW}ℹ️ Note: Review if this is intentional${NC}"
         echo ""
-        ((i++))
+        i=$((i + 1))
       fi
     done
   fi

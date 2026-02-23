@@ -217,7 +217,7 @@ DELETED_COUNT=0
 for branch in "${MERGED_BRANCHES[@]}" "${STALE_BRANCHES[@]}"; do
   if git branch -D "$branch" > /dev/null 2>&1; then
     echo -e "  ${GREEN}✓${NC} Deleted $branch"
-    ((DELETED_COUNT++))
+    DELETED_COUNT=$((DELETED_COUNT + 1))
   else
     echo -e "  ${RED}✗${NC} Failed to delete $branch"
   fi

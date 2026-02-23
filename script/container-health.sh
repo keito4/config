@@ -84,7 +84,7 @@ check_tool() {
   else
     TOOL_STATUS["$tool"]="missing"
     if [ "$required" = true ]; then
-      ((HEALTH_SCORE -= 10)) || true
+      HEALTH_SCORE=$((HEALTH_SCORE - 10))
     fi
     return 1
   fi
@@ -130,7 +130,7 @@ if [ -z "$CHECK_COMPONENT" ] || [ "$CHECK_COMPONENT" = "tools" ]; then
     if [ "$JSON_OUTPUT" = false ]; then
       echo -e "  ${YELLOW}⚠${NC} claude (not installed)"
     fi
-    ((HEALTH_SCORE -= 5)) || true
+    HEALTH_SCORE=$((HEALTH_SCORE - 5))
     RECOMMENDATIONS+=("Install Claude Code: npm install -g @anthropic-ai/claude-code")
   fi
 
@@ -153,7 +153,7 @@ if [ -z "$CHECK_COMPONENT" ] || [ "$CHECK_COMPONENT" = "tools" ]; then
       if [ "$JSON_OUTPUT" = false ]; then
         echo -e "  ${YELLOW}⚠${NC} $tool (not in PATH)"
       fi
-      ((HEALTH_SCORE -= 2)) || true
+      HEALTH_SCORE=$((HEALTH_SCORE - 2))
     fi
   done
 
@@ -210,14 +210,14 @@ if [ -z "$CHECK_COMPONENT" ] || [ "$CHECK_COMPONENT" = "config" ]; then
       if [ "$JSON_OUTPUT" = false ]; then
         echo -e "  ${RED}✗${NC} package.json invalid JSON"
       fi
-      ((HEALTH_SCORE -= 10)) || true
+      HEALTH_SCORE=$((HEALTH_SCORE - 10))
     fi
   else
     CONFIG_STATUS["package.json"]="missing"
     if [ "$JSON_OUTPUT" = false ]; then
       echo -e "  ${YELLOW}⚠${NC} package.json not found"
     fi
-    ((HEALTH_SCORE -= 5)) || true
+    HEALTH_SCORE=$((HEALTH_SCORE - 5))
   fi
 
   # Git config
@@ -232,7 +232,7 @@ if [ -z "$CHECK_COMPONENT" ] || [ "$CHECK_COMPONENT" = "config" ]; then
       echo -e "  ${YELLOW}⚠${NC} git user not configured"
     fi
     RECOMMENDATIONS+=("Set git user: git config --global user.name 'Your Name'")
-    ((HEALTH_SCORE -= 5)) || true
+    HEALTH_SCORE=$((HEALTH_SCORE - 5))
   fi
 
   if git config user.email > /dev/null 2>&1; then
@@ -246,7 +246,7 @@ if [ -z "$CHECK_COMPONENT" ] || [ "$CHECK_COMPONENT" = "config" ]; then
       echo -e "  ${YELLOW}⚠${NC} git email not configured"
     fi
     RECOMMENDATIONS+=("Set git email: git config --global user.email 'you@example.com'")
-    ((HEALTH_SCORE -= 5)) || true
+    HEALTH_SCORE=$((HEALTH_SCORE - 5))
   fi
 
   if [ "$JSON_OUTPUT" = false ]; then
@@ -306,7 +306,7 @@ else
     i=1
     for rec in "${RECOMMENDATIONS[@]}"; do
       echo "  $i. $rec"
-      ((i++))
+      i=$((i + 1))
     done
     echo ""
   fi
