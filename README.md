@@ -10,7 +10,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 
 ## Directory Structure
 
-- `.claude/`: Claude Code configuration directory containing settings, commands, agents, and hooks. User-specific settings like `settings.local.json` are git-ignored while shared configurations are version-controlled.
+- `.claude/`: Claude Code configuration directory containing settings, commands, agents, hooks, and skills. User-specific settings like `settings.local.json` are git-ignored while shared configurations are version-controlled.
 - `.codex/`: Contains MCP (Model Context Protocol) server configuration (`config.toml`) for Claude Code integration with external services like AWS, GitHub, Playwright, n8n, Supabase, and Vercel.
 - `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines. The `templates/` subdirectory contains optional DevContainer features templates for additional language support (Python, Ruby, Go, Java, .NET).
 - `.github/`: GitHub configuration including workflows for CI/CD, security scanning, and release automation. The `templates/` subdirectory contains reusable workflow templates for unified CI with coverage reporting and monorepo releases with change detection.
@@ -129,8 +129,10 @@ The `.claude/` directory contains Claude Code configuration that is partially ve
 - `commands/` - Custom slash commands available to all users
 - `agents/` - Specialized agent configurations
 - `hooks/` - Event-driven automation scripts
+- `skills/` - Claude Code skills list (`skills.txt`) and skill-specific configurations
 - `plugins/config.json` - Custom plugin repository configuration
 - `plugins/known_marketplaces.json.template` - Template for plugin marketplace configuration (generates `known_marketplaces.json` locally)
+- `plugins/plugins.txt` - Plugin list installed during DevContainer build
 - `CLAUDE.md` - Global development standards and guidelines
 
 ### Local-Only Files (Git-Ignored)
@@ -152,7 +154,8 @@ Claude Code設定は`export.sh`と`import.sh`スクリプトで自動的に同�
 - `commands/` - カスタムスラッシュコマンド
 - `agents/` - 専用エージェント設定
 - `hooks/` - イベント駆動の自動化スクリプト
-- `plugins/config.json`, `plugins/known_marketplaces.json.template` - プラグイン設定（テンプレート）
+- `skills/` - Claude Code スキル一覧（`skills.txt`）とスキル設定
+- `plugins/config.json`, `plugins/known_marketplaces.json.template`, `plugins/plugins.txt` - プラグイン設定（テンプレート・一覧）
 - `CLAUDE.md` - 開発標準とガイドライン
 
 **同期されない設定（ローカル専用）**
@@ -166,18 +169,32 @@ Claude Code設定は`export.sh`と`import.sh`スクリプトで自動的に同�
 
 ### Plugin Management
 
-Plugin configuration is managed through two layers:
+Plugin configuration is managed through three layers:
 
-1. **Marketplace Configuration** (template in `plugins/known_marketplaces.json.template`, generated as `known_marketplaces.json` locally)
+1. **Plugin List** (`plugins/plugins.txt` - version-controlled)
+   - Declarative list of plugins installed during DevContainer build
+   - Format: `plugin-name@marketplace-name`
+   - Shared across all team members
+   - Processed by `script/install-claude-plugins.sh`
+
+2. **Marketplace Configuration** (template in `plugins/known_marketplaces.json.template`, generated as `known_marketplaces.json` locally)
    - Defines which plugin marketplaces to use
    - Template is shared across all team members
    - Generated file is local-only (not version-controlled)
    - Examples: official Anthropic plugins, community repositories
 
-2. **Plugin Activation** (local-only in `settings.local.json`)
+3. **Plugin Activation** (local-only in `settings.local.json`)
    - Individual choice of which plugins to enable
    - Environment-specific preferences
    - Not committed to version control
+
+### Skills Management
+
+Claude Code skills are managed separately from plugins:
+
+- **Skills List** (`skills/skills.txt` - version-controlled): Declarative list of skills installed during DevContainer startup via `script/install-skills.sh`
+- Skills are cloned into `~/.agents/skills/` and activated automatically
+- Format: `owner/repo` or `owner/repo@branch`
 
 For detailed plugin management instructions, see [.claude/plugins/README.md](.claude/plugins/README.md).
 
@@ -270,7 +287,7 @@ The script performs the following actions:
 - Copies Zsh configuration files (`.zprofile`, `.zshrc`, `.zshrc.devcontainer`, `.zsh/`)
 - Copies Peco configuration (`.peco/`)
 - Installs npm global packages
-- Copies Claude Code shared configuration (`settings.json`, `commands/`, `agents/`, `hooks/`, `plugins/`)
+- Copies Claude Code shared configuration (`settings.json`, `commands/`, `agents/`, `hooks/`, `skills/`, `plugins/`)
 - Clones GitHub repositories using `ghq` (if available)
 
 ⚠️ **Note**: Local-only files like `settings.local.json` are not overwritten.
@@ -293,7 +310,7 @@ The script performs the following actions:
 - Exports Zsh configuration files (`.zprofile`, `.zshrc`, `.zshrc.devcontainer`, `.zsh/`)
 - Exports Peco configuration (`.peco/`)
 - Exports npm global packages list
-- Exports Claude Code shared configuration (`settings.json`, `commands/`, `agents/`, `hooks/`, `plugins/`)
+- Exports Claude Code shared configuration (`settings.json`, `commands/`, `agents/`, `hooks/`, `skills/`, `plugins/`)
 
 ⚠️ **Note**: Local-only files like `settings.local.json` and credentials are excluded.
 
@@ -600,13 +617,21 @@ The repository includes a complete DevContainer setup (`.devcontainer/`) that pr
 
 **推奨**: `ghcr.io/keito4/config-base:latest`（常に最新の安定版）
 
-**Pre-installed Plugins**:
+**Pre-installed Plugins** (defined in `.claude/plugins/plugins.txt`):
 
 - Official plugins: `commit-commands`, `hookify`, `plugin-dev`, `typescript-lsp`, `code-review`
 - Workflow plugins: `code-refactoring`, `kubernetes-operations`, `javascript-typescript`, `backend-development`, `full-stack-orchestration`, `database-design`, `database-migrations`
 - Supabase plugins: `postgres-best-practices`
 - Vercel plugins: `agent-browser`
 - Community plugins: `context7`
+
+**Pre-installed Skills** (defined in `.claude/skills/skills.txt`):
+
+- React: `facebook/react@fix`, `millionco/react-doctor`
+- Vercel: `vercel-labs/agent-skills` (including composition patterns)
+- Supabase: `supabase/agent-skills` (including postgres best practices)
+- Discovery: `vercel-labs/skills` (find-skills), `vercel-labs/agent-browser`
+- Context: `intellectronica/agent-skills` (Context7 integration)
 
 **Recommended Usage**: For new projects, use the pre-built image without mounting host's `~/.claude` directory. This ensures the image configuration works immediately. See [docs/using-config-base-image.md](docs/using-config-base-image.md) for detailed usage instructions.
 
