@@ -1,1 +1,0 @@
-# Python/pyenv configuration has been moved to dev container environments

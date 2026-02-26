@@ -9,17 +9,6 @@ if [ "$ENABLE_TIMING" = true ]; then
 fi
 
 
-# Amazon Q pre block. Keep at the top of this file.
-if [ "$ENABLE_TIMING" = true ]; then
-  float start_time_amazon_pre=$EPOCHREALTIME
-fi
-
-if [ "$ENABLE_TIMING" = true ]; then
-  float end_time_amazon_pre=$EPOCHREALTIME
-  elapsed_time_amazon_pre=$(( end_time_amazon_pre - start_time_amazon_pre ))
-  echo "Time for Amazon Q pre block: $elapsed_time_amazon_pre seconds"
-fi
-
 export ZSH="$HOME/.oh-my-zsh"
 
 plugins=(
@@ -128,17 +117,6 @@ if [ "$ENABLE_TIMING" = true ]; then
   echo "Time for _load_settings: $elapsed_time_load_settings seconds"
 fi
 
-# Amazon Q post block. Keep at the bottom of this file.
-if [ "$ENABLE_TIMING" = true ]; then
-  float start_time_amazon_post=$EPOCHREALTIME
-fi
-
-if [ "$ENABLE_TIMING" = true ]; then
-  float end_time_amazon_post=$EPOCHREALTIME
-  elapsed_time_amazon_post=$(( end_time_amazon_post - start_time_amazon_post ))
-  echo "Time for Amazon Q post block: $elapsed_time_amazon_post seconds"
-fi
-
 # pnpm
 export PNPM_HOME="$HOME/Library/pnpm"
 case ":$PATH:" in
@@ -146,9 +124,6 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end# Added by Windsurf
-export PATH="$HOME/.codeium/windsurf/bin:$PATH"
-
-# Added by Windsurf - Next
 export PATH="$HOME/.codeium/windsurf/bin:$PATH"
 
 ### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
