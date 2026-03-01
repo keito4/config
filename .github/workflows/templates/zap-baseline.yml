@@ -104,7 +104,7 @@ jobs:
 
       - name: Upload HTML Report
         if: always()
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: zap-report-html
           path: report_html.html
@@ -112,7 +112,7 @@ jobs:
 
       - name: Upload JSON Report
         if: always()
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: zap-report-json
           path: report_json.json

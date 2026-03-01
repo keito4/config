@@ -187,7 +187,7 @@ jobs:
         run: |
           docker run --rm -v "$PWD":/workspace -w /workspace ghcr.io/${{ github.repository_owner }}/config-base:latest bash -lc '{ brew --version; terraform --version; jq --version; } > devcontainer-info.txt'
 
-      - uses: actions/upload-artifact@v6.0.0
+      - uses: actions/upload-artifact@v7.0.0
         if: steps.release.outputs.skip_release != 'true'
         with:
           name: devcontainer-info

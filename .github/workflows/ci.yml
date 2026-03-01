@@ -135,7 +135,7 @@ jobs:
           JEST_JUNIT_OUTPUT_NAME: junit.xml
 
       - name: Upload test results
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         if: always()
         with:
           name: test-results
@@ -189,7 +189,7 @@ jobs:
           bats test/integration/*.bats --formatter tap > reports/bats-results.tap
 
       - name: Upload integration test results
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         if: always()
         with:
           name: integration-test-results
