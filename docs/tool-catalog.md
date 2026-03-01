@@ -32,7 +32,7 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | Rust (stable) | rustup 管理           | CLI ツールビルド           |
 | Python 3      | apt 管理              | スクリプト、AI ツール      |
 | pnpm          | npm 経由で最新        | パッケージマネージャ       |
-| npm           | 11.10.0 (global.json) | パッケージマネージャ       |
+| npm           | 11.10.1 (global.json) | パッケージマネージャ       |
 | corepack      | 0.34.6 (global.json)  | パッケージマネージャ切替   |
 
 ### 2.2 AI CLI ツール
@@ -40,8 +40,8 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | ツール                            | バージョン管理            | 用途                |
 | --------------------------------- | ------------------------- | ------------------- |
 | Claude Code                       | native installer (2.1.42) | AI コーディング支援 |
-| Codex (`@openai/codex`)           | 0.101.0 (global.json)     | OpenAI Codex CLI    |
-| Gemini CLI (`@google/gemini-cli`) | 0.28.2 (global.json)      | Google Gemini CLI   |
+| Codex (`@openai/codex`)           | 0.104.0 (global.json)     | OpenAI Codex CLI    |
+| Gemini CLI (`@google/gemini-cli`) | 0.29.5 (global.json)      | Google Gemini CLI   |
 | Happy Coder                       | 0.13.0 (global.json)      | AI コーディング     |
 | Cursor                            | curl installer            | AI エディタ CLI     |
 
@@ -54,8 +54,8 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | similarity-ts | cargo install         | コード類似度分析     |
 | eslint        | npm global            | JavaScript リンター  |
 | Supabase CLI  | pnpm global           | Supabase 操作        |
-| Vercel CLI    | 50.17.1 (global.json) | Vercel デプロイ      |
-| n8n           | 2.7.5 (global.json)   | ワークフロー自動化   |
+| Vercel CLI    | 50.22.1 (global.json) | Vercel デプロイ      |
+| n8n           | 2.8.3 (global.json)   | ワークフロー自動化   |
 | pm2           | 6.0.14 (global.json)  | プロセスマネージャ   |
 
 ### 2.4 Language Servers（global.json）
@@ -66,7 +66,7 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | typescript-language-server   | 5.1.3      | TypeScript LSP        |
 | bash-language-server         | 5.6.0      | Bash LSP              |
 | vscode-langservers-extracted | 4.10.0     | HTML/CSS/JSON LSP     |
-| yaml-language-server         | 1.19.2     | YAML LSP              |
+| yaml-language-server         | 1.20.0     | YAML LSP              |
 
 ### 2.5 MCP / Automation
 
@@ -80,8 +80,8 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | パッケージ                        | バージョン | 用途                   |
 | --------------------------------- | ---------- | ---------------------- |
 | husky                             | 9.1.7      | Git hooks              |
-| `@commitlint/cli`                 | 20.4.1     | コミットメッセージ検証 |
-| `@commitlint/config-conventional` | 20.4.1     | Conventional Commits   |
+| `@commitlint/cli`                 | 20.4.2     | コミットメッセージ検証 |
+| `@commitlint/config-conventional` | 20.4.2     | Conventional Commits   |
 
 ## 3. DevContainer Features（config ベースで提供）
 
@@ -91,7 +91,6 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | -------------------------------------- | ----------------------------- |
 | `homebrew-package`                     | Homebrew パッケージマネージャ |
 | `jq-likes` (jq/yq)                     | JSON/YAML 処理                |
-| `node` (+ pnpm latest)                 | Node.js（追加バージョン）     |
 | `1password`                            | シークレット管理              |
 | `github-cli`                           | GitHub CLI (`gh`)             |
 | `git`                                  | Git（最新版）                 |
@@ -188,7 +187,7 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 ### 6.1 ベースイメージバージョンの乖離
 
 4 リポジトリ（npm ライブラリ、SPA、モバイル Flutter、モバイル Android）が **1.0.13** のまま。
-最新は **1.58.0+** であり、AI CLI やセキュリティパッチが大幅に遅れている。
+最新は **1.81.1** であり、AI CLI やセキュリティパッチが大幅に遅れている。
 
 > **推奨**: `/config-base-sync-update` コマンドで一括更新、または Dependabot/Renovate で自動化。
 
