@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/base:1-ubuntu-24.04
+FROM mcr.microsoft.com/devcontainers/base:2.0-ubuntu-24.04
 
 # Build arguments
 ARG CLAUDE_CODE_OAUTH_TOKEN
