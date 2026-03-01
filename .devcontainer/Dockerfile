@@ -35,7 +35,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-ARG DOPPLER_CLI_VERSION=3.75.2
+ARG DOPPLER_CLI_VERSION=3.75.3
 
 # Install Doppler CLI from GitHub releases for latest security patches
 # https://docs.doppler.com/docs/install-cli
@@ -59,7 +59,7 @@ RUN OP_VERSION="${OP_CLI_VERSION}" \
  && chmod g+s /usr/local/bin/op
 
 # Install Node.js
-RUN NODE_VERSION=v22.14.0 \
+RUN NODE_VERSION=v22.22.0 \
  && NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/arm64/arm64/') \
  && wget -q https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
  && tar -xJf node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz -C /usr/local --strip-components=1 \
