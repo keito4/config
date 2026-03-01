@@ -11,6 +11,7 @@ This directory contains utility scripts for managing configuration, credentials,
 | `update-libraries.sh`    | Library updates for Codex/Claude | package.json           |
 | `version.sh`             | Semantic versioning              | Makefile               |
 | `check-image-version.sh` | Show DevContainer image version  | Manual                 |
+| `.shellcheck-exclude`    | ShellCheck 除外パターン定義      | npm run shellcheck     |
 
 ## Configuration Management
 
@@ -137,6 +138,18 @@ Checks staged TS/JS files for excessive line counts.
 **Configuration**: Create `.filelengthignore` (same syntax as `.gitignore`) to exclude files.
 
 **Template**: `.filelengthignore.template`
+
+### .shellcheck-exclude
+
+ShellCheck の除外対象ファイル一覧を管理する設定ファイル。
+
+**場所**: `script/.shellcheck-exclude`
+
+**用途**: `npm run shellcheck` 実行時に `grep -vFf` で参照され、ShellCheck の対象外とするスクリプトパターンを定義する。
+
+**フォーマット**: 1行1パターン（ファイル名またはパス）
+
+**除外対象の追加**: `.shellcheck-exclude` に1行追加するだけで完結。`package.json` の変更不要。
 
 ### pre-pr-checklist.sh
 

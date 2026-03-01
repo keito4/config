@@ -82,7 +82,7 @@ Each release creates two tags:
 
 ```json
 {
-  "image": "ghcr.io/keito4/config-base:1.54.0"
+  "image": "ghcr.io/keito4/config-base:1.81.1"
 }
 ```
 
