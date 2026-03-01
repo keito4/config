@@ -6,6 +6,13 @@
 
 set -euo pipefail
 
+DRY_RUN=false
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run|--check) DRY_RUN=true ;;
+  esac
+done
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 WORKFLOWS_DIR="${PROJECT_ROOT}/.github/workflows"
@@ -177,10 +184,12 @@ for workflow_file in "${workflow_files[@]}"; do
       log_info "${full_action}: ${current_ref} -> ${new_ref}"
 
       # 全ワークフローファイルで置換
-      escaped_action=$(escape_sed "$full_action")
-      for wf in "${workflow_files[@]}"; do
-        sed -i.bak "s|\(uses:.*\)${escaped_action}@${current_ref}|\1${escaped_action}@${new_ref}|g" "$wf" && rm -f "$wf.bak"
-      done
+      if [[ "$DRY_RUN" == false ]]; then
+        escaped_action=$(escape_sed "$full_action")
+        for wf in "${workflow_files[@]}"; do
+          sed -i.bak "s|\(uses:.*\)${escaped_action}@${current_ref}|\1${escaped_action}@${new_ref}|g" "$wf" && rm -f "$wf.bak"
+        done
+      fi
 
       updated_actions+=("${full_action}: ${current_ref} -> ${new_ref}")
     fi
