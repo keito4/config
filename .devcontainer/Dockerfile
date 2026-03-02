@@ -101,13 +101,15 @@ RUN CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@ope
  && VERCEL_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['vercel'].version") \
  && GEMINI_CLI_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@google/gemini-cli'].version") \
  && HAPPY_CODER_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['happy-coder'].version") \
+ && DIFIT_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['difit'].version") \
  && npm install -g eslint \
     typescript \
     typescript-language-server \
     @openai/codex@${CODEX_VERSION} \
     vercel@${VERCEL_VERSION} \
     @google/gemini-cli@${GEMINI_CLI_VERSION} \
-    happy-coder@${HAPPY_CODER_VERSION}
+    happy-coder@${HAPPY_CODER_VERSION} \
+    difit@${DIFIT_VERSION}
 
 USER vscode
 RUN bash -lc "cargo install similarity-ts" || true \
