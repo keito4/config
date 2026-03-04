@@ -307,7 +307,7 @@ CI にも追加:
 ## CI/CD パイプライン
 
 ```
-typecheck → biome check → knip → test (coverage) → build → e2e → security
+typecheck → biome check → knip → test (coverage + a11y) → build (bundle check) → e2e (+ a11y) → security
 ```
 
 **最小構成** (`ci.yml`):
@@ -412,6 +412,112 @@ export default defineConfig({
 ```
 
 > CI では Chromium のみに限定しフィードバックを高速化する。
+
+## アクセシビリティテスト（axe）
+
+WCAG 違反を自動検出する。E2E とユニットテストの両レイヤーでカバーする。
+
+### @axe-core/playwright（E2E での a11y チェック）
+
+```bash
+npm install -D @axe-core/playwright
+```
+
+既存の Playwright テストに数行追加するだけで、ページ全体のアクセシビリティ違反を検出できる。
+
+**`tests/e2e/accessibility.spec.ts`**:
+
+```typescript
+import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+
+test.describe('アクセシビリティ', () => {
+  test('トップページに WCAG 違反がないこと', async ({ page }) => {
+    await page.goto('/');
+    const results = await new AxeBuilder({ page }).analyze();
+    expect(results.violations).toEqual([]);
+  });
+
+  test('ログインページに WCAG 違反がないこと', async ({ page }) => {
+    await page.goto('/login');
+    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+    expect(results.violations).toEqual([]);
+  });
+});
+```
+
+### jest-axe（ユニットテストでの a11y チェック）
+
+```bash
+npm install -D jest-axe
+```
+
+Testing Library と組み合わせてコンポーネント単位でチェックする。
+
+**使い方**:
+
+```typescript
+import { render } from '@testing-library/react';
+import { axe, toHaveNoViolations } from 'jest-axe';
+import { LoginForm } from '@/components/LoginForm';
+
+expect.extend(toHaveNoViolations);
+
+test('LoginForm にアクセシビリティ違反がないこと', async () => {
+  const { container } = render(<LoginForm />);
+  const results = await axe(container);
+  expect(results).toHaveNoViolations();
+});
+```
+
+> E2E はページ全体、ユニットは個別コンポーネントの責務として使い分ける。
+
+## バンドルサイズ監視（@next/bundle-analyzer）
+
+```bash
+npm install -D @next/bundle-analyzer
+```
+
+バンドルサイズの肥大化を可視化し、依存追加時の意図しないサイズ増加を防ぐ。
+
+**`next.config.ts`**:
+
+```typescript
+import bundleAnalyzer from '@next/bundle-analyzer';
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+export default withBundleAnalyzer({
+  // 既存の next config
+});
+```
+
+**`package.json` スクリプト**:
+
+```json
+{
+  "analyze": "ANALYZE=true npm run build"
+}
+```
+
+**CI でのサイズ閾値チェック**（オプション）:
+
+```yaml
+- name: Build and check bundle size
+  run: npm run build
+  env:
+    NEXT_TELEMETRY_DISABLED: 1
+# .next/analyze/ に生成されたレポートをアーティファクトとして保存
+- uses: actions/upload-artifact@v4
+  if: always()
+  with:
+    name: bundle-report
+    path: .next/analyze/
+```
+
+> `npm run analyze` でブラウザにバンドルツリーが表示される。依存追加 PR 時に手動実行して確認する運用を推奨。
 
 ## Claude Code ワークフロー
 

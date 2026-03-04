@@ -458,6 +458,99 @@ config リポジトリから取り込み可能な新機能を発見：
 - 🆕 新機能: X 件
 - 📝 更新推奨: Y 件
 
+### 5.2 推奨パッケージ監査
+
+プロジェクト種別を自動検出し、推奨スタックとの差分を確認する。
+
+#### プロジェクト種別の検出
+
+以下の順序でプロジェクト種別を判定：
+
+```bash
+# Next.js プロジェクト
+if grep -q '"next"' package.json 2>/dev/null; then
+  PROJECT_TYPE="nextjs"
+# React + Vite SPA
+elif grep -q '"vite"' package.json 2>/dev/null && grep -q '"react"' package.json 2>/dev/null; then
+  PROJECT_TYPE="spa-react"
+else
+  PROJECT_TYPE="unknown"
+fi
+```
+
+#### Next.js 推奨パッケージ
+
+| カテゴリ               | パッケージ               | 確認方法                                                      |
+| ---------------------- | ------------------------ | ------------------------------------------------------------- |
+| ロギング               | `@vercel/logger`         | `jq '.dependencies["@vercel/logger"]' package.json`           |
+| エラー監視             | `@sentry/nextjs`         | `jq '.dependencies["@sentry/nextjs"]' package.json`           |
+| バリデーション         | `zod`                    | `jq '.dependencies.zod' package.json`                         |
+| 型安全な環境変数       | `@t3-oss/env-nextjs`     | `jq '.dependencies["@t3-oss/env-nextjs"]' package.json`       |
+| フォーム管理           | `react-hook-form`        | `jq '.dependencies["react-hook-form"]' package.json`          |
+| フォームバリデーション | `@hookform/resolvers`    | `jq '.dependencies["@hookform/resolvers"]' package.json`      |
+| アクセシビリティE2E    | `@axe-core/playwright`   | `jq '.devDependencies["@axe-core/playwright"]' package.json`  |
+| アクセシビリティUnit   | `jest-axe`               | `jq '.devDependencies["jest-axe"]' package.json`              |
+| バンドル分析           | `@next/bundle-analyzer`  | `jq '.devDependencies["@next/bundle-analyzer"]' package.json` |
+| アナリティクス         | `@vercel/analytics`      | `jq '.dependencies["@vercel/analytics"]' package.json`        |
+| パフォーマンス計測     | `@vercel/speed-insights` | `jq '.dependencies["@vercel/speed-insights"]' package.json`   |
+| Lint/Format            | `@biomejs/biome`         | `jq '.devDependencies["@biomejs/biome"]' package.json`        |
+| 未使用コード検出       | `knip`                   | `jq '.devDependencies.knip' package.json`                     |
+
+#### SPA (React + Vite) 推奨パッケージ
+
+| カテゴリ       | パッケージ               | 確認方法                                                       |
+| -------------- | ------------------------ | -------------------------------------------------------------- |
+| Lint/Format    | `@biomejs/biome`         | `jq '.devDependencies["@biomejs/biome"]' package.json`         |
+| テスト         | `vitest`                 | `jq '.devDependencies.vitest' package.json`                    |
+| カバレッジ     | `@vitest/coverage-v8`    | `jq '.devDependencies["@vitest/coverage-v8"]' package.json`    |
+| コンポーネント | `@testing-library/react` | `jq '.devDependencies["@testing-library/react"]' package.json` |
+
+#### 実行ロジック
+
+```bash
+MISSING_PACKAGES=()
+
+for pkg in "${REQUIRED_PACKAGES[@]}"; do
+  installed=$(jq -r --arg p "$pkg" '.dependencies[$p] // .devDependencies[$p] // "null"' package.json)
+  if [ "$installed" = "null" ]; then
+    MISSING_PACKAGES+=("$pkg")
+  fi
+done
+```
+
+#### 結果
+
+- ✅ 推奨パッケージ: すべてインストール済み
+- ⚠️ 未導入パッケージ: X 件（インストールコマンドをリスト表示）
+- ⏭️ スキップ（`package.json` なし / プロジェクト種別不明）
+
+**未導入パッケージがある場合の出力例:**
+
+```
+⚠️ 推奨パッケージが未導入です (Next.js)
+
+未導入:
+  - @vercel/logger      (ロギング)
+  - @sentry/nextjs      (エラー監視)
+  - knip                (未使用コード検出)
+
+インストールコマンド:
+  npm install @vercel/logger @sentry/nextjs
+  npm install -D knip
+
+詳細: docs/setup/web-app-nextjs.md
+```
+
+**MODE が `full` の場合:**
+
+インストールを確認してから実行：
+
+```bash
+# 確認後に実行
+npm install @vercel/logger @sentry/nextjs
+npm install -D @biomejs/biome knip
+```
+
 ## Step 6: Generate Summary Report
 
 全ステップの結果をまとめたレポートを生成：
@@ -488,7 +581,8 @@ config リポジトリから取り込み可能な新機能を発見：
 └── Git GC: ✅ Repository optimized
 
 ## Discovery (4/4)
-└── New Features: 🆕 2 new commands available
+├── New Features: 🆕 2 new commands available
+└── Package Audit: ⚠️ 3 recommended packages missing (Next.js)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -513,6 +607,8 @@ config リポジトリから取り込み可能な新機能を発見：
    Run: /branch-cleanup
 6. Review 2 new config features
    Run: /config-contribution-discover
+7. Install 3 missing recommended packages (Next.js)
+   Run: npm install @vercel/logger @sentry/nextjs && npm install -D knip
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -671,3 +767,4 @@ Run this command regularly to maintain repository health:
 | Setup       | `/setup-ci`                     | CI/CDワークフロー設定         |
 | Cleanup     | `/branch-cleanup`               | ブランチクリーンアップ        |
 | Discovery   | `/config-contribution-discover` | 新機能発見                    |
+| Discovery   | (Package Audit)                 | 推奨パッケージ監査            |
