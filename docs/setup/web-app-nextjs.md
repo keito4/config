@@ -128,6 +128,144 @@ npx @biomejs/biome migrate prettier
 - `prettier`, `eslint-config-prettier`
 - `eslint.config.mjs` / `.eslintrc.*` / `.prettierrc*`
 
+## バリデーション & 型安全
+
+### Zod（スキーマバリデーション）
+
+```bash
+npm install zod
+```
+
+API レスポンス・フォーム入力・環境変数の検証を一元化する。Supabase の型と組み合わせて使う。
+
+**基本的な使い方**:
+
+```typescript
+import { z } from 'zod';
+
+// スキーマ定義
+const UserSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  name: z.string().min(1).max(100),
+});
+
+type User = z.infer<typeof UserSchema>;
+
+// API Route でのバリデーション
+export async function POST(req: Request) {
+  const body = await req.json();
+  const result = UserSchema.safeParse(body);
+
+  if (!result.success) {
+    return Response.json({ errors: result.error.flatten() }, { status: 400 });
+  }
+
+  // result.data は型安全
+  const user = result.data;
+}
+```
+
+**Supabase の型と組み合わせる**:
+
+```typescript
+import { z } from 'zod';
+import type { Database } from '@/lib/supabase/types';
+
+type Row = Database['public']['Tables']['users']['Row'];
+
+// DB の型から Zod スキーマを構築
+const UserInsertSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(1),
+}) satisfies z.ZodType<Partial<Row>>;
+```
+
+### @t3-oss/env-nextjs（環境変数の型安全化）
+
+```bash
+npm install @t3-oss/env-nextjs zod
+```
+
+`.env` の未設定・型ミスをビルド時に検知する。`process.env.XXX` の生アクセスを禁止し、型付き `env` オブジェクト経由に統一する。
+
+**`src/env.ts`**:
+
+```typescript
+import { createEnv } from '@t3-oss/env-nextjs';
+import { z } from 'zod';
+
+export const env = createEnv({
+  server: {
+    SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+    SENTRY_AUTH_TOKEN: z.string().optional(),
+  },
+  client: {
+    NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+    NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+  },
+  runtimeEnv: {
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  },
+});
+```
+
+> `next.config.ts` で `import './src/env'` を追加するとビルド時に検証が走る。
+
+## フォーム管理（react-hook-form + Zod）
+
+```bash
+npm install react-hook-form @hookform/resolvers zod
+```
+
+フォームバリデーションを Zod スキーマで統一し、型安全なフォームを実装する。
+
+**基本的な使い方**:
+
+```typescript
+'use client';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const schema = z.object({
+  email: z.string().email('有効なメールアドレスを入力してください'),
+  password: z.string().min(8, '8文字以上で入力してください'),
+});
+
+type FormValues = z.infer<typeof schema>;
+
+export function LoginForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+
+  const onSubmit = async (data: FormValues) => {
+    // data は型安全
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register('email')} />
+      {errors.email && <p>{errors.email.message}</p>}
+      <input type="password" {...register('password')} />
+      {errors.password && <p>{errors.password.message}</p>}
+      <button type="submit" disabled={isSubmitting}>
+        ログイン
+      </button>
+    </form>
+  );
+}
+```
+
 ## Knip（未使用コード検出）
 
 未使用の依存関係・ファイル・export を検出する **Knip を推奨**する。
@@ -357,6 +495,38 @@ export async function GET() {
 ```
 
 詳細な設定は [Sentry セットアップガイド](../sentry-setup-guide.md) を参照。
+
+### @vercel/analytics + @vercel/speed-insights（アナリティクス）
+
+```bash
+npm install @vercel/analytics @vercel/speed-insights
+```
+
+Vercel デプロイなら追加コスト・設定なしで Core Web Vitals とページビューを収集できる。
+
+**`app/layout.tsx` に2行追加するだけ**:
+
+```typescript
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="ja">
+      <body>
+        {children}
+        <Analytics />
+        <SpeedInsights />
+      </body>
+    </html>
+  );
+}
+```
+
+| コンポーネント      | 収集データ                                 |
+| ------------------- | ------------------------------------------ |
+| `<Analytics />`     | ページビュー・ユニークビジター・リファラー |
+| `<SpeedInsights />` | LCP / FID / CLS 等の Core Web Vitals       |
 
 ### ロギング設計指針
 
