@@ -81,7 +81,15 @@ npx @biomejs/biome init
   },
   "linter": {
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "suspicious": {
+        "noConsole": {
+          "level": "error",
+          "options": {
+            "allow": ["error", "warn"]
+          }
+        }
+      }
     }
   },
   "files": {
@@ -89,6 +97,9 @@ npx @biomejs/biome init
   }
 }
 ```
+
+> `noConsole` は `console.log` / `console.debug` をエラーにし、`console.error` / `console.warn` は許可する。
+> ログ出力は `@vercel/logger`、エラー通知は Sentry に統一する。
 
 **推奨スクリプト**:
 
@@ -358,7 +369,7 @@ export async function GET() {
 
 - `@vercel/logger` で操作ログを記録し、Vercel Dashboard で確認
 - 例外・エラーは Sentry に `captureException` してアラートを受け取る
-- `console.log` の本番利用は禁止（`@vercel/logger` または Sentry に置き換える）
+- `console.log` の本番利用は禁止 → Biome の `noConsole` ルールで CI がブロック
 
 ## 関連ドキュメント
 
