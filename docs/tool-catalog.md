@@ -126,14 +126,14 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 ### 4.2 主要な追加依存（注目ポイント）
 
-| 種別                  | 注目する依存                                                                   |
-| --------------------- | ------------------------------------------------------------------------------ |
-| 共通基盤 (config)     | semantic-release, jest-junit, bats                                             |
-| Web アプリ (Next.js)  | `@supabase/ssr`, Tailwind CSS 4, Zod 4, Testing Library, Playwright, LangSmith |
-| npm ライブラリ (CLI)  | `@notionhq/client`, commander, ts-jest, semantic-release                       |
-| SPA (React + Vite)    | `@google/genai`, D3.js, React 19                                               |
-| デスクトップ拡張 (TS) | lint-staged, monorepo (pnpm workspaces)                                        |
-| モバイル (Flutter)    | Riverpod, Drift (SQLite), Freezed, go_router                                   |
+| 種別                  | 注目する依存                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 共通基盤 (config)     | semantic-release, jest-junit, bats                                                                                 |
+| Web アプリ (Next.js)  | `@supabase/ssr`, `@vercel/logger`, `@sentry/nextjs`, Tailwind CSS 4, Zod 4, Testing Library, Playwright, LangSmith |
+| npm ライブラリ (CLI)  | `@notionhq/client`, commander, ts-jest, semantic-release                                                           |
+| SPA (React + Vite)    | `@google/genai`, D3.js, React 19                                                                                   |
+| デスクトップ拡張 (TS) | lint-staged, monorepo (pnpm workspaces)                                                                            |
+| モバイル (Flutter)    | Riverpod, Drift (SQLite), Freezed, go_router                                                                       |
 
 ## 5. macOS ローカルツール（Brewfile）
 

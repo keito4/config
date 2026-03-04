@@ -277,6 +277,89 @@ export default defineConfig({
 - **冗長 Features の削除**: ベースイメージに含まれるもの（git, pnpm, github-cli, jq-likes, supabase-cli）は削除
 - **残すべき Features**: docker-in-docker, playwright（プロジェクト固有）
 
+## ロギング & モニタリング
+
+Next.js + Vercel 構成では以下の2ツールを**必ず導入**する。
+
+### @vercel/logger（構造化ロギング）
+
+```bash
+npm install @vercel/logger
+```
+
+Vercel のログインフラと連携した構造化ロギングライブラリ。JSON 形式で出力し、Vercel Dashboard / Log Drains で検索・集計しやすい形式になる。
+
+**基本的な使い方**:
+
+```typescript
+import { logger } from '@vercel/logger';
+
+// Server Components / API Routes での使用例
+logger.info('User authenticated', { userId: user.id });
+logger.warn('Rate limit approaching', { remaining: 5 });
+logger.error('Supabase query failed', { error: err.message, table: 'users' });
+```
+
+**推奨パターン**（モジュール単位でラップ）:
+
+```typescript
+// lib/logger.ts
+import { logger } from '@vercel/logger';
+
+export const appLogger = logger.child({ service: 'my-app' });
+export const dbLogger = logger.child({ service: 'supabase' });
+```
+
+**注意事項**:
+
+- クライアントコンポーネント（`'use client'`）では使用不可（サーバーサイド専用）
+- `console.log` の代替として Server Components / Route Handlers / Middleware で使用
+
+### Sentry（エラー監視 & パフォーマンス）
+
+```bash
+npx @sentry/wizard@latest -i nextjs
+```
+
+エラートラッキング、パフォーマンスモニタリング、Session Replay を提供する。Supabase のエラーも Sentry に集約することで、障害の根本原因追跡が容易になる。
+
+**Supabase との連携**:
+
+```typescript
+// app/api/users/route.ts
+import * as Sentry from '@sentry/nextjs';
+import { createClient } from '@/lib/supabase/server';
+
+export async function GET() {
+  const supabase = createClient();
+  const { data, error } = await supabase.from('users').select('*');
+
+  if (error) {
+    Sentry.captureException(error, {
+      tags: { supabase_table: 'users', operation: 'select' },
+    });
+    return Response.json({ error: 'DB error' }, { status: 500 });
+  }
+
+  return Response.json(data);
+}
+```
+
+詳細な設定は [Sentry セットアップガイド](../sentry-setup-guide.md) を参照。
+
+### ロギング設計指針
+
+| ツール                    | 用途                                 | 環境           |
+| ------------------------- | ------------------------------------ | -------------- |
+| `@vercel/logger`          | 構造化ログ（操作ログ、デバッグ）     | サーバーサイド |
+| Sentry (`@sentry/nextjs`) | エラー監視・アラート・パフォーマンス | 全環境         |
+
+**原則**:
+
+- `@vercel/logger` で操作ログを記録し、Vercel Dashboard で確認
+- 例外・エラーは Sentry に `captureException` してアラートを受け取る
+- `console.log` の本番利用は禁止（`@vercel/logger` または Sentry に置き換える）
+
 ## 関連ドキュメント
 
 | ドキュメント                                          | 説明                                  |
