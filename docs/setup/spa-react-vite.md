@@ -42,23 +42,73 @@ export default defineConfig({
 }
 ```
 
-## ESLint + Prettier
+## Biome（Lint + Format）
+
+ESLint + Prettier の代わりに **Biome を推奨**する。1 ツールで lint + format を高速に実行できる。
 
 ```bash
-npm install -D eslint @eslint/js typescript-eslint eslint-plugin-react-hooks eslint-plugin-react-refresh eslint-config-prettier
-npm install -D prettier
+npm install -D --save-exact @biomejs/biome
+npx @biomejs/biome init
 ```
 
-**スクリプト**:
+`biome.json`:
 
 ```json
 {
-  "lint": "eslint .",
-  "lint:fix": "eslint . --fix",
-  "format": "prettier --write .",
-  "format:check": "prettier --check ."
+  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
+  "organizeImports": {
+    "enabled": true
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "linter": {
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "noConsole": {
+          "level": "error",
+          "options": {
+            "allow": ["error", "warn"]
+          }
+        }
+      }
+    }
+  },
+  "files": {
+    "ignore": ["dist", "node_modules", "coverage"]
+  }
 }
 ```
+
+**推奨スクリプト**:
+
+```json
+{
+  "check": "biome check .",
+  "check:fix": "biome check --write .",
+  "lint": "biome lint .",
+  "format": "biome format .",
+  "format:check": "biome format ."
+}
+```
+
+> `biome check` は lint + format + import 整理を一括実行する。CI では `biome check .` を使う。
+
+### 既存の ESLint + Prettier からの移行
+
+```bash
+npx @biomejs/biome migrate eslint
+npx @biomejs/biome migrate prettier
+```
+
+移行後、不要になったパッケージと設定ファイルを削除する:
+
+- `eslint`, `eslint-config-*`, `eslint-plugin-*`, `@eslint/*`, `typescript-eslint`
+- `prettier`, `eslint-config-prettier`
+- `eslint.config.mjs` / `.eslintrc.*` / `.prettierrc*`
 
 ## CI/CD ワークフロー
 
@@ -74,11 +124,12 @@ Lint → Format Check → Test (with coverage) → Build
 
 ## lint-staged
 
-```json
-{
-  "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
-  "*.{json,md,yml}": ["prettier --write"]
-}
+```js
+// lint-staged.config.js
+module.exports = {
+  '*.{ts,tsx,js,jsx,json,css}': ['biome check --write --no-errors-on-unmatched'],
+  '*.{md,yml,yaml}': ['biome format --write --no-errors-on-unmatched'],
+};
 ```
 
 ## CLAUDE.md
