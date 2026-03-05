@@ -23,6 +23,7 @@ This directory contains pre-configured commands that provide automated workflows
 |                       | `/config-base-sync-update`                | DevContainer を最新に更新して PR 作成        |
 | **Setup**             | `/setup-new-repo`                         | 新規リポジトリのセットアップ                 |
 |                       | `/setup-ci`                               | CI/CD ワークフローのセットアップ             |
+|                       | `/setup-tests`                            | テスト基盤のセットアップ（21種類、5レベル）  |
 |                       | `/setup-husky`                            | Git hooks (Husky) のセットアップ             |
 |                       | `/setup-team-protection`                  | GitHub リポジトリ保護ルールの設定            |
 | **Documentation**     | [docs/setup/](../../docs/setup/README.md) | プロジェクト種別ごとのセットアップガイド     |
@@ -233,6 +234,42 @@ This directory contains pre-configured commands that provide automated workflows
 | minimal       | Lint + Build                                        |
 | standard      | Lint + Test + Build + Security Audit                |
 | comprehensive | All + E2E + CodeQL + Claude Review + Scheduled Scan |
+
+#### `setup-tests.md`
+
+**Purpose**: Setup comprehensive testing infrastructure for Next.js projects (21 test types, 5 levels)
+**Features**:
+
+- Test configuration templates from cyber_ace_1on1
+- Jest + Playwright setup with polyfills
+- Unit, Component, Integration, E2E, API tests
+- Regression, Smoke, Contract, Scenario tests
+- Visual, A11y, Property-based, Mutation tests
+- Performance, Load, Security, Database tests
+- Edge Functions, i18n, SSR/Hydration tests
+
+**Usage**:
+
+```
+/setup-tests                           # Standard level (default)
+/setup-tests --level minimal           # Unit + Component + Snapshot
+/setup-tests --level comprehensive     # + Regression + Smoke + Contract
+/setup-tests --level full              # + Visual + A11y + Scenario
+/setup-tests --level enterprise        # All 21 test types
+/setup-tests --coverage-threshold 80   # Custom coverage requirement
+```
+
+**Levels**:
+
+| Level         | Test Types                                                         |
+| ------------- | ------------------------------------------------------------------ |
+| minimal       | Unit, Component, Snapshot                                          |
+| standard      | + Integration, E2E, API                                            |
+| comprehensive | + Regression, Smoke, Contract                                      |
+| full          | + Visual, A11y, Scenario, Property-based                           |
+| enterprise    | + Performance, Load, Security, Database, Edge, i18n, SSR, Mutation |
+
+See [templates/testing/README.md](../../templates/testing/README.md) for detailed documentation.
 
 #### `container-health.md`
 

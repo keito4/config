@@ -18,6 +18,7 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 - `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
 - `docs/`: Documentation directory containing setup guides, usage instructions, and reference materials. The `setup/` subdirectory provides project-type-specific setup guides (Next.js, React+Vite, npm libraries, Flutter, Android, Desktop extensions). See [docs/setup/README.md](docs/setup/README.md) for the complete list.
 - `eslint/`: Contains recommended ESLint complexity rules template and documentation to prevent technical debt accumulation. See [eslint/README.md](eslint/README.md) for usage guidelines.
+- `templates/`: Project templates including testing configuration templates for Next.js projects. The `testing/` subdirectory provides comprehensive test setup (21 test types, 5 levels: minimal → standard → comprehensive → full → enterprise). Use `/setup-tests` command or see [templates/testing/README.md](templates/testing/README.md) for details.
 - `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory, including Zsh configuration with comprehensive aliases, functions, and environment setup.
 - `git/`: Contains Git configuration files including gitconfig, gitignore, commitlint configuration with i18n support, and modular configuration files in the `gitconfig.d/` subdirectory. See [git/README.md](git/README.md) for details.
 - `npm/`: Contains npm global package configuration.
@@ -525,6 +526,24 @@ For setting up a complete CI/CD pipeline in a new repository, use the `/setup-ci
 - Husky Git hooks setup
 - Troubleshooting guidance
 
+#### Test Configuration Setup
+
+For comprehensive test setup in Next.js projects, use the `/setup-tests` Claude command. It provides 21 test types across 5 levels:
+
+- **Minimal**: Unit, Component, Snapshot tests
+- **Standard**: + Integration, E2E, API tests
+- **Comprehensive**: + Regression, Smoke, Contract tests
+- **Full**: + Visual, A11y, Scenario, Property-based tests
+- **Enterprise**: + Performance, Load, Security, Database, Edge Functions, i18n, SSR, Mutation tests
+
+```bash
+/setup-tests                          # Standard level (default)
+/setup-tests --level comprehensive    # More test types
+/setup-tests --coverage-threshold 80  # Custom coverage
+```
+
+See [templates/testing/README.md](templates/testing/README.md) for detailed documentation.
+
 #### GitHub Actions Workflows
 
 - **CI Pipeline** (`.github/workflows/ci.yml`): Automated testing, linting, and quality checks (uses Node.js 22)
@@ -702,6 +721,12 @@ The repository includes automated Slack notifications for development workflow e
 - **Visual Studio Code**: A free source-code editor made by Microsoft for Windows, Linux, and macOS.
 - **Zsh**: An extended Unix shell with advanced features for interactive use and scripting.
 - **envsubst**: GNU gettext utility that substitutes environment variables in shell format strings (e.g., `${VARIABLE}`).
+- **Gitleaks**: Secret scanning tool that detects hardcoded secrets, API keys, and passwords in Git repositories.
+- **Jest**: JavaScript testing framework with a focus on simplicity, supporting unit tests, component tests, and snapshot testing.
+- **ni (@antfu/ni)**: Universal package manager wrapper that automatically detects and uses the correct package manager (npm, pnpm, yarn, bun).
+- **Playwright**: End-to-end testing framework for web applications, supporting cross-browser testing with Chromium, Firefox, and WebKit.
+- **pnpm**: Fast, disk space efficient package manager for Node.js with strict dependency management and built-in security features.
+- **Testing Library**: Family of packages for testing UI components in a user-centric way, encouraging best practices and accessibility.
 
 ## Disclaimer
 
