@@ -168,6 +168,31 @@ shamefully-hoist=false
 verify-store-integrity=true
 ```
 
+## ni（パッケージマネージャーコマンド統一）
+
+`@antfu/ni` はロックファイルを検出し、プロジェクトのパッケージマネージャーを自動判定してコマンドを実行するツール。npm / pnpm / yarn / bun どのプロジェクトでも同じコマンドが使える。
+
+```bash
+npm install -g @antfu/ni
+```
+
+| コマンド      | 相当する操作                            |
+| ------------- | --------------------------------------- |
+| `ni`          | 依存関係インストール                    |
+| `nr <script>` | スクリプト実行                          |
+| `nu`          | パッケージ更新                          |
+| `nun`         | パッケージ削除                          |
+| `nci`         | クリーンインストール（lockfile frozen） |
+
+**推奨エイリアス** (`~/.zshrc`):
+
+```zsh
+alias nrd="nr dev"
+alias nrb="nr build"
+alias nrs="nr start"
+alias nrp="nr preview"
+```
+
 ## 関連ドキュメント
 
 | ドキュメント                                          | 説明                                  |
