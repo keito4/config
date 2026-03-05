@@ -86,6 +86,28 @@ pnpm exec lint-staged
 - **ベースイメージ**: `ghcr.io/keito4/config-base:latest`
 - **冗長 Features の削除**: ベースイメージに含まれるもの（node, gh 等）は更新後に削除を検討
 
+## pnpm セキュリティ設定（supply chain attack 対策）
+
+pnpm を使用する場合は以下を必ず設定する。
+
+**`pnpm-workspace.yaml`**:
+
+```yaml
+# 公開から 2 日未満のパッケージをインストール禁止（pnpm v10.16.0+）
+minimumReleaseAge: 2880
+```
+
+**`.npmrc`**:
+
+```ini
+strict-peer-dependencies=true
+auto-install-peers=true
+audit=true
+audit-level=moderate
+shamefully-hoist=false
+verify-store-integrity=true
+```
+
 ## 関連ドキュメント
 
 | ドキュメント                                          | 説明                              |

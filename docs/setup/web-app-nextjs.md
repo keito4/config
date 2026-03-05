@@ -647,6 +647,44 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 - 例外・エラーは Sentry に `captureException` してアラートを受け取る
 - `console.log` の本番利用は禁止 → Biome の `noConsole` ルールで CI がブロック
 
+## pnpm セキュリティ設定（supply chain attack 対策）
+
+pnpm v10.16.0+ のネイティブ機能で、公開直後の悪意あるパッケージのインストールを防ぐ。
+
+### pnpm-workspace.yaml
+
+プロジェクトルートに配置する。**pnpm を使用するすべてのプロジェクトで必須設定**。
+
+```yaml
+# supply chain attack 対策: 公開から 2 日未満のパッケージをインストール禁止
+# pnpm v10.16.0+ でサポート（単位: 分）
+minimumReleaseAge: 2880
+
+# 信頼できるパッケージを除外する場合（例: 公式パッケージで更新頻度が高いもの）
+minimumReleaseAgeExclude: []
+```
+
+> **動作**: `pnpm add` や `pnpm update` で依存解決する際に適用。
+> `pnpm-lock.yaml` が存在する `pnpm install` では環境再現性優先のためスキップされる。
+
+### .npmrc（pnpm セキュリティ強化）
+
+```ini
+# Strict peer dependency resolution
+strict-peer-dependencies=true
+auto-install-peers=true
+
+# インストール時に脆弱性チェック
+audit=true
+audit-level=moderate
+
+# Phantom dependencies の排除
+shamefully-hoist=false
+
+# コンテンツハッシュで改ざん検知
+verify-store-integrity=true
+```
+
 ## 関連ドキュメント
 
 | ドキュメント                                          | 説明                                  |
