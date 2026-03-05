@@ -131,7 +131,7 @@ if [ -z "$CHECK_COMPONENT" ] || [ "$CHECK_COMPONENT" = "tools" ]; then
       echo -e "  ${YELLOW}⚠${NC} claude (not installed)"
     fi
     HEALTH_SCORE=$((HEALTH_SCORE - 5))
-    RECOMMENDATIONS+=("Install Claude Code: npm install -g @anthropic-ai/claude-code")
+    RECOMMENDATIONS+=("Install Claude Code: curl -fsSL https://claude.ai/install.sh | bash")
   fi
 
   if [ "$JSON_OUTPUT" = false ]; then

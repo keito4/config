@@ -9,10 +9,8 @@ credentials/
 ├── README.md                        # このファイル
 ├── setup.md                         # 詳細なセットアップガイド
 ├── templates/                       # 各種サービスのテンプレート
-│   ├── aws.env.template             # AWS認証情報用テンプレート
-│   ├── simple.env.template          # 汎用環境変数テンプレート
-│   ├── devcontainer.env.template    # DevContainer環境変数用（新規）
-│   └── mcp.env.template             # MCP設定用（新規）
+│   ├── devcontainer.env.template    # DevContainer環境変数用
+│   └── mcp.env.template             # MCP設定用
 └── .gitignore                       # 生成されたファイルを無視
 ```
 
