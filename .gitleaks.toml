@@ -1,0 +1,10 @@
+# Gitleaks configuration
+# https://github.com/gitleaks/gitleaks
+
+[allowlist]
+description = "Allowlist for test files and example tokens"
+
+# Allow test/example tokens in testing template files
+paths = [
+    '''templates/testing/examples/.*'''
+]
