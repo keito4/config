@@ -85,11 +85,3 @@ npm run lint
 npm test
 
 log_success "Library update complete"
-
-# Claude Code のバージョンを特別に表示
-if [[ -f "$GLOBAL_FILE" ]] && command -v jq >/dev/null 2>&1; then
-  claude_version=$(jq -r '.dependencies["@anthropic-ai/claude-code"].version' "$GLOBAL_FILE")
-  echo ""
-  log_success "Claude Code version: ${claude_version}"
-  echo ""
-fi
