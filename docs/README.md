@@ -18,6 +18,12 @@
 | [setup/mobile-android.md](./setup/mobile-android.md)             | Android ネイティブアプリ                     |
 | [setup/desktop-extension-ts.md](./setup/desktop-extension-ts.md) | デスクトップ拡張（TypeScript）               |
 
+### テストテンプレート
+
+| ドキュメント                                                     | 説明                                            |
+| ---------------------------------------------------------------- | ----------------------------------------------- |
+| [../templates/testing/README.md](../templates/testing/README.md) | 包括的テスト設定テンプレート（21種類、5レベル） |
+
 ### DevContainer / 開発環境
 
 | ドキュメント                                               | 説明                                            |
@@ -42,12 +48,13 @@
 
 ### Claude Code コマンドとの連携
 
-| コマンド                   | 関連ドキュメント                                           |
-| -------------------------- | ---------------------------------------------------------- |
-| `/setup-new-repo`          | [setup/README.md](./setup/README.md)                       |
-| `/setup-ci`                | [setup/README.md](./setup/README.md)                       |
-| `/config-base-sync-update` | [using-config-base-image.md](./using-config-base-image.md) |
-| `/repo-maintenance`        | [tool-catalog.md](./tool-catalog.md)                       |
+| コマンド                   | 関連ドキュメント                                                 |
+| -------------------------- | ---------------------------------------------------------------- |
+| `/setup-new-repo`          | [setup/README.md](./setup/README.md)                             |
+| `/setup-ci`                | [setup/README.md](./setup/README.md)                             |
+| `/setup-tests`             | [../templates/testing/README.md](../templates/testing/README.md) |
+| `/config-base-sync-update` | [using-config-base-image.md](./using-config-base-image.md)       |
+| `/repo-maintenance`        | [tool-catalog.md](./tool-catalog.md)                             |
 
 ## ディレクトリ構造
 
@@ -66,6 +73,13 @@ docs/
 ├── mcp-servers-guide.md        # MCP サーバー設定
 ├── sentry-setup-guide.md       # Sentry セットアップ
 └── tool-catalog.md             # ツールカタログ
+
+templates/
+├── testing/                     # テスト設定テンプレート
+│   ├── README.md               # テストテンプレートガイド（21種類）
+│   ├── jest.config.js          # Jest 基本設定
+│   ├── playwright.config.ts    # Playwright E2E 設定
+│   └── examples/               # 各テスト種別のサンプルコード
 ```
 
 ## 関連リソース
