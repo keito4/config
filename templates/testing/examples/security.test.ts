@@ -101,7 +101,8 @@ describe('Security Tests', () => {
 
     it('期限切れトークンで401', async () => {
       // 期限切れトークン（実際のテストではモックまたは実際の期限切れトークンを使用）
-      const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjB9.xxx';
+      // gitleaks:allow - テスト用の無効なトークン例
+      const expiredToken = 'expired-test-token-for-testing-purposes-only';
 
       const res = await fetch(`${BASE_URL}/api/users`, {
         headers: {
