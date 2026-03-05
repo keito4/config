@@ -123,7 +123,13 @@ case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
-# pnpm end# Added by Windsurf
+# pnpm end
+
+# ni - package manager command unifier (@antfu/ni)
+alias nrd="nr dev"
+alias nrb="nr build"
+alias nrs="nr start"
+alias nrp="nr preview"# Added by Windsurf
 export PATH="$HOME/.codeium/windsurf/bin:$PATH"
 
 ### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
