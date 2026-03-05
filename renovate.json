@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "UTC",
+  "schedule": ["every week on Monday at 3am"],
+  "packageRules": [
+    {
+      "description": "npm: 直近2日のリリースはスキップ（supply chain attack 対策）",
+      "matchManagers": ["npm"],
+      "minimumReleaseAge": "2 days",
+      "labels": ["dependencies", "npm"],
+      "commitMessagePrefix": "deps:",
+      "groupName": "npm patch/minor",
+      "groupSlug": "npm-deps",
+      "matchUpdateTypes": ["patch", "minor"]
+    },
+    {
+      "description": "npm major: 個別PR・手動レビュー必須",
+      "matchManagers": ["npm"],
+      "minimumReleaseAge": "2 days",
+      "matchUpdateTypes": ["major"],
+      "labels": ["dependencies", "npm", "major"],
+      "commitMessagePrefix": "deps!:",
+      "automerge": false
+    },
+    {
+      "description": "semantic-release: major は手動レビュー",
+      "matchPackageNames": ["semantic-release", "@semantic-release/*"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
+}
