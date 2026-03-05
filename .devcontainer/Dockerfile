@@ -66,7 +66,7 @@ RUN NODE_VERSION=v22.22.0 \
  && rm node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
  && ln -s /usr/local/bin/node /usr/local/bin/nodejs
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10.30.3
 
 USER vscode
 ENV SHELL=/bin/bash

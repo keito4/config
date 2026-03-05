@@ -1,0 +1,10 @@
+# pnpm workspace configuration
+# https://pnpm.io/pnpm-workspace_yaml
+
+# supply chain attack 対策: 公開から 2 日未満のパッケージをインストール禁止
+# pnpm v10.16.0+ でサポート
+# 単位: 分（2880 = 2 days）
+minimumReleaseAge: 2880
+
+# 除外パッケージ（公式・信頼できるリリースサイクルが速いもの）
+minimumReleaseAgeExclude: []

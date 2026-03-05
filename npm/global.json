@@ -53,6 +53,10 @@
       "version": "0.34.6",
       "overridden": false
     },
+    "@antfu/ni": {
+      "version": "28.2.0",
+      "overridden": false
+    },
     "difit": {
       "version": "3.1.12",
       "overridden": false

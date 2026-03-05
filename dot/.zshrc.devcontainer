@@ -87,3 +87,9 @@ setopt NO_BEEP
 
 # Set default editor
 export EDITOR='vim'
+
+# ni - package manager command unifier (@antfu/ni)
+alias nrd="nr dev"
+alias nrb="nr build"
+alias nrs="nr start"
+alias nrp="nr preview"
