@@ -308,6 +308,81 @@ Git hooks（pre-commit）の設定状況を確認：
 - ⚠️ Husky 未設定 → セットアップを提案
 - 📝 設定内容: pre-commit, commit-msg
 
+### 3.2.1 Check-file-length Setup Check
+
+pre-commit フックに `check-file-length` が含まれているか確認・追加：
+
+**確認ロジック:**
+
+```bash
+PRECOMMIT=".husky/pre-commit"
+SCRIPT_DEST="script/check-file-length.sh"
+SCRIPT_SRC_DEVCONTAINER="/usr/local/script/check-file-length.sh"
+SCRIPT_RAW_URL="https://raw.githubusercontent.com/keito4/config/main/script/check-file-length.sh"
+
+has_precommit=false
+has_file_length=false
+
+[ -f "$PRECOMMIT" ] && has_precommit=true
+grep -q "check-file-length" "$PRECOMMIT" 2>/dev/null && has_file_length=true
+```
+
+**結果パターン:**
+
+| 状態                                     | 対応                          |
+| ---------------------------------------- | ----------------------------- |
+| pre-commit あり + check-file-length あり | ✅ スキップ                   |
+| pre-commit あり + check-file-length なし | ⚠️ → full mode で自動追加     |
+| pre-commit なし                          | ⏭️ Husky 未設定のためスキップ |
+
+**MODE が `full` かつ追加が必要な場合の実行内容:**
+
+1. スクリプトを取得（優先順位順）:
+
+```bash
+mkdir -p script
+if [ -f "$SCRIPT_SRC_DEVCONTAINER" ]; then
+  # DevContainer 環境: コンテナ内スクリプトをコピー
+  cp "$SCRIPT_SRC_DEVCONTAINER" "$SCRIPT_DEST"
+elif [ ! -f "$SCRIPT_DEST" ]; then
+  # ローカル環境: GitHub から取得
+  curl -fsSL "$SCRIPT_RAW_URL" -o "$SCRIPT_DEST"
+fi
+chmod +x "$SCRIPT_DEST"
+```
+
+2. pre-commit フックに追記:
+
+```bash
+# すでに lint-staged を呼んでいる行の後に追加
+echo "" >> "$PRECOMMIT"
+echo "# check-file-length" >> "$PRECOMMIT"
+echo "bash script/check-file-length.sh" >> "$PRECOMMIT"
+```
+
+3. `.filelengthignore` がなければテンプレートから生成:
+
+```bash
+IGNORE_TEMPLATE="/usr/local/share/config-templates/.filelengthignore.template"
+if [ ! -f ".filelengthignore" ]; then
+  if [ -f "$IGNORE_TEMPLATE" ]; then
+    cp "$IGNORE_TEMPLATE" .filelengthignore
+  else
+    cat > .filelengthignore << 'EOF'
+# 自動生成ファイル
+**/*.generated.*
+**/database.types.ts
+EOF
+  fi
+fi
+```
+
+**結果:**
+
+- ✅ check-file-length が pre-commit に設定済み
+- 🔧 check-file-length を pre-commit に追加しました
+- ⏭️ Husky 未設定のためスキップ
+
 ### 3.3 Pre-PR Checklist Validation
 
 PR 作成前のチェック項目を検証：
@@ -572,6 +647,7 @@ npm install -D @biomejs/biome knip
 ## Setup (2/4)
 ├── Team Protection: ✅ Branch protection enabled
 ├── Husky: ✅ Git hooks configured
+├── check-file-length: ✅ Configured in pre-commit (or 🔧 Added / ⏭️ Skipped)
 ├── Pre-PR Checklist: ✅ CI workflow exists
 ├── CLAUDE.md: ✅ Symlink to AGENTS.md
 └── CI/CD: ✅ Standard level configured
@@ -762,6 +838,7 @@ Run this command regularly to maintain repository health:
 | Environment | `/codespaces-secrets`           | Codespaces シークレット同期   |
 | Setup       | `/setup-team-protection`        | GitHub保護ルール設定          |
 | Setup       | `/setup-husky`                  | Git hooks設定                 |
+| Setup       | (check-file-length auto-setup)  | ファイル行数チェック追加      |
 | Setup       | `/pre-pr-checklist`             | PR前チェックリスト            |
 | Setup       | (CLAUDE.md symlink check)       | CLAUDE.md シンボリックリンク  |
 | Setup       | `/setup-ci`                     | CI/CDワークフロー設定         |
