@@ -35,6 +35,16 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
+ARG GH_CLI_VERSION=2.68.1
+
+# Install GitHub CLI (gh)
+# https://cli.github.com/
+RUN GH_VERSION="${GH_CLI_VERSION}" \
+ && ARCH=$(dpkg --print-architecture) \
+ && curl -sLo /tmp/gh.deb "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${ARCH}.deb" \
+ && dpkg -i /tmp/gh.deb \
+ && rm /tmp/gh.deb
+
 ARG DOPPLER_CLI_VERSION=3.75.3
 
 # Install Doppler CLI from GitHub releases for latest security patches
