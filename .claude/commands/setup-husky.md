@@ -16,18 +16,18 @@ Husky + lint-staged + commitlint + file-length 最小構成
 npm i -D husky lint-staged @commitlint/cli @commitlint/config-conventional
 npm pkg set scripts.prepare="husky"
 npm run prepare
-npx husky add .husky/pre-commit "npx lint-staged && bash scripts/check-file-length.sh"
+npx husky add .husky/pre-commit "npx lint-staged && bash script/check-file-length.sh"
 npx husky add .husky/commit-msg "npx commitlint --edit \$1"
 npx husky add .husky/pre-push "npm --prefix next run type-check && npm --prefix next run test:ci"
 
 # ファイル行数チェックの設定
 
-mkdir -p scripts
+mkdir -p script
 
 # DevContainer 環境の場合
 
 if [ -f /usr/local/script/check-file-length.sh ]; then
-cp /usr/local/script/check-file-length.sh scripts/
+cp /usr/local/script/check-file-length.sh script/
 fi
 
 # テンプレートから .filelengthignore をコピー
@@ -136,7 +136,7 @@ Husky の再初期化
 
 rm -rf .husky
 npm run prepare
-npx husky add .husky/pre-commit "npx lint-staged && bash scripts/check-file-length.sh"
+npx husky add .husky/pre-commit "npx lint-staged && bash script/check-file-length.sh"
 npx husky add .husky/commit-msg "npx commitlint --edit \$1"
 npx husky add .husky/pre-push "npm --prefix next run type-check && npm --prefix next run test:ci"
 
