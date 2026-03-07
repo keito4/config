@@ -583,6 +583,181 @@ MODE が `full` かつ CI/CD が未設定の場合:
 
 `/setup-ci` コマンドの実行を提案。
 
+### 3.6 Renovate / Dependabot 設定チェック
+
+依存関係の自動更新設定を確認：
+
+**確認ロジック:**
+
+```bash
+HAS_RENOVATE=false
+HAS_DEPENDABOT=false
+
+[ -f ".github/renovate.json" ] || [ -f ".github/renovate.json5" ] || \
+  [ -f "renovate.json" ] || [ -f "renovate.json5" ] && HAS_RENOVATE=true
+
+[ -f ".github/dependabot.yml" ] || [ -f ".github/dependabot.yaml" ] && HAS_DEPENDABOT=true
+```
+
+**結果パターン:**
+
+| 状態                                  | 対応                                    |
+| ------------------------------------- | --------------------------------------- |
+| Renovate または Dependabot が設定済み | ✅ スキップ                             |
+| どちらも未設定                        | ⚠️ → full mode でテンプレート生成を提案 |
+
+**MODE が `full` かつ未設定の場合:**
+
+Renovate の最小構成テンプレートを生成：
+
+```bash
+mkdir -p .github
+cat > .github/renovate.json << 'EOF'
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "schedule": ["before 9am on Monday"],
+  "automerge": false,
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true
+    }
+  ]
+}
+EOF
+echo "🔧 .github/renovate.json を生成しました"
+echo "   GitHub Apps で Renovate をインストールしてください:"
+echo "   https://github.com/apps/renovate"
+```
+
+**結果:**
+
+- ✅ Renovate / Dependabot 設定済み
+- 🔧 .github/renovate.json を生成しました
+- ⏭️ スキップ（`package.json` なし）
+
+### 3.7 commitlint 設定チェック
+
+コミットメッセージの品質管理設定を確認：
+
+**確認ロジック:**
+
+```bash
+HAS_COMMITLINT=false
+HAS_COMMITMSG_HOOK=false
+
+# commitlint 設定ファイルの確認
+for f in commitlint.config.js commitlint.config.ts commitlint.config.mjs \
+          commitlint.config.cjs .commitlintrc.js .commitlintrc.json \
+          .commitlintrc.yml .commitlintrc.yaml; do
+  [ -f "$f" ] && HAS_COMMITLINT=true && break
+done
+
+# Husky commit-msg フックの確認
+grep -q "commitlint" .husky/commit-msg 2>/dev/null && HAS_COMMITMSG_HOOK=true
+```
+
+**結果パターン:**
+
+| 状態                                        | 対応                                    |
+| ------------------------------------------- | --------------------------------------- |
+| commitlint 設定あり + commit-msg フックあり | ✅ 設定済み                             |
+| commitlint 設定あり + commit-msg フックなし | ⚠️ フック未設定                         |
+| commitlint 設定なし                         | ⚠️ → full mode で `/setup-husky` を提案 |
+
+**結果:**
+
+- ✅ commitlint 設定済み（commit-msg フック連携）
+- ⚠️ commitlint 設定あり、commit-msg フック未設定 → `/setup-husky` で追加を提案
+- ⚠️ commitlint 未設定 → `/setup-husky` でセットアップを提案
+- ⏭️ スキップ（Husky 未設定）
+
+### 3.8 .editorconfig 設定チェック
+
+エディタ間のコーディングスタイル一貫性を確認：
+
+**確認ロジック:**
+
+```bash
+HAS_EDITORCONFIG=false
+[ -f ".editorconfig" ] && HAS_EDITORCONFIG=true
+```
+
+**MODE が `full` かつ未設定の場合:**
+
+標準テンプレートを生成：
+
+```bash
+cat > .editorconfig << 'EOF'
+root = true
+
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.md]
+trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab
+EOF
+echo "🔧 .editorconfig を生成しました"
+```
+
+**結果:**
+
+- ✅ .editorconfig 設定済み
+- 🔧 .editorconfig を生成しました
+- ⏭️ スキップ（`check-only` モード）
+
+### 3.9 package.json scripts 標準チェック
+
+Quality Gates で必要なスクリプトが揃っているか確認：
+
+**必須スクリプト一覧:**
+
+| スクリプト                      | 目的                 | Quality Gate での使用 |
+| ------------------------------- | -------------------- | --------------------- |
+| `dev`                           | 開発サーバー起動     | -                     |
+| `build`                         | プロダクションビルド | CI/CD                 |
+| `test` または `test:unit`       | ユニットテスト       | pre-commit / CI       |
+| `lint` または `lint:check`      | Lint チェック        | pre-commit / CI       |
+| `format:check`                  | フォーマットチェック | pre-commit / CI       |
+| `typecheck` または `type-check` | 型チェック           | CI                    |
+
+**確認ロジック:**
+
+```bash
+MISSING_SCRIPTS=()
+SCRIPTS=$(jq -r '.scripts | keys[]' package.json 2>/dev/null)
+
+check_script() {
+  local name="$1"
+  shift
+  for alias in "$@"; do
+    echo "$SCRIPTS" | grep -qx "$alias" && return 0
+  done
+  MISSING_SCRIPTS+=("$name")
+}
+
+check_script "test"        "test" "test:unit"
+check_script "lint"        "lint" "lint:check"
+check_script "format:check" "format:check"
+check_script "typecheck"   "typecheck" "type-check" "tsc"
+```
+
+**結果:**
+
+- ✅ 必須スクリプト: すべて定義済み
+- ⚠️ 未定義スクリプト: X 件（リスト表示）
+- ⏭️ スキップ（`package.json` なし）
+
 ## Step 4: Cleanup Category
 
 ### 4.1 Branch Cleanup
@@ -702,6 +877,36 @@ done
 - ⚠️ 未導入パッケージ: X 件（インストールコマンドをリスト表示）
 - ⏭️ スキップ（`package.json` なし / プロジェクト種別不明）
 
+**パッケージマネージャーの自動検出（`ni` 対応）:**
+
+`ni`（antfu/ni）がインストール済みの場合は優先使用し、ロックファイルから自動判定：
+
+```bash
+# パッケージマネージャーの検出
+detect_pm() {
+  if command -v ni >/dev/null 2>&1; then
+    echo "ni"
+  elif [ -f "pnpm-lock.yaml" ]; then
+    echo "pnpm"
+  elif [ -f "yarn.lock" ]; then
+    echo "yarn"
+  elif [ -f "bun.lockb" ] || [ -f "bun.lock" ]; then
+    echo "bun"
+  else
+    echo "npm"
+  fi
+}
+
+PM=$(detect_pm)
+case "$PM" in
+  ni)   INSTALL="ni"; INSTALL_DEV="ni -D" ;;
+  pnpm) INSTALL="pnpm add"; INSTALL_DEV="pnpm add -D" ;;
+  yarn) INSTALL="yarn add"; INSTALL_DEV="yarn add -D" ;;
+  bun)  INSTALL="bun add"; INSTALL_DEV="bun add -D" ;;
+  *)    INSTALL="npm install"; INSTALL_DEV="npm install -D" ;;
+esac
+```
+
 **未導入パッケージがある場合の出力例:**
 
 ```
@@ -713,8 +918,8 @@ done
   - knip                (未使用コード検出)
 
 インストールコマンド:
-  npm install @vercel/logger @sentry/nextjs
-  npm install -D knip
+  ni @vercel/logger @sentry/nextjs    # ni が利用可能な場合
+  ni -D knip
 
 詳細: docs/setup/web-app-nextjs.md
 ```
@@ -724,9 +929,9 @@ done
 インストールを確認してから実行：
 
 ```bash
-# 確認後に実行
-npm install @vercel/logger @sentry/nextjs
-npm install -D @biomejs/biome knip
+# 確認後に実行（パッケージマネージャーは自動検出）
+$INSTALL @vercel/logger @sentry/nextjs
+$INSTALL_DEV @biomejs/biome knip
 ```
 
 ## Step 6: Generate Summary Report
@@ -751,6 +956,10 @@ npm install -D @biomejs/biome knip
 ├── Team Protection: ✅ Branch protection enabled
 ├── Husky: ✅ Git hooks configured\n├── hooksPath: ✅ Valid (.husky) (or 🔧 Fixed / ❌ Manual required)\n├── Husky v8→v9: ✅ v9スタイル済み (or 🔧 移行しました / ✅ スキップ)
 ├── check-file-length: ✅ Configured in pre-commit (or 🔧 Added / ⏭️ Skipped)
+├── Renovate/Dependabot: ✅ Auto-update configured (or 🔧 renovate.json generated / ⏭️ Skipped)
+├── commitlint: ✅ Configured with commit-msg hook (or ⚠️ Hook missing / ⚠️ Not configured)
+├── .editorconfig: ✅ Configured (or 🔧 Generated)
+├── scripts: ✅ All standard scripts defined (or ⚠️ Missing: test, lint)
 ├── Pre-PR Checklist: ✅ CI workflow exists
 ├── CLAUDE.md: ✅ Symlink to AGENTS.md
 └── CI/CD: ✅ Standard level configured
@@ -945,6 +1154,10 @@ Run this command regularly to maintain repository health:
 | Setup       | `/pre-pr-checklist`             | PR前チェックリスト            |
 | Setup       | (CLAUDE.md symlink check)       | CLAUDE.md シンボリックリンク  |
 | Setup       | `/setup-ci`                     | CI/CDワークフロー設定         |
+| Setup       | (Renovate/Dependabot check)     | 依存関係自動更新設定          |
+| Setup       | (commitlint check)              | コミットメッセージ品質管理    |
+| Setup       | (editorconfig check)            | エディタスタイル設定          |
+| Setup       | (scripts standard check)        | package.json scripts 標準確認 |
 | Cleanup     | `/branch-cleanup`               | ブランチクリーンアップ        |
 | Discovery   | `/config-contribution-discover` | 新機能発見                    |
-| Discovery   | (Package Audit)                 | 推奨パッケージ監査            |
+| Discovery   | (Package Audit + ni support)    | 推奨パッケージ監査            |
