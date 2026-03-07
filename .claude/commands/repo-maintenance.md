@@ -357,7 +357,61 @@ fi
 - 🔧 core.hooksPath を修正しました（壊れたパス → `.husky`）
 - ❌ .husky ディレクトリ不在のため手動対応が必要
 
-### 3.2.2 Check-file-length Setup Check
+### 3.2.2 Husky v8 → v9 Migration Check
+
+`.husky/_` 経由のフック実行（husky v8 スタイル）を v9 スタイルへ移行提案：
+
+**確認ロジック:**
+
+```bash
+HOOKS_PATH=$(git config core.hooksPath 2>/dev/null || echo "")
+IS_V8_STYLE=false
+[ "$HOOKS_PATH" = ".husky/_" ] && IS_V8_STYLE=true
+```
+
+**v8 と v9 の違い:**
+
+| 項目       | v8 スタイル                                  | v9 スタイル                    |
+| ---------- | -------------------------------------------- | ------------------------------ |
+| hooksPath  | `.husky/_`                                   | `.husky`                       |
+| フック実行 | `_/h` 経由で `.husky/pre-commit` を呼ぶ      | `.husky/pre-commit` を直接実行 |
+| 旧 shebang | `. "$(dirname -- "$0")/_/husky.sh"` 行が必要 | 不要（素のシェルスクリプト）   |
+
+**結果パターン:**
+
+| 状態                        | 対応                                 |
+| --------------------------- | ------------------------------------ |
+| `core.hooksPath = .husky`   | ✅ v9スタイル済み                    |
+| `core.hooksPath = .husky/_` | ⚠️ v8スタイル → full mode で移行提案 |
+| 未設定                      | ✅ スキップ                          |
+
+**MODE が `full` かつ v8 スタイルの場合:**
+
+```bash
+# 1. hooksPath を v9 スタイルに更新
+git config core.hooksPath ".husky"
+
+# 2. 各フックファイルから旧 shebang を削除（存在する場合）
+for hook in .husky/pre-commit .husky/pre-push .husky/commit-msg; do
+  [ ! -f "$hook" ] && continue
+  if grep -q "_/husky.sh" "$hook"; then
+    # 旧 husky v8 の source 行を削除
+    grep -v "_/husky.sh" "$hook" > "$hook.tmp" && mv "$hook.tmp" "$hook"
+    # #!/usr/bin/env sh を #!/bin/sh に統一
+    sed -i "" "s|#!/usr/bin/env sh|#!/bin/sh|" "$hook"
+    chmod +x "$hook"
+    echo "🔧 $hook から旧 shebang を削除しました"
+  fi
+done
+```
+
+**結果:**
+
+- ✅ v9スタイル（`.husky`）で設定済み
+- 🔧 v8 → v9 へ移行しました（hooksPath 更新 + 旧 shebang 削除）
+- ✅ スキップ（hooksPath 未設定）
+
+### 3.2.3 Check-file-length Setup Check
 
 pre-commit フックに `check-file-length` が含まれているか確認・追加：
 
@@ -695,7 +749,7 @@ npm install -D @biomejs/biome knip
 
 ## Setup (2/4)
 ├── Team Protection: ✅ Branch protection enabled
-├── Husky: ✅ Git hooks configured\n├── hooksPath: ✅ Valid (.husky) (or 🔧 Fixed / ❌ Manual required)
+├── Husky: ✅ Git hooks configured\n├── hooksPath: ✅ Valid (.husky) (or 🔧 Fixed / ❌ Manual required)\n├── Husky v8→v9: ✅ v9スタイル済み (or 🔧 移行しました / ✅ スキップ)
 ├── check-file-length: ✅ Configured in pre-commit (or 🔧 Added / ⏭️ Skipped)
 ├── Pre-PR Checklist: ✅ CI workflow exists
 ├── CLAUDE.md: ✅ Symlink to AGENTS.md
