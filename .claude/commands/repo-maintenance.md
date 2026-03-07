@@ -308,7 +308,56 @@ Git hooks（pre-commit）の設定状況を確認：
 - ⚠️ Husky 未設定 → セットアップを提案
 - 📝 設定内容: pre-commit, commit-msg
 
-### 3.2.1 Check-file-length Setup Check
+### 3.2.1 Husky hooksPath Validation
+
+`core.hooksPath` が正常な値かどうか確認・修正：
+
+**確認ロジック:**
+
+```bash
+HOOKS_PATH=$(git config core.hooksPath 2>/dev/null || echo "")
+VALID_PATHS=(".husky" ".husky/_")
+
+is_valid=false
+for valid in "${VALID_PATHS[@]}"; do
+  [ "$HOOKS_PATH" = "$valid" ] && is_valid=true && break
+done
+```
+
+**結果パターン:**
+
+| 状態                       | 対応                            |
+| -------------------------- | ------------------------------- |
+| `.husky` または `.husky/_` | ✅ 正常                         |
+| 空（未設定）               | ✅ デフォルト動作のためスキップ |
+| それ以外（壊れたパス）     | ⚠️ → full mode で自動修正       |
+
+**壊れたパスの例（実際に発生したケース）:**
+
+- `--version/_` → git が `sh --version/_/pre-commit` を実行しフックが一切動作しない
+
+**MODE が `full` かつ修正が必要な場合:**
+
+```bash
+echo "⚠️ core.hooksPath が不正です: '$HOOKS_PATH'"
+
+# .husky/ が存在すれば .husky に修正
+if [ -d ".husky" ]; then
+  git config core.hooksPath ".husky"
+  echo "🔧 core.hooksPath を '.husky' に修正しました"
+else
+  echo "❌ .husky ディレクトリが存在しないため自動修正できません"
+fi
+```
+
+**結果:**
+
+- ✅ core.hooksPath が正常（`.husky` または `.husky/_`）
+- ✅ core.hooksPath 未設定（デフォルト動作）
+- 🔧 core.hooksPath を修正しました（壊れたパス → `.husky`）
+- ❌ .husky ディレクトリ不在のため手動対応が必要
+
+### 3.2.2 Check-file-length Setup Check
 
 pre-commit フックに `check-file-length` が含まれているか確認・追加：
 
@@ -646,7 +695,7 @@ npm install -D @biomejs/biome knip
 
 ## Setup (2/4)
 ├── Team Protection: ✅ Branch protection enabled
-├── Husky: ✅ Git hooks configured
+├── Husky: ✅ Git hooks configured\n├── hooksPath: ✅ Valid (.husky) (or 🔧 Fixed / ❌ Manual required)
 ├── check-file-length: ✅ Configured in pre-commit (or 🔧 Added / ⏭️ Skipped)
 ├── Pre-PR Checklist: ✅ CI workflow exists
 ├── CLAUDE.md: ✅ Symlink to AGENTS.md
