@@ -747,6 +747,7 @@ check_script() {
 }
 
 check_script "test"        "test" "test:unit"
+# Biome プロジェクトは "check" スクリプトで lint + format を統合する場合がある
 check_script "lint"        "lint" "lint:check"
 check_script "format:check" "format:check"
 check_script "typecheck"   "typecheck" "type-check" "tsc"

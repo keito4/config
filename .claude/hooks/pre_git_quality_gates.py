@@ -3,11 +3,12 @@
 グローバル Quality Gates: git commit/push 前にローカル CI チェックを実行
 
 リポジトリの package.json を解析し、利用可能なチェックを自動検出して実行する。
-npm / pnpm / yarn / bun に対応。
+npm / pnpm / yarn / bun / ni に対応。Biome による統合チェックにも対応。
 """
 import sys
 import json
 import shlex
+import shutil
 import subprocess
 import os
 from pathlib import Path
@@ -50,7 +51,10 @@ if not repo_root:
 
 
 def detect_package_manager(root: str) -> str:
-    """パッケージマネージャーを検出"""
+    """パッケージマネージャーを検出。ni が利用可能な場合は優先使用"""
+    # ni (antfu/ni) がインストール済みの場合は優先使用（nr = ni's run command）
+    if shutil.which("nr"):
+        return "ni"
     if (Path(root) / "bun.lockb").exists() or (Path(root) / "bun.lock").exists():
         return "bun"
     if (Path(root) / "pnpm-lock.yaml").exists():
@@ -58,6 +62,29 @@ def detect_package_manager(root: str) -> str:
     if (Path(root) / "yarn.lock").exists():
         return "yarn"
     return "npm"
+
+
+def build_run_command(pm: str, script_name: str) -> list:
+    """パッケージマネージャーに応じたスクリプト実行コマンドを生成"""
+    if pm == "ni":
+        return ["nr", script_name]  # nr = ni run
+    return [pm, "run", script_name]
+
+
+def has_biome(root: str) -> bool:
+    """Biome が導入されているか確認"""
+    if (Path(root) / "biome.json").exists() or (Path(root) / "biome.jsonc").exists():
+        return True
+    pkg_path = Path(root) / "package.json"
+    if pkg_path.exists():
+        try:
+            with open(pkg_path) as f:
+                pkg = json.load(f)
+            all_deps = {**pkg.get("dependencies", {}), **pkg.get("devDependencies", {})}
+            return "@biomejs/biome" in all_deps
+        except Exception:
+            pass
+    return False
 
 
 def get_package_scripts(root: str) -> dict:
@@ -131,10 +158,25 @@ for candidate in CHECK_CANDIDATES:
         if script_name in scripts:
             checks.append({
                 "name": candidate["label"],
-                "command": [pm, "run", script_name],
+                "command": build_run_command(pm, script_name),
                 "description": candidate["description"],
             })
             break  # 最初にマッチしたスクリプトを使用
+
+# Biome 対応: biome.json があるが package.json scripts に lint/format:check が定義されていない場合
+# node_modules/.bin/biome を直接実行してカバー
+if has_biome(repo_root):
+    has_lint_check = any(
+        c["name"] in ("Lint", "Format Check") for c in checks
+    )
+    if not has_lint_check:
+        biome_bin = Path(repo_root) / "node_modules" / ".bin" / "biome"
+        if biome_bin.exists():
+            checks.insert(0, {
+                "name": "Biome Check (lint + format)",
+                "command": [str(biome_bin), "check", "."],
+                "description": "Biome による lint + format 統合チェック",
+            })
 
 # スクリプトベースのチェック（リポジトリに存在する場合のみ）
 SCRIPT_CHECKS = [
