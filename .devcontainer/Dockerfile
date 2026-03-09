@@ -100,8 +100,10 @@ COPY npm/global.json /tmp/npm-global.json
 
 # Install Claude Code using native installer (npm installation deprecated)
 # Must run as vscode user so claude installs to /home/vscode/.claude/local/bin
+# Version is managed by .github/workflows/update-claude-code.yml
+ARG CLAUDE_CODE_VERSION=2.1.71
 USER vscode
-RUN curl -fsSL https://claude.ai/install.sh | bash -s 2.1.63 \
+RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
  && echo 'export PATH="$HOME/.claude/local/bin:$PATH"' >> /home/vscode/.bashrc
 ENV PATH="/home/vscode/.claude/local/bin:${PATH}"
 USER root
