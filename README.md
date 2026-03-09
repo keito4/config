@@ -43,7 +43,7 @@ The `git/gitconfig` file uses commented placeholders instead of hardcoded values
 ```bash
 git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
-git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
 ```
 
 ### Setup Instructions
@@ -85,7 +85,7 @@ git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
    ```bash
    git config --global user.name "Your Name"
    git config --global user.email "your.email@example.com"
-   git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
+   git config --global user.signingkey ~/.ssh/id_ed25519.pub
    ```
 
 5. **Install packages using Homebrew**
