@@ -1,0 +1,170 @@
+name: Update Development Tools
+
+on:
+  schedule:
+    # 毎日 UTC 5:00（JST 14:00）に実行
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      has_updates: ${{ steps.compare.outputs.has_updates }}
+      updates_summary: ${{ steps.compare.outputs.summary }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get current versions from Dockerfile
+        id: current
+        run: |
+          echo "gh_cli=$(grep -oP 'GH_CLI_VERSION=\K[0-9.]+' .devcontainer/Dockerfile)" >> $GITHUB_OUTPUT
+          echo "doppler=$(grep -oP 'DOPPLER_CLI_VERSION=\K[0-9.]+' .devcontainer/Dockerfile)" >> $GITHUB_OUTPUT
+          echo "op_cli=$(grep -oP 'OP_CLI_VERSION=\K[0-9.]+' .devcontainer/Dockerfile)" >> $GITHUB_OUTPUT
+          echo "node=$(grep -oP 'NODE_VERSION=\K[0-9.]+' .devcontainer/Dockerfile)" >> $GITHUB_OUTPUT
+          echo "pnpm=$(grep -oP 'PNPM_VERSION=\K[0-9.]+' .devcontainer/Dockerfile)" >> $GITHUB_OUTPUT
+          echo "claude_code=$(grep -oP 'CLAUDE_CODE_VERSION=\K[0-9.]+' .devcontainer/Dockerfile)" >> $GITHUB_OUTPUT
+
+      - name: Get latest versions
+        id: latest
+        run: |
+          # GitHub CLI - GitHub Releases API
+          GH_LATEST=$(curl -s https://api.github.com/repos/cli/cli/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+          echo "gh_cli=$GH_LATEST" >> $GITHUB_OUTPUT
+
+          # Doppler CLI - GitHub Releases API
+          DOPPLER_LATEST=$(curl -s https://api.github.com/repos/DopplerHQ/cli/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+          echo "doppler=$DOPPLER_LATEST" >> $GITHUB_OUTPUT
+
+          # 1Password CLI - releases page
+          OP_LATEST=$(curl -s https://app-updates.agilebits.com/check/1/0/CLI2/en/0/N -H "User-Agent: Mozilla/5.0" | jq -r '.version // empty' || curl -s https://api.github.com/repos/1Password/connect/releases/latest | jq -r '.tag_name' | sed 's/^v//' || echo "")
+          if [ -z "$OP_LATEST" ]; then
+            # Fallback: use current version if can't fetch
+            OP_LATEST="${{ steps.current.outputs.op_cli }}"
+          fi
+          echo "op_cli=$OP_LATEST" >> $GITHUB_OUTPUT
+
+          # Node.js LTS - nodejs.org API
+          NODE_LATEST=$(curl -s https://nodejs.org/dist/index.json | jq -r '[.[] | select(.lts != false)] | .[0].version' | sed 's/^v//')
+          echo "node=$NODE_LATEST" >> $GITHUB_OUTPUT
+
+          # pnpm - npm registry
+          PNPM_LATEST=$(npm view pnpm version)
+          echo "pnpm=$PNPM_LATEST" >> $GITHUB_OUTPUT
+
+          # Claude Code - npm registry
+          CLAUDE_LATEST=$(npm view @anthropic-ai/claude-code version)
+          echo "claude_code=$CLAUDE_LATEST" >> $GITHUB_OUTPUT
+
+      - name: Compare versions
+        id: compare
+        run: |
+          UPDATES=""
+          HAS_UPDATES="false"
+
+          compare_version() {
+            local name=$1 current=$2 latest=$3
+            if [ "$current" != "$latest" ] && [ -n "$latest" ]; then
+              echo "- **$name**: \`$current\` → \`$latest\`"
+              return 0
+            fi
+            return 1
+          }
+
+          if compare_version "GitHub CLI" "${{ steps.current.outputs.gh_cli }}" "${{ steps.latest.outputs.gh_cli }}" >> /tmp/updates.txt; then
+            HAS_UPDATES="true"
+          fi
+          if compare_version "Doppler CLI" "${{ steps.current.outputs.doppler }}" "${{ steps.latest.outputs.doppler }}" >> /tmp/updates.txt; then
+            HAS_UPDATES="true"
+          fi
+          if compare_version "1Password CLI" "${{ steps.current.outputs.op_cli }}" "${{ steps.latest.outputs.op_cli }}" >> /tmp/updates.txt; then
+            HAS_UPDATES="true"
+          fi
+          if compare_version "Node.js" "${{ steps.current.outputs.node }}" "${{ steps.latest.outputs.node }}" >> /tmp/updates.txt; then
+            HAS_UPDATES="true"
+          fi
+          if compare_version "pnpm" "${{ steps.current.outputs.pnpm }}" "${{ steps.latest.outputs.pnpm }}" >> /tmp/updates.txt; then
+            HAS_UPDATES="true"
+          fi
+          if compare_version "Claude Code" "${{ steps.current.outputs.claude_code }}" "${{ steps.latest.outputs.claude_code }}" >> /tmp/updates.txt; then
+            HAS_UPDATES="true"
+          fi
+
+          echo "has_updates=$HAS_UPDATES" >> $GITHUB_OUTPUT
+
+          {
+            echo "summary<<EOF"
+            cat /tmp/updates.txt 2>/dev/null || echo "No updates available"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+          echo "Updates found: $HAS_UPDATES"
+          cat /tmp/updates.txt 2>/dev/null || echo "No updates"
+
+      - name: Update Dockerfile
+        if: steps.compare.outputs.has_updates == 'true'
+        run: |
+          # Update each version if changed
+          if [ "${{ steps.current.outputs.gh_cli }}" != "${{ steps.latest.outputs.gh_cli }}" ] && [ -n "${{ steps.latest.outputs.gh_cli }}" ]; then
+            sed -i "s/GH_CLI_VERSION=${{ steps.current.outputs.gh_cli }}/GH_CLI_VERSION=${{ steps.latest.outputs.gh_cli }}/" .devcontainer/Dockerfile
+          fi
+          if [ "${{ steps.current.outputs.doppler }}" != "${{ steps.latest.outputs.doppler }}" ] && [ -n "${{ steps.latest.outputs.doppler }}" ]; then
+            sed -i "s/DOPPLER_CLI_VERSION=${{ steps.current.outputs.doppler }}/DOPPLER_CLI_VERSION=${{ steps.latest.outputs.doppler }}/" .devcontainer/Dockerfile
+          fi
+          if [ "${{ steps.current.outputs.op_cli }}" != "${{ steps.latest.outputs.op_cli }}" ] && [ -n "${{ steps.latest.outputs.op_cli }}" ]; then
+            sed -i "s/OP_CLI_VERSION=${{ steps.current.outputs.op_cli }}/OP_CLI_VERSION=${{ steps.latest.outputs.op_cli }}/" .devcontainer/Dockerfile
+          fi
+          if [ "${{ steps.current.outputs.node }}" != "${{ steps.latest.outputs.node }}" ] && [ -n "${{ steps.latest.outputs.node }}" ]; then
+            sed -i "s/NODE_VERSION=${{ steps.current.outputs.node }}/NODE_VERSION=${{ steps.latest.outputs.node }}/" .devcontainer/Dockerfile
+          fi
+          if [ "${{ steps.current.outputs.pnpm }}" != "${{ steps.latest.outputs.pnpm }}" ] && [ -n "${{ steps.latest.outputs.pnpm }}" ]; then
+            sed -i "s/PNPM_VERSION=${{ steps.current.outputs.pnpm }}/PNPM_VERSION=${{ steps.latest.outputs.pnpm }}/" .devcontainer/Dockerfile
+          fi
+          if [ "${{ steps.current.outputs.claude_code }}" != "${{ steps.latest.outputs.claude_code }}" ] && [ -n "${{ steps.latest.outputs.claude_code }}" ]; then
+            sed -i "s/CLAUDE_CODE_VERSION=${{ steps.current.outputs.claude_code }}/CLAUDE_CODE_VERSION=${{ steps.latest.outputs.claude_code }}/" .devcontainer/Dockerfile
+          fi
+
+      - name: Create pull request
+        if: steps.compare.outputs.has_updates == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: fix/update-dev-tools
+          delete-branch: true
+          commit-message: 'fix: update development tools'
+          title: 'fix: update development tools'
+          body: |
+            ## 開発ツールのバージョン更新
+
+            ${{ steps.compare.outputs.summary }}
+
+            ### 📝 リリースノート
+
+            - [Claude Code Releases](https://github.com/anthropics/claude-code/releases)
+            - [GitHub CLI Releases](https://github.com/cli/cli/releases)
+            - [Doppler CLI Releases](https://github.com/DopplerHQ/cli/releases)
+            - [1Password CLI Releases](https://developer.1password.com/docs/cli/release-notes/)
+            - [Node.js Releases](https://nodejs.org/en/blog/release/)
+            - [pnpm Releases](https://github.com/pnpm/pnpm/releases)
+
+            ---
+
+            **Auto-generated by:** [update-dev-tools.yml](.github/workflows/update-dev-tools.yml)
+          labels: dependencies
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.compare.outputs.has_updates }}" == "true" ]; then
+            echo "✅ PR created for development tool updates"
+          else
+            echo "ℹ️ All development tools are up to date"
+          fi
