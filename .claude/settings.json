@@ -214,6 +214,15 @@
             "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 .claude/hooks/post_pr_ai_review.py'"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 .claude/hooks/post_pr_ci_watch.py'"
+          }
+        ]
       }
     ]
   },

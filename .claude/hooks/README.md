@@ -246,7 +246,47 @@ result = subprocess.run(
 }
 ```
 
-### 5. `pre_exit_plan_ai_review.py`
+### 5. `post_pr_ci_watch.py`
+
+**目的**: PR作成後にGitHub Actions CIの状態を監視し、結果を報告
+
+**トリガー**: `PostToolUse(Bash)` で `gh pr create` の成功を検出
+
+**動作**:
+
+- `gh pr create` 成功後に自動実行
+- PRのCIチェック状態を15秒ごとにポーリング
+- 最大10分間監視
+- 全チェック完了または失敗を検出したら報告
+- 失敗時は修正を促すメッセージを表示
+- ブロックはしない（結果を表示のみ）
+
+**前提条件**:
+
+- GitHub CLI (`gh`) がインストール済み
+- GitHub Actions ワークフローが設定済み
+
+**設定例**:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "tool_name == 'Bash'",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/post_pr_ci_watch.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 6. `pre_exit_plan_ai_review.py`
 
 **目的**: プラン作成後、ExitPlanMode実行前にAI（Codex + Gemini）によるプランレビューを実行
 
