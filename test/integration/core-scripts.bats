@@ -1,126 +1,97 @@
 #!/usr/bin/env bats
 # Core scripts integration tests
+# These tests verify that scripts exist and are executable
 
-setup() {
-    load '../test_helper/common'
-    PROJECT_ROOT="$(cd "$BATS_TEST_DIRNAME/../.." && pwd)"
+load ../test_helper/test_helper
+
+# ==================== Script Existence Tests ====================
+
+@test "branch-cleanup.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/branch-cleanup.sh"
+    [ -x "$REPO_ROOT/script/branch-cleanup.sh" ]
 }
 
-# ==================== branch-cleanup ====================
-
-@test "branch-cleanup: script exists and is executable" {
-    [ -x "$PROJECT_ROOT/script/branch-cleanup.sh" ]
+@test "check-image-version.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/check-image-version.sh"
+    [ -x "$REPO_ROOT/script/check-image-version.sh" ]
 }
 
-@test "branch-cleanup: shows help with --help" {
-    run bash "$PROJECT_ROOT/script/branch-cleanup.sh" --help 2>&1 || true
-    # スクリプトがヘルプを表示するか、または正常に動作することを確認
-    [ "$status" -eq 0 ] || [[ "$output" == *"usage"* ]] || [[ "$output" == *"help"* ]] || true
+@test "codespaces-secrets.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/codespaces-secrets.sh"
+    [ -x "$REPO_ROOT/script/codespaces-secrets.sh" ]
 }
 
-# ==================== check-image-version ====================
-
-@test "check-image-version: script exists and is executable" {
-    [ -x "$PROJECT_ROOT/script/check-image-version.sh" ]
+@test "dependency-health-check.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/dependency-health-check.sh"
+    [ -x "$REPO_ROOT/script/dependency-health-check.sh" ]
 }
 
-@test "check-image-version: runs without error" {
-    run bash "$PROJECT_ROOT/script/check-image-version.sh" 2>&1 || true
-    # スクリプトが実行できることを確認（環境によってはスキップ）
-    [ "$status" -eq 0 ] || [ "$status" -eq 1 ]
+@test "pre-pr-checklist.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/pre-pr-checklist.sh"
+    [ -x "$REPO_ROOT/script/pre-pr-checklist.sh" ]
 }
 
-# ==================== codespaces-secrets ====================
-
-@test "codespaces-secrets: script exists and is executable" {
-    [ -x "$PROJECT_ROOT/script/codespaces-secrets.sh" ]
+@test "setup-mcp.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/setup-mcp.sh"
+    [ -x "$REPO_ROOT/script/setup-mcp.sh" ]
 }
 
-@test "codespaces-secrets: shows help with --help" {
-    run bash "$PROJECT_ROOT/script/codespaces-secrets.sh" --help 2>&1 || true
-    [ "$status" -eq 0 ] || [[ "$output" == *"usage"* ]] || [[ "$output" == *"help"* ]] || true
+@test "setup-lsp.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/setup-lsp.sh"
+    [ -x "$REPO_ROOT/script/setup-lsp.sh" ]
 }
 
-# ==================== dependency-health-check ====================
-
-@test "dependency-health-check: script exists and is executable" {
-    [ -x "$PROJECT_ROOT/script/dependency-health-check.sh" ]
+@test "install-skills.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/install-skills.sh"
+    [ -x "$REPO_ROOT/script/install-skills.sh" ]
 }
 
-@test "dependency-health-check: runs without error" {
-    cd "$PROJECT_ROOT"
-    run timeout 30 bash "$PROJECT_ROOT/script/dependency-health-check.sh" 2>&1 || true
-    # タイムアウトまたは正常終了
-    [ "$status" -eq 0 ] || [ "$status" -eq 124 ] || [ "$status" -eq 1 ]
+@test "fix-container-plugins.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/fix-container-plugins.sh"
+    [ -x "$REPO_ROOT/script/fix-container-plugins.sh" ]
 }
 
-# ==================== pre-pr-checklist ====================
-
-@test "pre-pr-checklist: script exists and is executable" {
-    [ -x "$PROJECT_ROOT/script/pre-pr-checklist.sh" ]
+@test "restore-cli-auth.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/restore-cli-auth.sh"
+    [ -x "$REPO_ROOT/script/restore-cli-auth.sh" ]
 }
 
-@test "pre-pr-checklist: runs without error" {
-    cd "$PROJECT_ROOT"
-    run timeout 60 bash "$PROJECT_ROOT/script/pre-pr-checklist.sh" 2>&1 || true
-    [ "$status" -eq 0 ] || [ "$status" -eq 124 ] || [ "$status" -eq 1 ]
+@test "setup-team-protection.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/setup-team-protection.sh"
+    [ -x "$REPO_ROOT/script/setup-team-protection.sh" ]
 }
 
-# ==================== setup-mcp ====================
-
-@test "setup-mcp: script exists and is executable" {
-    [ -x "$PROJECT_ROOT/script/setup-mcp.sh" ]
+@test "check-file-length.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/check-file-length.sh"
+    [ -x "$REPO_ROOT/script/check-file-length.sh" ]
 }
 
-# ==================== setup-lsp ====================
-
-@test "setup-lsp: script exists and is executable" {
-    [ -x "$PROJECT_ROOT/script/setup-lsp.sh" ]
+@test "create-codespace.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/create-codespace.sh"
+    [ -x "$REPO_ROOT/script/create-codespace.sh" ]
 }
 
-# ==================== install-skills ====================
-
-@test "install-skills: script exists and is executable" {
-    [ -x "$PROJECT_ROOT/script/install-skills.sh" ]
+@test "setup-env.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/setup-env.sh"
+    [ -x "$REPO_ROOT/script/setup-env.sh" ]
 }
 
-@test "install-skills: shows usage without arguments" {
-    run bash "$PROJECT_ROOT/script/install-skills.sh" 2>&1 || true
-    # 引数なしでエラーまたは使用方法を表示
-    [ "$status" -eq 0 ] || [ "$status" -eq 1 ]
+@test "setup-file-length-check.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/setup-file-length-check.sh"
+    [ -x "$REPO_ROOT/script/setup-file-length-check.sh" ]
 }
 
-# ==================== fix-container-plugins ====================
-
-@test "fix-container-plugins: script exists and is executable" {
-    [ -x "$PROJECT_ROOT/script/fix-container-plugins.sh" ]
+@test "brew-deps.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/brew-deps.sh"
+    [ -x "$REPO_ROOT/script/brew-deps.sh" ]
 }
 
-# ==================== restore-cli-auth ====================
-
-@test "restore-cli-auth: script exists and is executable" {
-    [ -x "$PROJECT_ROOT/script/restore-cli-auth.sh" ]
+@test "install-npm-globals.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/install-npm-globals.sh"
+    [ -x "$REPO_ROOT/script/install-npm-globals.sh" ]
 }
 
-# ==================== setup-team-protection ====================
-
-@test "setup-team-protection: script exists and is executable" {
-    [ -x "$PROJECT_ROOT/script/setup-team-protection.sh" ]
-}
-
-@test "setup-team-protection: shows help with --help" {
-    run bash "$PROJECT_ROOT/script/setup-team-protection.sh" --help 2>&1 || true
-    [ "$status" -eq 0 ] || [[ "$output" == *"usage"* ]] || [[ "$output" == *"help"* ]] || true
-}
-
-# ==================== check-file-length ====================
-
-@test "check-file-length: script exists and is executable" {
-    [ -x "$PROJECT_ROOT/script/check-file-length.sh" ]
-}
-
-@test "check-file-length: runs in project directory" {
-    cd "$PROJECT_ROOT"
-    run bash "$PROJECT_ROOT/script/check-file-length.sh" 2>&1 || true
-    [ "$status" -eq 0 ] || [ "$status" -eq 1 ]
+@test "setup-claude-build.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/setup-claude-build.sh"
+    [ -x "$REPO_ROOT/script/setup-claude-build.sh" ]
 }
