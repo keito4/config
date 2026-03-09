@@ -56,3 +56,25 @@ CVE-2025-68121
 # Tracking: https://github.com/vercel/vercel/issues
 # Review date: 2026-03-22
 CVE-2024-45296
+
+# CVE-2026-29786: tar: Hardlink Path Traversal via Drive-Relative Linkpath
+# Severity: HIGH
+# Affected: tar@7.5.9 (via semantic-release > @semantic-release/npm > npm)
+# Fixed in: 7.5.10
+# Reason: Bundled dependency in npm package, cannot override
+# npm@11.11.0 (latest) still uses tar@^7.5.9
+# Expected resolution: Wait for npm to update tar dependency
+# Tracking: https://github.com/npm/cli/issues
+# Review date: 2026-04-09
+CVE-2026-29786
+
+# CVE-2026-27903: minimatch: ReDoS via multiple non-adjacent GLOBSTAR segments
+# Severity: HIGH
+# Affected: minimatch@10.2.2 (via semantic-release > @semantic-release/npm > npm)
+# Fixed in: 10.2.3
+# Reason: Bundled dependency in npm package, cannot override
+# npm@11.11.0 (latest) still uses minimatch@10.2.2
+# Expected resolution: Wait for npm to update minimatch dependency
+# Tracking: https://github.com/npm/cli/issues
+# Review date: 2026-04-09
+CVE-2026-27903
