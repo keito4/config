@@ -26,6 +26,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     wget \
     xz-utils \
     shellcheck \
+    bats \
     python3 \
     python3-pip \
     python3-venv \
