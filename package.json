@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Personal configuration files and setup scripts",
   "private": true,
+  "engines": {
+    "node": "^22.14.0 || >= 24.10.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/keito4/config.git"
@@ -44,8 +47,7 @@
     "semantic-release": "25.0.3"
   },
   "overrides": {
-    "npm": {
-      "tar": "7.5.7"
-    }
+    "tar": "^7.5.11",
+    "minimatch": "^10.2.4"
   }
 }
