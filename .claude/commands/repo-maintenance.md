@@ -1082,6 +1082,51 @@ EOF
 )"
 ```
 
+## Step 7.5: CI Monitoring (Automatic)
+
+PR作成後、自動的にCIステータスを監視します。
+
+### 自動監視の仕組み
+
+`.claude/hooks/post_pr_ci_watch.py` フックにより、`gh pr create` 実行後に自動的にCIを監視:
+
+1. PR作成成功を検出
+2. CIチェック状態を15秒ごとにポーリング
+3. 最大10分間監視
+4. 結果を報告
+
+### 監視結果
+
+| 状態           | 出力                           | 対応                              |
+| -------------- | ------------------------------ | --------------------------------- |
+| 全チェック成功 | ✅ 全CIチェック成功！          | マージ可能                        |
+| チェック失敗   | ❌ CIチェック失敗 + 失敗リスト | このブランチで修正                |
+| タイムアウト   | ⏰ CI監視タイムアウト          | `gh pr checks --watch` で手動確認 |
+| チェックなし   | ⚠️ CIチェックが見つかりません  | CI未設定の可能性                  |
+
+### 手動確認コマンド
+
+```bash
+# CIステータスを確認
+gh pr checks
+
+# リアルタイム監視
+gh pr checks --watch
+
+# 失敗したチェックの詳細
+gh run view <run-id> --log-failed
+```
+
+### CI失敗時の対応
+
+1. 失敗したチェックを特定
+2. このブランチで修正
+3. コミット＆プッシュ
+4. CIが再実行されることを確認
+5. CIが緑になるまで繰り返す
+
+**原則**: CIが緑になるまでPRを放置しない
+
 ## Step 8: Final Report
 
 ```
@@ -1162,3 +1207,4 @@ Run this command regularly to maintain repository health:
 | Cleanup     | `/branch-cleanup`               | ブランチクリーンアップ        |
 | Discovery   | `/config-contribution-discover` | 新機能発見                    |
 | Discovery   | (Package Audit + ni support)    | 推奨パッケージ監査            |
+| PR          | (post_pr_ci_watch.py hook)      | PR作成後のCI自動監視          |
