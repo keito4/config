@@ -69,14 +69,18 @@ RUN OP_VERSION="${OP_CLI_VERSION}" \
  && chmod g+s /usr/local/bin/op
 
 # Install Node.js
-RUN NODE_VERSION=v22.22.0 \
- && NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/arm64/arm64/') \
- && wget -q https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
- && tar -xJf node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz -C /usr/local --strip-components=1 \
- && rm node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
+# Version is managed by .github/workflows/update-dev-tools.yml
+ARG NODE_VERSION=22.22.0
+RUN NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/arm64/arm64/') \
+ && wget -q https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
+ && tar -xJf node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz -C /usr/local --strip-components=1 \
+ && rm node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
  && ln -s /usr/local/bin/node /usr/local/bin/nodejs
 
-RUN npm install -g pnpm@10.30.3
+# Install pnpm
+# Version is managed by .github/workflows/update-dev-tools.yml
+ARG PNPM_VERSION=10.30.3
+RUN npm install -g pnpm@${PNPM_VERSION}
 
 USER vscode
 ENV SHELL=/bin/bash
@@ -100,7 +104,7 @@ COPY npm/global.json /tmp/npm-global.json
 
 # Install Claude Code using native installer (npm installation deprecated)
 # Must run as vscode user so claude installs to /home/vscode/.claude/local/bin
-# Version is managed by .github/workflows/update-claude-code.yml
+# Version is managed by .github/workflows/update-dev-tools.yml
 ARG CLAUDE_CODE_VERSION=2.1.71
 USER vscode
 RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
