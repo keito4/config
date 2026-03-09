@@ -303,7 +303,7 @@ config::filter_gitconfig() {
   sed -E -e '/^\[user\]/,/^\[/{' \
     -e 's/^[[:space:]]*name[[:space:]]*=.*$/	# name = # Configure with: git config --global user.name "Your Name"/' \
     -e 's/^[[:space:]]*email[[:space:]]*=.*$/	# email = # Configure with: git config --global user.email "your.email@example.com"/' \
-    -e 's/^[[:space:]]*signingkey[[:space:]]*=.*$/	# signingkey = # Configure with: git config --global user.signingkey "$(cat ~\/.ssh\/id_ed25519.pub)"/' \
+    -e 's/^[[:space:]]*signingkey[[:space:]]*=.*$/	# signingkey = # Configure with: git config --global user.signingkey ~\/.ssh\/id_ed25519.pub/' \
     -e '}' "$input_file" > "$output_file"
 
   echo "✅ gitconfig exported (personal info filtered)"

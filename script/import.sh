@@ -61,7 +61,7 @@ if [[ -f "$REPO_PATH/git/gitconfig" ]]; then
 	echo "    以下のコマンドで設定してください:"
 	echo "    git config --global user.name \"Your Name\""
 	echo "    git config --global user.email \"your.email@example.com\""
-	echo "    git config --global user.signingkey \"\$(cat ~/.ssh/id_ed25519.pub)\""
+	echo "    git config --global user.signingkey ~/.ssh/id_ed25519.pub"
 fi
 
 [[ -f "$REPO_PATH/git/gitignore" ]] && cp "$REPO_PATH/git/gitignore" ~/.gitignore

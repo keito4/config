@@ -75,15 +75,43 @@ fi
 
 # Patterns to detect
 declare -A PATTERNS
+# Cloud Provider Keys
 PATTERNS["AWS Access Key"]="AKIA[0-9A-Z]{16}"
 PATTERNS["AWS Secret"]="['\"][A-Za-z0-9/+=]{40}['\"]"
-PATTERNS["GitHub Token"]="ghp_[a-zA-Z0-9]{36}"
-PATTERNS["GitHub Token (fine-grained)"]="github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}"
 PATTERNS["Google API Key"]="AIza[0-9A-Za-z\\-_]{35}"
+PATTERNS["Azure Service Principal"]="['\"][a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}['\"]"
+
+# GitHub Tokens
+PATTERNS["GitHub Token (classic)"]="ghp_[a-zA-Z0-9]{36}"
+PATTERNS["GitHub Token (fine-grained)"]="github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}"
+PATTERNS["GitHub OAuth"]="gho_[a-zA-Z0-9]{36}"
+PATTERNS["GitHub App Token"]="ghu_[a-zA-Z0-9]{36}"
+PATTERNS["GitHub Server-to-Server"]="ghs_[a-zA-Z0-9]{36}"
+PATTERNS["GitHub Refresh Token"]="ghr_[a-zA-Z0-9]{36}"
+
+# AI Service Keys
+PATTERNS["OpenAI API Key"]="sk-proj-[a-zA-Z0-9_-]{20,}"
+PATTERNS["OpenAI Legacy Key"]="sk-[a-zA-Z0-9]{48}"
+PATTERNS["Anthropic API Key"]="sk-ant-[a-zA-Z0-9_-]{95,}"
+PATTERNS["Cohere API Key"]="['\"]co_[a-zA-Z0-9]{32,}['\"]"
+# Note: Gemini API Key uses same pattern as Google API Key (AIza...)
+
+# Platform Keys
+PATTERNS["Slack Token"]="xox[baprs]-[a-zA-Z0-9-]+"
+PATTERNS["Slack Webhook"]="https://hooks\\.slack\\.com/services/[A-Z0-9]+/[A-Z0-9]+/[a-zA-Z0-9]+"
+PATTERNS["Stripe Key"]="[sr]k_(live|test)_[a-zA-Z0-9]{24,}"
+PATTERNS["Supabase Key"]="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+"
+# Note: Vercel Token pattern removed (too broad, causes false positives)
+PATTERNS["Linear API Key"]="lin_api_[a-zA-Z0-9]{43}"
+PATTERNS["Sentry DSN"]="https://[a-f0-9]{32}@[a-z0-9]+\\.ingest\\.sentry\\.io/[0-9]+"
+
+# Generic Patterns
 PATTERNS["Private Key"]="-----BEGIN.*PRIVATE KEY-----"
 PATTERNS["JWT Token"]="eyJ[A-Za-z0-9_-]*\\.eyJ[A-Za-z0-9_-]*\\.[A-Za-z0-9_-]*"
 PATTERNS["Password Assignment"]="password[[:space:]]*=[[:space:]]*['\"][^'\"]{8,}['\"]"
 PATTERNS["Database URL"]="(postgres|mysql|mongodb)://[^:]+:[^@]+@"
+PATTERNS["Bearer Token"]="Bearer[[:space:]]+[a-zA-Z0-9_-]{20,}"
+PATTERNS["Basic Auth Header"]="Basic[[:space:]]+[A-Za-z0-9+/=]{20,}"
 
 # Files to exclude
 EXCLUDE_PATTERNS=(
@@ -152,7 +180,16 @@ for pattern_name in "${!PATTERNS[@]}"; do
 
     # Determine severity
     SEVERITY="WARNING"
-    if [[ "$pattern_name" == *"AWS"* ]] || [[ "$pattern_name" == *"GitHub Token"* ]] || [[ "$pattern_name" == *"Private Key"* ]]; then
+    # Critical patterns: cloud credentials, API keys that provide full access
+    if [[ "$pattern_name" == *"AWS"* ]] || \
+       [[ "$pattern_name" == *"GitHub Token"* ]] || \
+       [[ "$pattern_name" == *"Private Key"* ]] || \
+       [[ "$pattern_name" == *"OpenAI"* ]] || \
+       [[ "$pattern_name" == *"Anthropic"* ]] || \
+       [[ "$pattern_name" == *"Stripe"* ]] || \
+       [[ "$pattern_name" == *"Supabase"* ]] || \
+       [[ "$pattern_name" == *"Slack Token"* ]] || \
+       [[ "$pattern_name" == *"Database URL"* ]]; then
       SEVERITY="CRITICAL"
       CRITICAL_COUNT=$((CRITICAL_COUNT + 1))
     else

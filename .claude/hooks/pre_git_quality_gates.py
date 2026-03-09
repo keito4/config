@@ -11,7 +11,13 @@ import shlex
 import shutil
 import subprocess
 import os
+import time
 from pathlib import Path
+
+# 設定
+DEFAULT_TIMEOUT = 300  # 5分
+MAX_RETRIES = 2  # 最大リトライ回数
+RETRY_DELAY = 2  # リトライ間隔（秒）
 
 # Read input from Claude
 data = json.load(sys.stdin)
@@ -87,6 +93,50 @@ def has_biome(root: str) -> bool:
     return False
 
 
+def detect_linter_conflicts(root: str) -> list:
+    """Biome と他の lint/format ツールの競合を検出"""
+    conflicts = []
+    pkg_path = Path(root) / "package.json"
+
+    if not pkg_path.exists():
+        return conflicts
+
+    try:
+        with open(pkg_path) as f:
+            pkg = json.load(f)
+        all_deps = {**pkg.get("dependencies", {}), **pkg.get("devDependencies", {})}
+    except Exception:
+        return conflicts
+
+    has_biome_installed = "@biomejs/biome" in all_deps
+    if not has_biome_installed:
+        return conflicts
+
+    # ESLint との競合検出
+    eslint_tools = ["eslint", "@eslint/js", "eslint-config-prettier"]
+    found_eslint = [t for t in eslint_tools if t in all_deps]
+    if found_eslint:
+        conflicts.append({
+            "type": "eslint",
+            "tools": found_eslint,
+            "message": "Biome と ESLint が同時に導入されています。"
+                       "どちらか一方への統合を検討してください。",
+        })
+
+    # Prettier との競合検出
+    prettier_tools = ["prettier", "prettier-plugin-tailwindcss"]
+    found_prettier = [t for t in prettier_tools if t in all_deps]
+    if found_prettier:
+        conflicts.append({
+            "type": "prettier",
+            "tools": found_prettier,
+            "message": "Biome と Prettier が同時に導入されています。"
+                       "Biome は Prettier 互換のフォーマッタを内蔵しています。",
+        })
+
+    return conflicts
+
+
 def get_package_scripts(root: str) -> dict:
     """package.json の scripts を取得"""
     pkg_path = Path(root) / "package.json"
@@ -105,6 +155,93 @@ def has_node_modules(root: str) -> bool:
     return (Path(root) / "node_modules").exists()
 
 
+def is_retryable_error(returncode: int, stderr: str) -> bool:
+    """リトライ可能なエラーかどうか判定"""
+    # ネットワーク系エラー
+    network_errors = [
+        "ECONNREFUSED",
+        "ETIMEDOUT",
+        "ENOTFOUND",
+        "network error",
+        "socket hang up",
+        "EAI_AGAIN",
+    ]
+    for err in network_errors:
+        if err in stderr:
+            return True
+    # 一時的なファイルロック
+    if "EBUSY" in stderr or "resource busy" in stderr.lower():
+        return True
+    return False
+
+
+def run_with_retry(
+    command: list,
+    cwd: str,
+    timeout: int = DEFAULT_TIMEOUT,
+    max_retries: int = MAX_RETRIES,
+) -> tuple:
+    """リトライ付きコマンド実行
+
+    Returns:
+        tuple: (success: bool, result: dict)
+    """
+    last_result = None
+
+    for attempt in range(max_retries + 1):
+        try:
+            result = subprocess.run(
+                command,
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+
+            if result.returncode == 0:
+                return True, {"stdout": result.stdout, "stderr": result.stderr}
+
+            # リトライ可能なエラーかチェック
+            if attempt < max_retries and is_retryable_error(
+                result.returncode, result.stderr
+            ):
+                time.sleep(RETRY_DELAY)
+                continue
+
+            last_result = {
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "returncode": result.returncode,
+            }
+
+            # ツール未インストールの場合はスキップ扱い
+            is_tool_missing = (
+                result.returncode == 127
+                or "command not found" in result.stderr
+                or "No such file or directory" in result.stderr
+            )
+            if is_tool_missing:
+                return True, {"skipped": True, "reason": "ツール未インストール"}
+
+            return False, last_result
+
+        except subprocess.TimeoutExpired:
+            # タイムアウトはリトライしない（長時間ブロックを防ぐため）
+            return False, {"error": f"タイムアウト ({timeout}秒)"}
+
+        except FileNotFoundError:
+            return True, {"skipped": True, "reason": "コマンド未検出"}
+
+        except Exception as e:
+            last_result = {"error": str(e)}
+            if attempt < max_retries:
+                time.sleep(RETRY_DELAY)
+                continue
+            return False, last_result
+
+    return False, last_result or {"error": "Unknown error"}
+
+
 # package.json のスクリプトを取得
 scripts = get_package_scripts(repo_root)
 if not scripts:
@@ -121,6 +258,16 @@ if not has_node_modules(repo_root):
     print(f"\n  {pm} install を実行してから再度お試しください\n",
           file=sys.stderr, flush=True)
     sys.exit(2)
+
+# Biome と他の lint ツールの競合警告
+conflicts = detect_linter_conflicts(repo_root)
+if conflicts:
+    print("", file=sys.stderr, flush=True)
+    print("⚠️  [Lint Tool Conflict Warning]", file=sys.stderr, flush=True)
+    for conflict in conflicts:
+        print(f"   • {conflict['message']}", file=sys.stderr, flush=True)
+        print(f"     対象: {', '.join(conflict['tools'])}", file=sys.stderr, flush=True)
+    print("", file=sys.stderr, flush=True)
 
 # 実行するチェックを自動検出
 # 優先度順: format:check > format > lint > test > typecheck > shellcheck
@@ -217,54 +364,24 @@ for check in checks:
     print(f"  ▶ {check['name']}: {check['description']}",
           file=sys.stderr, flush=True)
 
-    try:
-        result = subprocess.run(
-            check["command"],
-            cwd=repo_root,
-            capture_output=True,
-            text=True,
-            timeout=300,
-        )
+    success, result = run_with_retry(check["command"], repo_root)
 
-        if result.returncode != 0:
-            # ツール未インストール等の場合はスキップ
-            is_tool_missing = (
-                result.returncode == 127
-                or "command not found" in result.stderr
-                or "No such file or directory" in result.stderr
-            )
-            if is_tool_missing:
-                print("    ⚠  スキップ (ツール未インストール)",
-                      file=sys.stderr, flush=True)
-            else:
-                failed_checks.append({
-                    "name": check["name"],
-                    "stdout": result.stdout,
-                    "stderr": result.stderr,
-                    "returncode": result.returncode,
-                })
-                print(f"    ✗  失敗 (exit code: {result.returncode})",
-                      file=sys.stderr, flush=True)
+    if success:
+        if result.get("skipped"):
+            print(f"    ⚠  スキップ ({result['reason']})",
+                  file=sys.stderr, flush=True)
         else:
             print("    ✓  成功", file=sys.stderr, flush=True)
-
-    except subprocess.TimeoutExpired:
+    else:
         failed_checks.append({
             "name": check["name"],
-            "error": "タイムアウト (5分)",
+            **result,
         })
-        print("    ✗  タイムアウト", file=sys.stderr, flush=True)
-
-    except FileNotFoundError:
-        print("    ⚠  スキップ (コマンド未検出)",
-              file=sys.stderr, flush=True)
-
-    except Exception as e:
-        failed_checks.append({
-            "name": check["name"],
-            "error": str(e),
-        })
-        print(f"    ✗  エラー: {e}", file=sys.stderr, flush=True)
+        if "error" in result:
+            print(f"    ✗  {result['error']}", file=sys.stderr, flush=True)
+        else:
+            print(f"    ✗  失敗 (exit code: {result.get('returncode', '?')})",
+                  file=sys.stderr, flush=True)
 
 # 失敗があればブロック
 if failed_checks:

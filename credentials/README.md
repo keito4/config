@@ -101,7 +101,7 @@ make credentials
 [user]
 	# name = # Configure with: git config --global user.name "Your Name"
 	# email = # Configure with: git config --global user.email "your.email@example.com"
-	# signingkey = # Configure with: git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
+	# signingkey = # Configure with: git config --global user.signingkey ~/.ssh/id_ed25519.pub
 ```
 
 ### シェル環境変数トークンのフィルタリング
@@ -146,7 +146,7 @@ export BUNDLE_RUBYGEMS__PKG__GITHUB__COM="op://Dev/GITHUB_TOKEN/credential"
     以下のコマンドで設定してください:
     git config --global user.name "Your Name"
     git config --global user.email "your.email@example.com"
-    git config --global user.signingkey "$(cat ~/.ssh/id_ed25519.pub)"
+    git config --global user.signingkey ~/.ssh/id_ed25519.pub
 ```
 
 ## 1Password Vault 推奨構造
