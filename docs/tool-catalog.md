@@ -45,6 +45,17 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | Happy Coder                       | 0.13.0 (global.json)      | AI コーディング     |
 | Cursor                            | curl installer            | AI エディタ CLI     |
 
+#### 設定ファイルの場所
+
+| ツール     | 設定ファイル              | 形式 | 内容                       |
+| ---------- | ------------------------- | ---- | -------------------------- |
+| Claude     | `~/.claude/settings.json` | JSON | commands, hooks, skills    |
+| Codex      | `~/.codex/config.toml`    | TOML | MCP サーバー、機能フラグ   |
+| Gemini CLI | `~/.gemini/settings.json` | JSON | MCP サーバー               |
+| Cursor     | `~/.cursor/mcp.json`      | JSON | MCP サーバー、カスタム設定 |
+
+> 設定は `script/export.sh` / `script/import.sh` で一括管理可能。
+
 ### 2.3 ユーティリティ
 
 | ツール        | バージョン            | 用途                 |

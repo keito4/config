@@ -105,6 +105,11 @@ if [[ -d "$REPO_PATH/.cursor" ]]; then
 	config::import_cursor "$REPO_PATH/.cursor" ~/.cursor
 fi
 
+# Gemini configuration
+if [[ -d "$REPO_PATH/.gemini" ]]; then
+	config::import_gemini "$REPO_PATH/.gemini" ~/.gemini
+fi
+
 if devcontainer::is_active; then
 	devcontainer::bootstrap
 fi

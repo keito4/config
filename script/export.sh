@@ -7,7 +7,7 @@ source "$SCRIPT_DIR/lib/platform.sh"
 source "$SCRIPT_DIR/lib/config.sh"
 
 REPO_PATH="${REPO_PATH:-$(pwd)}"
-mkdir -p "$REPO_PATH/brew" "$REPO_PATH/vscode" "$REPO_PATH/git" "$REPO_PATH/npm" "$REPO_PATH/.zsh" "$REPO_PATH/dot" "$REPO_PATH/.claude" "$REPO_PATH/.codex" "$REPO_PATH/.cursor"
+mkdir -p "$REPO_PATH/brew" "$REPO_PATH/vscode" "$REPO_PATH/git" "$REPO_PATH/npm" "$REPO_PATH/.zsh" "$REPO_PATH/dot" "$REPO_PATH/.claude" "$REPO_PATH/.codex" "$REPO_PATH/.cursor" "$REPO_PATH/.gemini"
 
 export_extensions_darwin() {
 	if type cursor >/dev/null 2>&1; then
@@ -78,4 +78,9 @@ fi
 # Cursor configuration
 if [[ -d ~/.cursor ]]; then
 	config::export_cursor ~/.cursor "$REPO_PATH/.cursor"
+fi
+
+# Gemini configuration
+if [[ -d ~/.gemini ]]; then
+	config::export_gemini ~/.gemini "$REPO_PATH/.gemini"
 fi
