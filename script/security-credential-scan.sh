@@ -94,14 +94,14 @@ PATTERNS["OpenAI API Key"]="sk-proj-[a-zA-Z0-9_-]{20,}"
 PATTERNS["OpenAI Legacy Key"]="sk-[a-zA-Z0-9]{48}"
 PATTERNS["Anthropic API Key"]="sk-ant-[a-zA-Z0-9_-]{95,}"
 PATTERNS["Cohere API Key"]="['\"]co_[a-zA-Z0-9]{32,}['\"]"
-PATTERNS["Gemini API Key"]="AIza[0-9A-Za-z\\-_]{35}"
+# Note: Gemini API Key uses same pattern as Google API Key (AIza...)
 
 # Platform Keys
 PATTERNS["Slack Token"]="xox[baprs]-[a-zA-Z0-9-]+"
 PATTERNS["Slack Webhook"]="https://hooks\\.slack\\.com/services/[A-Z0-9]+/[A-Z0-9]+/[a-zA-Z0-9]+"
 PATTERNS["Stripe Key"]="[sr]k_(live|test)_[a-zA-Z0-9]{24,}"
 PATTERNS["Supabase Key"]="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+"
-PATTERNS["Vercel Token"]="['\"]?[0-9a-zA-Z]{24}['\"]?"
+# Note: Vercel Token pattern removed (too broad, causes false positives)
 PATTERNS["Linear API Key"]="lin_api_[a-zA-Z0-9]{43}"
 PATTERNS["Sentry DSN"]="https://[a-f0-9]{32}@[a-z0-9]+\\.ingest\\.sentry\\.io/[0-9]+"
 

@@ -226,11 +226,8 @@ def run_with_retry(
             return False, last_result
 
         except subprocess.TimeoutExpired:
-            last_result = {"error": f"タイムアウト ({timeout}秒)"}
-            if attempt < max_retries:
-                time.sleep(RETRY_DELAY)
-                continue
-            return False, last_result
+            # タイムアウトはリトライしない（長時間ブロックを防ぐため）
+            return False, {"error": f"タイムアウト ({timeout}秒)"}
 
         except FileNotFoundError:
             return True, {"skipped": True, "reason": "コマンド未検出"}
