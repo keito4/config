@@ -141,12 +141,12 @@ RUN echo "alias gco='git checkout'" >> /home/vscode/.bashrc \
  && echo "alias gpl='git pull'" >> /home/vscode/.bashrc \
  && echo 'export PATH="/usr/local/script:$PATH"' >> /home/vscode/.bashrc
 
-RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex /home/vscode/.agents /home/vscode/.happy \
- && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex /home/vscode/.agents /home/vscode/.happy
+RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex /home/vscode/.agents /home/vscode/.happy /home/vscode/.gemini \
+ && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /home/vscode/.codex /home/vscode/.agents /home/vscode/.happy /home/vscode/.gemini
 
 COPY --chown=vscode:vscode .devcontainer/claude-settings.json /home/vscode/.claude/settings.json
 COPY --chown=vscode:vscode .devcontainer/claude-settings.local.json /home/vscode/.claude/settings.local.json
-COPY --chown=vscode:vscode .devcontainer/codex-config.json /home/vscode/.codex/config.json
+COPY --chown=vscode:vscode .gemini/settings.json /home/vscode/.gemini/settings.json
 COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
 COPY --chown=vscode:vscode .claude/agents /home/vscode/.claude/agents
 COPY --chown=vscode:vscode .claude/hooks /home/vscode/.claude/hooks

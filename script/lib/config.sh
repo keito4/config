@@ -16,6 +16,9 @@ typeset -ga CONFIG_CODEX_SHARED_DIRS=(prompts rules)
 typeset -ga CONFIG_CURSOR_SHARED_FILES=(mcp.json)
 typeset -ga CONFIG_CURSOR_SHARED_DIRS=(rules)
 
+# Constants for Gemini configuration
+typeset -ga CONFIG_GEMINI_SHARED_FILES=(settings.json)
+
 # Claude設定のインポート
 config::import_claude() {
   local source_dir="${1:?Source directory required}"
@@ -245,6 +248,48 @@ config::export_cursor() {
       cp -r "$source_dir/$dir"/* "$target_dir/$dir/" 2>/dev/null && \
         echo "✅ Exported cursor/$dir/" || \
         echo "⚠️  No cursor/$dir found"
+    fi
+  done
+}
+
+# Gemini設定のインポート
+config::import_gemini() {
+  local source_dir="${1:?Source directory required}"
+  local target_dir="${2:-$HOME/.gemini}"
+
+  if [[ ! -d "$source_dir" ]]; then
+    echo "⚠️  Gemini設定ディレクトリが見つかりません: $source_dir"
+    return 0  # エラーではなく警告で継続
+  fi
+
+  mkdir -p "$target_dir"
+
+  # 共有設定ファイル
+  for file in "${CONFIG_GEMINI_SHARED_FILES[@]}"; do
+    if [[ -f "$source_dir/$file" ]]; then
+      cp "$source_dir/$file" "$target_dir/$file"
+      echo "✅ Imported gemini/$file"
+    fi
+  done
+}
+
+# Gemini設定のエクスポート
+config::export_gemini() {
+  local source_dir="${1:-$HOME/.gemini}"
+  local target_dir="${2:?Target directory required}"
+
+  if [[ ! -d "$source_dir" ]]; then
+    echo "⚠️  Gemini設定ディレクトリが見つかりません: $source_dir"
+    return 0  # エラーではなく警告で継続
+  fi
+
+  mkdir -p "$target_dir"
+
+  # 共有設定ファイル
+  for file in "${CONFIG_GEMINI_SHARED_FILES[@]}"; do
+    if [[ -f "$source_dir/$file" ]]; then
+      cp "$source_dir/$file" "$target_dir/$file"
+      echo "✅ Exported gemini/$file"
     fi
   done
 }

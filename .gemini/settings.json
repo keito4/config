@@ -1,0 +1,41 @@
+{
+  "mcpServers": {
+    "aws-docs": {
+      "command": "uvx",
+      "args": ["awslabs.aws-documentation-mcp-server@latest"]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest"]
+    },
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp",
+      "transport": "sse",
+      "headers": {
+        "Authorization": "Bearer ${SUPABASE_MCP_TOKEN}"
+      }
+    },
+    "vercel": {
+      "url": "https://mcp.vercel.com",
+      "transport": "sse",
+      "headers": {
+        "Authorization": "Bearer ${VERCEL_MCP_TOKEN}"
+      }
+    },
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "transport": "sse",
+      "headers": {
+        "Authorization": "Bearer ${GITHUB_COPILOT_MCP_TOKEN}"
+      }
+    }
+  }
+}
