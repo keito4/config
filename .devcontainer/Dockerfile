@@ -36,7 +36,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-ARG GH_CLI_VERSION=2.87.3
+ARG GH_CLI_VERSION=2.88.0
 
 # Install GitHub CLI (gh)
 # https://cli.github.com/
@@ -80,7 +80,7 @@ RUN NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/
 
 # Install pnpm
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG PNPM_VERSION=10.32.0
+ARG PNPM_VERSION=10.32.1
 RUN npm install -g pnpm@${PNPM_VERSION}
 
 USER vscode
