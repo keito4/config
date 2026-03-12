@@ -317,7 +317,7 @@
       "Bash(rm -rf /*)"
     ],
     "ask": [],
-    "defaultMode": "acceptEdits"
+    "defaultMode": "auto"
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": ["playwright"],
