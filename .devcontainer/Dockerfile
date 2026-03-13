@@ -36,7 +36,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-ARG GH_CLI_VERSION=2.88.0
+ARG GH_CLI_VERSION=2.88.1
 
 # Install GitHub CLI (gh)
 # https://cli.github.com/
