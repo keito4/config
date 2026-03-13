@@ -139,6 +139,21 @@ if [[ "$PERMISSIONS" != "true" ]]; then
   exit 1
 fi
 
+# Validate protection level
+case "$PROTECTION_LEVEL" in
+  standard|strict) ;;
+  *)
+    error "Invalid protection level: $PROTECTION_LEVEL. Valid options: standard, strict"
+    exit 1
+    ;;
+esac
+
+# Strict mode requires linear history, which is incompatible with merge commits
+if [[ "$PROTECTION_LEVEL" == "strict" && "$MERGE_METHOD" == "merge" ]]; then
+  warning "Strict mode requires linear history. Switching merge method from 'merge' to 'squash'."
+  MERGE_METHOD="squash"
+fi
+
 info "Setting up team protection for $REPO"
 echo ""
 
@@ -238,15 +253,23 @@ setup_branch_protection() {
   fi
 
   protection_config+='"restrictions":null,'
-  protection_config+='"allow_force_pushes":{"enabled":false},'
-  protection_config+='"allow_deletions":{"enabled":false},'
-  protection_config+="\"required_linear_history\":{\"enabled\":$require_linear_history},"
-  protection_config+="\"required_conversation_resolution\":{\"enabled\":$require_conversation_resolution}"
+  protection_config+='"allow_force_pushes":false,'
+  protection_config+='"allow_deletions":false,'
+  protection_config+="\"required_linear_history\":$require_linear_history,"
+  protection_config+="\"required_conversation_resolution\":$require_conversation_resolution"
   protection_config+='}'
 
   # Apply branch protection
   if [[ "$DRY_RUN" == "true" ]]; then
-    echo "[DRY RUN] Would apply branch protection to $branch with config:"
+    echo "[DRY RUN] Would apply branch protection to $branch:"
+    echo "  Reviewers: $reviewers"
+    echo "  Enforce admins: $enforce_admins"
+    echo "  Linear history: $require_linear_history"
+    echo "  Last push approval: $require_last_push_approval"
+    echo "  Conversation resolution: $require_conversation_resolution"
+    echo "  Signed commits: $require_signed_commits"
+    echo ""
+    echo "[DRY RUN] API payload:"
     echo "$protection_config" | jq '.' 2>/dev/null || echo "$protection_config"
   else
     if gh api "repos/$REPO/branches/$branch/protection" \
@@ -258,16 +281,22 @@ setup_branch_protection() {
       return 1
     fi
 
-    # Enable signed commits requirement (separate API endpoint)
+    # Manage signed commits requirement (separate API endpoint)
     if [[ "$require_signed_commits" == "true" ]]; then
       if gh api "repos/$REPO/branches/$branch/protection/required_signatures" \
         --method POST \
-        -H "Accept: application/vnd.github.zzzax-preview+json" \
+        -H "Accept: application/vnd.github+json" \
         &>/dev/null; then
         success "Signed commits required for $branch"
       else
         warning "Could not enable signed commits requirement for $branch"
       fi
+    else
+      # Disable signed commits to ensure idempotent standard mode
+      gh api "repos/$REPO/branches/$branch/protection/required_signatures" \
+        --method DELETE \
+        -H "Accept: application/vnd.github+json" \
+        &>/dev/null 2>&1 || true
     fi
   fi
 }

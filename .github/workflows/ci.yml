@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+    branches: [main, master, pre-production, production]
     paths:
       - '**.js'
       - '**.ts'

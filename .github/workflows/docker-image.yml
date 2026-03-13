@@ -2,7 +2,7 @@ name: Build and Release DevContainer Image
 
 on:
   push:
-    branches: [main, pre-production, production]
+    branches: [main]
     paths:
       - '.devcontainer/**'
       - '.claude/commands/**'
