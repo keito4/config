@@ -583,7 +583,104 @@ MODE が `full` かつ CI/CD が未設定の場合:
 
 `/setup-ci` コマンドの実行を提案。
 
-### 3.6 Renovate / Dependabot 設定チェック
+### 3.6 Claude Workflow Cost Optimization Check
+
+GitHub Actions のコスト最適化のため、Claude 関連ワークフローの設定を確認：
+
+**確認対象ファイル:**
+
+- `.github/workflows/claude.yml`
+- `.github/workflows/claude-code-review.yml`
+
+**チェック項目:**
+
+| # | チェック | 推奨値 | コスト影響 |
+|---|---|---|---|
+| 1 | `claude.yml` の `cancel-in-progress` | `true` | 重複実行防止（**最大の効果**） |
+| 2 | `claude.yml` の issues トリガー | `[opened]` のみ | `assigned` での不要起動防止 |
+| 3 | `claude.yml` の bot 除外 | `github-actions[bot]`, `dependabot[bot]` | bot連鎖防止 |
+| 4 | `claude.yml` の Draft PR スキップ | `github.event.pull_request.draft == false` | Draft中の不要実行防止 |
+| 5 | `claude.yml` の timeout | `20` 分以下 | 長時間実行抑制 |
+| 6 | `claude-code-review.yml` の `synchronize` 除外 | `[opened, ready_for_review]` | push毎のレビュー実行防止 |
+| 7 | Copilot code review との重複 | どちらか1つに統一 | AIレビュー重複防止 |
+
+**確認ロジック:**
+
+```bash
+ISSUES=()
+
+# claude.yml のチェック
+if [ -f ".github/workflows/claude.yml" ]; then
+  CLAUDE_YML=$(cat .github/workflows/claude.yml)
+
+  # cancel-in-progress チェック
+  if echo "$CLAUDE_YML" | grep -q "cancel-in-progress: false"; then
+    ISSUES+=("claude.yml: cancel-in-progress が false（推奨: true）")
+  fi
+
+  # assigned トリガーチェック
+  if echo "$CLAUDE_YML" | grep -q "assigned"; then
+    ISSUES+=("claude.yml: issues トリガーに assigned が含まれている（推奨: opened のみ）")
+  fi
+
+  # bot 除外チェック
+  if ! echo "$CLAUDE_YML" | grep -q "github-actions\[bot\]"; then
+    ISSUES+=("claude.yml: bot ユーザー除外が未設定")
+  fi
+
+  # Draft PR チェック
+  if ! echo "$CLAUDE_YML" | grep -q "draft"; then
+    ISSUES+=("claude.yml: Draft PR スキップが未設定")
+  fi
+
+  # timeout チェック
+  TIMEOUT=$(echo "$CLAUDE_YML" | grep "timeout-minutes:" | head -1 | grep -o '[0-9]*')
+  if [ -n "$TIMEOUT" ] && [ "$TIMEOUT" -gt 20 ]; then
+    ISSUES+=("claude.yml: timeout が ${TIMEOUT}分（推奨: 20分以下）")
+  fi
+fi
+
+# claude-code-review.yml のチェック
+if [ -f ".github/workflows/claude-code-review.yml" ]; then
+  REVIEW_YML=$(cat .github/workflows/claude-code-review.yml)
+
+  # synchronize トリガーチェック
+  if echo "$REVIEW_YML" | grep -q "synchronize"; then
+    ISSUES+=("claude-code-review.yml: synchronize トリガーが有効（push毎にレビュー実行される）")
+  fi
+fi
+```
+
+**結果パターン:**
+
+| 状態 | 対応 |
+|---|---|
+| 全チェック OK | ✅ Claude ワークフロー最適化済み |
+| 問題あり | ⚠️ コスト最適化の余地あり（問題リスト表示） |
+
+**MODE が `full` かつ問題がある場合:**
+
+keito4/config の最新テンプレートと比較し、差分を自動適用するかユーザーに確認：
+
+```bash
+# config リポジトリの最新テンプレートを取得
+TEMPLATE_CLAUDE=$(curl -fsSL "https://raw.githubusercontent.com/keito4/config/main/.github/workflows/claude.yml")
+TEMPLATE_REVIEW=$(curl -fsSL "https://raw.githubusercontent.com/keito4/config/main/.github/workflows/claude-code-review.yml")
+
+# 差分がある場合はテンプレートで上書きを提案
+```
+
+**結果:**
+
+- ✅ Claude ワークフロー最適化済み
+- 🔧 Claude ワークフローを最適化しました（変更リスト表示）
+- ⏭️ スキップ（Claude ワークフロー未使用）
+
+**背景:**
+Elu-co-jp org で Claude Code ワークフローの過剰実行（1日64回等）がActions費用の最大要因であったことから、
+このチェックをデフォルトで実行し、全リポジトリのコスト最適化を推奨する。
+
+### 3.7 Renovate / Dependabot 設定チェック
 
 依存関係の自動更新設定を確認：
 
@@ -638,7 +735,7 @@ echo "   https://github.com/apps/renovate"
 - 🔧 .github/renovate.json を生成しました
 - ⏭️ スキップ（`package.json` なし）
 
-### 3.7 commitlint 設定チェック
+### 3.8 commitlint 設定チェック
 
 コミットメッセージの品質管理設定を確認：
 
@@ -674,7 +771,7 @@ grep -q "commitlint" .husky/commit-msg 2>/dev/null && HAS_COMMITMSG_HOOK=true
 - ⚠️ commitlint 未設定 → `/setup-husky` でセットアップを提案
 - ⏭️ スキップ（Husky 未設定）
 
-### 3.8 .editorconfig 設定チェック
+### 3.9 .editorconfig 設定チェック
 
 エディタ間のコーディングスタイル一貫性を確認：
 
@@ -716,7 +813,7 @@ echo "🔧 .editorconfig を生成しました"
 - 🔧 .editorconfig を生成しました
 - ⏭️ スキップ（`check-only` モード）
 
-### 3.9 package.json scripts 標準チェック
+### 3.10 package.json scripts 標準チェック
 
 Quality Gates で必要なスクリプトが揃っているか確認：
 
@@ -963,7 +1060,9 @@ $INSTALL_DEV @biomejs/biome knip
 ├── scripts: ✅ All standard scripts defined (or ⚠️ Missing: test, lint)
 ├── Pre-PR Checklist: ✅ CI workflow exists
 ├── CLAUDE.md: ✅ Symlink to AGENTS.md
-└── CI/CD: ✅ Standard level configured
+├── CI/CD: ✅ Standard level configured
+├── Claude Workflow: ✅ Cost-optimized (or ⚠️ Optimization needed)
+├── Renovate/Dependabot: ✅ Auto-update configured
 
 ## Cleanup (3/4)
 ├── Branches: 🗑️ 8 merged branches can be deleted
@@ -1200,6 +1299,7 @@ Run this command regularly to maintain repository health:
 | Setup       | `/pre-pr-checklist`             | PR前チェックリスト            |
 | Setup       | (CLAUDE.md symlink check)       | CLAUDE.md シンボリックリンク  |
 | Setup       | `/setup-ci`                     | CI/CDワークフロー設定         |
+| Setup       | (Claude Workflow Optimization)  | Claude ワークフローコスト最適化 |
 | Setup       | (Renovate/Dependabot check)     | 依存関係自動更新設定          |
 | Setup       | (commitlint check)              | コミットメッセージ品質管理    |
 | Setup       | (editorconfig check)            | エディタスタイル設定          |
