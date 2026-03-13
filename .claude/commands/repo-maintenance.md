@@ -583,7 +583,413 @@ MODE が `full` かつ CI/CD が未設定の場合:
 
 `/setup-ci` コマンドの実行を提案。
 
-### 3.6 Renovate / Dependabot 設定チェック
+### 3.6 GitHub Actions Cost Optimization Check
+
+GitHub Actions のコスト最適化のため、全ワークフローの設定を確認：
+
+#### 3.6.1 全ワークフロー共通チェック
+
+**確認対象:** `.github/workflows/*.yml` 全ファイル
+
+**チェック項目:**
+
+| # | チェック | 推奨値 | コスト影響 |
+|---|---|---|---|
+| 1 | `concurrency` 設定の有無 | 設定あり | 重複実行防止 |
+| 2 | `cancel-in-progress` | `true`（CI系） | 古い実行の即時キャンセル |
+| 3 | Draft PR のスキップ | `github.event.pull_request.draft == false` | Draft中の不要実行防止 |
+| 4 | `timeout-minutes` の設定 | 明示的に設定（デフォルト360分は危険） | 暴走ジョブ防止 |
+| 5 | `paths` / `paths-ignore` フィルタ | コード変更に関係ないファイルを除外 | 不要実行の抑制 |
+| 6 | Dependabot PR の除外/制限 | bot除外 or 実行制限 | 大量の依存更新PRでの過剰実行防止 |
+
+**確認ロジック:**
+
+```bash
+ISSUES=()
+
+for workflow in .github/workflows/*.yml; do
+  [ ! -f "$workflow" ] && continue
+  BASENAME=$(basename "$workflow")
+  CONTENT=$(cat "$workflow")
+
+  # concurrency 設定チェック
+  if ! echo "$CONTENT" | grep -q "concurrency:"; then
+    ISSUES+=("$BASENAME: concurrency 未設定（重複実行の可能性あり）")
+  fi
+
+  # timeout-minutes チェック
+  if ! echo "$CONTENT" | grep -q "timeout-minutes:"; then
+    ISSUES+=("$BASENAME: timeout-minutes 未設定（デフォルト360分で課金される可能性あり）")
+  fi
+
+  # PR トリガーでの Draft スキップチェック
+  if echo "$CONTENT" | grep -q "pull_request:" && ! echo "$CONTENT" | grep -q "draft"; then
+    ISSUES+=("$BASENAME: pull_request トリガーあり、Draft PR スキップ未設定")
+  fi
+
+  # paths フィルタの推奨（CI/テスト系ワークフロー）
+  if echo "$CONTENT" | grep -qE "(npm test|npm run test|vitest|jest|pytest)" && \
+     ! echo "$CONTENT" | grep -q "paths:"; then
+    ISSUES+=("$BASENAME: テスト実行あり、paths フィルタ未設定（README変更等でもテスト実行される）")
+  fi
+done
+```
+
+#### 3.6.2 Claude ワークフロー固有チェック
+
+**確認対象:**
+
+- `.github/workflows/claude.yml`
+- `.github/workflows/claude-code-review.yml`
+
+**チェック項目:**
+
+| # | チェック | 推奨値 | コスト影響 |
+|---|---|---|---|
+| 1 | `claude.yml` の `cancel-in-progress` | `true` | 重複実行防止（**最大の効果**） |
+| 2 | `claude.yml` の issues トリガー | `[opened]` のみ | `assigned` での不要起動防止 |
+| 3 | `claude.yml` の bot 除外 | `github-actions[bot]`, `dependabot[bot]` | bot連鎖防止 |
+| 4 | `claude.yml` の timeout | `20` 分以下 | 長時間実行抑制 |
+| 5 | `claude-code-review.yml` の `synchronize` 除外 | `[opened, ready_for_review]` | push毎のレビュー実行防止 |
+| 6 | Copilot code review との重複 | どちらか1つに統一 | AIレビュー重複防止 |
+
+```bash
+# claude.yml のチェック
+if [ -f ".github/workflows/claude.yml" ]; then
+  CLAUDE_YML=$(cat .github/workflows/claude.yml)
+
+  if echo "$CLAUDE_YML" | grep -q "cancel-in-progress: false"; then
+    ISSUES+=("claude.yml: cancel-in-progress が false（推奨: true）")
+  fi
+
+  if echo "$CLAUDE_YML" | grep -q "assigned"; then
+    ISSUES+=("claude.yml: issues トリガーに assigned が含まれている（推奨: opened のみ）")
+  fi
+
+  if ! echo "$CLAUDE_YML" | grep -q "github-actions\[bot\]"; then
+    ISSUES+=("claude.yml: bot ユーザー除外が未設定")
+  fi
+
+  if ! echo "$CLAUDE_YML" | grep -q "draft"; then
+    ISSUES+=("claude.yml: Draft PR スキップが未設定")
+  fi
+
+  TIMEOUT=$(echo "$CLAUDE_YML" | grep "timeout-minutes:" | head -1 | grep -o '[0-9]*')
+  if [ -n "$TIMEOUT" ] && [ "$TIMEOUT" -gt 20 ]; then
+    ISSUES+=("claude.yml: timeout が ${TIMEOUT}分（推奨: 20分以下）")
+  fi
+fi
+
+# claude-code-review.yml のチェック
+if [ -f ".github/workflows/claude-code-review.yml" ]; then
+  REVIEW_YML=$(cat .github/workflows/claude-code-review.yml)
+
+  if echo "$REVIEW_YML" | grep -q "synchronize"; then
+    ISSUES+=("claude-code-review.yml: synchronize トリガーが有効（push毎にレビュー実行される）")
+  fi
+fi
+```
+
+#### 3.6.3 CI/CD ワークフロー固有チェック
+
+**確認対象:** テスト・ビルド・デプロイ系ワークフロー
+
+**チェック項目:**
+
+| # | チェック | 推奨値 | コスト影響 |
+|---|---|---|---|
+| 1 | `paths` フィルタ | ソースコード変更時のみ実行 | ドキュメント変更での不要実行防止 |
+| 2 | キャッシュ設定 | `actions/cache` or `actions/setup-node` の cache | ビルド時間短縮 |
+| 3 | マトリクスの最適化 | 必要最小限の組み合わせ | 並列ジョブ数の削減 |
+| 4 | Dependabot PR の制限 | `if: github.actor != 'dependabot[bot]'` (高コストジョブ) | 依存更新での過剰実行防止 |
+
+```bash
+for workflow in .github/workflows/ci*.yml .github/workflows/test*.yml; do
+  [ ! -f "$workflow" ] && continue
+  BASENAME=$(basename "$workflow")
+  CONTENT=$(cat "$workflow")
+
+  # キャッシュ設定チェック
+  if echo "$CONTENT" | grep -qE "(npm ci|npm install|pnpm install)" && \
+     ! echo "$CONTENT" | grep -qE "(actions/cache|cache:|actions/setup-node.*cache)"; then
+    ISSUES+=("$BASENAME: パッケージインストールあり、キャッシュ未設定（ビルド時間増加）")
+  fi
+
+  # paths フィルタチェック（CI系）
+  if echo "$CONTENT" | grep -q "pull_request:" && ! echo "$CONTENT" | grep -q "paths"; then
+    ISSUES+=("$BASENAME: paths フィルタ未設定（推奨: src/ 等のコード変更のみトリガー）")
+  fi
+done
+```
+
+#### 3.6.4 セキュリティワークフローの重複チェック
+
+同一リポジトリに重複するセキュリティスキャンがないか確認：
+
+```bash
+SECURITY_WORKFLOWS=()
+
+# CodeQL チェック
+ls .github/workflows/*.yml 2>/dev/null | while read -r f; do
+  if grep -q "codeql" "$f" 2>/dev/null; then
+    SECURITY_WORKFLOWS+=("$(basename "$f"):CodeQL")
+  fi
+  if grep -q "Security Scan\|security-scan\|trivy\|snyk" "$f" 2>/dev/null; then
+    SECURITY_WORKFLOWS+=("$(basename "$f"):SecurityScan")
+  fi
+done
+
+# AI レビューの重複チェック
+AI_REVIEWS=0
+[ -f ".github/workflows/claude-code-review.yml" ] && AI_REVIEWS=$((AI_REVIEWS + 1))
+# Copilot code review は dynamic workflow なので GitHub 設定で確認
+gh api repos/{owner}/{repo}/actions/workflows --jq '.workflows[] | select(.name | test("Copilot code review"))' 2>/dev/null && AI_REVIEWS=$((AI_REVIEWS + 1))
+
+if [ "$AI_REVIEWS" -gt 1 ]; then
+  ISSUES+=("AIレビューが複数有効（Claude Code Review + Copilot）。どちらか1つに統一推奨")
+fi
+```
+
+**結果パターン:**
+
+| 状態 | 対応 |
+|---|---|
+| 全チェック OK | ✅ GitHub Actions 最適化済み |
+| 問題あり | ⚠️ コスト最適化の余地あり（問題リスト表示） |
+
+**MODE が `full` かつ問題がある場合:**
+
+Claude 関連ワークフローは keito4/config のテンプレートと比較し、差分を自動適用するかユーザーに確認。
+その他のワークフローは推奨設定をリスト表示し、個別に適用するか確認。
+
+```bash
+# config リポジトリの最新テンプレートを取得
+TEMPLATE_CLAUDE=$(curl -fsSL "https://raw.githubusercontent.com/keito4/config/main/.github/workflows/claude.yml")
+TEMPLATE_REVIEW=$(curl -fsSL "https://raw.githubusercontent.com/keito4/config/main/.github/workflows/claude-code-review.yml")
+
+# 差分がある場合はテンプレートで上書きを提案
+```
+
+**結果:**
+
+- ✅ GitHub Actions 最適化済み
+- 🔧 ワークフローを最適化しました（変更リスト表示）
+- ⏭️ スキップ（GitHub Actions 未使用）
+
+**背景:**
+Elu-co-jp org で Claude Code ワークフローの過剰実行（1日64回等）や
+CI/CDの非効率な設定がActions費用の最大要因（推定 $400+/3ヶ月）であったことから、
+このチェックをデフォルトで実行し、全リポジトリのコスト最適化を推奨する。
+
+#### 3.6.5 Actions Artifact 保持期間チェック
+
+Actions で生成される Artifact のストレージ保持期間を確認：
+
+**背景:**
+GitHub Actions の Artifact はデフォルトで **90日間** 保持され、ストレージ課金の対象となる。
+多くの場合、Artifact は CI 結果の確認が終われば不要であり、30日以下で十分。
+
+**チェック項目:**
+
+| # | チェック | 推奨値 | コスト影響 |
+|---|---|---|---|
+| 1 | ワークフロー内の `retention-days` 設定 | 明示的に `7`〜`30` 日 | ストレージ課金削減 |
+| 2 | `actions/upload-artifact` の使用箇所 | retention-days を必ず指定 | 90日保持の防止 |
+
+**確認ロジック:**
+
+```bash
+ISSUES=()
+
+for workflow in .github/workflows/*.yml; do
+  [ ! -f "$workflow" ] && continue
+  BASENAME=$(basename "$workflow")
+  CONTENT=$(cat "$workflow")
+
+  # upload-artifact を使用しているか確認
+  if echo "$CONTENT" | grep -q "actions/upload-artifact"; then
+    # retention-days が設定されているか確認
+    if ! echo "$CONTENT" | grep -q "retention-days:"; then
+      ISSUES+=("$BASENAME: upload-artifact 使用あり、retention-days 未設定（デフォルト90日保持）")
+    else
+      # 設定値を確認
+      RETENTION=$(echo "$CONTENT" | grep "retention-days:" | head -1 | grep -o '[0-9]*')
+      if [ -n "$RETENTION" ] && [ "$RETENTION" -gt 30 ]; then
+        ISSUES+=("$BASENAME: retention-days が ${RETENTION}日（推奨: 30日以下）")
+      fi
+    fi
+  fi
+done
+```
+
+**MODE が `full` かつ問題がある場合:**
+
+upload-artifact ステップに `retention-days: 7` を追加するか、リポジトリ設定でデフォルト保持期間を変更：
+
+```bash
+# リポジトリの Artifact 保持期間をAPIで確認
+RETENTION=$(gh api repos/{owner}/{repo}/actions/cache/usage-policy --jq '.actions_cache_usage_limit_in_gb' 2>/dev/null)
+
+# GitHub UI で設定変更を推奨:
+# Settings → Actions → General → Artifact and log retention → 7 days
+```
+
+**結果:**
+
+- ✅ Artifact 保持期間: 適切に設定済み
+- ⚠️ retention-days 未設定の upload-artifact あり（リスト表示）
+- ⏭️ スキップ（upload-artifact 未使用）
+
+#### 3.6.6 未使用ワークフロー検出
+
+存在するが長期間実行されていない、または無効化すべきワークフローを検出：
+
+**背景:**
+使われなくなったワークフローが残存していると、意図しないタイミングでトリガーされ、
+不要な Actions 課金が発生する。特に `schedule` や `push` でトリガーされるワークフローは
+忘れられたまま定期実行され続けるリスクがある。
+
+**チェック項目:**
+
+| # | チェック | 判定基準 | 対応 |
+|---|---|---|---|
+| 1 | 30日以上実行のないワークフロー | 最終実行日 > 30日前 | 無効化を提案 |
+| 2 | `schedule` トリガーのワークフロー | cron 設定の確認 | 本当に必要か確認 |
+| 3 | 失敗し続けているワークフロー | 直近5回が全て失敗 | 修正 or 無効化を提案 |
+
+**確認ロジック:**
+
+```bash
+ISSUES=()
+THIRTY_DAYS_AGO=$(date -u -v-30d +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+
+# 全ワークフローの最終実行日を確認
+gh api "repos/$REPO/actions/workflows" --jq '.workflows[] | select(.state == "active") | {id, name, path}' | while read -r line; do
+  WORKFLOW_ID=$(echo "$line" | jq -r '.id')
+  WORKFLOW_NAME=$(echo "$line" | jq -r '.name')
+  WORKFLOW_PATH=$(echo "$line" | jq -r '.path')
+
+  # dynamic ワークフロー（Copilot, Dependabot等）はスキップ
+  if echo "$WORKFLOW_PATH" | grep -q "^dynamic/"; then
+    continue
+  fi
+
+  # 最新の実行を取得
+  LATEST_RUN=$(gh api "repos/$REPO/actions/workflows/$WORKFLOW_ID/runs?per_page=1" --jq '.workflow_runs[0]' 2>/dev/null)
+
+  if [ -z "$LATEST_RUN" ] || [ "$LATEST_RUN" = "null" ]; then
+    ISSUES+=("$WORKFLOW_NAME: 実行履歴なし（不要なら削除推奨）")
+    continue
+  fi
+
+  LAST_RUN_DATE=$(echo "$LATEST_RUN" | jq -r '.created_at')
+
+  # 30日以上実行されていない
+  if [[ "$LAST_RUN_DATE" < "$THIRTY_DAYS_AGO" ]]; then
+    ISSUES+=("$WORKFLOW_NAME: 最終実行 $LAST_RUN_DATE（30日以上未実行、無効化を検討）")
+  fi
+
+  # 直近5回の実行結果を確認
+  RECENT_CONCLUSIONS=$(gh api "repos/$REPO/actions/workflows/$WORKFLOW_ID/runs?per_page=5" \
+    --jq '[.workflow_runs[].conclusion] | map(select(. != null))' 2>/dev/null)
+
+  ALL_FAILED=$(echo "$RECENT_CONCLUSIONS" | jq 'all(. == "failure")' 2>/dev/null)
+  if [ "$ALL_FAILED" = "true" ]; then
+    ISSUES+=("$WORKFLOW_NAME: 直近5回すべて失敗（修正 or 無効化が必要）")
+  fi
+done
+
+# schedule トリガーのワークフロー一覧
+for workflow in .github/workflows/*.yml; do
+  [ ! -f "$workflow" ] && continue
+  BASENAME=$(basename "$workflow")
+  if grep -q "schedule:" "$workflow"; then
+    CRON=$(grep -A1 "schedule:" "$workflow" | grep "cron:" | head -1 | sed 's/.*cron: *//')
+    ISSUES+=("INFO: $BASENAME: schedule トリガーあり（$CRON）— 定期実行が必要か確認")
+  fi
+done
+```
+
+**MODE が `full` かつ問題がある場合:**
+
+未使用ワークフローの無効化をユーザーに確認してから実行：
+
+```bash
+# ワークフローを無効化
+gh api -X PUT "repos/$REPO/actions/workflows/$WORKFLOW_ID/disable"
+```
+
+**結果:**
+
+- ✅ 全ワークフローがアクティブに使用されている
+- ⚠️ 未使用ワークフロー: X 件（リスト表示）
+- ⚠️ 常時失敗ワークフロー: X 件（リスト表示）
+- 📝 schedule ワークフロー: X 件（要確認リスト表示）
+
+#### 3.6.7 Actions Runner サイズチェック
+
+不必要に高スペックな Runner の使用を検出：
+
+**背景:**
+GitHub-hosted Runner は種類により単価が異なる。Linux 2-core（`ubuntu-latest`）は $0.008/分だが、
+Large Runner（8-core）は $0.032/分、Windows は $0.016/分と2〜4倍の課金となる。
+必要以上のスペックを使用するとコストが膨らむ。
+
+**Runner 単価一覧:**
+
+| Runner | 単価/分 | 倍率 |
+|---|---|---|
+| `ubuntu-latest` (2-core) | $0.008 | 1x |
+| `ubuntu-latest-4-core` | $0.016 | 2x |
+| `ubuntu-latest-8-core` | $0.032 | 4x |
+| `ubuntu-latest-16-core` | $0.064 | 8x |
+| `windows-latest` | $0.016 | 2x |
+| `macos-latest` | $0.08 | 10x |
+
+**チェック項目:**
+
+| # | チェック | 推奨 | コスト影響 |
+|---|---|---|---|
+| 1 | `runs-on` で Large Runner 使用 | 本当に必要か確認 | 2〜8倍のコスト差 |
+| 2 | `runs-on: windows-latest` | Linux で代替可能か確認 | 2倍のコスト差 |
+| 3 | `runs-on: macos-latest` | iOS/macOS ビルド以外は Linux 推奨 | 10倍のコスト差 |
+
+**確認ロジック:**
+
+```bash
+ISSUES=()
+
+for workflow in .github/workflows/*.yml; do
+  [ ! -f "$workflow" ] && continue
+  BASENAME=$(basename "$workflow")
+  CONTENT=$(cat "$workflow")
+
+  # Large Runner の検出
+  if echo "$CONTENT" | grep -qE "runs-on:.*(-[0-9]+-core|xlarge|2xlarge|4xlarge)"; then
+    RUNNERS=$(echo "$CONTENT" | grep -oE "runs-on:.*" | sort -u)
+    ISSUES+=("$BASENAME: Large Runner 使用（$RUNNERS）— 本当に必要か確認")
+  fi
+
+  # Windows Runner の検出
+  if echo "$CONTENT" | grep -q "runs-on:.*windows"; then
+    ISSUES+=("$BASENAME: Windows Runner 使用（$0.016/分、Linux の2倍）— Linux で代替可能か確認")
+  fi
+
+  # macOS Runner の検出
+  if echo "$CONTENT" | grep -q "runs-on:.*macos"; then
+    ISSUES+=("$BASENAME: macOS Runner 使用（$0.08/分、Linux の10倍）— iOS/macOS ビルド以外なら Linux 推奨")
+  fi
+done
+```
+
+**結果:**
+
+- ✅ 全ワークフローが標準 Runner（ubuntu-latest）を使用
+- ⚠️ 高コスト Runner 使用: X 件（リスト表示・代替案提示）
+- 📝 Windows/macOS Runner: X 件（用途が適切か確認推奨）
+
+### 3.7 Renovate / Dependabot 設定チェック
 
 依存関係の自動更新設定を確認：
 
@@ -638,7 +1044,7 @@ echo "   https://github.com/apps/renovate"
 - 🔧 .github/renovate.json を生成しました
 - ⏭️ スキップ（`package.json` なし）
 
-### 3.7 commitlint 設定チェック
+### 3.8 commitlint 設定チェック
 
 コミットメッセージの品質管理設定を確認：
 
@@ -674,7 +1080,7 @@ grep -q "commitlint" .husky/commit-msg 2>/dev/null && HAS_COMMITMSG_HOOK=true
 - ⚠️ commitlint 未設定 → `/setup-husky` でセットアップを提案
 - ⏭️ スキップ（Husky 未設定）
 
-### 3.8 .editorconfig 設定チェック
+### 3.9 .editorconfig 設定チェック
 
 エディタ間のコーディングスタイル一貫性を確認：
 
@@ -716,7 +1122,7 @@ echo "🔧 .editorconfig を生成しました"
 - 🔧 .editorconfig を生成しました
 - ⏭️ スキップ（`check-only` モード）
 
-### 3.9 package.json scripts 標準チェック
+### 3.10 package.json scripts 標準チェック
 
 Quality Gates で必要なスクリプトが揃っているか確認：
 
@@ -963,7 +1369,12 @@ $INSTALL_DEV @biomejs/biome knip
 ├── scripts: ✅ All standard scripts defined (or ⚠️ Missing: test, lint)
 ├── Pre-PR Checklist: ✅ CI workflow exists
 ├── CLAUDE.md: ✅ Symlink to AGENTS.md
-└── CI/CD: ✅ Standard level configured
+├── CI/CD: ✅ Standard level configured
+├── Actions Cost: ✅ Optimized (or ⚠️ X issues found)
+│   ├── Artifact Retention: ✅ (or ⚠️ 90-day default detected)
+│   ├── Unused Workflows: ✅ (or ⚠️ X stale workflows)
+│   └── Runner Size: ✅ (or ⚠️ High-cost runners detected)
+├── Renovate/Dependabot: ✅ Auto-update configured
 
 ## Cleanup (3/4)
 ├── Branches: 🗑️ 8 merged branches can be deleted
@@ -1200,6 +1611,7 @@ Run this command regularly to maintain repository health:
 | Setup       | `/pre-pr-checklist`             | PR前チェックリスト            |
 | Setup       | (CLAUDE.md symlink check)       | CLAUDE.md シンボリックリンク  |
 | Setup       | `/setup-ci`                     | CI/CDワークフロー設定         |
+| Setup       | (Actions Cost Optimization)     | GitHub Actions コスト最適化     |
 | Setup       | (Renovate/Dependabot check)     | 依存関係自動更新設定          |
 | Setup       | (commitlint check)              | コミットメッセージ品質管理    |
 | Setup       | (editorconfig check)            | エディタスタイル設定          |
