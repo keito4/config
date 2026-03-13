@@ -18,6 +18,9 @@
 #   --skip-status-checks  Skip required status checks configuration
 #   --create-branches     Create branches if they don't exist
 #   --merge-method METHOD Merge method: squash, merge, rebase, all, none (default: squash)
+#   --protection-level LV Protection level: standard or strict (default: standard)
+#                         strict: 2 reviewers, enforce admins, linear history,
+#                         conversation resolution, signed commits, last push approval
 #   --help                Show this help message
 
 set -euo pipefail
@@ -36,6 +39,7 @@ DRY_RUN=false
 SKIP_STATUS_CHECKS=false
 CREATE_BRANCHES=false
 MERGE_METHOD="merge"  # Options: squash, merge, rebase, all, none
+PROTECTION_LEVEL="standard"  # Options: standard, strict
 
 # Parse arguments
 REPO=""
@@ -71,6 +75,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --merge-method)
       MERGE_METHOD="$2"
+      shift 2
+      ;;
+    --protection-level)
+      PROTECTION_LEVEL="$2"
       shift 2
       ;;
     --help)
@@ -143,6 +151,7 @@ if [[ "$INTERACTIVE" == "true" ]]; then
   echo "  Enforce for admins: $ENFORCE_ADMINS"
   echo "  Skip status checks: $SKIP_STATUS_CHECKS"
   echo "  Merge method: $MERGE_METHOD"
+  echo "  Protection level: $PROTECTION_LEVEL"
   echo ""
   read -p "Continue? (y/N) " -n 1 -r
   echo
@@ -181,6 +190,27 @@ setup_branch_protection() {
     fi
   fi
 
+  # Apply protection level presets
+  local reviewers=$REVIEWERS
+  local enforce_admins=$ENFORCE_ADMINS
+  local require_linear_history=false
+  local require_last_push_approval=false
+  local require_conversation_resolution=false
+  local require_signed_commits=false
+
+  if [[ "$PROTECTION_LEVEL" == "strict" ]]; then
+    # Strict: maximum protection for production-grade branches
+    if [[ "$REVIEWERS" -lt 2 ]]; then
+      reviewers=2
+    fi
+    enforce_admins=true
+    require_linear_history=true
+    require_last_push_approval=true
+    require_conversation_resolution=true
+    require_signed_commits=true
+    info "Applying strict protection level (reviewers=$reviewers, enforce_admins, linear_history, signed_commits, last_push_approval)"
+  fi
+
   # Build protection configuration
   local protection_config='{'
   protection_config+='"required_status_checks":{'
@@ -195,12 +225,13 @@ setup_branch_protection() {
   protection_config+='},'
 
   protection_config+='"required_pull_request_reviews":{'
-  protection_config+="\"required_approving_review_count\":$REVIEWERS,"
+  protection_config+="\"required_approving_review_count\":$reviewers,"
   protection_config+='"dismiss_stale_reviews":true,'
-  protection_config+='"require_code_owner_reviews":true'
+  protection_config+='"require_code_owner_reviews":true,'
+  protection_config+="\"require_last_push_approval\":$require_last_push_approval"
   protection_config+='},'
 
-  if [[ "$ENFORCE_ADMINS" == "true" ]]; then
+  if [[ "$enforce_admins" == "true" ]]; then
     protection_config+='"enforce_admins":true,'
   else
     protection_config+='"enforce_admins":false,'
@@ -209,7 +240,8 @@ setup_branch_protection() {
   protection_config+='"restrictions":null,'
   protection_config+='"allow_force_pushes":{"enabled":false},'
   protection_config+='"allow_deletions":{"enabled":false},'
-  protection_config+='"required_linear_history":{"enabled":false}'
+  protection_config+="\"required_linear_history\":{\"enabled\":$require_linear_history},"
+  protection_config+="\"required_conversation_resolution\":{\"enabled\":$require_conversation_resolution}"
   protection_config+='}'
 
   # Apply branch protection
@@ -224,6 +256,18 @@ setup_branch_protection() {
     else
       error "Failed to apply branch protection to $branch"
       return 1
+    fi
+
+    # Enable signed commits requirement (separate API endpoint)
+    if [[ "$require_signed_commits" == "true" ]]; then
+      if gh api "repos/$REPO/branches/$branch/protection/required_signatures" \
+        --method POST \
+        -H "Accept: application/vnd.github.zzzax-preview+json" \
+        &>/dev/null; then
+        success "Signed commits required for $branch"
+      else
+        warning "Could not enable signed commits requirement for $branch"
+      fi
     fi
   fi
 }

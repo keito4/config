@@ -17,7 +17,7 @@ on:
       - '.prettierrc.*'
       - 'tsconfig.json'
   push:
-    branches: [main, master]
+    branches: [main, master, pre-production, production]
     paths:
       - '**.js'
       - '**.ts'
