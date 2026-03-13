@@ -2,12 +2,12 @@ name: Container Security Scan
 
 on:
   push:
-    branches: [main]
+    branches: [main, pre-production, production]
     paths:
       - '.devcontainer/**'
       - 'npm/global.json'
   pull_request:
-    branches: [main]
+    branches: [main, pre-production, production]
     paths:
       - '.devcontainer/**'
       - 'npm/global.json'

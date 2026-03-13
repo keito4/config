@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+    branches: [main, master, pre-production, production]
     paths:
       - '**.js'
       - '**.ts'
@@ -17,7 +18,7 @@ on:
       - '.prettierrc.*'
       - 'tsconfig.json'
   push:
-    branches: [main, master]
+    branches: [main, master, pre-production, production]
     paths:
       - '**.js'
       - '**.ts'

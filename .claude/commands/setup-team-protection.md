@@ -123,6 +123,28 @@ bash script/setup-team-protection.sh --reviewers 2
 bash script/setup-team-protection.sh --enforce-admins
 ```
 
+**pre-production / production ブランチも保護（最厳格設定）**
+
+```bash
+# main, pre-production, production を保護（strictレベル）
+bash script/setup-team-protection.sh \
+  --branches main,pre-production,production \
+  --create-branches \
+  --protection-level strict
+```
+
+**保護レベルの設定**
+
+```bash
+# standard（デフォルト）: レビュー1名、管理者除外
+bash script/setup-team-protection.sh --protection-level standard
+
+# strict: レビュー2名以上、管理者も制約、リニア履歴必須、
+#         署名付きコミット必須、最終プッシュ承認必須、
+#         会話解決必須
+bash script/setup-team-protection.sh --protection-level strict
+```
+
 **develop ブランチも保護**
 
 ```bash
