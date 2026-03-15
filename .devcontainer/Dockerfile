@@ -165,6 +165,8 @@ COPY --chown=root:root script/lib /usr/local/script/lib
 COPY --chown=root:root script/*.sh /usr/local/script/
 # Copy templates for project initialization
 COPY --chown=root:root .devcontainer/templates /usr/local/share/config-templates/
+# Copy workflow/pre-commit templates for repo-maintenance distribution
+COPY --chown=root:root templates/ /usr/local/share/config-templates/
 RUN chmod +x /usr/local/bin/setup-claude.sh /tmp/setup-claude-build.sh /tmp/install-skills.sh /usr/local/script/*.sh
 
 # Install skills from skills.txt using npx skills add
