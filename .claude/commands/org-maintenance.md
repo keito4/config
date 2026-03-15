@@ -392,6 +392,11 @@ Repositories Checked: {COUNT}
 ├── PR Template: {PR_TMPL_COUNT}/{ACTIVE} repos
 └── Branch Protection: {PROTECTED_COUNT}/{ACTIVE} repos
 
+## .github-private テンプレート同期
+├── テンプレート差分: {DIFF_COUNT} repos
+├── .github-private 更新: {UPDATES_NEEDED} テンプレート
+└── 同期 PRs: {SYNC_PRS} 件
+
 ## Actions Taken
 ├── Issues Created: {ISSUES_CREATED}
 ├── PRs Created: {PRS_CREATED}
@@ -450,6 +455,200 @@ Run regularly:
 ├── Standard Files: {MISSING_LIST}
 ├── Actions (30d): {RUN_COUNT} runs
 └── Recommendation: {ACTION}
+```
+
+## Step 9: .github-private テンプレート同期
+
+組織の `.github-private` リポジトリに管理されているテンプレートを各リポジトリに同期する。
+
+### 9.1 .github-private のテンプレート取得
+
+```bash
+# .github-private リポジトリからテンプレートを取得
+ORG_TEMPLATES_REPO="$ORG/.github-private"
+
+# テンプレート一覧
+# templates/CLAUDE.md        → 各リポジトリの CLAUDE.md
+# templates/dependabot.yml   → 各リポジトリの .github/dependabot.yml
+# templates/.github/pull_request_template.md → 各リポジトリの .github/pull_request_template.md
+# templates/.github/ISSUE_TEMPLATE/*        → 各リポジトリの .github/ISSUE_TEMPLATE/
+
+TEMPLATE_FILES=(
+  "templates/CLAUDE.md"
+  "templates/dependabot.yml"
+  "templates/.github/pull_request_template.md"
+  "templates/.github/ISSUE_TEMPLATE/bug_report.md"
+  "templates/.github/ISSUE_TEMPLATE/feature_request.md"
+)
+```
+
+### 9.2 各リポジトリとの差分チェック
+
+```bash
+for repo in $REPOS; do
+  DIFFS=()
+
+  for template in "${TEMPLATE_FILES[@]}"; do
+    # テンプレートのターゲットパスを算出
+    case "$template" in
+      templates/CLAUDE.md)         TARGET="CLAUDE.md" ;;
+      templates/dependabot.yml)    TARGET=".github/dependabot.yml" ;;
+      templates/.github/*)         TARGET="${template#templates/}" ;;
+    esac
+
+    # .github-private のテンプレート内容を取得
+    ORG_CONTENT=$(gh api "repos/$ORG_TEMPLATES_REPO/contents/$template" \
+      --jq '.content' 2>/dev/null | base64 -d 2>/dev/null)
+
+    # 対象リポジトリの現在の内容を取得
+    REPO_CONTENT=$(gh api "repos/$ORG/$repo/contents/$TARGET" \
+      --jq '.content' 2>/dev/null | base64 -d 2>/dev/null)
+
+    if [ -z "$REPO_CONTENT" ]; then
+      DIFFS+=("$TARGET: ❌ 未作成")
+    elif [ "$ORG_CONTENT" != "$REPO_CONTENT" ]; then
+      DIFFS+=("$TARGET: ⚠️ 差分あり")
+    fi
+  done
+
+  if [ ${#DIFFS[@]} -gt 0 ]; then
+    echo "$repo: テンプレート差分 ${#DIFFS[@]} 件"
+    for d in "${DIFFS[@]}"; do echo "  - $d"; done
+  fi
+done
+```
+
+### 9.3 テンプレート同期 PR の作成（--create-prs 時）
+
+差分があるリポジトリに対して、`.github-private` のテンプレートを適用する PR を作成:
+
+```bash
+for repo in $OUTDATED_TEMPLATE_REPOS; do
+  TMPDIR=$(mktemp -d)
+  gh repo clone "$ORG/$repo" "$TMPDIR" -- --depth 1
+  cd "$TMPDIR"
+
+  git checkout -b chore/sync-org-templates
+
+  # テンプレートをコピー
+  for template in "${TEMPLATE_FILES[@]}"; do
+    case "$template" in
+      templates/CLAUDE.md)         TARGET="CLAUDE.md" ;;
+      templates/dependabot.yml)    TARGET=".github/dependabot.yml" ;;
+      templates/.github/*)         TARGET="${template#templates/}" ;;
+    esac
+
+    mkdir -p "$(dirname "$TARGET")"
+    gh api "repos/$ORG_TEMPLATES_REPO/contents/$template" \
+      --jq '.content' 2>/dev/null | base64 -d > "$TARGET"
+  done
+
+  git add -A
+  git commit -m "chore: 組織テンプレートを同期
+
+.github-private のテンプレートを最新版に更新。
+org-maintenance による自動同期。"
+
+  git push -u origin chore/sync-org-templates
+  gh pr create \
+    --title "chore: 組織テンプレートを同期" \
+    --body "org-maintenance による .github-private テンプレートの自動同期"
+
+  cd -
+  rm -rf "$TMPDIR"
+done
+```
+
+### 9.4 .github-private 自体の更新
+
+config リポジトリのテンプレートが `.github-private` より新しい場合、
+`.github-private` を更新する PR を作成:
+
+**比較対象:**
+
+| config テンプレート                                   | .github-private テンプレート                          |
+| ----------------------------------------------------- | ----------------------------------------------------- |
+| `templates/github/pull_request_template.md`           | `templates/.github/pull_request_template.md`          |
+| `templates/github/ISSUE_TEMPLATE/bug_report.yml`      | `templates/.github/ISSUE_TEMPLATE/bug_report.md`      |
+| `templates/github/ISSUE_TEMPLATE/feature_request.yml` | `templates/.github/ISSUE_TEMPLATE/feature_request.md` |
+| `templates/github/dependabot.yml`                     | `templates/dependabot.yml`                            |
+
+```bash
+# config リポジトリの最新テンプレートと .github-private を比較
+CONFIG_REPO="keito4/config"
+
+UPDATES_NEEDED=()
+
+# PR テンプレート比較
+CONFIG_PR=$(gh api "repos/$CONFIG_REPO/contents/templates/github/pull_request_template.md" \
+  --jq '.content' 2>/dev/null | base64 -d 2>/dev/null)
+ORG_PR=$(gh api "repos/$ORG_TEMPLATES_REPO/contents/templates/.github/pull_request_template.md" \
+  --jq '.content' 2>/dev/null | base64 -d 2>/dev/null)
+
+if [ "$CONFIG_PR" != "$ORG_PR" ]; then
+  UPDATES_NEEDED+=("pull_request_template.md")
+fi
+
+# dependabot 比較
+CONFIG_DEP=$(gh api "repos/$CONFIG_REPO/contents/templates/github/dependabot.yml" \
+  --jq '.content' 2>/dev/null | base64 -d 2>/dev/null)
+ORG_DEP=$(gh api "repos/$ORG_TEMPLATES_REPO/contents/templates/dependabot.yml" \
+  --jq '.content' 2>/dev/null | base64 -d 2>/dev/null)
+
+if [ "$CONFIG_DEP" != "$ORG_DEP" ]; then
+  UPDATES_NEEDED+=("dependabot.yml")
+fi
+
+if [ ${#UPDATES_NEEDED[@]} -gt 0 ]; then
+  echo "⚠️ .github-private のテンプレートが古い: ${UPDATES_NEEDED[*]}"
+  echo "   config リポジトリの最新テンプレートで更新を推奨"
+fi
+```
+
+**MODE が `full` かつ更新が必要な場合:**
+
+`.github-private` リポジトリに対して更新 PR を作成:
+
+```bash
+TMPDIR=$(mktemp -d)
+gh repo clone "$ORG_TEMPLATES_REPO" "$TMPDIR" -- --depth 1
+cd "$TMPDIR"
+
+git checkout -b chore/sync-config-templates
+
+# config リポジトリのテンプレートで上書き
+for update in "${UPDATES_NEEDED[@]}"; do
+  case "$update" in
+    pull_request_template.md)
+      gh api "repos/$CONFIG_REPO/contents/templates/github/pull_request_template.md" \
+        --jq '.content' | base64 -d > "templates/.github/pull_request_template.md"
+      ;;
+    dependabot.yml)
+      gh api "repos/$CONFIG_REPO/contents/templates/github/dependabot.yml" \
+        --jq '.content' | base64 -d > "templates/dependabot.yml"
+      ;;
+  esac
+done
+
+git add -A
+git commit -m "chore: config リポジトリの最新テンプレートを同期"
+git push -u origin chore/sync-config-templates
+gh pr create \
+  --title "chore: config リポジトリの最新テンプレートを同期" \
+  --body "keito4/config のテンプレート更新に追従"
+
+cd -
+rm -rf "$TMPDIR"
+```
+
+**結果:**
+
+```
+.github-private テンプレート同期:
+├── 各リポジトリへの配布: X repos に差分あり
+├── .github-private の更新: Y テンプレートが古い
+├── PRs Created: Z 件
+└── ✅ 同期完了
 ```
 
 ## Error Handling
