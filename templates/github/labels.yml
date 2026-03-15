@@ -1,0 +1,100 @@
+# GitHub Labels 標準定義
+#
+# label-sync ワークフローで自動同期される
+# 各プロジェクトに合わせてカスタマイズ可能
+#
+# 使い方:
+#   .github/labels.yml にコピーして配置
+
+# ── Priority ──────────────────────────────────────
+- name: "P0: Critical"
+  color: "b60205"
+  description: "即時対応が必要"
+
+- name: "P1: High"
+  color: "d93f0b"
+  description: "今スプリントで対応"
+
+- name: "P2: Medium"
+  color: "fbca04"
+  description: "次スプリントで対応"
+
+- name: "P3: Low"
+  color: "0e8a16"
+  description: "バックログ"
+
+# ── Type ──────────────────────────────────────────
+- name: "bug"
+  color: "d73a4a"
+  description: "不具合・バグ"
+
+- name: "feature"
+  color: "a2eeef"
+  description: "新機能"
+
+- name: "enhancement"
+  color: "84b6eb"
+  description: "既存機能の改善"
+
+- name: "docs"
+  color: "0075ca"
+  description: "ドキュメントの更新"
+
+- name: "chore"
+  color: "e4e669"
+  description: "メンテナンス・雑務"
+
+- name: "refactor"
+  color: "d4c5f9"
+  description: "リファクタリング"
+
+- name: "performance"
+  color: "f9d0c4"
+  description: "パフォーマンス改善"
+
+- name: "security"
+  color: "ee0701"
+  description: "セキュリティ関連"
+
+- name: "dependencies"
+  color: "0366d6"
+  description: "依存関係の更新"
+
+# ── Status ────────────────────────────────────────
+- name: "in-progress"
+  color: "ededed"
+  description: "作業中"
+
+- name: "needs-review"
+  color: "fbca04"
+  description: "レビュー待ち"
+
+- name: "blocked"
+  color: "b60205"
+  description: "ブロック中"
+
+- name: "wontfix"
+  color: "ffffff"
+  description: "対応しない"
+
+- name: "duplicate"
+  color: "cfd3d7"
+  description: "重複"
+
+# ── Dependency ────────────────────────────────────
+- name: "breaking-change"
+  color: "b60205"
+  description: "破壊的変更あり"
+
+- name: "auto-discovered"
+  color: "bfdadc"
+  description: "自動検出された機能・改善"
+
+# ── CI/CD ─────────────────────────────────────────
+- name: "ci"
+  color: "006b75"
+  description: "CI/CD パイプライン関連"
+
+- name: "infrastructure"
+  color: "5319e7"
+  description: "インフラ関連"

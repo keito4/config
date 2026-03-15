@@ -1,0 +1,406 @@
+# =============================================================================
+# Terraform Drift Detection ワークフロー
+# =============================================================================
+#
+# 概要:
+#   Terraform State と実際のインフラの差分（ドリフト）を定期的に検出する。
+#   ドリフト検出時は GitHub Issue を自動作成し、Slack にも通知する。
+#
+# カスタマイズ方法:
+#   1. matrix.environment に対象環境を定義する
+#   2. 各環境の Terraform ディレクトリパスを設定する
+#   3. クラウドプロバイダーの認証情報を設定する
+#   4. Slack Webhook URL を設定する
+#
+# 必要な Secrets:
+#   - SLACK_WEBHOOK_URL: Slack 通知用 Webhook URL
+#   - クラウドプロバイダー認証情報（下記の認証セクション参照）
+#
+# =============================================================================
+
+name: Terraform Drift Detection
+
+on:
+  # --- 定期実行スケジュール ---
+  # 毎日 09:00 JST（00:00 UTC）に全環境をスキャン
+  schedule:
+    - cron: '0 0 * * *'
+
+  # --- 手動実行 ---
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'スキャン対象の環境（空の場合は全環境）'
+        required: false
+        type: choice
+        options:
+          - ''
+          - dev
+          - staging
+          - production
+        # TODO: プロジェクトの環境名に合わせて選択肢を変更する
+
+# =============================================================================
+# 同時実行制御
+# 環境ごとに排他制御し、同一環境の並列実行を防止する
+# =============================================================================
+# concurrency はジョブレベルで設定（環境ごとに制御するため）
+
+# =============================================================================
+# 権限設定（最小権限の原則）
+# =============================================================================
+permissions:
+  contents: read # リポジトリの読み取り
+  issues: write # Issue 作成用
+  id-token: write # OIDC 認証用（クラウドプロバイダー）
+
+jobs:
+  # ===========================================================================
+  # ドリフト検出ジョブ
+  # ===========================================================================
+  detect-drift:
+    name: 'Drift Detection - ${{ matrix.environment }}'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # --- 同時実行制御（環境ごと） ---
+    concurrency:
+      group: terraform-drift-${{ matrix.environment }}
+      cancel-in-progress: false # ドリフト検出は中断しない
+
+    strategy:
+      # 1つの環境が失敗しても他の環境のスキャンを継続する
+      fail-fast: false
+      matrix:
+        # TODO: プロジェクトの環境に合わせて変更する
+        environment:
+          - dev
+          - staging
+          - production
+        # TODO: 各環境の Terraform ディレクトリパスを設定する
+        include:
+          - environment: dev
+            tf_directory: terraform/environments/dev
+          - environment: staging
+            tf_directory: terraform/environments/staging
+          - environment: production
+            tf_directory: terraform/environments/production
+
+    # --- 環境フィルタ ---
+    # 手動実行で特定環境が指定された場合、その環境のみ実行する
+    if: >-
+      github.event_name == 'schedule' ||
+      github.event.inputs.environment == '' ||
+      github.event.inputs.environment == matrix.environment
+
+    # TODO: GitHub Environments を使用する場合はコメントを外す
+    # environment: ${{ matrix.environment }}
+
+    env:
+      TF_IN_AUTOMATION: 'true'
+      # State Lock を取得しない（読み取り専用操作のため）
+      TF_CLI_ARGS_plan: '-lock=false'
+
+    steps:
+      # -----------------------------------------------------------------
+      # リポジトリのチェックアウト
+      # -----------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------
+      # Terraform セットアップ
+      # -----------------------------------------------------------------
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          # TODO: プロジェクトで使用する Terraform バージョンを指定する
+          terraform_version: '~> 1.9'
+          terraform_wrapper: false # exitcode を正確に取得するため無効化
+
+      # -----------------------------------------------------------------
+      # クラウドプロバイダー認証
+      # TODO: 使用するクラウドプロバイダーに合わせて認証ステップを設定する
+      # -----------------------------------------------------------------
+
+      # --- AWS の場合（OIDC 認証推奨） ---
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ secrets[format('AWS_ROLE_ARN_{0}', matrix.environment)] }}
+      #     aws-region: ap-northeast-1
+      #     # TODO: リージョンをプロジェクトに合わせて変更する
+
+      # --- Google Cloud の場合（Workload Identity 認証推奨） ---
+      # - name: Authenticate to Google Cloud
+      #   uses: google-github-actions/auth@v2
+      #   with:
+      #     workload_identity_provider: ${{ secrets[format('GCP_WIF_PROVIDER_{0}', matrix.environment)] }}
+      #     service_account: ${{ secrets[format('GCP_SA_EMAIL_{0}', matrix.environment)] }}
+
+      # --- Azure の場合（OIDC 認証推奨） ---
+      # - name: Login to Azure
+      #   uses: azure/login@v2
+      #   with:
+      #     client-id: ${{ secrets[format('AZURE_CLIENT_ID_{0}', matrix.environment)] }}
+      #     tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      #     subscription-id: ${{ secrets[format('AZURE_SUBSCRIPTION_ID_{0}', matrix.environment)] }}
+
+      # -----------------------------------------------------------------
+      # Terraform 初期化
+      # -----------------------------------------------------------------
+      - name: Terraform Init
+        id: init
+        working-directory: ${{ matrix.tf_directory }}
+        run: terraform init -input=false -no-color
+
+      # -----------------------------------------------------------------
+      # ドリフト検出（terraform plan）
+      # -----------------------------------------------------------------
+      # exit code:
+      #   0 = 差分なし
+      #   1 = エラー
+      #   2 = 差分あり（ドリフト検出）
+      - name: Terraform Plan (Drift Detection)
+        id: plan
+        working-directory: ${{ matrix.tf_directory }}
+        run: |
+          set +e
+          terraform plan -detailed-exitcode -input=false -no-color -out=tfplan 2>&1 | tee plan_output.txt
+          EXIT_CODE=$?
+          set -e
+
+          echo "exitcode=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+          if [ "$EXIT_CODE" -eq 2 ]; then
+            echo "drift_detected=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::ドリフトを検出しました: ${{ matrix.environment }}"
+          elif [ "$EXIT_CODE" -eq 1 ]; then
+            echo "drift_detected=false" >> "$GITHUB_OUTPUT"
+            echo "::error::Terraform plan でエラーが発生しました: ${{ matrix.environment }}"
+            exit 1
+          else
+            echo "drift_detected=false" >> "$GITHUB_OUTPUT"
+            echo "差分なし: ${{ matrix.environment }}"
+          fi
+
+      # -----------------------------------------------------------------
+      # Plan 出力の要約を生成
+      # -----------------------------------------------------------------
+      - name: Generate plan summary
+        id: summary
+        if: steps.plan.outputs.drift_detected == 'true'
+        working-directory: ${{ matrix.tf_directory }}
+        run: |
+          # plan 出力から変更サマリを抽出する
+          PLAN_SUMMARY=$(tail -20 plan_output.txt)
+
+          # GitHub Actions の出力に設定（複数行対応）
+          {
+            echo "plan_summary<<PLAN_EOF"
+            echo "${PLAN_SUMMARY}"
+            echo "PLAN_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # -----------------------------------------------------------------
+      # GitHub Issue 作成（重複チェック付き）
+      # -----------------------------------------------------------------
+      - name: Check existing drift issue
+        id: check_issue
+        if: steps.plan.outputs.drift_detected == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // 既存の未解決ドリフト Issue を検索する
+            const issueTitle = `[Drift] ${{ matrix.environment }}: Terraform state drift detected`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'terraform-drift',
+            });
+
+            const existing = issues.find(i => i.title === issueTitle);
+            if (existing) {
+              core.info(`既存の Issue を検出: #${existing.number}`);
+              core.setOutput('exists', 'true');
+              core.setOutput('issue_number', existing.number);
+              core.setOutput('issue_url', existing.html_url);
+            } else {
+              core.setOutput('exists', 'false');
+            }
+
+      - name: Create drift issue
+        id: create_issue
+        if: >-
+          steps.plan.outputs.drift_detected == 'true' &&
+          steps.check_issue.outputs.exists == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueTitle = `[Drift] ${{ matrix.environment }}: Terraform state drift detected`;
+            const issueBody = [
+              `## Terraform Drift Detection Report`,
+              ``,
+              `| 項目 | 値 |`,
+              `|------|-----|`,
+              `| 環境 | \`${{ matrix.environment }}\` |`,
+              `| 検出日時 | ${new Date().toISOString()} |`,
+              `| ワークフロー | [Run #${context.runId}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) |`,
+              `| Terraform ディレクトリ | \`${{ matrix.tf_directory }}\` |`,
+              ``,
+              `## Plan 出力（末尾）`,
+              ``,
+              '```',
+              `${{ steps.summary.outputs.plan_summary }}`,
+              '```',
+              ``,
+              `## 対応方法`,
+              ``,
+              `1. ドリフトの原因を確認する（手動変更・外部システムによる変更など）`,
+              `2. 以下のいずれかで対処する:`,
+              `   - \`terraform apply\` で State を実態に合わせる`,
+              `   - \`terraform import\` で手動リソースを取り込む`,
+              `   - 手動変更を元に戻す`,
+              `3. この Issue を Close する`,
+            ].join('\n');
+
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+              labels: ['terraform-drift', '${{ matrix.environment }}'],
+            });
+
+            core.info(`Issue 作成完了: #${issue.number}`);
+            core.setOutput('issue_number', issue.number);
+            core.setOutput('issue_url', issue.html_url);
+
+      - name: Update existing drift issue
+        if: >-
+          steps.plan.outputs.drift_detected == 'true' &&
+          steps.check_issue.outputs.exists == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // 既存 Issue にコメントを追加して最新のドリフト情報を記録する
+            const commentBody = [
+              `## ドリフト再検出 - ${new Date().toISOString()}`,
+              ``,
+              `ワークフロー: [Run #${context.runId}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+              ``,
+              '```',
+              `${{ steps.summary.outputs.plan_summary }}`,
+              '```',
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ steps.check_issue.outputs.issue_number || 0 }},
+              body: commentBody,
+            });
+
+      # -----------------------------------------------------------------
+      # Slack 通知（ドリフト検出時）
+      # TODO: Slack Webhook URL を Secrets に設定する
+      # -----------------------------------------------------------------
+      - name: Notify Slack
+        if: steps.plan.outputs.drift_detected == 'true'
+        # TODO: 通知不要の場合はこのステップを削除する
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          # Webhook URL が未設定の場合はスキップする
+          if [ -z "${SLACK_WEBHOOK_URL}" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL が設定されていません。Slack 通知をスキップします。"
+            exit 0
+          fi
+
+          ISSUE_URL="${{ steps.create_issue.outputs.issue_url || steps.check_issue.outputs.issue_url }}"
+
+          curl -sS -X POST "${SLACK_WEBHOOK_URL}" \
+            -H 'Content-Type: application/json' \
+            -d @- <<PAYLOAD
+          {
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "🔍 Terraform Drift Detected",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  { "type": "mrkdwn", "text": "*環境:*\n\`${{ matrix.environment }}\`" },
+                  { "type": "mrkdwn", "text": "*検出日時:*\n$(date -u +%Y-%m-%dT%H:%M:%SZ)" }
+                ]
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*対応 Issue:* <${ISSUE_URL}|GitHub Issue を確認>"
+                }
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|ワークフロー実行ログ>"
+                  }
+                ]
+              }
+            ]
+          }
+          PAYLOAD
+
+      # -----------------------------------------------------------------
+      # Terraform plan エラー時の Slack 通知
+      # -----------------------------------------------------------------
+      - name: Notify Slack on error
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "${SLACK_WEBHOOK_URL}" ]; then
+            exit 0
+          fi
+
+          curl -sS -X POST "${SLACK_WEBHOOK_URL}" \
+            -H 'Content-Type: application/json' \
+            -d @- <<PAYLOAD
+          {
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "❌ Terraform Drift Detection Error",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  { "type": "mrkdwn", "text": "*環境:*\n\`${{ matrix.environment }}\`" },
+                  { "type": "mrkdwn", "text": "*ステータス:*\nエラー" }
+                ]
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|ワークフロー実行ログを確認>"
+                  }
+                ]
+              }
+            ]
+          }
+          PAYLOAD
