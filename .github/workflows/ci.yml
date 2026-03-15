@@ -88,7 +88,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
 
-      - uses: actions/setup-node@v6.2.0
+      - uses: actions/setup-node@v6.3.0
         with:
           node-version-file: '.node-version'
           cache: 'npm'
@@ -121,7 +121,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
 
-      - uses: actions/setup-node@v6.2.0
+      - uses: actions/setup-node@v6.3.0
         with:
           node-version-file: '.node-version'
           cache: 'npm'
@@ -173,7 +173,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
 
-      - uses: actions/setup-node@v6.2.0
+      - uses: actions/setup-node@v6.3.0
         with:
           node-version-file: '.node-version'
           cache: 'npm'
@@ -362,7 +362,7 @@ jobs:
     if: failure() && github.ref == 'refs/heads/main'
     steps:
       - name: Send Slack notification
-        uses: slackapi/slack-github-action@v2.1.1
+        uses: slackapi/slack-github-action@v3.0.1
         with:
           channel-id: ${{ vars.SLACK_CI_CHANNEL_ID }}
           payload-template-file-path: '.github/slack-ci-failure.json'

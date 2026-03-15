@@ -134,7 +134,7 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/config-base:cache
 
       - name: Generate SBOM with Syft
-        uses: anchore/sbom-action@v0.23.0
+        uses: anchore/sbom-action@v0.23.1
         with:
           image: config-base:sbom
           artifact-name: sbom.spdx.json
