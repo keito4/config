@@ -121,7 +121,7 @@ Add ESLint complexity checks to your CI pipeline:
 
 ## Source
 
-These rules were discovered from `Elu-co-jp/management_tools` repository and recommended for organization-wide adoption.
+These rules are recommended for organization-wide adoption to prevent technical debt accumulation.
 
 ## Related Files
 

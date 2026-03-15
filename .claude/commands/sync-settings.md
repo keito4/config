@@ -20,7 +20,7 @@ argument-hint: [--create-pr] [--base-path PATH] [--claude-only] [--codex-only]
 
 ## 前提条件
 
-- ベースパス（`/Users/keito4/develop/github.com/Elu-co-jp`）は既に存在すると仮定
+- ベースパス（`~/develop/github.com/Elu-co-jp`）は既に存在すると仮定
 - 環境確認は不要で、直接ファイル検索から開始
 - Node.js, npm, git, gh コマンドは既にインストール済みと仮定
 
@@ -29,7 +29,7 @@ argument-hint: [--create-pr] [--base-path PATH] [--claude-only] [--codex-only]
 引数から設定を読み取る：
 
 - `--create-pr`: PR を自動作成する（デフォルト: false）
-- `--base-path PATH`: カスタムベースパス（デフォルト: `/Users/keito4/develop/github.com/Elu-co-jp`）
+- `--base-path PATH`: カスタムベースパス（デフォルト: `~/develop/github.com/Elu-co-jp`）
 - `--claude-only`: Claude 設定のみ同期（デフォルト: false）
 - `--codex-only`: Codex 設定のみ同期（デフォルト: false）
 
