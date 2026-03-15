@@ -654,7 +654,7 @@ The repository includes a complete DevContainer setup (`.devcontainer/`) that pr
 
 **Recommended Usage**: For new projects, use the pre-built image without mounting host's `~/.claude` directory. This ensures the image configuration works immediately. See [docs/using-config-base-image.md](docs/using-config-base-image.md) for detailed usage instructions.
 
-**DevContainer推奨設定**: Elu-co-jp配下のリポジトリで統一されたDevContainer環境を構築するための推奨設定とベストプラクティスについては、[.claude/devcontainer-recommendations.md](.claude/devcontainer-recommendations.md)を参照してください。
+**DevContainer推奨設定**: 組織内のリポジトリで統一されたDevContainer環境を構築するための推奨設定とベストプラクティスについては、[.claude/devcontainer-recommendations.md](.claude/devcontainer-recommendations.md)を参照してください。
 
 ### Automated Releases
 

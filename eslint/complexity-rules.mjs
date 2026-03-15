@@ -4,7 +4,7 @@
  * These rules help prevent technical debt accumulation by enforcing
  * code complexity limits. Use this as a reference for your projects.
  *
- * Source: Discovered from Elu-co-jp/management_tools
+ * Source: Organization-wide best practices
  *
  * Implementation Strategy:
  * - Phase 1: Set rules to "warn" to detect issues without breaking builds
