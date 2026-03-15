@@ -277,16 +277,39 @@ GitHub リポジトリの保護ルールを確認・設定：
 実行内容:
 
 - ブランチ保護ルールの確認
-- 必須ステータスチェックの設定
+- 必須ステータスチェックの設定（`Quality Gate` ジョブ）
 - レビュー要件の設定
 - Dependabot、脆弱性アラートの有効化
+- Next.js プロジェクトの場合、`pre-production` / `production` ブランチの保護確認
 
 これは `/setup-team-protection` コマンドと同等の処理を実行します。
+
+**フレームワーク検出による保護ブランチの自動判定:**
+
+```bash
+# Next.js プロジェクトかどうかを検出
+IS_NEXTJS=false
+if [ -f "package.json" ]; then
+  if jq -e '.dependencies.next // .devDependencies.next' package.json &>/dev/null; then
+    IS_NEXTJS=true
+  fi
+fi
+
+# Next.js の場合は pre-production / production も保護対象
+if [ "$IS_NEXTJS" = true ]; then
+  PROTECT_BRANCHES="main,pre-production,production"
+  PROTECTION_LEVEL="strict"
+else
+  PROTECT_BRANCHES="main"
+  PROTECTION_LEVEL="standard"
+fi
+```
 
 結果:
 
 - ✅ 保護ルール設定済み
 - ⚠️ 未設定の保護ルールあり（詳細をリスト）
+- ⚠️ Next.js プロジェクト: `pre-production` / `production` ブランチ未保護 → strict レベルで保護を提案
 - 🔧 設定を適用
 
 ### 3.2 Husky Setup Check
@@ -567,7 +590,7 @@ CI/CD ワークフローの設定状況を確認：
 実行内容:
 
 - GitHub Actions ワークフローの存在確認
-- 必須ジョブ（lint, test, build）の確認
+- 必須ジョブ（Quality Gate による全チェック集約）の確認
 - セキュリティスキャンの設定確認
 - Claude Code Review の統合確認
 

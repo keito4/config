@@ -82,7 +82,7 @@ bash script/setup-team-protection.sh --dry-run
 gh api repos/{owner}/{repo}/branches/main/protection \
   --method PUT \
   --field required_status_checks[strict]=true \
-  --field required_status_checks[contexts][]=CI \
+  --field required_status_checks[contexts][]="Quality Gate" \
   --field required_pull_request_reviews[required_approving_review_count]=1 \
   --field required_pull_request_reviews[dismiss_stale_reviews]=true \
   --field required_pull_request_reviews[require_code_owner_reviews]=false \
@@ -95,8 +95,8 @@ gh api repos/{owner}/{repo}/branches/main/protection \
 
 **必須ステータスチェック**
 
-以下のワークフローが必須:
-• CI（テスト、リント、ビルド）
+以下のチェックが必須:
+• Quality Gate（CI ワークフローの全ジョブ結果を集約するゲートジョブ）
 • セキュリティスキャン（オプション）
 
 **レビュー要件**
@@ -240,6 +240,20 @@ Error: Branch not found
 2. チームに周知・教育
 3. main ブランチに適用
 4. 必要に応じて厳格化
+
+**フレームワーク別の推奨ブランチ保護**
+
+• Next.js / Vercel プロジェクト:
+`main`, `pre-production`, `production` の3ブランチを保護（strict レベル推奨）
+
+```bash
+bash script/setup-team-protection.sh \
+  --branches main,pre-production,production \
+  --create-branches \
+  --protection-level strict
+```
+
+• それ以外のプロジェクト: `main` のみ（デフォルト）
 
 **チームサイズに応じた設定**
 
