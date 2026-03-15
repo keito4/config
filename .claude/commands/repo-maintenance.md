@@ -268,6 +268,100 @@ test -f ./script/codespaces-secrets.sh && echo "available" || echo "not_availabl
 
 **Note**: Codespacesを使用していない場合は自動的にスキップされます。
 
+### 2.9 GitHub Actions Security Hardening Check
+
+GitHub Actions のサプライチェーン保護状況を確認：
+
+**背景:**
+3rd-party actions のタグ参照（`@v4` 等）はタグの付け替えにより悪意あるコードに差し替えられるリスクがある。
+GitHub はフル SHA 固定を immutable な使い方として推奨しており、`GITHUB_TOKEN` には least privilege を適用すべきとしている。
+
+**チェック項目:**
+
+| #   | チェック                       | 推奨値                                     | リスク                         |
+| --- | ------------------------------ | ------------------------------------------ | ------------------------------ |
+| 1   | 3rd-party actions の SHA 固定  | フルSHA（40文字）で参照                    | タグ改ざんによるコード注入     |
+| 2   | `GITHUB_TOKEN` の権限制限      | workflow/job レベルで `permissions` を明示 | 過剰権限によるトークン悪用     |
+| 3   | 許可 actions の制限            | Repository Settings で制限                 | 任意の actions 実行リスク      |
+| 4   | `pull_request_target` の安全性 | 未使用 or secrets 非参照                   | Fork PR 経由のシークレット漏洩 |
+
+**確認ロジック:**
+
+```bash
+ISSUES=()
+
+for workflow in .github/workflows/*.yml; do
+  [ ! -f "$workflow" ] && continue
+  BASENAME=$(basename "$workflow")
+  CONTENT=$(cat "$workflow")
+
+  # 1. 3rd-party actions の SHA 固定チェック
+  # actions/ と github/ org 以外の actions を検出
+  THIRD_PARTY=$(echo "$CONTENT" | grep -oE "uses: [^/]+/[^@]+@[^ ]+" | \
+    grep -vE "^uses: (actions|github)/" | \
+    grep -vE "@[0-9a-f]{40}")
+  if [ -n "$THIRD_PARTY" ]; then
+    while IFS= read -r line; do
+      ISSUES+=("$BASENAME: SHA未固定の3rd-party action: $line")
+    done <<< "$THIRD_PARTY"
+  fi
+
+  # 2. GITHUB_TOKEN 権限チェック（top-level permissions の有無）
+  if ! echo "$CONTENT" | grep -q "^permissions:"; then
+    ISSUES+=("$BASENAME: top-level permissions 未設定（デフォルトは write-all）")
+  fi
+
+  # 3. pull_request_target の安全性チェック
+  if echo "$CONTENT" | grep -q "pull_request_target:"; then
+    if echo "$CONTENT" | grep -qE "(secrets\.|GITHUB_TOKEN)"; then
+      ISSUES+=("$BASENAME: pull_request_target + secrets/GITHUB_TOKEN 使用（Fork PR からのシークレット漏洩リスク）")
+    fi
+  fi
+done
+```
+
+**リポジトリ設定の確認:**
+
+```bash
+REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+
+# 許可 actions の設定確認
+ACTIONS_PERMS=$(gh api "repos/$REPO/actions/permissions" --jq '.allowed_actions' 2>/dev/null)
+if [ "$ACTIONS_PERMS" = "all" ]; then
+  ISSUES+=("Repository Settings: 全 actions が許可されている（推奨: selected に制限）")
+fi
+
+# デフォルト GITHUB_TOKEN 権限の確認
+DEFAULT_PERMS=$(gh api "repos/$REPO/actions/permissions/workflow" --jq '.default_workflow_permissions' 2>/dev/null)
+if [ "$DEFAULT_PERMS" = "write" ]; then
+  ISSUES+=("Repository Settings: GITHUB_TOKEN デフォルト権限が write（推奨: read）")
+fi
+```
+
+**MODE が `full` かつ問題がある場合:**
+
+- SHA 未固定の actions をリスト表示し、`npx pin-github-action` で固定するコマンドを提示
+- top-level `permissions: {}` の追加を提案
+- Repository Settings の変更手順を案内
+
+```bash
+# SHA 固定のための推奨コマンド
+echo "📌 以下のコマンドで actions を SHA 固定できます:"
+echo "  npx pin-github-action .github/workflows/$BASENAME"
+
+# GITHUB_TOKEN デフォルト権限の変更
+gh api -X PUT "repos/$REPO/actions/permissions/workflow" \
+  -f default_workflow_permissions=read \
+  -F can_approve_pull_request_reviews=false
+```
+
+**結果:**
+
+- ✅ GitHub Actions セキュリティハードニング: 問題なし
+- ⚠️ SHA 未固定の 3rd-party actions: X 件
+- ⚠️ permissions 未設定のワークフロー: X 件
+- ⚠️ Repository Settings の改善余地あり
+
 ## Step 3: Setup Category
 
 ### 3.1 Team Protection Setup (full mode only)
@@ -1456,6 +1550,184 @@ check_script "typecheck"   "typecheck" "type-check" "tsc"
 - ⚠️ 未定義スクリプト: X 件（リスト表示）
 - ⏭️ スキップ（`package.json` なし）
 
+### 3.19 Push Protection Check
+
+GitHub Secret Scanning の Push Protection 設定を確認：
+
+**背景:**
+Secret Scanning は commit 済みの secrets を検出するが、Push Protection を有効にすることで
+push 時点で secrets をブロックできる。事後対応より事前防止が効果的。
+
+**確認ロジック:**
+
+```bash
+REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+
+# Secret scanning の有効確認
+SECRET_SCANNING=$(gh api "repos/$REPO" --jq '.security_and_analysis.secret_scanning.status' 2>/dev/null)
+
+# Push protection の有効確認
+PUSH_PROTECTION=$(gh api "repos/$REPO" --jq '.security_and_analysis.secret_scanning_push_protection.status' 2>/dev/null)
+```
+
+**結果パターン:**
+
+| 状態                                                 | 対応                                         |
+| ---------------------------------------------------- | -------------------------------------------- |
+| Secret scanning: enabled + Push protection: enabled  | ✅ 設定済み                                  |
+| Secret scanning: enabled + Push protection: disabled | ⚠️ → full mode で有効化を提案                |
+| Secret scanning: disabled                            | ⚠️ → full mode で両方の有効化を提案          |
+| API エラー（権限不足）                               | ⏭️ スキップ（Organization admin 権限が必要） |
+
+**MODE が `full` かつ未設定の場合:**
+
+```bash
+# Push protection の有効化
+gh api -X PATCH "repos/$REPO" \
+  -f "security_and_analysis[secret_scanning][status]=enabled" \
+  -f "security_and_analysis[secret_scanning_push_protection][status]=enabled"
+echo "🔧 Push Protection を有効化しました"
+```
+
+**結果:**
+
+- ✅ Push Protection 有効
+- 🔧 Push Protection を有効化しました
+- ⚠️ Push Protection 無効（有効化を推奨）
+- ⏭️ スキップ（権限不足）
+
+### 3.20 Dependency Review Check
+
+PR で新規追加される依存関係の脆弱性チェック（Dependency Review）を確認：
+
+**背景:**
+Dependabot alerts は既存の依存関係の脆弱性を通知するが、Dependency Review は
+PR 段階で新規追加・更新される依存関係の脆弱性をブロックできる。
+`actions/dependency-review-action` をCI に組み込むことで、脆弱な依存関係のマージを防止する。
+
+**確認ロジック:**
+
+```bash
+HAS_DEPENDENCY_REVIEW=false
+
+for workflow in .github/workflows/*.yml; do
+  [ ! -f "$workflow" ] && continue
+  if grep -q "dependency-review-action" "$workflow" 2>/dev/null; then
+    HAS_DEPENDENCY_REVIEW=true
+    break
+  fi
+done
+```
+
+**結果パターン:**
+
+| 状態                          | 対応                                |
+| ----------------------------- | ----------------------------------- |
+| dependency-review-action あり | ✅ 設定済み                         |
+| dependency-review-action なし | ⚠️ → full mode で CI への追加を提案 |
+
+**MODE が `full` かつ未設定の場合:**
+
+既存の CI ワークフローに dependency-review job を追加するか、
+専用ワークフローの作成を提案：
+
+```yaml
+# .github/workflows/dependency-review.yml
+name: Dependency Review
+on: [pull_request]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: critical
+          comment-summary-in-pr: always
+```
+
+**結果:**
+
+- ✅ Dependency Review 設定済み
+- 🔧 dependency-review.yml を追加しました
+- ⚠️ Dependency Review 未設定（追加を推奨）
+
+### 3.21 Deployment Environment Protection Check
+
+GitHub Environments のデプロイ保護設定を確認：
+
+**背景:**
+CI の成功と本番反映を分離するため、GitHub Environments に required reviewers を設定し、
+production デプロイ前に承認を必須にする。これにより、CI パスだけでは本番にデプロイされない統制が可能。
+
+**確認ロジック:**
+
+```bash
+REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+
+# Environments の取得
+ENVIRONMENTS=$(gh api "repos/$REPO/environments" --jq '.environments[]' 2>/dev/null)
+
+if [ -z "$ENVIRONMENTS" ]; then
+  echo "⏭️ GitHub Environments 未使用"
+else
+  # 各環境の保護ルールを確認
+  gh api "repos/$REPO/environments" --jq '.environments[] | {name, protection_rules}' 2>/dev/null | while read -r env; do
+    ENV_NAME=$(echo "$env" | jq -r '.name')
+    HAS_REVIEWERS=$(echo "$env" | jq '.protection_rules[] | select(.type == "required_reviewers")' 2>/dev/null)
+    HAS_WAIT_TIMER=$(echo "$env" | jq '.protection_rules[] | select(.type == "wait_timer")' 2>/dev/null)
+    HAS_BRANCH_POLICY=$(echo "$env" | jq '.deployment_branch_policy' 2>/dev/null)
+
+    if [ "$ENV_NAME" = "production" ] || [ "$ENV_NAME" = "prod" ]; then
+      if [ -z "$HAS_REVIEWERS" ]; then
+        ISSUES+=("Environment '$ENV_NAME': required reviewers 未設定（本番デプロイに承認なし）")
+      fi
+      if [ -z "$HAS_BRANCH_POLICY" ] || [ "$HAS_BRANCH_POLICY" = "null" ]; then
+        ISSUES+=("Environment '$ENV_NAME': branch policy 未設定（任意のブランチからデプロイ可能）")
+      fi
+    fi
+  done
+fi
+```
+
+**チェック項目:**
+
+| #   | チェック                 | 推奨値            | 対象環境             |
+| --- | ------------------------ | ----------------- | -------------------- |
+| 1   | Required reviewers       | 1名以上           | production / staging |
+| 2   | Deployment branch policy | main ブランチのみ | production           |
+| 3   | Wait timer               | 任意（5分推奨）   | production           |
+
+**結果パターン:**
+
+| 状態                            | 対応                                     |
+| ------------------------------- | ---------------------------------------- |
+| production に保護ルール設定済み | ✅ 設定済み                              |
+| production に保護ルール未設定   | ⚠️ → full mode で設定手順を案内          |
+| Environments 未使用             | ⏭️ スキップ（CD ワークフローがない場合） |
+
+**MODE が `full` かつ問題がある場合:**
+
+```bash
+# production 環境に required reviewers を設定（API では制限あり、UI 設定を推奨）
+echo "🔧 以下の設定を GitHub UI で実施してください:"
+echo "   Settings → Environments → production"
+echo "   ✅ Required reviewers: 有効化（レビュアーを指定）"
+echo "   ✅ Deployment branches: Selected branches → main のみ"
+echo "   ✅ Wait timer: 5 minutes（任意）"
+```
+
+**結果:**
+
+- ✅ Deployment Environment 保護設定済み
+- ⚠️ production 環境: 保護ルール未設定（設定手順を表示）
+- ⏭️ スキップ（GitHub Environments 未使用）
+
 ## Step 4: Cleanup Category
 
 ### 4.1 Branch Cleanup
@@ -1632,6 +1904,127 @@ $INSTALL @vercel/logger @sentry/nextjs
 $INSTALL_DEV @biomejs/biome knip
 ```
 
+### 5.3 Provenance / SBOM Audit
+
+ビルド成果物の出所証明とソフトウェア部品表（SBOM）の状況を確認：
+
+**背景:**
+npm package や release artifact を配布するリポジトリでは、Trusted Publishing（OIDC）で長期トークンをなくし、
+GitHub の Artifact Attestations で build provenance と integrity guarantees を付けることで、
+サプライチェーン攻撃への耐性を高められる。
+
+**適用対象の判定:**
+
+```bash
+IS_PUBLISHABLE=false
+
+# npm パッケージとして公開可能か判定
+if [ -f "package.json" ]; then
+  PRIVATE=$(jq -r '.private // false' package.json)
+  if [ "$PRIVATE" != "true" ]; then
+    IS_PUBLISHABLE=true
+    PUBLISH_TYPE="npm"
+  fi
+fi
+
+# GitHub Releases を使用しているか判定
+RELEASES=$(gh api "repos/$REPO/releases?per_page=1" --jq 'length' 2>/dev/null)
+if [ "$RELEASES" -gt 0 ]; then
+  IS_PUBLISHABLE=true
+  PUBLISH_TYPE="${PUBLISH_TYPE:+$PUBLISH_TYPE+}release"
+fi
+```
+
+**チェック項目（公開リポジトリのみ）:**
+
+| #   | チェック                       | 推奨値                                    | 効果                 |
+| --- | ------------------------------ | ----------------------------------------- | -------------------- |
+| 1   | Artifact Attestations          | `actions/attest-build-provenance` を使用  | ビルド出所の証明     |
+| 2   | SBOM 生成                      | `actions/dependency-submission-action` 等 | 依存関係の可視化     |
+| 3   | npm Trusted Publishing（OIDC） | `id-token: write` + provenance 設定       | 長期トークン不要     |
+| 4   | Signed commits / tags          | 署名付きリリースタグ                      | リリースの真正性証明 |
+
+**確認ロジック:**
+
+```bash
+ISSUES=()
+
+if [ "$IS_PUBLISHABLE" = "true" ]; then
+  # Artifact Attestations の使用確認
+  HAS_ATTESTATION=false
+  for workflow in .github/workflows/*.yml; do
+    [ ! -f "$workflow" ] && continue
+    if grep -q "attest-build-provenance\|attestation" "$workflow" 2>/dev/null; then
+      HAS_ATTESTATION=true
+      break
+    fi
+  done
+  [ "$HAS_ATTESTATION" = "false" ] && \
+    ISSUES+=("Artifact Attestations 未設定（ビルド出所証明なし）")
+
+  # SBOM 生成の確認
+  HAS_SBOM=false
+  for workflow in .github/workflows/*.yml; do
+    [ ! -f "$workflow" ] && continue
+    if grep -qE "(dependency-submission|sbom|cyclonedx|spdx)" "$workflow" 2>/dev/null; then
+      HAS_SBOM=true
+      break
+    fi
+  done
+  [ "$HAS_SBOM" = "false" ] && \
+    ISSUES+=("SBOM 生成未設定（依存関係の可視化なし）")
+
+  # npm Trusted Publishing の確認
+  if echo "$PUBLISH_TYPE" | grep -q "npm"; then
+    HAS_PROVENANCE=false
+    for workflow in .github/workflows/*.yml; do
+      [ ! -f "$workflow" ] && continue
+      if grep -q "provenance" "$workflow" 2>/dev/null; then
+        HAS_PROVENANCE=true
+        break
+      fi
+    done
+    [ "$HAS_PROVENANCE" = "false" ] && \
+      ISSUES+=("npm Trusted Publishing 未設定（OIDC による安全な公開が可能）")
+  fi
+fi
+```
+
+**結果パターン:**
+
+| 状態           | 対応                                  |
+| -------------- | ------------------------------------- |
+| 全項目設定済み | ✅ Provenance / SBOM: 設定済み        |
+| 一部未設定     | ⚠️ 改善余地あり（推奨設定リスト表示） |
+| 公開対象でない | ⏭️ スキップ（private リポジトリ）     |
+
+**MODE が `full` かつ問題がある場合:**
+
+設定手順と推奨ワークフローのテンプレートを提示：
+
+```bash
+echo "📦 Provenance / SBOM の推奨設定:"
+echo ""
+echo "1. Artifact Attestations:"
+echo "   - actions/attest-build-provenance を release ワークフローに追加"
+echo "   - permissions: id-token: write, attestations: write"
+echo ""
+echo "2. SBOM 生成:"
+echo "   - anchore/sbom-action または actions/dependency-submission-action を CI に追加"
+echo ""
+if echo "$PUBLISH_TYPE" | grep -q "npm"; then
+  echo "3. npm Trusted Publishing:"
+  echo "   - npm に OIDC 設定を追加（npm access → Granular Access Tokens → OIDC）"
+  echo "   - ワークフローに provenance: true を設定"
+fi
+```
+
+**結果:**
+
+- ✅ Provenance / SBOM 設定済み
+- ⚠️ Provenance / SBOM 改善余地あり（X 件の推奨設定）
+- ⏭️ スキップ（非公開リポジトリ）
+
 ## Step 6: Generate Summary Report
 
 全ステップの結果をまとめたレポートを生成：
@@ -1648,7 +2041,11 @@ $INSTALL_DEV @biomejs/biome knip
 ├── GitHub Actions: ✅ All actions up to date
 ├── Claude Settings: ✅ Synced
 ├── Claude Code LSP: ⚠️ Not configured (TypeScript detected)
-└── Codespaces Secrets: ✅ Synced (or ⏭️ Skipped)
+├── Codespaces Secrets: ✅ Synced (or ⏭️ Skipped)
+└── Actions Security: ✅ Hardened (or ⚠️ X issues found)
+    ├── SHA Pinning: ✅ (or ⚠️ X unpinned 3rd-party actions)
+    ├── GITHUB_TOKEN Perms: ✅ (or ⚠️ X workflows missing permissions)
+    └── Repo Settings: ✅ (or ⚠️ Default write / all actions allowed)
 
 ## Setup (2/4)
 ├── Team Protection: ✅ Branch protection enabled
@@ -1674,6 +2071,9 @@ $INSTALL_DEV @biomejs/biome knip
 │   ├── Unused Workflows: ✅ (or ⚠️ X stale workflows)
 │   └── Runner Size: ✅ (or ⚠️ High-cost runners detected)
 ├── Renovate/Dependabot: ✅ Auto-update configured
+├── Push Protection: ✅ Enabled (or ⚠️ Disabled)
+├── Dependency Review: ✅ Configured (or ⚠️ Not configured)
+└── Deploy Env Protection: ✅ Configured (or ⚠️ No reviewers / ⏭️ No environments)
 
 ## Cleanup (3/4)
 ├── Branches: 🗑️ 8 merged branches can be deleted
@@ -1681,7 +2081,8 @@ $INSTALL_DEV @biomejs/biome knip
 
 ## Discovery (4/4)
 ├── New Features: 🆕 2 new commands available
-└── Package Audit: ⚠️ 3 recommended packages missing (Next.js)
+├── Package Audit: ⚠️ 3 recommended packages missing (Next.js)
+└── Provenance/SBOM: ✅ Configured (or ⚠️ Not configured / ⏭️ Private repo)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -1904,6 +2305,7 @@ Run this command regularly to maintain repository health:
 | Environment | `/sync-claude-settings`         | Claude 設定同期               |
 | Environment | (Claude Code LSP setup)         | LSP 設定                      |
 | Environment | `/codespaces-secrets`           | Codespaces シークレット同期   |
+| Environment | (Actions Security Hardening)    | Actions SHA固定・権限・制限   |
 | Setup       | `/setup-team-protection`        | GitHub保護ルール設定          |
 | Setup       | `/setup-husky`                  | Git hooks設定                 |
 | Setup       | (check-file-length auto-setup)  | ファイル行数チェック追加      |
@@ -1923,7 +2325,11 @@ Run this command regularly to maintain repository health:
 | Setup       | (SECURITY.md check)             | セキュリティポリシー設定      |
 | Setup       | (Release Drafter check)         | リリースノート自動生成設定    |
 | Setup       | (scripts standard check)        | package.json scripts 標準確認 |
+| Setup       | (Push Protection check)         | Secret scanning push 防止     |
+| Setup       | (Dependency Review check)       | PR 依存関係脆弱性チェック     |
+| Setup       | (Deploy Env Protection check)   | デプロイ環境保護ルール        |
 | Cleanup     | `/branch-cleanup`               | ブランチクリーンアップ        |
 | Discovery   | `/config-contribution-discover` | 新機能発見                    |
 | Discovery   | (Package Audit + ni support)    | 推奨パッケージ監査            |
+| Discovery   | (Provenance / SBOM Audit)       | ビルド出所証明・SBOM 監査     |
 | PR          | (post_pr_ci_watch.py hook)      | PR作成後のCI自動監視          |
