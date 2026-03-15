@@ -77,7 +77,7 @@ This DevContainer image is automatically built and versioned using semantic-rele
 - **Minor versions**: New features and enhancements (1.0.0 → 1.1.0)
 - **Major versions**: Breaking changes (1.0.0 → 2.0.0)
 
-**Latest Version**: `v1.81.1`
+**Latest Version**: 最新バージョンは `ghcr.io/keito4/config-base:latest` で自動取得されます
 
 Images are published to GitHub Container Registry: `ghcr.io/keito4/config-base`
 
@@ -102,7 +102,7 @@ Use the pre-built image without mounting host's `~/.claude` directory:
 ```json
 {
   "name": "My Project",
-  "image": "ghcr.io/keito4/config-base:1.81.1",
+  "image": "ghcr.io/keito4/config-base:latest",
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
   }
@@ -115,7 +115,7 @@ Use the pre-built image without mounting host's `~/.claude` directory:
 - No conflicts with host configuration
 - Consistent environment across all team members
 
-See [docs/devcontainer.json.example](../docs/devcontainer.json.example) for complete example.
+詳細は [docs/using-config-base-image.md](../docs/using-config-base-image.md) を参照してください。
 
 #### Option 2: With Host Persistence
 
@@ -124,7 +124,7 @@ Mount host's `~/.claude` to persist custom plugin installations:
 ```json
 {
   "name": "My Project",
-  "image": "ghcr.io/keito4/config-base:1.81.1",
+  "image": "ghcr.io/keito4/config-base:latest",
   "remoteEnv": {
     "TMPDIR": "/home/vscode/.claude/tmp"
   },
