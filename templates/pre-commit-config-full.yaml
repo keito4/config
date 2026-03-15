@@ -1,0 +1,120 @@
+# =============================================================================
+# pre-commit-config-full.yaml
+# 全フック入り: Terraform + セキュリティ + シェル/YAML/Markdown + 追加チェック
+# 使い方: プロジェクトルートに .pre-commit-config.yaml としてコピー
+# =============================================================================
+
+repos:
+  # ---------------------------------------------------------------------------
+  # pre-commit-hooks: 汎用の基本チェック
+  # https://github.com/pre-commit/pre-commit-hooks
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # YAML 構文の検証
+      - id: check-yaml
+        args: ['--allow-multiple-documents']
+      # JSON 構文の検証
+      - id: check-json
+      # 大容量ファイル（500KB 超）の混入防止
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      # 末尾の空白文字を除去
+      - id: trailing-whitespace
+      # ファイル末尾に改行を追加
+      - id: end-of-file-fixer
+      # マージコンフリクトマーカーの検出
+      - id: check-merge-conflict
+      # main/master への直接コミットを防止
+      - id: no-commit-to-branch
+        args: ['--branch', 'main', '--branch', 'master']
+      # シンボリックリンクが壊れていないか検証
+      - id: check-symlinks
+      # TOML 構文の検証
+      - id: check-toml
+      # XML 構文の検証
+      - id: check-xml
+      # 実行権限のあるスクリプトに shebang があるか検証
+      - id: check-executables-have-shebangs
+      # shebang のあるファイルに実行権限があるか検証
+      - id: check-shebang-scripts-are-runnable
+      # UTF-8 BOM なしの検証
+      - id: fix-byte-order-marker
+      # プライベートキーの混入検出
+      - id: detect-private-key
+
+  # ---------------------------------------------------------------------------
+  # gitleaks: シークレット（API キー、トークン等）の漏洩検出
+  # https://github.com/gitleaks/gitleaks
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  # ---------------------------------------------------------------------------
+  # pre-commit-terraform: Terraform のフォーマット・検証・ドキュメント生成
+  # https://github.com/antonbabenko/pre-commit-terraform
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.105.0
+    hooks:
+      # terraform fmt によるコードフォーマット
+      - id: terraform_fmt
+      # terraform validate による構文・構成の検証
+      - id: terraform_validate
+      # terraform-docs によるドキュメント自動生成
+      - id: terraform_docs
+      # tflint によるベストプラクティスチェック
+      - id: terraform_tflint
+      # tfsec によるセキュリティスキャン
+      - id: terraform_tfsec
+      # checkov による IaC セキュリティ・コンプライアンスチェック
+      - id: terraform_checkov
+
+  # ---------------------------------------------------------------------------
+  # shellcheck: シェルスクリプトの静的解析
+  # https://github.com/shellcheck-py/shellcheck-py
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+
+  # ---------------------------------------------------------------------------
+  # markdownlint: Markdown ファイルのリント
+  # https://github.com/igorshubovych/markdownlint-cli
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.48.0
+    hooks:
+      - id: markdownlint
+
+  # ---------------------------------------------------------------------------
+  # yamllint: YAML ファイルのリント
+  # https://github.com/adrienverge/yamllint
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args: ['--strict']
+
+  # ---------------------------------------------------------------------------
+  # actionlint: GitHub Actions ワークフローの検証
+  # https://github.com/rhysd/actionlint
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.11
+    hooks:
+      - id: actionlint
+
+  # ---------------------------------------------------------------------------
+  # checkmake: Makefile のリント
+  # https://github.com/mrtazz/checkmake
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/mrtazz/checkmake
+    rev: 0.2.2
+    hooks:
+      - id: checkmake

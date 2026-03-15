@@ -1,0 +1,40 @@
+# =============================================================================
+# pre-commit-config-base.yaml
+# 基本構成: YAML/JSON 構文チェック、シークレット検出、ブランチ保護
+# 使い方: プロジェクトルートに .pre-commit-config.yaml としてコピー
+# =============================================================================
+
+repos:
+  # ---------------------------------------------------------------------------
+  # pre-commit-hooks: 汎用の基本チェック
+  # https://github.com/pre-commit/pre-commit-hooks
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # YAML 構文の検証
+      - id: check-yaml
+        args: ['--allow-multiple-documents']
+      # JSON 構文の検証
+      - id: check-json
+      # 大容量ファイル（500KB 超）の混入防止
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      # 末尾の空白文字を除去
+      - id: trailing-whitespace
+      # ファイル末尾に改行を追加
+      - id: end-of-file-fixer
+      # マージコンフリクトマーカーの検出
+      - id: check-merge-conflict
+      # main/master への直接コミットを防止
+      - id: no-commit-to-branch
+        args: ['--branch', 'main', '--branch', 'master']
+
+  # ---------------------------------------------------------------------------
+  # gitleaks: シークレット（API キー、トークン等）の漏洩検出
+  # https://github.com/gitleaks/gitleaks
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
