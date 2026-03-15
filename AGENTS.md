@@ -28,27 +28,16 @@ This repository implements comprehensive development quality standards and AI-as
 - **Ready**: Acceptance criteria defined, dependencies resolved
 - **Done**: Quality gates passed, documentation updated, monitoring stable, release notes complete
 
-## Slack Notifications
-
-When completing tasks, Claude will automatically send a notification to Slack using the MCP Slack integration.
-
-### Configuration
-
-Claude is configured to send notifications to the Slack workspace when tasks are completed. This uses the MCP (Model Context Protocol) Slack integration.
-
-## Development Tools & Automation
-
-This repository provides comprehensive development tooling through GitHub Actions workflows and automated scripts:
-
 ## GitHub Actions Integration
 
 The repository includes comprehensive automated workflows for continuous integration and AI-assisted development:
 
 ### CI/CD Pipelines
 
-- **CI Pipeline** (`.github/workflows/ci.yml`): Code quality validation with linting, formatting, testing, and building
+- **CI Pipeline** (`.github/workflows/ci.yml`): Code quality validation with linting, formatting, testing, and building. Required status check は `Quality Gate` ジョブで集約
 - **DevContainer Build** (`.github/workflows/docker-image.yml`): Automated container image building with semantic versioning and multi-platform support
 - **Library Auto-Update** (`.github/workflows/update-libraries.yml`): Scheduled execution of `npm run update:libs` that opens a pull request when dependencies or Codex/Claude tooling change
+- **Security Scanning** (`.github/workflows/security.yml`): Dependency review, license compliance, secret detection, and npm audit
 
 ### AI-Assisted Development
 

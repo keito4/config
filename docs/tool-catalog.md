@@ -227,7 +227,7 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 ### 7.1 ベースイメージバージョンの乖離
 
 4 リポジトリ（npm ライブラリ、SPA、モバイル Flutter、モバイル Android）が **1.0.13** のまま。
-最新は **1.81.1** であり、AI CLI やセキュリティパッチが大幅に遅れている。
+最新は **1.97.0** であり、AI CLI やセキュリティパッチが大幅に遅れている。
 
 > **推奨**: `/config-base-sync-update` コマンドで一括更新、または Dependabot/Renovate で自動化。
 

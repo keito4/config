@@ -28,7 +28,7 @@
 
 **重要**: ホストの `~/.claude` をマウント**しない**ことで、イメージに含まれている設定がそのまま使えます。
 
-📝 **サンプル**: [devcontainer.json.example](./devcontainer.json.example) を参照してください。
+📝 上記の構成をそのまま `.devcontainer/devcontainer.json` として使用できます。
 
 この構成では以下がすぐに利用できます：
 
