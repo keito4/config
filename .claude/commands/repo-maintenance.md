@@ -1270,7 +1270,150 @@ echo "   pre-commit install を実行してください"
 - 🔧 .pre-commit-config.yaml を追加しました（テンプレート名表示）
 - ⏭️ スキップ
 
-### 3.13 package.json scripts 標準チェック
+### 3.13 PR テンプレートチェック
+
+PR テンプレートが設定されているか確認：
+
+**確認ロジック:**
+
+```bash
+HAS_PR_TEMPLATE=false
+[ -f ".github/pull_request_template.md" ] && HAS_PR_TEMPLATE=true
+```
+
+**MODE が `full` かつ未設定の場合:**
+
+```bash
+TEMPLATE_SRC="/usr/local/share/config-templates/github/pull_request_template.md"
+TEMPLATE_RAW_URL="https://raw.githubusercontent.com/keito4/config/main/templates/github/pull_request_template.md"
+
+mkdir -p .github
+if [ -f "$TEMPLATE_SRC" ]; then
+  cp "$TEMPLATE_SRC" .github/pull_request_template.md
+else
+  curl -fsSL "$TEMPLATE_RAW_URL" -o .github/pull_request_template.md
+fi
+echo "🔧 pull_request_template.md を追加しました"
+```
+
+**結果:**
+
+- ✅ PR テンプレート設定済み
+- 🔧 pull_request_template.md を追加しました
+
+### 3.14 Issue テンプレートチェック
+
+Issue テンプレートが設定されているか確認：
+
+**確認ロジック:**
+
+```bash
+HAS_ISSUE_TEMPLATE=false
+[ -d ".github/ISSUE_TEMPLATE" ] && HAS_ISSUE_TEMPLATE=true
+```
+
+**MODE が `full` かつ未設定の場合:**
+
+```bash
+TEMPLATE_DIR_SRC="/usr/local/share/config-templates/github/ISSUE_TEMPLATE"
+TEMPLATE_RAW_BASE="https://raw.githubusercontent.com/keito4/config/main/templates/github/ISSUE_TEMPLATE"
+
+mkdir -p .github/ISSUE_TEMPLATE
+for f in bug_report.yml feature_request.yml config.yml; do
+  if [ -f "$TEMPLATE_DIR_SRC/$f" ]; then
+    cp "$TEMPLATE_DIR_SRC/$f" ".github/ISSUE_TEMPLATE/$f"
+  else
+    curl -fsSL "$TEMPLATE_RAW_BASE/$f" -o ".github/ISSUE_TEMPLATE/$f"
+  fi
+done
+echo "🔧 Issue テンプレートを追加しました"
+```
+
+**結果:**
+
+- ✅ Issue テンプレート設定済み
+- 🔧 Issue テンプレートを追加しました（bug_report, feature_request）
+
+### 3.15 CODEOWNERS チェック
+
+CODEOWNERS ファイルが設定されているか確認：
+
+**確認ロジック:**
+
+```bash
+HAS_CODEOWNERS=false
+[ -f ".github/CODEOWNERS" ] || [ -f "CODEOWNERS" ] || [ -f "docs/CODEOWNERS" ] && HAS_CODEOWNERS=true
+```
+
+**結果:**
+
+- ✅ CODEOWNERS 設定済み
+- ⚠️ CODEOWNERS 未設定（テンプレート: `templates/github/CODEOWNERS`）
+
+### 3.16 SECURITY.md チェック
+
+セキュリティポリシーが設定されているか確認：
+
+**確認ロジック:**
+
+```bash
+HAS_SECURITY=false
+[ -f "SECURITY.md" ] || [ -f ".github/SECURITY.md" ] && HAS_SECURITY=true
+```
+
+**MODE が `full` かつ未設定の場合:**
+
+```bash
+TEMPLATE_SRC="/usr/local/share/config-templates/github/SECURITY.md"
+TEMPLATE_RAW_URL="https://raw.githubusercontent.com/keito4/config/main/templates/github/SECURITY.md"
+
+if [ -f "$TEMPLATE_SRC" ]; then
+  cp "$TEMPLATE_SRC" SECURITY.md
+else
+  curl -fsSL "$TEMPLATE_RAW_URL" -o SECURITY.md
+fi
+echo "🔧 SECURITY.md を追加しました"
+```
+
+**結果:**
+
+- ✅ SECURITY.md 設定済み
+- 🔧 SECURITY.md を追加しました
+
+### 3.17 Release Drafter チェック
+
+リリースノート自動生成が設定されているか確認：
+
+**確認ロジック:**
+
+```bash
+HAS_RELEASE_DRAFTER=false
+[ -f ".github/workflows/release-drafter.yml" ] && HAS_RELEASE_DRAFTER=true
+```
+
+**MODE が `full` かつ未設定の場合:**
+
+```bash
+TEMPLATE_WF="/usr/local/share/config-templates/workflows/release-drafter.yml"
+TEMPLATE_CFG="/usr/local/share/config-templates/github/release-drafter.yml"
+
+mkdir -p .github/workflows
+if [ -f "$TEMPLATE_WF" ]; then
+  cp "$TEMPLATE_WF" .github/workflows/release-drafter.yml
+  cp "$TEMPLATE_CFG" .github/release-drafter.yml
+else
+  curl -fsSL "https://raw.githubusercontent.com/keito4/config/main/templates/workflows/release-drafter.yml" -o .github/workflows/release-drafter.yml
+  curl -fsSL "https://raw.githubusercontent.com/keito4/config/main/templates/github/release-drafter.yml" -o .github/release-drafter.yml
+fi
+echo "🔧 Release Drafter を追加しました"
+```
+
+**結果:**
+
+- ✅ Release Drafter 設定済み
+- 🔧 Release Drafter を追加しました
+
+### 3.18 package.json scripts 標準チェック
 
 Quality Gates で必要なスクリプトが揃っているか確認：
 
@@ -1515,6 +1658,11 @@ $INSTALL_DEV @biomejs/biome knip
 ├── Dependabot Auto-merge: ✅ Configured (or 🔧 Added / ⏭️ Skipped)
 ├── Label Sync: ✅ Configured (or 🔧 Added / ⚠️ labels.yml missing)
 ├── pre-commit: ✅ Configured (or 🔧 Added / ⏭️ Skipped)
+├── PR Template: ✅ Configured (or 🔧 Added)
+├── Issue Template: ✅ Configured (or 🔧 Added)
+├── CODEOWNERS: ✅ Configured (or ⚠️ Not configured)
+├── SECURITY.md: ✅ Configured (or 🔧 Added)
+├── Release Drafter: ✅ Configured (or 🔧 Added)
 ├── commitlint: ✅ Configured with commit-msg hook (or ⚠️ Hook missing / ⚠️ Not configured)
 ├── .editorconfig: ✅ Configured (or 🔧 Generated)
 ├── scripts: ✅ All standard scripts defined (or ⚠️ Missing: test, lint)
@@ -1769,6 +1917,11 @@ Run this command regularly to maintain repository health:
 | Setup       | (Dependabot Auto-merge check)   | Dependabot 自動マージ設定     |
 | Setup       | (Label Sync check)              | ラベル IaC 管理設定           |
 | Setup       | (pre-commit config check)       | pre-commit フレームワーク設定 |
+| Setup       | (PR Template check)             | PR テンプレート設定           |
+| Setup       | (Issue Template check)          | Issue テンプレート設定        |
+| Setup       | (CODEOWNERS check)              | コードオーナー設定            |
+| Setup       | (SECURITY.md check)             | セキュリティポリシー設定      |
+| Setup       | (Release Drafter check)         | リリースノート自動生成設定    |
 | Setup       | (scripts standard check)        | package.json scripts 標準確認 |
 | Cleanup     | `/branch-cleanup`               | ブランチクリーンアップ        |
 | Discovery   | `/config-contribution-discover` | 新機能発見                    |

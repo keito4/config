@@ -1,0 +1,32 @@
+# CODEOWNERS
+#
+# コードオーナーを定義し、PR レビューを自動アサインする
+# 参考: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# 使い方:
+#   .github/CODEOWNERS にコピーして配置し、チーム・メンバーを設定
+#
+# フォーマット: パターン オーナー（スペース区切りで複数指定可）
+#   @org/team-name  ... GitHub チーム
+#   @username       ... 個人
+
+# ── デフォルトオーナー ──
+# TODO: リポジトリのデフォルトオーナーを設定
+# * @org/team-name
+
+# ── インフラ ──
+# .github/         @org/platform-team
+# .devcontainer/   @org/platform-team
+# terraform/       @org/infra-team
+
+# ── フロントエンド ──
+# src/components/  @org/frontend-team
+# src/pages/       @org/frontend-team
+
+# ── バックエンド ──
+# src/api/         @org/backend-team
+# src/services/    @org/backend-team
+
+# ── ドキュメント ──
+# docs/            @org/docs-team
+# *.md             @org/docs-team

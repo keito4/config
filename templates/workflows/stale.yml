@@ -1,0 +1,65 @@
+# Stale Issue/PR 管理ワークフロー
+#
+# 長期間アクティビティのない Issue / PR にラベルを付与し、
+# さらに放置された場合は自動クローズする
+#
+# 使い方:
+#   .github/workflows/stale.yml にコピーして配置
+#
+# 参考: https://github.com/actions/stale
+#
+name: Stale Issues and PRs
+
+on:
+  schedule:
+    # 毎日 10:00 JST (01:00 UTC)
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/stale@v9
+        with:
+          # ── Issue 設定 ──
+          days-before-issue-stale: 30
+          days-before-issue-close: 14
+          stale-issue-label: 'stale'
+          stale-issue-message: |
+            この Issue は30日以上アクティビティがありません。
+            14日以内に更新がない場合、自動的にクローズされます。
+            引き続き対応が必要な場合はコメントしてください。
+          close-issue-message: |
+            アクティビティがないため、この Issue をクローズしました。
+            再度対応が必要な場合は、新しい Issue を作成してください。
+
+          # ── PR 設定 ──
+          days-before-pr-stale: 14
+          days-before-pr-close: 7
+          stale-pr-label: 'stale'
+          stale-pr-message: |
+            この PR は14日以上アクティビティがありません。
+            7日以内に更新がない場合、自動的にクローズされます。
+          close-pr-message: |
+            アクティビティがないため、この PR をクローズしました。
+
+          # ── 除外設定 ──
+          # これらのラベルが付いている場合は stale にしない
+          exempt-issue-labels: 'P0: Critical,P1: High,blocked,in-progress'
+          exempt-pr-labels: 'P0: Critical,P1: High,blocked,in-progress'
+
+          # bot が作成した Issue/PR も対象にする
+          exempt-all-assignees: false
+
+          # 1回の実行で処理する最大数
+          operations-per-run: 100
