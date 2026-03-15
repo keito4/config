@@ -232,7 +232,9 @@ setup_branch_protection() {
 
   if [[ "$SKIP_STATUS_CHECKS" == "false" ]]; then
     protection_config+='"strict":true,'
-    protection_config+='"contexts":["CI"]'
+    # CI workflow の Quality Gate ジョブが全チェックを集約するため、
+    # 単一の required check として使用する
+    protection_config+='"contexts":["Quality Gate"]'
   else
     protection_config+='"strict":false,'
     protection_config+='"contexts":[]'
