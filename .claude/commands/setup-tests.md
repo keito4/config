@@ -7,7 +7,7 @@ argument-hint: '[--level minimal|standard|comprehensive|full] [--coverage-thresh
 # Setup Tests Command
 
 Next.js プロジェクトに包括的なテスト基盤をセットアップします。
-cyber_ace_1on1 で実績のある設定を他のリポジトリに適用できます。
+実績のある設定テンプレートとして、他のリポジトリに適用できます。
 
 ## テストピラミッド
 

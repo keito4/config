@@ -240,7 +240,7 @@ This directory contains pre-configured commands that provide automated workflows
 **Purpose**: Setup comprehensive testing infrastructure for Next.js projects (21 test types, 5 levels)
 **Features**:
 
-- Test configuration templates from cyber_ace_1on1
+- Proven test configuration templates
 - Jest + Playwright setup with polyfills
 - Unit, Component, Integration, E2E, API tests
 - Regression, Smoke, Contract, Scenario tests
