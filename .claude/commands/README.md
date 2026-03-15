@@ -7,6 +7,7 @@ This directory contains pre-configured commands that provide automated workflows
 | カテゴリ              | コマンド                                  | 説明                                         |
 | --------------------- | ----------------------------------------- | -------------------------------------------- |
 | **Maintenance**       | `/repo-maintenance`                       | 包括的なリポジトリメンテナンス               |
+|                       | `/org-maintenance`                        | 組織横断のリポジトリ健全性チェック           |
 | **Git Workflow**      | `/git-sync`                               | Git 同期とブランチ管理                       |
 |                       | `/branch-cleanup`                         | マージ済み・古いブランチのクリーンアップ     |
 |                       | `/create-pr`                              | ベースブランチをマージして PR 作成           |
