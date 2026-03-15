@@ -1122,7 +1122,155 @@ echo "🔧 .editorconfig を生成しました"
 - 🔧 .editorconfig を生成しました
 - ⏭️ スキップ（`check-only` モード）
 
-### 3.10 package.json scripts 標準チェック
+### 3.10 Dependabot Auto-merge ワークフローチェック
+
+Dependabot PR の自動処理ワークフローが設定されているか確認：
+
+**確認ロジック:**
+
+```bash
+HAS_DEPENDABOT_AUTOMERGE=false
+[ -f ".github/workflows/dependabot-auto-merge.yml" ] && HAS_DEPENDABOT_AUTOMERGE=true
+```
+
+**結果パターン:**
+
+| 状態                          | 対応                                          |
+| ----------------------------- | --------------------------------------------- |
+| ワークフローが設定済み        | ✅ スキップ                                   |
+| Dependabot 設定あり + WF なし | ⚠️ → full mode でテンプレートからコピーを提案 |
+| Dependabot 未使用             | ⏭️ スキップ                                   |
+
+**MODE が `full` かつ未設定の場合:**
+
+```bash
+# Dependabot が設定されている場合のみ提案
+if [ -f ".github/dependabot.yml" ] || [ -f ".github/dependabot.yaml" ]; then
+  TEMPLATE_SRC="/usr/local/share/config-templates/workflows/dependabot-auto-merge.yml"
+  TEMPLATE_RAW_URL="https://raw.githubusercontent.com/keito4/config/main/templates/workflows/dependabot-auto-merge.yml"
+
+  mkdir -p .github/workflows
+  if [ -f "$TEMPLATE_SRC" ]; then
+    cp "$TEMPLATE_SRC" .github/workflows/dependabot-auto-merge.yml
+  else
+    curl -fsSL "$TEMPLATE_RAW_URL" -o .github/workflows/dependabot-auto-merge.yml
+  fi
+  echo "🔧 dependabot-auto-merge.yml を追加しました"
+fi
+```
+
+**結果:**
+
+- ✅ Dependabot Auto-merge 設定済み
+- 🔧 dependabot-auto-merge.yml を追加しました
+- ⏭️ スキップ（Dependabot 未使用）
+
+### 3.11 Label Sync ワークフローチェック
+
+GitHub ラベルの IaC 管理が設定されているか確認：
+
+**確認ロジック:**
+
+```bash
+HAS_LABEL_SYNC=false
+HAS_LABELS_YML=false
+
+[ -f ".github/workflows/label-sync.yml" ] && HAS_LABEL_SYNC=true
+[ -f ".github/labels.yml" ] && HAS_LABELS_YML=true
+```
+
+**結果パターン:**
+
+| 状態                      | 対応                                    |
+| ------------------------- | --------------------------------------- |
+| WF + labels.yml 両方あり  | ✅ スキップ                             |
+| WF あり + labels.yml なし | ⚠️ labels.yml 未定義                    |
+| 両方なし                  | ⚠️ → full mode でテンプレート生成を提案 |
+
+**MODE が `full` かつ未設定の場合:**
+
+```bash
+TEMPLATE_WF_SRC="/usr/local/share/config-templates/workflows/label-sync.yml"
+TEMPLATE_WF_RAW="https://raw.githubusercontent.com/keito4/config/main/templates/workflows/label-sync.yml"
+TEMPLATE_LABELS_SRC="/usr/local/share/config-templates/github/labels.yml"
+TEMPLATE_LABELS_RAW="https://raw.githubusercontent.com/keito4/config/main/templates/github/labels.yml"
+
+mkdir -p .github/workflows
+
+if [ ! -f ".github/workflows/label-sync.yml" ]; then
+  if [ -f "$TEMPLATE_WF_SRC" ]; then
+    cp "$TEMPLATE_WF_SRC" .github/workflows/label-sync.yml
+  else
+    curl -fsSL "$TEMPLATE_WF_RAW" -o .github/workflows/label-sync.yml
+  fi
+  echo "🔧 label-sync.yml を追加しました"
+fi
+
+if [ ! -f ".github/labels.yml" ]; then
+  if [ -f "$TEMPLATE_LABELS_SRC" ]; then
+    cp "$TEMPLATE_LABELS_SRC" .github/labels.yml
+  else
+    curl -fsSL "$TEMPLATE_LABELS_RAW" -o .github/labels.yml
+  fi
+  echo "🔧 labels.yml を追加しました"
+fi
+```
+
+**結果:**
+
+- ✅ Label Sync 設定済み
+- 🔧 label-sync.yml + labels.yml を追加しました
+- ⚠️ labels.yml が未定義（ワークフローのみ存在）
+
+### 3.12 pre-commit 設定チェック
+
+pre-commit フレームワークの設定状況を確認：
+
+**確認ロジック:**
+
+```bash
+HAS_PRE_COMMIT_CONFIG=false
+[ -f ".pre-commit-config.yaml" ] && HAS_PRE_COMMIT_CONFIG=true
+```
+
+**結果パターン:**
+
+| 状態     | 対応                                          |
+| -------- | --------------------------------------------- |
+| 設定済み | ✅ スキップ                                   |
+| 未設定   | ⚠️ → full mode でテンプレートからコピーを提案 |
+
+**MODE が `full` かつ未設定の場合:**
+
+プロジェクト種別を判定してテンプレートを選択：
+
+```bash
+# テンプレートの選択
+if ls *.tf 2>/dev/null || [ -d "terraform" ]; then
+  TEMPLATE_NAME="pre-commit-config-terraform.yaml"
+else
+  TEMPLATE_NAME="pre-commit-config-base.yaml"
+fi
+
+TEMPLATE_SRC="/usr/local/share/config-templates/$TEMPLATE_NAME"
+TEMPLATE_RAW_URL="https://raw.githubusercontent.com/keito4/config/main/templates/$TEMPLATE_NAME"
+
+if [ -f "$TEMPLATE_SRC" ]; then
+  cp "$TEMPLATE_SRC" .pre-commit-config.yaml
+else
+  curl -fsSL "$TEMPLATE_RAW_URL" -o .pre-commit-config.yaml
+fi
+echo "🔧 .pre-commit-config.yaml を追加しました（$TEMPLATE_NAME）"
+echo "   pre-commit install を実行してください"
+```
+
+**結果:**
+
+- ✅ .pre-commit-config.yaml 設定済み
+- 🔧 .pre-commit-config.yaml を追加しました（テンプレート名表示）
+- ⏭️ スキップ
+
+### 3.13 package.json scripts 標準チェック
 
 Quality Gates で必要なスクリプトが揃っているか確認：
 
@@ -1364,6 +1512,9 @@ $INSTALL_DEV @biomejs/biome knip
 ├── Husky: ✅ Git hooks configured\n├── hooksPath: ✅ Valid (.husky) (or 🔧 Fixed / ❌ Manual required)\n├── Husky v8→v9: ✅ v9スタイル済み (or 🔧 移行しました / ✅ スキップ)
 ├── check-file-length: ✅ Configured in pre-commit (or 🔧 Added / ⏭️ Skipped)
 ├── Renovate/Dependabot: ✅ Auto-update configured (or 🔧 renovate.json generated / ⏭️ Skipped)
+├── Dependabot Auto-merge: ✅ Configured (or 🔧 Added / ⏭️ Skipped)
+├── Label Sync: ✅ Configured (or 🔧 Added / ⚠️ labels.yml missing)
+├── pre-commit: ✅ Configured (or 🔧 Added / ⏭️ Skipped)
 ├── commitlint: ✅ Configured with commit-msg hook (or ⚠️ Hook missing / ⚠️ Not configured)
 ├── .editorconfig: ✅ Configured (or 🔧 Generated)
 ├── scripts: ✅ All standard scripts defined (or ⚠️ Missing: test, lint)
@@ -1615,6 +1766,9 @@ Run this command regularly to maintain repository health:
 | Setup       | (Renovate/Dependabot check)     | 依存関係自動更新設定          |
 | Setup       | (commitlint check)              | コミットメッセージ品質管理    |
 | Setup       | (editorconfig check)            | エディタスタイル設定          |
+| Setup       | (Dependabot Auto-merge check)   | Dependabot 自動マージ設定     |
+| Setup       | (Label Sync check)              | ラベル IaC 管理設定           |
+| Setup       | (pre-commit config check)       | pre-commit フレームワーク設定 |
 | Setup       | (scripts standard check)        | package.json scripts 標準確認 |
 | Cleanup     | `/branch-cleanup`               | ブランチクリーンアップ        |
 | Discovery   | `/config-contribution-discover` | 新機能発見                    |

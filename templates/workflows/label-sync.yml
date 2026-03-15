@@ -1,0 +1,41 @@
+# Label Sync Workflow
+#
+# GitHub ラベルを YAML ファイルで IaC 管理し、自動同期するワークフロー
+# labels.yml を変更して push するだけで、リポジトリのラベルが自動更新される
+#
+# 使い方:
+#   1. .github/workflows/label-sync.yml にコピーして配置
+#   2. .github/labels.yml にラベル定義を配置（テンプレート: templates/github/labels.yml）
+#
+name: Label Sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/labels.yml'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync labels
+        uses: EndBug/label-sync@v2
+        with:
+          config-file: .github/labels.yml
+          # 既存ラベルを保持（false = labels.yml にないラベルを削除しない）
+          delete-other-labels: false
+          token: ${{ secrets.GITHUB_TOKEN }}

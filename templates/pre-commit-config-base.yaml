@@ -1,0 +1,46 @@
+# Pre-commit 基本構成
+#
+# YAML/JSON 構文チェック、シークレット検出、基本的なファイルチェック
+# 全プロジェクト共通で使用可能
+#
+# 使い方:
+#   .pre-commit-config.yaml にコピーして配置
+#   pip install pre-commit && pre-commit install
+#
+repos:
+  # ── 基本フック（ファイル品質チェック） ──
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+        name: YAML 構文チェック
+      - id: check-json
+        name: JSON 構文チェック
+      - id: check-toml
+        name: TOML 構文チェック
+      - id: check-merge-conflict
+        name: マージコンフリクトマーカー検出
+      - id: end-of-file-fixer
+        name: ファイル末尾の改行修正
+      - id: trailing-whitespace
+        name: 末尾空白の除去
+      - id: check-added-large-files
+        name: 大容量ファイル検出
+        args: ['--maxkb=500']
+      - id: detect-private-key
+        name: 秘密鍵の検出
+
+  # ── シークレット検出 ──
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.22.1
+    hooks:
+      - id: gitleaks
+        name: シークレット検出（gitleaks）
+
+  # ── main/master への直接コミット防止 ──
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: no-commit-to-branch
+        name: 保護ブランチへの直接コミット防止
+        args: ['--branch', 'main', '--branch', 'master']

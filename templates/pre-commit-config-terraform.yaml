@@ -1,0 +1,65 @@
+# Pre-commit Terraform プロジェクト向け構成
+#
+# 基本構成 + Terraform フォーマット/バリデーション + シェルスクリプト検証
+#
+# 使い方:
+#   .pre-commit-config.yaml にコピーして配置
+#   pip install pre-commit && pre-commit install
+#
+# 前提:
+#   - terraform CLI がインストール済み
+#   - tflint がインストール済み（オプション）
+#   - terraform-docs がインストール済み（オプション）
+#
+repos:
+  # ── 基本フック（ファイル品質チェック） ──
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+        name: YAML 構文チェック
+      - id: check-json
+        name: JSON 構文チェック
+      - id: check-toml
+        name: TOML 構文チェック
+      - id: check-merge-conflict
+        name: マージコンフリクトマーカー検出
+      - id: end-of-file-fixer
+        name: ファイル末尾の改行修正
+      - id: trailing-whitespace
+        name: 末尾空白の除去
+      - id: check-added-large-files
+        name: 大容量ファイル検出
+        args: ['--maxkb=500']
+      - id: detect-private-key
+        name: 秘密鍵の検出
+      - id: no-commit-to-branch
+        name: 保護ブランチへの直接コミット防止
+        args: ['--branch', 'main', '--branch', 'master']
+
+  # ── シークレット検出 ──
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.22.1
+    hooks:
+      - id: gitleaks
+        name: シークレット検出（gitleaks）
+
+  # ── Terraform フック ──
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.96.3
+    hooks:
+      - id: terraform_fmt
+        name: Terraform フォーマット
+      - id: terraform_validate
+        name: Terraform バリデーション
+      - id: terraform_docs
+        name: Terraform ドキュメント自動生成
+      - id: terraform_tflint
+        name: Terraform リント（tflint）
+
+  # ── シェルスクリプト検証 ──
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        name: ShellCheck
