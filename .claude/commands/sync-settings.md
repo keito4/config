@@ -1,5 +1,5 @@
 ---
-description: Sync Claude & Codex settings from Elu-co-jp projects to DevContainer configuration
+description: Sync Claude & Codex settings from your-org projects to DevContainer configuration
 allowed-tools: Read, Write, Edit, Bash(find:*), Bash(ls:*), Bash(git:*), Bash(gh:*)
 argument-hint: [--create-pr] [--base-path PATH] [--claude-only] [--codex-only]
 ---
@@ -8,7 +8,7 @@ argument-hint: [--create-pr] [--base-path PATH] [--claude-only] [--codex-only]
 
 ## Overview
 
-このコマンドは Elu-co-jp 配下の全プロジェクトから設定ファイルを収集し、
+このコマンドは your-org 配下の全プロジェクトから設定ファイルを収集し、
 共通設定を抽出して DevContainer 設定に反映させます。
 
 ### 対象設定ファイル
@@ -20,7 +20,7 @@ argument-hint: [--create-pr] [--base-path PATH] [--claude-only] [--codex-only]
 
 ## 前提条件
 
-- ベースパス（`~/develop/github.com/Elu-co-jp`）は既に存在すると仮定
+- ベースパス（`~/develop/github.com/your-org`）は既に存在すると仮定
 - 環境確認は不要で、直接ファイル検索から開始
 - Node.js, npm, git, gh コマンドは既にインストール済みと仮定
 
@@ -29,7 +29,7 @@ argument-hint: [--create-pr] [--base-path PATH] [--claude-only] [--codex-only]
 引数から設定を読み取る：
 
 - `--create-pr`: PR を自動作成する（デフォルト: false）
-- `--base-path PATH`: カスタムベースパス（デフォルト: `~/develop/github.com/Elu-co-jp`）
+- `--base-path PATH`: カスタムベースパス（デフォルト: `~/develop/github.com/your-org`）
 - `--claude-only`: Claude 設定のみ同期（デフォルト: false）
 - `--codex-only`: Codex 設定のみ同期（デフォルト: false）
 
@@ -277,9 +277,9 @@ git checkout -b feat/sync-settings-$(date +%Y%m%d)
 
 ```bash
 git add .devcontainer/claude-settings.json .codex/config.toml
-git commit -m "feat: Sync Claude & Codex settings from Elu-co-jp projects
+git commit -m "feat: Sync Claude & Codex settings from your-org projects
 
-Elu-co-jp 配下の全プロジェクトから設定ファイルを収集し、
+your-org 配下の全プロジェクトから設定ファイルを収集し、
 共通設定を抽出して DevContainer 設定に反映しました。
 
 ## 収集元
@@ -309,11 +309,11 @@ git push -u origin feat/sync-settings-$(date +%Y%m%d)
 
 gh pr create \
   --base main \
-  --title "feat: Sync Claude & Codex settings from Elu-co-jp projects" \
+  --title "feat: Sync Claude & Codex settings from your-org projects" \
   --body "$(cat <<'EOF'
 ## 概要
 
-Elu-co-jp 配下の全プロジェクトから設定ファイルを収集し、
+your-org 配下の全プロジェクトから設定ファイルを収集し、
 共通設定を抽出して DevContainer 設定に反映しました。
 
 ## 収集元

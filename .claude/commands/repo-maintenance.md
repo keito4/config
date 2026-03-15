@@ -777,8 +777,8 @@ TEMPLATE_REVIEW=$(curl -fsSL "https://raw.githubusercontent.com/keito4/config/ma
 - ⏭️ スキップ（GitHub Actions 未使用）
 
 **背景:**
-Elu-co-jp org で Claude Code ワークフローの過剰実行（1日64回等）や
-CI/CDの非効率な設定がActions費用の最大要因（推定 $400+/3ヶ月）であったことから、
+組織内で Claude Code ワークフローの過剰実行（1日64回等）や
+CI/CDの非効率な設定がActions費用の最大要因であったことから、
 このチェックをデフォルトで実行し、全リポジトリのコスト最適化を推奨する。
 
 #### 3.6.5 Actions Artifact 保持期間チェック

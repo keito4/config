@@ -461,7 +461,7 @@ See [templates/testing/README.md](../../templates/testing/README.md) for detaile
 
 #### `sync-settings.md`
 
-**Purpose**: Sync Claude & Codex settings from Elu-co-jp projects to DevContainer configuration
+**Purpose**: Sync Claude & Codex settings from organization projects to DevContainer configuration
 **Features**:
 
 - Claude/Codex 設定ファイルの同期

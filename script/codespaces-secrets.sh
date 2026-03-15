@@ -378,7 +378,7 @@ Examples:
 
   # リポジトリを追加
   $SCRIPT_NAME repos add keito4/my-project
-  $SCRIPT_NAME repos add Elu-co-jp/project-a Elu-co-jp/project-b
+  $SCRIPT_NAME repos add org/project-a org/project-b
 
   # 設定を全シークレットに同期
   $SCRIPT_NAME sync
