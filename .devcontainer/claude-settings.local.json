@@ -178,27 +178,9 @@
       "Bash(terraform destroy)",
       "Bash(terraform destroy:*)",
       "Bash(rm -rf /)",
-      "Bash(rm -rf /*)"
-    ],
-    "ask": [
+      "Bash(rm -rf /*)",
       "mcp__plugin_supabase-toolkit_supabase__execute_sql",
-      "mcp__supabase__execute_sql",
-      "Bash(npx supabase db push)",
-      "Bash(npx supabase db push:*)",
-      "Bash(supabase db push)",
-      "Bash(supabase db push:*)",
-      "Bash(npx supabase migration squash)",
-      "Bash(npx supabase migration squash:*)",
-      "Bash(supabase migration squash)",
-      "Bash(supabase migration squash:*)",
-      "Bash(npx supabase migration repair)",
-      "Bash(npx supabase migration repair:*)",
-      "Bash(supabase migration repair)",
-      "Bash(supabase migration repair:*)",
-      "Bash(supabase db reset)",
-      "Bash(supabase db reset:*)",
-      "Bash(npx supabase db reset)",
-      "Bash(npx supabase db reset:*)"
+      "mcp__supabase__execute_sql"
     ],
     "defaultMode": "auto"
   },
