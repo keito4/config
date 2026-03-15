@@ -63,7 +63,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download coverage artifact
-        uses: actions/download-artifact@v8.0.0
+        uses: actions/download-artifact@v8.0.1
         with:
           name: ${{ inputs.artifact-name }}
           path: coverage-download
@@ -86,7 +86,7 @@ jobs:
         uses: actions/checkout@v6.0.2
 
       - name: Download coverage artifact
-        uses: actions/download-artifact@v8.0.0
+        uses: actions/download-artifact@v8.0.1
         with:
           name: ${{ inputs.artifact-name }}
           path: coverage-download
@@ -167,7 +167,7 @@ jobs:
         uses: actions/checkout@v6.0.2
 
       - name: Download coverage artifact
-        uses: actions/download-artifact@v8.0.0
+        uses: actions/download-artifact@v8.0.1
         with:
           name: ${{ inputs.artifact-name }}
           path: coverage-download
@@ -183,7 +183,7 @@ jobs:
           thresholds: '${{ inputs.min-coverage-overall }} ${{ inputs.min-coverage-changed-files }}'
 
       - name: Post coverage comment
-        uses: marocchino/sticky-pull-request-comment@v2.9.4
+        uses: marocchino/sticky-pull-request-comment@v3.0.2
         with:
           header: ${{ inputs.title }}
           message: |
@@ -200,7 +200,7 @@ jobs:
         uses: actions/checkout@v6.0.2
 
       - name: Download coverage artifact
-        uses: actions/download-artifact@v8.0.0
+        uses: actions/download-artifact@v8.0.1
         with:
           name: ${{ inputs.artifact-name }}
           path: coverage-download
