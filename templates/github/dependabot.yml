@@ -1,0 +1,77 @@
+# Dependabot 設定
+#
+# 依存関係の自動更新を管理する
+# dependabot-auto-merge.yml ワークフローと合わせて使用推奨
+#
+# 使い方:
+#   .github/dependabot.yml にコピーして配置
+#
+# 参考: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+#
+version: 2
+updates:
+  # ── npm パッケージ ──
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Tokyo'
+    # PR の上限数（同時に開ける PR 数）
+    open-pull-requests-limit: 10
+    labels:
+      - 'dependencies'
+    commit-message:
+      prefix: 'deps'
+      include: 'scope'
+    # マイナー・パッチは自動グループ化
+    groups:
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # ── GitHub Actions ──
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Tokyo'
+    open-pull-requests-limit: 5
+    labels:
+      - 'dependencies'
+      - 'ci'
+    commit-message:
+      prefix: 'ci'
+
+  # ── Docker ──
+  # TODO: Dockerfile がある場合のみ有効化
+  # - package-ecosystem: "docker"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #   labels:
+  #     - "dependencies"
+  #     - "infrastructure"
+
+  # ── Terraform ──
+  # TODO: Terraform を使用する場合のみ有効化
+  # - package-ecosystem: "terraform"
+  #   directory: "/terraform"
+  #   schedule:
+  #     interval: "weekly"
+  #   labels:
+  #     - "dependencies"
+  #     - "infrastructure"
+
+  # ── pip (Python) ──
+  # TODO: Python プロジェクトの場合のみ有効化
+  # - package-ecosystem: "pip"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #   labels:
+  #     - "dependencies"

@@ -1,0 +1,66 @@
+name: Bug Report
+description: 不具合を報告する
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        不具合の報告ありがとうございます。以下の項目をできるだけ詳しく記入してください。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 概要
+      description: 不具合の内容を簡潔に記述してください
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: 不具合を再現するための手順
+      placeholder: |
+        1. '...' に移動
+        2. '...' をクリック
+        3. '...' まで下にスクロール
+        4. エラーが表示される
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待する動作
+      description: 正常な場合にどう動作すべきか
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動作
+      description: 実際にどう動作したか（エラーメッセージがあれば記載）
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 環境
+      description: 動作環境の情報
+      placeholder: |
+        - OS: macOS 15.x
+        - ブラウザ: Chrome 130
+        - Node.js: 22.x
+        - その他:
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 補足情報
+      description: スクリーンショット、ログ、関連する情報など
+    validations:
+      required: false
