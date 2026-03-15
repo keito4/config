@@ -6,16 +6,22 @@
 
 設定される内容
 
-**ブランチ保護ルール（main/develop）**
+**ブランチ保護ルール（ブランチ種別ごとのデフォルト）**
+
+| ブランチ              | enforce_admins | required_reviews | code_owner_reviews |
+| --------------------- | -------------- | ---------------- | ------------------ |
+| main (default_branch) | true           | 0                | false              |
+| pre-production        | false          | 1                | true               |
+| production            | false          | 1                | true               |
+
 • 直接プッシュ禁止
 • プルリクエスト必須
-• レビュー承認必須（最低1名）
-• CODEOWNERSレビュー必須
 • ステータスチェック必須（CI通過）
 • force pushの禁止
 • ブランチ削除保護
 • 古いレビューの自動却下
 • マージ前のブランチ更新必須
+• `--uniform` で全ブランチ同一設定に切替可能
 
 **リポジトリ設定**
 • マージ方法の設定（デフォルト: Merge commitのみ、オプションで変更可能）
@@ -76,21 +82,30 @@ bash script/setup-team-protection.sh --dry-run
 
 設定の詳細
 
-**main ブランチ保護**
+**ブランチ種別ごとの保護設定**
+
+main ブランチ:
 
 ```bash
-gh api repos/{owner}/{repo}/branches/main/protection \
-  --method PUT \
-  --field required_status_checks[strict]=true \
-  --field required_status_checks[contexts][]="Quality Gate" \
-  --field required_pull_request_reviews[required_approving_review_count]=1 \
-  --field required_pull_request_reviews[dismiss_stale_reviews]=true \
-  --field required_pull_request_reviews[require_code_owner_reviews]=false \
-  --field enforce_admins=false \
-  --field restrictions=null \
-  --field allow_force_pushes[enabled]=false \
-  --field allow_deletions[enabled]=false \
-  --field required_linear_history[enabled]=false
+# enforce_admins=true, reviewers=0, code_owner_reviews=false
+bash script/setup-team-protection.sh --branches main
+```
+
+pre-production / production ブランチ:
+
+```bash
+# enforce_admins=false, reviewers=1, code_owner_reviews=true
+bash script/setup-team-protection.sh \
+  --branches pre-production,production \
+  --create-branches
+```
+
+全ブランチ一括:
+
+```bash
+bash script/setup-team-protection.sh \
+  --branches main,pre-production,production \
+  --create-branches
 ```
 
 **必須ステータスチェック**
@@ -99,11 +114,11 @@ gh api repos/{owner}/{repo}/branches/main/protection \
 • Quality Gate（CI ワークフローの全ジョブ結果を集約するゲートジョブ）
 • セキュリティスキャン（オプション）
 
-**レビュー要件**
+**レビュー要件（デフォルト）**
 
-• 最低1名の承認が必要
+• main: レビュー不要、管理者はルール適用
+• pre-production / production: 最低1名の承認 + CODEOWNERS レビュー必須、管理者は緊急時マージ可能
 • 変更があった場合は承認をリセット
-• コードオーナーのレビューは任意（チーム判断）
 
 ---
 
@@ -123,25 +138,34 @@ bash script/setup-team-protection.sh --reviewers 2
 bash script/setup-team-protection.sh --enforce-admins
 ```
 
-**pre-production / production ブランチも保護（最厳格設定）**
+**pre-production / production ブランチも保護（推奨設定）**
 
 ```bash
-# main, pre-production, production を保護（strictレベル）
+# main, pre-production, production を保護（ブランチ種別ごとの推奨デフォルト）
+bash script/setup-team-protection.sh \
+  --branches main,pre-production,production \
+  --create-branches
+```
+
+**全ブランチに同一設定を適用**
+
+```bash
+# --uniform で全ブランチ同一設定（ブランチ種別デフォルトを無効化）
 bash script/setup-team-protection.sh \
   --branches main,pre-production,production \
   --create-branches \
-  --protection-level strict
+  --uniform --reviewers 1
 ```
 
 **保護レベルの設定**
 
 ```bash
-# standard（デフォルト）: レビュー1名、管理者除外
+# standard（デフォルト）: ブランチ種別ごとの推奨設定を自動適用
 bash script/setup-team-protection.sh --protection-level standard
 
 # strict: レビュー2名以上、管理者も制約、リニア履歴必須、
 #         署名付きコミット必須、最終プッシュ承認必須、
-#         会話解決必須
+#         会話解決必須（ブランチ種別デフォルトより優先）
 bash script/setup-team-protection.sh --protection-level strict
 ```
 
