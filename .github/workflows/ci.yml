@@ -55,7 +55,7 @@ jobs:
       workflows: ${{ steps.filter.outputs.workflows }}
       dependencies: ${{ steps.filter.outputs.dependencies }}
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6
 
       - uses: dorny/paths-filter@v3
         id: filter
@@ -86,7 +86,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true' || needs.changes.outputs.scripts == 'true' || needs.changes.outputs.dependencies == 'true'
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6.3.0
         with:
@@ -119,7 +119,7 @@ jobs:
       actions: write
       checks: write
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6.3.0
         with:
@@ -171,7 +171,7 @@ jobs:
       contents: read
       actions: write
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6.3.0
         with:
@@ -204,7 +204,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.workflows == 'true'
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6
 
       - name: Run actionlint
         uses: reviewdog/action-actionlint@0d952c597ef8459f634d7145b0b044a9699e5e43 # v1.71.0
