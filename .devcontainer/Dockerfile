@@ -56,7 +56,7 @@ RUN DOPPLER_VERSION="${DOPPLER_CLI_VERSION}" \
  && dpkg -i /tmp/doppler.deb \
  && rm /tmp/doppler.deb
 
-ARG OP_CLI_VERSION=2.32.1
+ARG OP_CLI_VERSION=2.33.0
 
 # Install 1Password CLI (op)
 # https://developer.1password.com/docs/cli/get-started/
@@ -106,7 +106,7 @@ COPY npm/global.json /tmp/npm-global.json
 # Install Claude Code using native installer (npm installation deprecated)
 # Must run as vscode user so claude installs to /home/vscode/.claude/local/bin
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG CLAUDE_CODE_VERSION=2.1.77
+ARG CLAUDE_CODE_VERSION=2.1.78
 USER vscode
 RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
  && echo 'export PATH="$HOME/.claude/local/bin:$PATH"' >> /home/vscode/.bashrc
