@@ -1751,6 +1751,205 @@ echo "   ✅ Wait timer: 5 minutes（任意）"
 - ⚠️ production 環境: 保護ルール未設定（設定手順を表示）
 - ⏭️ スキップ（GitHub Environments 未使用）
 
+### 3.22 推奨ファイル同期 (Config Template Sync)
+
+config リポジトリ（`keito4/config`）の推奨テンプレートファイルと現在のリポジトリを比較し、差分があれば同期する。
+
+**背景:**
+`/setup-new-repo` で初期構築したリポジトリのワークフローやフックは、config リポジトリの更新に追従しない。
+このステップにより、推奨設定の変更（例: `cancel-in-progress` の修正）が全リポジトリに反映される。
+
+**前提:** `MODE` は Step 1 で定義済み（`full` / `quick` / `check-only`）。このステップは全モードで実行される。
+
+**スキップ条件:**
+
+```bash
+# config リポジトリ自身かどうかを判定
+REPO_NAME=$(gh repo view --json nameWithOwner -q '.nameWithOwner' 2>/dev/null || echo "")
+if [ "$REPO_NAME" = "keito4/config" ]; then
+  echo "⏭️ スキップ（config リポジトリ自身）"
+  # このステップを終了
+fi
+
+# config-base 管理下かどうかを判定
+if [ -f ".devcontainer/devcontainer.json" ]; then
+  if ! grep -q "config-base" .devcontainer/devcontainer.json 2>/dev/null; then
+    echo "⏭️ スキップ（config 管理外のリポジトリ）"
+    # このステップを終了
+  fi
+fi
+```
+
+**同期対象ファイルの分類:**
+
+| カテゴリ     | ファイル                                   | 同期ポリシー                 |
+| ------------ | ------------------------------------------ | ---------------------------- |
+| マネージド   | `.github/workflows/claude.yml`             | 常に config の最新版で上書き |
+| マネージド   | `.github/workflows/claude-code-review.yml` | 常に config の最新版で上書き |
+| マネージド   | `.claude/hooks/block_git_no_verify.py`     | 常に config の最新版で上書き |
+| マネージド   | `.claude/hooks/pre_git_quality_gates.py`   | 常に config の最新版で上書き |
+| マネージド   | `.claude/hooks/post_git_push_ci.py`        | 常に config の最新版で上書き |
+| テンプレート | `.github/workflows/security.yml`           | 差分表示 → 確認後に上書き    |
+| テンプレート | `.github/workflows/ci.yml`                 | 差分表示 → 確認後に上書き    |
+| テンプレート | `.github/ISSUE_TEMPLATE/*`                 | 欠落ファイルのみ追加         |
+| テンプレート | `.github/pull_request_template.md`         | 欠落時のみ追加               |
+
+**マネージドファイル**: config リポジトリが正規のソースであり、プロジェクト側でカスタマイズしない前提のファイル。
+**テンプレートファイル**: プロジェクト固有のカスタマイズが入る可能性があるため、差分確認を挟む。
+
+**config リポジトリのソース取得:**
+
+```bash
+# config リポジトリのローカルクローンを探す
+CONFIG_REPO=""
+SEARCH_PATHS=(
+  "$HOME/develop/github.com/keito4/config"
+  "$HOME/ghq/github.com/keito4/config"
+  "$HOME/src/github.com/keito4/config"
+)
+for path in "${SEARCH_PATHS[@]}"; do
+  if [ -d "$path/.github/workflows" ]; then
+    CONFIG_REPO="$path"
+    break
+  fi
+done
+
+# ローカルに見つからない場合は GitHub API でフェッチ
+TEMP_CONFIG_DIR=""
+if [ -z "$CONFIG_REPO" ]; then
+  TEMP_CONFIG_DIR=$(mktemp -d)
+  trap 'rm -rf "$TEMP_CONFIG_DIR"' EXIT
+  CONFIG_REPO="$TEMP_CONFIG_DIR"
+  gh api repos/keito4/config/tarball/main | tar xz -C "$TEMP_CONFIG_DIR" --strip-components=1
+fi
+```
+
+**マネージドファイルの同期ロジック:**
+
+```bash
+MANAGED_FILES=(
+  ".github/workflows/claude.yml"
+  ".github/workflows/claude-code-review.yml"
+  ".claude/hooks/block_git_no_verify.py"
+  ".claude/hooks/pre_git_quality_gates.py"
+  ".claude/hooks/post_git_push_ci.py"
+)
+
+UPDATED=()
+SKIPPED=()
+
+for file in "${MANAGED_FILES[@]}"; do
+  SRC="$CONFIG_REPO/$file"
+  DST="./$file"
+
+  if [ ! -f "$SRC" ]; then
+    continue
+  fi
+
+  # ディレクトリが無ければ作成
+  mkdir -p "$(dirname "$DST")"
+
+  if [ ! -f "$DST" ]; then
+    # ファイルが存在しない → 新規コピー
+    cp "$SRC" "$DST"
+    UPDATED+=("$file (新規追加)")
+  elif ! diff -q "$SRC" "$DST" >/dev/null 2>&1; then
+    # 差分あり → 上書き
+    diff --color=auto -u "$DST" "$SRC" | head -30
+    cp "$SRC" "$DST"
+    UPDATED+=("$file (更新)")
+  else
+    SKIPPED+=("$file (最新)")
+  fi
+done
+```
+
+**テンプレートファイルの同期ロジック:**
+
+```bash
+TEMPLATE_FILES=(
+  ".github/workflows/security.yml"
+  ".github/workflows/ci.yml"
+)
+
+for file in "${TEMPLATE_FILES[@]}"; do
+  SRC="$CONFIG_REPO/$file"
+  DST="./$file"
+
+  if [ ! -f "$SRC" ]; then
+    continue
+  fi
+
+  mkdir -p "$(dirname "$DST")"
+
+  if [ ! -f "$DST" ]; then
+    # 存在しない → コピー
+    cp "$SRC" "$DST"
+    UPDATED+=("$file (新規追加)")
+  elif ! diff -q "$SRC" "$DST" >/dev/null 2>&1; then
+    # 差分あり → diff を表示
+    echo "📄 $file に差分があります:"
+    diff -u "$DST" "$SRC" | head -50
+    if [ "$MODE" = "full" ]; then
+      # full mode: Claude が diff を確認し、ユーザーに対話的に確認してから上書き
+      # ※ このコマンドは Claude Code が実行するため、Claude がユーザーに確認を取る
+      cp "$SRC" "$DST"
+      UPDATED+=("$file (確認後に更新)")
+    else
+      # quick / check-only mode: 差分を報告のみ
+      UPDATED+=("$file (差分あり・要確認)")
+    fi
+  else
+    SKIPPED+=("$file (最新)")
+  fi
+done
+
+# Issue/PR テンプレート: 欠落ファイルのみ追加
+TEMPLATE_DIRS=(
+  ".github/ISSUE_TEMPLATE"
+)
+for dir in "${TEMPLATE_DIRS[@]}"; do
+  SRC_DIR="$CONFIG_REPO/$dir"
+  DST_DIR="./$dir"
+  if [ -d "$SRC_DIR" ]; then
+    mkdir -p "$DST_DIR"
+    for src_file in "$SRC_DIR"/*; do
+      [ ! -f "$src_file" ] && continue  # 空ディレクトリでの glob 対策
+      dst_file="$DST_DIR/$(basename "$src_file")"
+      if [ ! -f "$dst_file" ]; then
+        cp "$src_file" "$dst_file"
+        UPDATED+=("$dir/$(basename "$src_file") (新規追加)")
+      fi
+    done
+  fi
+done
+
+# PR テンプレート
+PR_TEMPLATE_SRC="$CONFIG_REPO/.github/pull_request_template.md"
+PR_TEMPLATE_DST="./.github/pull_request_template.md"
+if [ -f "$PR_TEMPLATE_SRC" ] && [ ! -f "$PR_TEMPLATE_DST" ]; then
+  mkdir -p .github
+  cp "$PR_TEMPLATE_SRC" "$PR_TEMPLATE_DST"
+  UPDATED+=(".github/pull_request_template.md (新規追加)")
+fi
+```
+
+**結果パターン:**
+
+| 状態                 | 出力                                              |
+| -------------------- | ------------------------------------------------- |
+| 全ファイル最新       | ✅ Config Template Sync: 全ファイル最新           |
+| 更新あり             | 🔧 Config Template Sync: X 件更新                 |
+| 差分あり（確認待ち） | ⚠️ Config Template Sync: X 件の差分あり（要確認） |
+| スキップ             | ⏭️ スキップ（config リポジトリ自身 / 管理外）     |
+
+**結果:**
+
+- ✅ Config Template Sync: 全ファイル最新
+- 🔧 Config Template Sync: X 件更新（更新ファイルをリスト表示）
+- ⚠️ Config Template Sync: X 件の差分あり（テンプレートファイルの確認待ち）
+- ⏭️ スキップ（config リポジトリ自身）
+
 ## Step 4: Cleanup Category
 
 ### 4.1 Branch Cleanup
@@ -2096,7 +2295,8 @@ fi
 ├── Renovate/Dependabot: ✅ Auto-update configured
 ├── Push Protection: ✅ Enabled (or ⚠️ Disabled)
 ├── Dependency Review: ✅ Configured (or ⚠️ Not configured)
-└── Deploy Env Protection: ✅ Configured (or ⚠️ No reviewers / ⏭️ No environments)
+├── Deploy Env Protection: ✅ Configured (or ⚠️ No reviewers / ⏭️ No environments)
+└── Config Template Sync: ✅ All files up to date (or 🔧 X files updated / ⏭️ Skipped)
 
 ## Cleanup (3/4)
 ├── Branches: 🗑️ 8 merged branches can be deleted
