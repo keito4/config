@@ -1497,40 +1497,7 @@ echo "🔧 SECURITY.md を追加しました"
 - ✅ SECURITY.md 設定済み
 - 🔧 SECURITY.md を追加しました
 
-### 3.17 Release Drafter チェック
-
-リリースノート自動生成が設定されているか確認：
-
-**確認ロジック:**
-
-```bash
-HAS_RELEASE_DRAFTER=false
-[ -f ".github/workflows/release-drafter.yml" ] && HAS_RELEASE_DRAFTER=true
-```
-
-**MODE が `full` かつ未設定の場合:**
-
-```bash
-TEMPLATE_WF="/usr/local/share/config-templates/workflows/release-drafter.yml"
-TEMPLATE_CFG="/usr/local/share/config-templates/github/release-drafter.yml"
-
-mkdir -p .github/workflows
-if [ -f "$TEMPLATE_WF" ]; then
-  cp "$TEMPLATE_WF" .github/workflows/release-drafter.yml
-  cp "$TEMPLATE_CFG" .github/release-drafter.yml
-else
-  curl -fsSL "https://raw.githubusercontent.com/keito4/config/main/templates/workflows/release-drafter.yml" -o .github/workflows/release-drafter.yml
-  curl -fsSL "https://raw.githubusercontent.com/keito4/config/main/templates/github/release-drafter.yml" -o .github/release-drafter.yml
-fi
-echo "🔧 Release Drafter を追加しました"
-```
-
-**結果:**
-
-- ✅ Release Drafter 設定済み
-- 🔧 Release Drafter を追加しました
-
-### 3.18 package.json scripts 標準チェック
+### 3.17 package.json scripts 標準チェック
 
 Quality Gates で必要なスクリプトが揃っているか確認：
 
@@ -2281,7 +2248,6 @@ fi
 ├── Issue Template: ✅ Configured (or 🔧 Added)
 ├── CODEOWNERS: ✅ Configured (or ⚠️ Not configured)
 ├── SECURITY.md: ✅ Configured (or 🔧 Added)
-├── Release Drafter: ✅ Configured (or 🔧 Added)
 ├── commitlint: ✅ Configured with commit-msg hook (or ⚠️ Hook missing / ⚠️ Not configured)
 ├── .editorconfig: ✅ Configured (or 🔧 Generated)
 ├── scripts: ✅ All standard scripts defined (or ⚠️ Missing: test, lint)
@@ -2546,7 +2512,6 @@ Run this command regularly to maintain repository health:
 | Setup       | (Issue Template check)          | Issue テンプレート設定        |
 | Setup       | (CODEOWNERS check)              | コードオーナー設定            |
 | Setup       | (SECURITY.md check)             | セキュリティポリシー設定      |
-| Setup       | (Release Drafter check)         | リリースノート自動生成設定    |
 | Setup       | (scripts standard check)        | package.json scripts 標準確認 |
 | Setup       | (Push Protection check)         | Secret scanning push 防止     |
 | Setup       | (Dependency Review check)       | PR 依存関係脆弱性チェック     |

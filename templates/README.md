@@ -6,13 +6,12 @@
 
 ### ワークフロー（`workflows/`）
 
-| テンプレート                | 対象                             | 自動適用条件                     |
-| --------------------------- | -------------------------------- | -------------------------------- |
-| `dependabot-auto-merge.yml` | Dependabot を使う全プロジェクト  | dependabot.yml が存在する場合    |
-| `label-sync.yml`            | 全プロジェクト                   | 常に推奨                         |
-| `release-drafter.yml`       | リリース管理が必要なプロジェクト | 常に推奨                         |
-| `stale.yml`                 | Issue/PR が多いプロジェクト      | 常に推奨                         |
-| `terraform-drift.yml`       | Terraform プロジェクト           | Terraform ファイルが存在する場合 |
+| テンプレート                | 対象                            | 自動適用条件                     |
+| --------------------------- | ------------------------------- | -------------------------------- |
+| `dependabot-auto-merge.yml` | Dependabot を使う全プロジェクト | dependabot.yml が存在する場合    |
+| `label-sync.yml`            | 全プロジェクト                  | 常に推奨                         |
+| `stale.yml`                 | Issue/PR が多いプロジェクト     | 常に推奨                         |
+| `terraform-drift.yml`       | Terraform プロジェクト          | Terraform ファイルが存在する場合 |
 
 ### pre-commit（`pre-commit-config-*.yaml`）
 
@@ -34,7 +33,6 @@
 | `CODEOWNERS`               | チーム開発でのレビュー自動アサイン               | 中     |
 | `SECURITY.md`              | セキュリティポリシー                             | 中     |
 | `CONTRIBUTING.md`          | コントリビューションガイド                       | 低     |
-| `release-drafter.yml`      | Release Drafter の設定                           | 中     |
 
 ### その他
 
