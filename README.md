@@ -10,20 +10,396 @@ It includes settings for various tools, such as the shell (Zsh), Git, npm, and V
 
 ## Directory Structure
 
-- `.claude/`: Claude Code configuration directory containing settings, commands, agents, hooks, and skills. User-specific settings like `settings.local.json` are git-ignored while shared configurations are version-controlled.
-- `.codex/`: Contains MCP (Model Context Protocol) server configuration (`config.toml`) for Claude Code integration with external services like AWS, GitHub, Playwright, n8n, Supabase, and Vercel.
-- `.devcontainer/`: Development container configuration providing containerized development environment with consistent tooling across different machines. The `templates/` subdirectory contains optional DevContainer features templates for additional language support (Python, Ruby, Go, Java, .NET).
-- `.github/`: GitHub configuration including workflows for CI/CD, security scanning, and release automation. The `templates/` subdirectory contains reusable workflow templates for unified CI with coverage reporting and monorepo releases with change detection.
-- `brew/`: Contains Brewfiles for different operating systems (Linux, macOS) and dependency configurations, including lock files for reproducible package installations. Supports categorized package management and dependency analysis.
-- `credentials/`: Contains templates and scripts for secure credential management using 1Password CLI integration.
-- `docs/`: Documentation directory containing setup guides, usage instructions, and reference materials. The `setup/` subdirectory provides project-type-specific setup guides (Next.js, React+Vite, npm libraries, Flutter, Android, Desktop extensions). See [docs/setup/README.md](docs/setup/README.md) for the complete list.
-- `eslint/`: Contains recommended ESLint complexity rules template and documentation to prevent technical debt accumulation. See [eslint/README.md](eslint/README.md) for usage guidelines.
-- `templates/`: Project templates including testing configuration templates for Next.js projects. The `testing/` subdirectory provides comprehensive test setup (21 test types, 5 levels: minimal → standard → comprehensive → full → enterprise). Use `/setup-tests` command or see [templates/testing/README.md](templates/testing/README.md) for details.
-- `dot/`: Directory for dotfiles and configuration files that are typically placed in the home directory, including Zsh configuration with comprehensive aliases, functions, and environment setup.
-- `git/`: Contains Git configuration files including gitconfig, gitignore, commitlint configuration with i18n support, and modular configuration files in the `gitconfig.d/` subdirectory. See [git/README.md](git/README.md) for details.
-- `npm/`: Contains npm global package configuration.
-- `script/`: Contains utility scripts for exporting configuration settings (`export.sh`), importing configuration settings (`import.sh`), credential management (`credentials.sh`), Homebrew dependency management (`brew-deps.sh`), semantic versioning (`version.sh`), and automated library updates for Codex/Claude Code tooling (`update-libraries.sh`). See [script/README.md](script/README.md) for details.
-- `vscode/`: Contains Visual Studio Code configuration including extensions list and installation documentation. The `templates/` subdirectory contains project-specific settings templates such as Tailwind CSS + CVA IntelliSense configuration. See [vscode/README.md](vscode/README.md) for details.
+```
+config/
+├── .actrc                          # act（ローカルGitHub Actions実行）設定
+├── .claude/                        # Claude Code 設定
+│   ├── CLAUDE.md                   # 開発標準・ガイドライン
+│   ├── settings.json               # 共有パーミッション・環境変数・フック
+│   ├── settings.local.json.template # ユーザー固有設定テンプレート
+│   ├── .gitignore
+│   ├── devcontainer-recommendations.md
+│   ├── agents/                     # 専用エージェント設定
+│   │   ├── README.md
+│   │   ├── act-local-ci-manager.md
+│   │   ├── docs-consistency-checker.md
+│   │   ├── issue-resolver-*.md     # Issue解決エージェント群（orchestrator, code-quality, dependencies, documentation, security, test-coverage）
+│   │   ├── playwright-test-generator.md
+│   │   ├── playwright-test-healer.md
+│   │   └── playwright-test-planner.md
+│   ├── commands/                   # カスタムスラッシュコマンド
+│   │   ├── README.md
+│   │   ├── branch-cleanup.md
+│   │   ├── changelog-generator.md
+│   │   ├── code-complexity-check.md
+│   │   ├── codespaces-secrets.md
+│   │   ├── config-base-sync-check.md
+│   │   ├── config-base-sync-update.md
+│   │   ├── config-contribution-discover.md
+│   │   ├── container-health.md
+│   │   ├── create-codespace.md
+│   │   ├── create-pr.md
+│   │   ├── dependency-health-check.md
+│   │   ├── devcontainer-checklist.md
+│   │   ├── git-sync.md
+│   │   ├── pre-pr-checklist.md
+│   │   ├── repo-maintenance.md
+│   │   ├── security-credential-scan.md
+│   │   ├── security-review.md
+│   │   ├── setup-ci.md
+│   │   ├── setup-husky.md
+│   │   ├── setup-new-repo.md
+│   │   ├── setup-team-protection.md
+│   │   ├── setup-tests.md
+│   │   ├── similarity-analysis.md
+│   │   ├── sync-settings.md
+│   │   ├── test-coverage-trend.md
+│   │   ├── update-actions.md
+│   │   └── update-claude-code.md
+│   ├── hooks/                      # イベント駆動の自動化スクリプト
+│   │   ├── README.md
+│   │   ├── block_dangerous_commands.py
+│   │   ├── block_git_no_verify.py
+│   │   ├── post_git_push_ci.py
+│   │   ├── post_pr_ai_review.py
+│   │   ├── post_pr_ci_watch.py
+│   │   ├── pre_exit_plan_ai_review.py
+│   │   └── pre_git_quality_gates.py
+│   ├── plugins/                    # プラグイン設定
+│   │   ├── README.md
+│   │   ├── config.json
+│   │   ├── known_marketplaces.json.template
+│   │   └── plugins.txt
+│   └── skills/                     # スキル設定
+│       ├── README.md
+│       ├── ci-check.md
+│       ├── codex-review.md
+│       ├── gemini-review.md
+│       └── skills.txt
+├── .claude-plugin/                 # LSP プラグイン設定
+│   └── plugin.json
+├── .codex/                         # Codex CLI 設定
+│   └── config.toml                 # MCP サーバー設定
+├── .cursor/                        # Cursor エディタ設定
+│   └── rules/base.mdc
+├── .devcontainer/                  # DevContainer 設定
+│   ├── Dockerfile
+│   ├── README.md
+│   ├── VERSIONING.md
+│   ├── devcontainer.json           # ローカル DevContainer 設定
+│   ├── claude-settings.json        # DevContainer 用 Claude 共有設定
+│   ├── claude-settings.local.json  # DevContainer 用 Claude ローカル設定
+│   ├── claude-settings-README.md
+│   ├── codespaces/
+│   │   └── devcontainer.json       # GitHub Codespaces 用設定
+│   └── templates/
+│       ├── README.md
+│       ├── .filelengthignore.template
+│       ├── optional-features.json  # オプション言語サポート
+│       └── project-presets.json    # プロジェクトプリセット
+├── .gemini/                        # Gemini CLI 設定
+│   └── settings.json
+├── .github/                        # GitHub 設定
+│   ├── PULL_REQUEST_TEMPLATE.md
+│   ├── dependabot.yml
+│   ├── labels.yml
+│   ├── slack-ci-failure.json
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.yml
+│   │   └── feature_request.yml
+│   ├── actions/
+│   │   └── coverage-comment/       # カバレッジコメント用カスタムアクション
+│   │       ├── README.md
+│   │       ├── action.yml
+│   │       └── example-integration.yml
+│   └── workflows/                  # GitHub Actions ワークフロー
+│       ├── ci.yml                  # CI パイプライン
+│       ├── claude.yml              # Claude Code 統合
+│       ├── claude-code-review.yml  # Claude コードレビュー
+│       ├── container-security.yml  # コンテナセキュリティスキャン
+│       ├── coverage-report.yml     # カバレッジレポート
+│       ├── dependabot-auto-merge.yml # Dependabot 自動マージ
+│       ├── docker-image.yml        # Docker イメージビルド
+│       ├── label-sync.yml          # ラベル同期
+│       ├── manual-release.yml      # 手動リリース
+│       ├── rebuild-docker-cache.yml # Docker キャッシュ再構築
+│       ├── security.yml            # セキュリティスキャン
+│       ├── update-claude-plugins.yml # Claude プラグイン更新
+│       ├── update-dev-tools.yml    # 開発ツール更新
+│       ├── update-libraries.yml    # ライブラリ自動更新
+│       └── templates/              # 再利用可能ワークフローテンプレート
+│           ├── README.md
+│           ├── monorepo-release.yml
+│           ├── tls-evidence.yml
+│           ├── unified-ci.yml
+│           ├── update-db-types.yml
+│           └── zap-baseline.yml
+├── .husky/                         # Git フック
+│   ├── commit-msg
+│   └── pre-commit
+├── .vscode/                        # VS Code 設定
+│   ├── extensions.json
+│   └── settings.json
+├── .zsh/                           # Zsh 設定モジュール
+│   ├── configs/
+│   │   ├── aliases.zsh
+│   │   ├── color.zsh
+│   │   ├── completion.zsh
+│   │   ├── history.zsh
+│   │   ├── keybindings.zsh
+│   │   ├── prompt.zsh
+│   │   ├── pre/                    # 初期化前設定
+│   │   │   ├── .env
+│   │   │   ├── .env.secret.template
+│   │   │   ├── .gitignore
+│   │   │   ├── completion.zsh
+│   │   │   ├── envup.zsh
+│   │   │   └── path.zsh
+│   │   └── virtual/               # 言語バージョン管理
+│   │       ├── dart.zsh
+│   │       ├── java.zsh
+│   │       ├── node.zsh
+│   │       ├── php.zsh
+│   │       └── ruby.zsh
+│   └── functions/                  # カスタムシェル関数
+│       ├── docker
+│       ├── gcp
+│       ├── git
+│       ├── mkcd
+│       ├── op
+│       ├── peco
+│       ├── process
+│       ├── terraform
+│       └── utilities
+├── brew/                           # Homebrew 設定
+│   ├── README.md
+│   ├── CategorizedBrewfile
+│   ├── LinuxBrewfile
+│   ├── LinuxBrewfile.lock.json
+│   ├── MacOSBrewfile
+│   ├── MacOSBrewfile.lock.json
+│   ├── StandaloneBrewfile
+│   └── categories.json
+├── credentials/                    # 認証情報管理
+│   ├── README.md
+│   ├── setup.md
+│   ├── .gitignore
+│   └── templates/
+│       ├── devcontainer.env.template
+│       └── mcp.env.template
+├── docs/                           # ドキュメント
+│   ├── README.md
+│   ├── mcp-servers-guide.md
+│   ├── sentry-setup-guide.md
+│   ├── tool-catalog.md
+│   ├── using-config-base-image.md
+│   ├── adr/                        # Architecture Decision Records
+│   │   ├── README.md
+│   │   ├── 0001-devcontainer-base-image.md
+│   │   └── 0002-auto-version-updates.md
+│   └── setup/                      # プロジェクト種別セットアップガイド
+│       ├── README.md
+│       ├── desktop-extension-ts.md
+│       ├── mobile-android.md
+│       ├── mobile-flutter.md
+│       ├── npm-library-cli.md
+│       ├── spa-react-vite.md
+│       └── web-app-nextjs.md
+├── dot/                            # ホームディレクトリ用 dotfiles
+│   ├── .peco/config.json
+│   ├── .zprofile
+│   ├── .zshrc
+│   └── .zshrc.devcontainer
+├── eslint/                         # ESLint 設定テンプレート
+│   ├── README.md
+│   └── complexity-rules.mjs
+├── git/                            # Git 設定
+│   ├── README.md
+│   ├── commitlint.config.js
+│   ├── gitconfig
+│   └── gitignore
+├── npm/                            # npm グローバルパッケージ設定
+│   └── global.json
+├── script/                         # ユーティリティスクリプト
+│   ├── README.md
+│   ├── .shellcheck-exclude
+│   ├── aerospace-fix-layout
+│   ├── branch-cleanup.sh
+│   ├── brew-deps.sh
+│   ├── changelog-generator.sh
+│   ├── check-file-length.sh
+│   ├── check-image-version.sh
+│   ├── code-complexity-check.sh
+│   ├── codespaces-secrets.sh
+│   ├── container-health.sh
+│   ├── create-codespace.sh
+│   ├── credentials.sh
+│   ├── dependency-health-check.sh
+│   ├── export.sh
+│   ├── fix-container-plugins.sh
+│   ├── import.sh
+│   ├── install-claude-plugins.sh
+│   ├── install-npm-globals.sh
+│   ├── install-skills.sh
+│   ├── pre-pr-checklist.sh
+│   ├── restore-cli-auth.sh
+│   ├── security-credential-scan.sh
+│   ├── setup-claude-build.sh
+│   ├── setup-claude.sh
+│   ├── setup-env.sh
+│   ├── setup-file-length-check.sh
+│   ├── setup-lsp.sh
+│   ├── setup-mcp.sh
+│   ├── setup-team-protection.sh
+│   ├── test-coverage-trend.sh
+│   ├── update-actions.sh
+│   ├── update-all.sh
+│   ├── update-claude-code.sh
+│   ├── update-libraries.sh
+│   ├── verify-container-setup.sh
+│   ├── version.sh
+│   ├── credentials/
+│   │   └── providers/op.sh
+│   └── lib/                        # 共通ライブラリ
+│       ├── brew_categories.py
+│       ├── claude_plugins.sh
+│       ├── config.sh
+│       ├── devcontainer.sh
+│       ├── output.sh
+│       └── platform.sh
+├── templates/                      # プロジェクトテンプレート
+│   ├── README.md
+│   ├── editorconfig
+│   ├── github/                     # GitHub テンプレート
+│   │   ├── CODEOWNERS
+│   │   ├── CONTRIBUTING.md
+│   │   ├── SECURITY.md
+│   │   ├── dependabot.yml
+│   │   ├── labels.yml
+│   │   ├── pull_request_template.md
+│   │   ├── renovate.json
+│   │   └── ISSUE_TEMPLATE/
+│   │       ├── bug_report.yml
+│   │       ├── config.yml
+│   │       └── feature_request.yml
+│   ├── pre-commit-config-base.yaml
+│   ├── pre-commit-config-full.yaml
+│   ├── pre-commit-config-terraform.yaml
+│   ├── testing/                    # テスト設定テンプレート
+│   │   ├── README.md
+│   │   ├── ci-test-jobs.yml
+│   │   ├── jest.config.js
+│   │   ├── jest.polyfills.js
+│   │   ├── jest.regression.config.js
+│   │   ├── jest.scenario.config.js
+│   │   ├── jest.setup.js
+│   │   ├── playwright.config.ts
+│   │   ├── playwright.regression.config.ts
+│   │   └── examples/              # テスト実装例（21種）
+│   │       ├── a11y.spec.ts
+│   │       ├── api-route.test.ts
+│   │       ├── api.test.ts
+│   │       ├── component.test.tsx
+│   │       ├── contract.test.ts
+│   │       ├── database.test.ts
+│   │       ├── e2e-auth.spec.ts
+│   │       ├── edge-functions.test.ts
+│   │       ├── hook.test.ts
+│   │       ├── i18n.test.tsx
+│   │       ├── integration.test.ts
+│   │       ├── load.test.ts
+│   │       ├── mutation.config.js
+│   │       ├── performance.spec.ts
+│   │       ├── property-based.test.ts
+│   │       ├── regression-auth.spec.ts
+│   │       ├── security.test.ts
+│   │       ├── smoke.test.ts
+│   │       ├── snapshot.test.tsx
+│   │       ├── ssr-hydration.spec.ts
+│   │       └── visual.spec.ts
+│   └── workflows/                  # ワークフローテンプレート
+│       ├── dependabot-auto-merge.yml
+│       ├── label-sync.yml
+│       ├── stale.yml
+│       └── terraform-drift.yml
+├── test/                           # テスト
+│   ├── commitlint-config.test.js
+│   ├── config-validation.test.js
+│   ├── credential-filtering.test.js
+│   ├── eslint-config.test.js
+│   ├── jest-config.test.js
+│   ├── python/
+│   │   └── test_hooks.py
+│   ├── integration/                # 統合テスト（BATS）
+│   │   ├── core-scripts.bats
+│   │   ├── coverage-report-workflow.bats
+│   │   ├── development-tools.bats
+│   │   ├── e2e-scenarios.bats
+│   │   ├── install_claude_plugins.bats
+│   │   ├── lib_functions.bats
+│   │   ├── platform_basic.bats
+│   │   ├── security-scripts.bats
+│   │   ├── setup_claude.bats
+│   │   ├── update_actions.bats
+│   │   ├── update_all.bats
+│   │   ├── update_libraries.bats
+│   │   ├── verify_container_setup.bats
+│   │   └── workflows.bats
+│   └── test_helper/
+│       └── test_helper.bash
+├── vscode/                         # VS Code 設定
+│   ├── README.md
+│   └── extensions.txt
+├── AGENTS.md                       # AI エージェント設定
+├── CLAUDE.md                       # 開発標準（ルート）
+├── LICENSE
+├── Makefile
+├── README.md
+├── SECURITY.md
+├── commitlint.config.js
+├── cspell.json
+├── eslint.config.mjs
+├── jest.config.js
+├── package.json
+├── package-lock.json
+├── pnpm-workspace.yaml
+├── .dockerignore
+├── .editorconfig
+├── .env.example
+├── .filelengthignore.template
+├── .gitattributes
+├── .gitignore
+├── .gitleaks.toml
+├── .lsp.json
+├── .mcp.json
+├── .node-version
+├── .npmrc
+├── .prettierignore
+├── .prettierrc
+├── .releaserc.json
+└── .trivyignore
+```
+
+**ファイル総数**: 321 ファイル（Git 管理対象）
+
+各ディレクトリの概要：
+
+- **`.claude/`**: Claude Code 設定（settings, commands, agents, hooks, skills, plugins）
+- **`.codex/`**: Codex CLI の MCP サーバー設定
+- **`.devcontainer/`**: DevContainer / Codespaces 設定。`templates/` にオプション言語サポート
+- **`.github/`**: GitHub Actions ワークフロー、Issue/PR テンプレート、カスタムアクション
+- **`.zsh/`**: Zsh モジュール構成（aliases, functions, 言語バージョン管理）
+- **`brew/`**: OS 別 Brewfile とカテゴリ管理
+- **`credentials/`**: 1Password CLI 連携の認証情報テンプレート
+- **`docs/`**: セットアップガイド、ADR、ツールカタログ
+- **`dot/`**: ホームディレクトリ用 dotfiles（.zshrc, .zprofile 等）
+- **`eslint/`**: ESLint 複雑度ルールテンプレート
+- **`git/`**: gitconfig, gitignore, commitlint 設定
+- **`npm/`**: npm グローバルパッケージ定義
+- **`script/`**: インポート/エクスポート、セットアップ、更新等のユーティリティスクリプト
+- **`templates/`**: GitHub, テスト, ワークフローの再利用可能テンプレート
+- **`test/`**: Jest 単体テスト、BATS 統合テスト、Python フックテスト
+- **`vscode/`**: VS Code 拡張機能リストと設定
 
 ## Security
 
