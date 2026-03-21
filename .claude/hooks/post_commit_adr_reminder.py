@@ -14,6 +14,7 @@ data = json.load(sys.stdin)
 
 tool_name = data.get("tool_name", "")
 tool_input = data.get("tool_input", {}) or {}
+tool_response = data.get("tool_response", {}) or {}
 
 if tool_name != "Bash":
     sys.exit(0)
@@ -25,6 +26,14 @@ if not re.search(r"git\s+commit", command):
 
 # --help, --dry-run は除外
 if any(flag in command for flag in ["--help", "-h", "--dry-run", "-n"]):
+    sys.exit(0)
+
+# コミットが実際に成功したか確認（tool_responseのstdoutをチェック）
+stdout = tool_response.get("stdout", "")
+stderr = tool_response.get("stderr", "")
+combined = stdout + stderr
+# 成功パターン: "[branch hash] message" 形式
+if not re.search(r"\[[^\]]+\s+[0-9a-f]{5,}\]", combined):
     sys.exit(0)
 
 # HEADの変更ファイルを取得
