@@ -52,6 +52,10 @@ config::import_claude() {
   for dir in "${CONFIG_CLAUDE_SHARED_DIRS[@]}"; do
     if [[ -d "$source_dir/$dir" ]]; then
       if [[ "$use_symlink" == "1" ]]; then
+        # 既存の通常ディレクトリを削除してからリンク（シンボリックリンクは ln -snf で上書き可能）
+        if [[ -d "$target_dir/$dir" && ! -L "$target_dir/$dir" ]]; then
+          rm -rf "$target_dir/$dir"
+        fi
         ln -snf "$source_dir/$dir" "$target_dir/$dir"
         echo "🔗 Linked $dir/"
       else
@@ -188,6 +192,9 @@ config::import_codex() {
   for dir in "${CONFIG_CODEX_SHARED_DIRS[@]}"; do
     if [[ -d "$source_dir/$dir" ]]; then
       if [[ "$use_symlink" == "1" ]]; then
+        if [[ -d "$target_dir/$dir" && ! -L "$target_dir/$dir" ]]; then
+          rm -rf "$target_dir/$dir"
+        fi
         ln -snf "$source_dir/$dir" "$target_dir/$dir"
         echo "🔗 Linked codex/$dir/"
       else
@@ -261,6 +268,9 @@ config::import_cursor() {
   for dir in "${CONFIG_CURSOR_SHARED_DIRS[@]}"; do
     if [[ -d "$source_dir/$dir" ]]; then
       if [[ "$use_symlink" == "1" ]]; then
+        if [[ -d "$target_dir/$dir" && ! -L "$target_dir/$dir" ]]; then
+          rm -rf "$target_dir/$dir"
+        fi
         ln -snf "$source_dir/$dir" "$target_dir/$dir"
         echo "🔗 Linked cursor/$dir/"
       else
