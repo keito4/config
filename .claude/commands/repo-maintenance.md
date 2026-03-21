@@ -2023,6 +2023,9 @@ fi
 | マネージド   | `.claude/hooks/pre_git_quality_gates.py`    | 常に config の最新版で上書き |
 | マネージド   | `.claude/hooks/post_git_push_ci.py`         | 常に config の最新版で上書き |
 | マネージド   | `.claude/hooks/post_commit_adr_reminder.py` | 常に config の最新版で上書き |
+| マネージド   | `.claude/rules/development-standards.md`    | 常に config の最新版で上書き |
+| マネージド   | `.claude/rules/git-conventions.md`          | 常に config の最新版で上書き |
+| マネージド   | `.claude/rules/release-types.md`            | 常に config の最新版で上書き |
 | テンプレート | `.github/workflows/security.yml`            | 差分表示 → 確認後に上書き    |
 | テンプレート | `.github/workflows/ci.yml`                  | 差分表示 → 確認後に上書き    |
 | テンプレート | `.github/ISSUE_TEMPLATE/*`                  | 欠落ファイルのみ追加         |
@@ -2068,6 +2071,9 @@ MANAGED_FILES=(
   ".claude/hooks/pre_git_quality_gates.py"
   ".claude/hooks/post_git_push_ci.py"
   ".claude/hooks/post_commit_adr_reminder.py"
+  ".claude/rules/development-standards.md"
+  ".claude/rules/git-conventions.md"
+  ".claude/rules/release-types.md"
 )
 
 UPDATED=()
