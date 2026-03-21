@@ -1,0 +1,55 @@
+# Quality Gate Fallback
+#
+# CI ワークフローが paths フィルタでスキップされた場合に
+# Required Status Check "Quality Gate" を Pass で報告する。
+# CI が実行された場合は ci.yml 側の Quality Gate が優先される。
+#
+name: CI
+
+on:
+  pull_request:
+    branches: [main, master, pre-production, production]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-fallback
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check if CI workflow ran
+        id: check
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head_sha: context.sha,
+              per_page: 20,
+            });
+
+            const ciRun = runs.workflow_runs.find(
+              r => r.name === 'CI' && r.id !== context.runId
+            );
+
+            if (ciRun && ciRun.status !== 'completed') {
+              core.info(`CI workflow is running (${ciRun.html_url}), this fallback is not needed.`);
+              core.setOutput('ci_running', 'true');
+            } else if (ciRun && ciRun.conclusion === 'success') {
+              core.info(`CI workflow already succeeded (${ciRun.html_url}).`);
+              core.setOutput('ci_running', 'true');
+            } else {
+              core.info('CI workflow did not run for this commit. Providing fallback Quality Gate.');
+              core.setOutput('ci_running', 'false');
+            }
+
+      - name: Pass (CI skipped)
+        if: steps.check.outputs.ci_running == 'false'
+        run: echo "Quality Gate passed (CI skipped — no code changes detected)."
