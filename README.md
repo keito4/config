@@ -47,6 +47,7 @@ config/
 │   │   ├── security-credential-scan.md
 │   │   ├── security-review.md
 │   │   ├── setup-ci.md
+│   │   ├── setup-doppler.md        # Doppler シークレット管理セットアップ
 │   │   ├── setup-husky.md
 │   │   ├── setup-new-repo.md
 │   │   ├── setup-team-protection.md
