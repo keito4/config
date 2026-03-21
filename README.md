@@ -58,13 +58,16 @@ config/
 │   │   └── update-claude-code.md
 │   ├── hooks/                      # イベント駆動の自動化スクリプト
 │   │   ├── README.md
+│   │   ├── block_config_edit.py    # リンター設定の編集防止
 │   │   ├── block_dangerous_commands.py
 │   │   ├── block_git_no_verify.py
+│   │   ├── post_edit_auto_lint.py  # ファイル編集後の自動リント
 │   │   ├── post_git_push_ci.py
 │   │   ├── post_pr_ai_review.py
 │   │   ├── post_pr_ci_watch.py
 │   │   ├── pre_exit_plan_ai_review.py
-│   │   └── pre_git_quality_gates.py
+│   │   ├── pre_git_quality_gates.py
+│   │   └── stop_test_verification.py # 完了前テスト検証
 │   ├── plugins/                    # プラグイン設定
 │   │   ├── README.md
 │   │   ├── config.json
@@ -617,13 +620,16 @@ For more information about LSP support in Claude Code, see [Claude Code LSP Guid
 
 Hooksは、Claude Codeの特定のイベントに自動実行されるスクリプトです。`.claude/hooks/` ディレクトリに格納されており、config-base イメージにも組み込まれるため DevContainer/Codespaces 環境でデフォルト有効です。
 
-| Hook                         | トリガー                   | 目的                                        |
-| ---------------------------- | -------------------------- | ------------------------------------------- |
-| `block_git_no_verify.py`     | `PreToolUse(Bash)`         | `--no-verify` や `HUSKY=0` の使用をブロック |
-| `pre_git_quality_gates.py`   | `PreToolUse(Bash)`         | git commit/push 前に品質チェックを自動実行  |
-| `post_git_push_ci.py`        | `PostToolUse(Bash)`        | git push 後に CI 状態を監視・報告           |
-| `post_pr_ai_review.py`       | `PostToolUse(Bash)`        | PR 作成後に AI レビューを実行               |
-| `pre_exit_plan_ai_review.py` | `PreToolUse(ExitPlanMode)` | プラン承認前に AI レビューを実行            |
+| Hook                         | トリガー                   | 目的                                                      |
+| ---------------------------- | -------------------------- | --------------------------------------------------------- |
+| `block_git_no_verify.py`     | `PreToolUse(Bash)`         | `--no-verify` や `HUSKY=0` の使用をブロック               |
+| `block_config_edit.py`       | `PreToolUse(Write\|Edit)`  | リンター/フォーマッター設定ファイルの編集をブロック       |
+| `pre_git_quality_gates.py`   | `PreToolUse(Bash)`         | git commit/push 前に品質チェックを自動実行                |
+| `post_edit_auto_lint.py`     | `PostToolUse(Write\|Edit)` | ファイル編集後に自動フォーマット＋リント → 自己修正ループ |
+| `post_git_push_ci.py`        | `PostToolUse(Bash)`        | git push 後に CI 状態を監視・報告                         |
+| `post_pr_ai_review.py`       | `PostToolUse(Bash)`        | PR 作成後に AI レビューを実行                             |
+| `pre_exit_plan_ai_review.py` | `PreToolUse(ExitPlanMode)` | プラン承認前に AI レビューを実行                          |
+| `stop_test_verification.py`  | `Stop`                     | エージェント完了前にテスト実行 → 失敗時は修正を促す       |
 
 **Quality Gates（自動検出方式）:**
 
