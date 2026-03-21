@@ -132,7 +132,7 @@ Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + cov
 | `block_git_no_verify.py`      | Pre git commit/push | Block `--no-verify` and `HUSKY=0`    |
 | `pre_git_quality_gates.py`    | Pre git commit/push | Auto-detect and run quality gates    |
 | `block_config_edit.py`        | Pre edit            | Protect configuration files          |
-| `block_dangerous_commands.py` | Pre bash            | Block destructive commands           |
+| `block_dangerous_commands.py` | Pre Bash            | Block destructive commands           |
 | `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint                 |
 | `post_git_push_ci.py`         | Post git push       | Monitor CI status                    |
 | `post_pr_ai_review.py`        | Post PR creation    | Run AI code review                   |
