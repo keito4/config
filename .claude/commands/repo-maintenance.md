@@ -2015,17 +2015,18 @@ fi
 
 **同期対象ファイルの分類:**
 
-| カテゴリ     | ファイル                                   | 同期ポリシー                 |
-| ------------ | ------------------------------------------ | ---------------------------- |
-| マネージド   | `.github/workflows/claude.yml`             | 常に config の最新版で上書き |
-| マネージド   | `.github/workflows/claude-code-review.yml` | 常に config の最新版で上書き |
-| マネージド   | `.claude/hooks/block_git_no_verify.py`     | 常に config の最新版で上書き |
-| マネージド   | `.claude/hooks/pre_git_quality_gates.py`   | 常に config の最新版で上書き |
-| マネージド   | `.claude/hooks/post_git_push_ci.py`        | 常に config の最新版で上書き |
-| テンプレート | `.github/workflows/security.yml`           | 差分表示 → 確認後に上書き    |
-| テンプレート | `.github/workflows/ci.yml`                 | 差分表示 → 確認後に上書き    |
-| テンプレート | `.github/ISSUE_TEMPLATE/*`                 | 欠落ファイルのみ追加         |
-| テンプレート | `.github/pull_request_template.md`         | 欠落時のみ追加               |
+| カテゴリ     | ファイル                                    | 同期ポリシー                 |
+| ------------ | ------------------------------------------- | ---------------------------- |
+| マネージド   | `.github/workflows/claude.yml`              | 常に config の最新版で上書き |
+| マネージド   | `.github/workflows/claude-code-review.yml`  | 常に config の最新版で上書き |
+| マネージド   | `.claude/hooks/block_git_no_verify.py`      | 常に config の最新版で上書き |
+| マネージド   | `.claude/hooks/pre_git_quality_gates.py`    | 常に config の最新版で上書き |
+| マネージド   | `.claude/hooks/post_git_push_ci.py`         | 常に config の最新版で上書き |
+| マネージド   | `.claude/hooks/post_commit_adr_reminder.py` | 常に config の最新版で上書き |
+| テンプレート | `.github/workflows/security.yml`            | 差分表示 → 確認後に上書き    |
+| テンプレート | `.github/workflows/ci.yml`                  | 差分表示 → 確認後に上書き    |
+| テンプレート | `.github/ISSUE_TEMPLATE/*`                  | 欠落ファイルのみ追加         |
+| テンプレート | `.github/pull_request_template.md`          | 欠落時のみ追加               |
 
 **マネージドファイル**: config リポジトリが正規のソースであり、プロジェクト側でカスタマイズしない前提のファイル。
 **テンプレートファイル**: プロジェクト固有のカスタマイズが入る可能性があるため、差分確認を挟む。
@@ -2066,6 +2067,7 @@ MANAGED_FILES=(
   ".claude/hooks/block_git_no_verify.py"
   ".claude/hooks/pre_git_quality_gates.py"
   ".claude/hooks/post_git_push_ci.py"
+  ".claude/hooks/post_commit_adr_reminder.py"
 )
 
 UPDATED=()
