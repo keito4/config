@@ -1,6 +1,6 @@
 # Agent Guidelines
 
-Always prefer simplicity over pathological complexity. YAGNI, KISS, DRY, and SOLID. No backward-compat shims or fallback paths unless they come free without adding cyclomatic complexity.
+Always prefer simplicity over pathological correctness. YAGNI, KISS, DRY. No backward-compat shims or fallback paths unless they come free without adding cyclomatic complexity.
 
 ## Operational Rules
 
