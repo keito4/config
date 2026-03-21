@@ -9,6 +9,7 @@ import sys
 import json
 import subprocess
 import re
+import shlex
 
 data = json.load(sys.stdin)
 
@@ -25,7 +26,11 @@ if not re.search(r"git\s+commit", command):
     sys.exit(0)
 
 # --help, --dry-run は除外
-if any(flag in command for flag in ["--help", "-h", "--dry-run", "-n"]):
+try:
+    tokens = shlex.split(command)
+except ValueError:
+    tokens = command.split()
+if any(flag in tokens for flag in ["--help", "-h", "--dry-run", "-n"]):
     sys.exit(0)
 
 # コミットが実際に成功したか確認（tool_responseのstdoutをチェック）
