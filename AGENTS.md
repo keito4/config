@@ -142,29 +142,3 @@ Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + cov
 | `stop_test_verification.py`   | Stop                | Verify test results on session end   |
 
 <!-- END AUTO-GENERATED -->
-
-## Development Standards
-
-### Code Quality Requirements
-
-- **Test-Driven Development (TDD)**: Red -> Green -> Refactor methodology with 70%+ line coverage requirement
-- **Static Quality Gates**: Automated linting, formatting, security analysis, and license checking
-- **Git Workflow**: Conventional commits, branch naming conventions, and pull request requirements
-- **Release Types Required for Tooling Changes**: Commits that touch `.codex/**`, `.devcontainer/codex*`, `package*.json`, or `npm/global.json` must use release-triggering types (`feat` / `fix` / `perf` / `revert` / `docs`). commitlint blocks `chore` etc. to align with semantic-release.
-
-### AI Prompt Design Guidelines
-
-- Structured approach for requirements definition, implementation, and bug reporting
-- Clear separation between requirements gathering and code generation phases
-- Emphasis on test-first development practices
-
-### Definition of Ready/Done Criteria
-
-- **Ready**: Acceptance criteria defined, dependencies resolved
-- **Done**: Quality gates passed, documentation updated, monitoring stable, release notes complete
-
-### Git Conventions
-
-- Branch naming: `feat|fix|chore/<issue#>-slug`
-- Commit format: Conventional Commits
-- PR guard: Diff <= 400 lines, <= 25 files, linked issue required, 1+ reviewer
