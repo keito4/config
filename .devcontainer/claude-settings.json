@@ -297,6 +297,15 @@
         ]
       },
       {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 /home/vscode/.claude/hooks/block_config_edit.py'"
+          }
+        ]
+      },
+      {
         "matcher": "ExitPlanMode",
         "hooks": [
           {
@@ -307,6 +316,15 @@
       }
     ],
     "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 /home/vscode/.claude/hooks/post_edit_auto_lint.py'"
+          }
+        ]
+      },
       {
         "matcher": "Bash",
         "hooks": [
@@ -322,6 +340,17 @@
           {
             "type": "command",
             "command": "python3 /home/vscode/.claude/hooks/post_pr_ai_review.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 /home/vscode/.claude/hooks/stop_test_verification.py'"
           }
         ]
       }
