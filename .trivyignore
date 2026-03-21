@@ -78,3 +78,14 @@ CVE-2026-29786
 # Tracking: https://github.com/npm/cli/issues
 # Review date: 2026-04-09
 CVE-2026-27903
+
+# CVE-2026-33186: gRPC-Go authorization bypass via missing leading slash in :path
+# Severity: CRITICAL
+# Affected: google.golang.org/grpc v1.79.2 (usr/bin/gh), v1.75.1 (usr/local/bin/op)
+# Fixed in: 1.79.3
+# Reason: Vulnerability is in pre-built binaries (GitHub CLI and 1Password CLI);
+#   cannot upgrade grpc directly — waiting for upstream tool releases
+# Expected resolution: Wait for gh and op to release new builds with grpc >= 1.79.3
+# Tracking: https://github.com/cli/cli/releases (gh), https://github.com/1Password/onepassword-operator/releases (op)
+# Review date: 2026-04-21
+CVE-2026-33186

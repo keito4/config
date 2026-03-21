@@ -33,7 +33,8 @@
   "overrideCommand": true,
   "updateRemoteUserUID": false,
   "containerEnv": {
-    "CLAUDE_ENV_FILE": "/home/vscode/.devcontainer.env"
+    "CLAUDE_ENV_FILE": "/home/vscode/.devcontainer.env",
+    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1"
   },
   "remoteEnv": {
     "CLAUDE_CONFIG_DIR": "${containerWorkspaceFolder}/.claude-data"
