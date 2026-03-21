@@ -716,7 +716,7 @@ for cmd in .claude/commands/*.md; do
   BASENAME=$(basename "$cmd" .md)
   [ "$BASENAME" = "README" ] && continue
   # frontmatter から description を取得
-  DESC=$(sed -n '/^---$/,/^---$/{ /^description:/{ s/^description: *//; p; } }' "$cmd")
+  DESC=$(awk '/^---$/{n++; next} n==1 && /^description:/{sub(/^description: */, ""); print; exit}' "$cmd")
   [ -z "$DESC" ] && DESC="(no description)"
   COMMANDS="$COMMANDS| \`/$BASENAME\` | $DESC |\n"
 done
@@ -754,12 +754,14 @@ NODE_VER=$(jq -r '.engines.node // empty' package.json 2>/dev/null)
 PM="npm"  # ロックファイルから自動判定
 [ -f "pnpm-lock.yaml" ] && PM="pnpm"
 [ -f "yarn.lock" ] && PM="yarn"
-[ -f "bun.lockb" ] || [ -f "bun.lock" ] && PM="bun"
+{ [ -f "bun.lockb" ] || [ -f "bun.lock" ]; } && PM="bun"
 
 # 6. トップレベルディレクトリの収集
 DIRS=""
 for d in */; do
-  [ "$d" = "node_modules/" ] || [ "$d" = "coverage/" ] || [ "$d" = ".git/" ] && continue
+  case "$d" in
+    node_modules/|coverage/|.git/|reports/) continue ;;
+  esac
   DIRS="$DIRS| \`${d%/}/\` | ... |\n"
 done
 ```

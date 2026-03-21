@@ -18,21 +18,28 @@ Development infrastructure template repository providing DevContainer images, CI
 
 ## Project Structure
 
-| Directory            | Purpose                                         |
-| -------------------- | ----------------------------------------------- |
-| `.claude/commands/`  | Claude Code slash commands (29 commands)        |
-| `.claude/hooks/`     | Pre/post hook scripts for quality enforcement   |
-| `.devcontainer/`     | DevContainer configuration and Dockerfile       |
-| `.github/workflows/` | GitHub Actions CI/CD workflows                  |
-| `brew/`              | Homebrew package management                     |
-| `docs/`              | Documentation                                   |
-| `dot/`               | Dotfiles (zsh, git, etc.)                       |
-| `eslint/`            | ESLint configuration and plugins                |
-| `git/`               | Git hooks and configuration                     |
-| `npm/`               | npm global configuration and library management |
-| `script/`            | Utility shell scripts                           |
-| `templates/`         | Workflow, testing, and dotfile templates        |
-| `test/`              | Test suites (Jest unit, BATS integration)       |
+| Directory            | Purpose                                          |
+| -------------------- | ------------------------------------------------ |
+| `.agents/`           | AI agent skills and configurations               |
+| `.claude/commands/`  | Claude Code slash commands (28 commands)         |
+| `.claude/hooks/`     | Pre/post hook scripts for quality enforcement    |
+| `.codex/`            | Codex AI agent configuration                     |
+| `.cursor/`           | Cursor editor settings                           |
+| `.devcontainer/`     | DevContainer configuration and Dockerfile        |
+| `.gemini/`           | Gemini AI agent configuration                    |
+| `.github/workflows/` | GitHub Actions CI/CD workflows                   |
+| `.husky/`            | Git hooks (pre-commit, commit-msg)               |
+| `.vscode/`           | VS Code workspace settings                       |
+| `brew/`              | Homebrew package management                      |
+| `credentials/`       | Credential templates and filtering documentation |
+| `docs/`              | Documentation                                    |
+| `dot/`               | Dotfiles (zsh, git, etc.)                        |
+| `eslint/`            | ESLint configuration and plugins                 |
+| `git/`               | Git hooks and configuration                      |
+| `npm/`               | npm global configuration and library management  |
+| `script/`            | Utility shell scripts                            |
+| `templates/`         | Workflow, testing, and dotfile templates         |
+| `test/`              | Test suites (Jest unit, BATS integration)        |
 
 ## Available Commands
 
@@ -80,8 +87,10 @@ Development infrastructure template repository providing DevContainer images, CI
 | `update-dev-tools.yml`      | Update development tools                                                                   |
 | `update-claude-plugins.yml` | Update Claude plugins                                                                      |
 | `container-security.yml`    | Container security scanning                                                                |
+| `coverage-report.yml`       | Coverage report generation                                                                 |
 | `label-sync.yml`            | GitHub label IaC management                                                                |
-| `dependabot-auto-merge.yml` | Auto-merge Dependabot PRs                                                                  |
+| `dependabot-auto-merge.yml` | Dependabot PR auto-merge                                                                   |
+| `quality-gate-fallback.yml` | CI quality gate fallback for non-code changes                                              |
 | `manual-release.yml`        | Manual release trigger                                                                     |
 | `rebuild-docker-cache.yml`  | Weekly Docker cache rebuild                                                                |
 
