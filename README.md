@@ -192,6 +192,7 @@ config/
 │       └── mcp.env.template
 ├── docs/                           # ドキュメント
 │   ├── README.md
+│   ├── doppler-setup-guide.md    # Doppler シークレット管理ガイド
 │   ├── mcp-servers-guide.md
 │   ├── sentry-setup-guide.md
 │   ├── tool-catalog.md
@@ -272,6 +273,7 @@ config/
 │       └── platform.sh
 ├── templates/                      # プロジェクトテンプレート
 │   ├── README.md
+│   ├── doppler.yaml                # Doppler プロジェクト設定テンプレート
 │   ├── editorconfig
 │   ├── github/                     # GitHub テンプレート
 │   │   ├── CODEOWNERS
