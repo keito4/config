@@ -700,6 +700,124 @@ MODE が `full` かつ CI/CD が未設定の場合:
 
 `/setup-ci` コマンドの実行を提案。
 
+### 3.5.1 CI Workflow Template Sync Check
+
+`templates/workflows/` のテンプレートと `.github/workflows/` の実ファイルを比較し、乖離を検出：
+
+**確認ロジック:**
+
+```bash
+for f in templates/workflows/*.yml; do
+  base=$(basename "$f")
+  actual=".github/workflows/$base"
+  if [ -f "$actual" ]; then
+    if ! diff -q "$f" "$actual" > /dev/null 2>&1; then
+      echo "DIFF: $base — テンプレートと実ファイルが乖離"
+    fi
+  else
+    echo "MISS: $base — テンプレートはあるがワークフロー未配置"
+  fi
+done
+```
+
+**結果:**
+
+- ✅ 全テンプレートと一致
+- ⚠️ 乖離あり → diff を表示し、テンプレート更新 or ワークフロー更新を提案
+- 📝 未配置テンプレートあり → 配置を提案（stale.yml 等はオプションのため確認のみ）
+
+**MODE が `full` の場合:**
+
+乖離しているファイルごとに:
+
+1. `diff templates/workflows/$base .github/workflows/$base` を表示
+2. テンプレートを実ファイルに反映するか確認
+3. 承認された場合 `cp templates/workflows/$base .github/workflows/$base` を実行
+
+### 3.5.2 CI Workflow Consistency Check
+
+ワークフロー間の設定整合性を検証：
+
+**チェック項目:**
+
+| #   | チェック                               | 確認方法                                                                    | 推奨                           |
+| --- | -------------------------------------- | --------------------------------------------------------------------------- | ------------------------------ |
+| 1   | Node.js バージョン統一                 | `grep -rh 'node-version' .github/workflows/*.yml` と `.node-version` を比較 | `.node-version` の値と一致     |
+| 2   | Actions バージョン統一                 | 同一アクションのバージョンがワークフロー間で一致しているか                  | 全ワークフローで同一バージョン |
+| 3   | ジョブ名・ステータスチェック名の一貫性 | Required Status Checks に使われるジョブ名が正しいか                         | `Quality Gate` 等の統一名      |
+| 4   | Runner バージョン                      | `runs-on` の値がワークフロー間で一貫しているか                              | `ubuntu-latest` に統一         |
+
+**確認ロジック:**
+
+```bash
+# Node.js バージョン整合性
+NODE_FILE_VER=$(cat .node-version 2>/dev/null | cut -d. -f1)
+WORKFLOW_VERS=$(grep -rh 'node-version' .github/workflows/*.yml \
+  | sed "s/.*node-version[: ]*['\"]*//" | sed "s/['\"].*//" | sort -u)
+for v in $WORKFLOW_VERS; do
+  if [ "$v" != "$NODE_FILE_VER" ] && [ "$v" != "$(cat .node-version)" ]; then
+    echo "MISMATCH: workflow uses node $v, .node-version is $(cat .node-version)"
+  fi
+done
+
+# Actions バージョン統一
+grep -rh 'uses:' .github/workflows/*.yml \
+  | sed 's/.*uses: *//' | sort | uniq -c | sort -rn \
+  | awk '{print $2}' | sed 's/@.*//' | sort -u \
+  | while read action; do
+    versions=$(grep -rh "uses: *${action}@" .github/workflows/*.yml \
+      | sed "s/.*@//" | sort -u)
+    count=$(echo "$versions" | wc -l)
+    if [ "$count" -gt 1 ]; then
+      echo "INCONSISTENT: $action has multiple versions: $(echo $versions | tr '\n' ', ')"
+    fi
+  done
+
+# Runner バージョン
+grep -rh 'runs-on:' .github/workflows/*.yml \
+  | sed 's/.*runs-on: *//' | sort | uniq -c | sort -rn
+```
+
+**結果:**
+
+- ✅ 全ワークフロー間で一貫性あり
+- ⚠️ 不一致あり → 具体的なファイル名・行番号・推奨値を表示
+
+**MODE が `full` の場合:**
+
+不一致ごとに修正を提案し、承認後に自動修正を実行。
+
+### 3.5.3 CI Template Deployment Check (他リポジトリ展開)
+
+config リポジトリのテンプレートが他リポジトリに展開可能か確認：
+
+**確認項目:**
+
+1. `templates/workflows/` 内のテンプレートが self-contained か（外部依存なし）
+2. `.github/workflows/templates/` の再利用可能ワークフローが正しく定義されているか
+3. `templates/github/` のテンプレート（CODEOWNERS, CONTRIBUTING.md 等）が最新か
+
+**確認ロジック:**
+
+```bash
+# 再利用可能ワークフローの定義チェック
+for f in .github/workflows/templates/*.yml; do
+  if ! grep -q 'workflow_call:' "$f" 2>/dev/null; then
+    echo "WARN: $(basename $f) is not a reusable workflow (missing workflow_call trigger)"
+  fi
+done
+
+# テンプレート内のハードコードされたリポジトリ名チェック
+grep -rn 'keito4/config' templates/ | grep -v 'README\|\.md' || echo "OK: no hardcoded repo names"
+```
+
+**結果:**
+
+- ✅ テンプレート展開準備完了
+- ⚠️ 修正が必要なテンプレートあり
+
+このチェックは情報提供のみで、自動修正は行わない。
+
 ### 3.6 GitHub Actions Cost Optimization Check
 
 GitHub Actions のコスト最適化のため、全ワークフローの設定を確認：
@@ -2254,6 +2372,8 @@ fi
 ├── Pre-PR Checklist: ✅ CI workflow exists
 ├── CLAUDE.md: ✅ Symlink to AGENTS.md
 ├── CI/CD: ✅ Standard level configured
+├── CI Template Sync: ✅ All templates match (or ⚠️ N files diverged)
+├── CI Consistency: ✅ Node.js/Actions versions consistent (or ⚠️ mismatches found)
 ├── Actions Cost: ✅ Optimized (or ⚠️ X issues found)
 │   ├── Artifact Retention: ✅ (or ⚠️ 90-day default detected)
 │   ├── Unused Workflows: ✅ (or ⚠️ X stale workflows)
@@ -2484,40 +2604,43 @@ Run this command regularly to maintain repository health:
 
 このコマンドは以下のコマンドを内部的に呼び出します：
 
-| カテゴリ    | コマンド                        | 説明                          |
-| ----------- | ------------------------------- | ----------------------------- |
-| Environment | `/container-health`             | コンテナ健全性                |
-| Environment | `/config-base-sync-check`       | DevContainer バージョン       |
-| Environment | `/config-base-sync-update`      | DevContainer 更新             |
-| Environment | `/update-claude-code`           | Claude Code 更新              |
-| Environment | `/update-actions`               | GitHub Actions バージョン更新 |
-| Environment | `/sync-claude-settings`         | Claude 設定同期               |
-| Environment | (Claude Code LSP setup)         | LSP 設定                      |
-| Environment | `/codespaces-secrets`           | Codespaces シークレット同期   |
-| Environment | (Actions Security Hardening)    | Actions SHA固定・権限・制限   |
-| Setup       | `/setup-team-protection`        | GitHub保護ルール設定          |
-| Setup       | `/setup-husky`                  | Git hooks設定                 |
-| Setup       | (check-file-length auto-setup)  | ファイル行数チェック追加      |
-| Setup       | `/pre-pr-checklist`             | PR前チェックリスト            |
-| Setup       | (CLAUDE.md symlink check)       | CLAUDE.md シンボリックリンク  |
-| Setup       | `/setup-ci`                     | CI/CDワークフロー設定         |
-| Setup       | (Actions Cost Optimization)     | GitHub Actions コスト最適化   |
-| Setup       | (Renovate/Dependabot check)     | 依存関係自動更新設定          |
-| Setup       | (commitlint check)              | コミットメッセージ品質管理    |
-| Setup       | (editorconfig check)            | エディタスタイル設定          |
-| Setup       | (Dependabot Auto-merge check)   | Dependabot 自動マージ設定     |
-| Setup       | (Label Sync check)              | ラベル IaC 管理設定           |
-| Setup       | (pre-commit config check)       | pre-commit フレームワーク設定 |
-| Setup       | (PR Template check)             | PR テンプレート設定           |
-| Setup       | (Issue Template check)          | Issue テンプレート設定        |
-| Setup       | (CODEOWNERS check)              | コードオーナー設定            |
-| Setup       | (SECURITY.md check)             | セキュリティポリシー設定      |
-| Setup       | (scripts standard check)        | package.json scripts 標準確認 |
-| Setup       | (Push Protection check)         | Secret scanning push 防止     |
-| Setup       | (Dependency Review check)       | PR 依存関係脆弱性チェック     |
-| Setup       | (Deploy Env Protection check)   | デプロイ環境保護ルール        |
-| Cleanup     | `/branch-cleanup`               | ブランチクリーンアップ        |
-| Discovery   | `/config-contribution-discover` | 新機能発見                    |
-| Discovery   | (Package Audit + ni support)    | 推奨パッケージ監査            |
-| Discovery   | (Provenance / SBOM Audit)       | ビルド出所証明・SBOM 監査     |
-| PR          | (post_pr_ci_watch.py hook)      | PR作成後のCI自動監視          |
+| カテゴリ    | コマンド                        | 説明                               |
+| ----------- | ------------------------------- | ---------------------------------- |
+| Environment | `/container-health`             | コンテナ健全性                     |
+| Environment | `/config-base-sync-check`       | DevContainer バージョン            |
+| Environment | `/config-base-sync-update`      | DevContainer 更新                  |
+| Environment | `/update-claude-code`           | Claude Code 更新                   |
+| Environment | `/update-actions`               | GitHub Actions バージョン更新      |
+| Environment | `/sync-claude-settings`         | Claude 設定同期                    |
+| Environment | (Claude Code LSP setup)         | LSP 設定                           |
+| Environment | `/codespaces-secrets`           | Codespaces シークレット同期        |
+| Environment | (Actions Security Hardening)    | Actions SHA固定・権限・制限        |
+| Setup       | `/setup-team-protection`        | GitHub保護ルール設定               |
+| Setup       | `/setup-husky`                  | Git hooks設定                      |
+| Setup       | (check-file-length auto-setup)  | ファイル行数チェック追加           |
+| Setup       | `/pre-pr-checklist`             | PR前チェックリスト                 |
+| Setup       | (CLAUDE.md symlink check)       | CLAUDE.md シンボリックリンク       |
+| Setup       | `/setup-ci`                     | CI/CDワークフロー設定              |
+| Setup       | (CI Template Sync)              | テンプレートと実ファイルの乖離検出 |
+| Setup       | (CI Consistency)                | ワークフロー間の設定整合性検証     |
+| Setup       | (CI Template Deployment)        | 他リポジトリ展開準備状況確認       |
+| Setup       | (Actions Cost Optimization)     | GitHub Actions コスト最適化        |
+| Setup       | (Renovate/Dependabot check)     | 依存関係自動更新設定               |
+| Setup       | (commitlint check)              | コミットメッセージ品質管理         |
+| Setup       | (editorconfig check)            | エディタスタイル設定               |
+| Setup       | (Dependabot Auto-merge check)   | Dependabot 自動マージ設定          |
+| Setup       | (Label Sync check)              | ラベル IaC 管理設定                |
+| Setup       | (pre-commit config check)       | pre-commit フレームワーク設定      |
+| Setup       | (PR Template check)             | PR テンプレート設定                |
+| Setup       | (Issue Template check)          | Issue テンプレート設定             |
+| Setup       | (CODEOWNERS check)              | コードオーナー設定                 |
+| Setup       | (SECURITY.md check)             | セキュリティポリシー設定           |
+| Setup       | (scripts standard check)        | package.json scripts 標準確認      |
+| Setup       | (Push Protection check)         | Secret scanning push 防止          |
+| Setup       | (Dependency Review check)       | PR 依存関係脆弱性チェック          |
+| Setup       | (Deploy Env Protection check)   | デプロイ環境保護ルール             |
+| Cleanup     | `/branch-cleanup`               | ブランチクリーンアップ             |
+| Discovery   | `/config-contribution-discover` | 新機能発見                         |
+| Discovery   | (Package Audit + ni support)    | 推奨パッケージ監査                 |
+| Discovery   | (Provenance / SBOM Audit)       | ビルド出所証明・SBOM 監査          |
+| PR          | (post_pr_ci_watch.py hook)      | PR作成後のCI自動監視               |
