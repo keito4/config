@@ -1,0 +1,13 @@
+# Doppler プロジェクト設定テンプレート
+#
+# 使い方:
+#   1. このファイルをプロジェクトルートにコピー
+#   2. project 名を実際のプロジェクト名に変更
+#   3. doppler setup で初期化
+#
+# config の優先順位:
+#   --config フラグ > DOPPLER_CONFIG 環境変数 > doppler.yaml > doppler setup の選択
+#
+setup:
+  project: my-app
+  config: dev_personal

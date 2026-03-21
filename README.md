@@ -47,6 +47,7 @@ config/
 │   │   ├── security-credential-scan.md
 │   │   ├── security-review.md
 │   │   ├── setup-ci.md
+│   │   ├── setup-doppler.md        # Doppler シークレット管理セットアップ
 │   │   ├── setup-husky.md
 │   │   ├── setup-new-repo.md
 │   │   ├── setup-team-protection.md
@@ -192,6 +193,7 @@ config/
 │       └── mcp.env.template
 ├── docs/                           # ドキュメント
 │   ├── README.md
+│   ├── doppler-setup-guide.md    # Doppler シークレット管理ガイド
 │   ├── mcp-servers-guide.md
 │   ├── sentry-setup-guide.md
 │   ├── tool-catalog.md
@@ -272,6 +274,7 @@ config/
 │       └── platform.sh
 ├── templates/                      # プロジェクトテンプレート
 │   ├── README.md
+│   ├── doppler.yaml                # Doppler プロジェクト設定テンプレート
 │   ├── editorconfig
 │   ├── github/                     # GitHub テンプレート
 │   │   ├── CODEOWNERS
