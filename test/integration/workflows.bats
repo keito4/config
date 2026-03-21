@@ -114,7 +114,7 @@ load ../test_helper/test_helper
 @test "all workflows use checkout action" {
   local workflows_dir="${REPO_ROOT}/.github/workflows"
   # Workflows that don't need checkout (no source code access required)
-  local skip_patterns="dependabot-auto-merge"
+  local skip_patterns="dependabot-auto-merge|quality-gate-fallback"
 
   for workflow in "$workflows_dir"/*.yml; do
     local basename
