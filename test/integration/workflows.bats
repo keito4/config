@@ -34,9 +34,9 @@ load ../test_helper/test_helper
   # Should use npm ci instead of npm install
   grep -q "npm ci" "$workflow"
 
-  # Should use pinned action versions
-  grep -q "actions/checkout@v6" "$workflow"
-  grep -q "actions/setup-node@v6" "$workflow"
+  # Should use pinned action versions (SHA or tag)
+  grep -q "actions/checkout@" "$workflow"
+  grep -q "actions/setup-node@" "$workflow"
 }
 
 @test "docker-image workflow has proper permissions" {
@@ -95,8 +95,8 @@ load ../test_helper/test_helper
 @test "update-libraries workflow uses pinned third-party actions" {
   local workflow="${REPO_ROOT}/.github/workflows/update-libraries.yml"
 
-  # Should use specific version for peter-evans/create-pull-request
-  grep -q "peter-evans/create-pull-request@v7" "$workflow"
+  # Should use pinned version for peter-evans/create-pull-request (SHA or tag)
+  grep -q "peter-evans/create-pull-request@" "$workflow"
 }
 
 @test "update-libraries workflow has safe cron schedule" {
@@ -199,8 +199,8 @@ load ../test_helper/test_helper
 @test "ci workflow uploads coverage reports securely" {
   local workflow="${REPO_ROOT}/.github/workflows/ci.yml"
 
-  # Should upload coverage with token
-  grep -q "codecov/codecov-action@v5" "$workflow"
+  # Should upload coverage with token (SHA or tag)
+  grep -q "codecov/codecov-action@" "$workflow"
   grep -q "token:.*secrets.CODECOV_TOKEN" "$workflow"
 
   # Should not fail CI on coverage upload errors

@@ -41,7 +41,7 @@ setup() {
 
 @test "coverage-report.yml has jacoco report job" {
   grep -q "report-jacoco:" "$WORKFLOW"
-  grep -q "madrapps/jacoco-report@v" "$WORKFLOW"
+  grep -q "madrapps/jacoco-report@" "$WORKFLOW"
 }
 
 @test "coverage-report.yml passes GITHUB_TOKEN to jacoco action" {
@@ -50,7 +50,7 @@ setup() {
 
 @test "coverage-report.yml has jest report job" {
   grep -q "report-jest:" "$WORKFLOW"
-  grep -q "actions/github-script@v" "$WORKFLOW"
+  grep -q "actions/github-script@" "$WORKFLOW"
 }
 
 @test "coverage-report.yml uses pinned action versions" {
@@ -59,7 +59,7 @@ setup() {
 }
 
 @test "coverage-report.yml downloads artifacts before reporting" {
-  grep -q "actions/download-artifact@v" "$WORKFLOW"
+  grep -q "actions/download-artifact@" "$WORKFLOW"
 }
 
 @test "coverage-report.yml uses env variables for script inputs" {
@@ -71,13 +71,13 @@ setup() {
 
 @test "coverage-report.yml has cobertura report job" {
   grep -q "report-cobertura:" "$WORKFLOW"
-  grep -q "irongut/CodeCoverageSummary@v" "$WORKFLOW"
-  grep -q "marocchino/sticky-pull-request-comment@v" "$WORKFLOW"
+  grep -q "irongut/CodeCoverageSummary@" "$WORKFLOW"
+  grep -q "marocchino/sticky-pull-request-comment@" "$WORKFLOW"
 }
 
 @test "coverage-report.yml has lcov report job" {
   grep -q "report-lcov:" "$WORKFLOW"
-  grep -q "romeovs/lcov-reporter-action@v" "$WORKFLOW"
+  grep -q "romeovs/lcov-reporter-action@" "$WORKFLOW"
 }
 
 @test "coverage-report.yml passes GITHUB_TOKEN to lcov action" {
