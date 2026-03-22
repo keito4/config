@@ -10,7 +10,7 @@
 
 | ブランチ              | enforce_admins | required_reviews | code_owner_reviews |
 | --------------------- | -------------- | ---------------- | ------------------ |
-| main (default_branch) | true           | 0                | false              |
+| main (default_branch) | false          | 0                | false              |
 | pre-production        | false          | 1                | true               |
 | production            | false          | 1                | true               |
 
@@ -87,7 +87,7 @@ bash script/setup-team-protection.sh --dry-run
 main ブランチ:
 
 ```bash
-# enforce_admins=true, reviewers=0, code_owner_reviews=false
+# enforce_admins=false, reviewers=0, code_owner_reviews=false
 bash script/setup-team-protection.sh --branches main
 ```
 
