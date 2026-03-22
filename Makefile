@@ -1,4 +1,4 @@
-.PHONY: version-patch version-minor version-major version-dry-run credentials clean-credentials list-credentials brew-leaves brew-categorized brew-generate brew-deps brew-uses claude-setup nix-switch nix-build nix-update nix-check
+.PHONY: version-patch version-minor version-major version-dry-run credentials clean-credentials list-credentials claude-setup nix-switch nix-build nix-update nix-check
 
 # Semantic versioning for devcontainer
 version-patch:
@@ -24,25 +24,6 @@ clean-credentials: ## Clean up credential files
 
 list-credentials: ## List available credential templates
 	@./script/credentials.sh list
-
-# Brew dependency management
-brew-leaves: ## List Homebrew packages without dependencies
-	@./script/brew-deps.sh leaves
-
-brew-categorized: ## List Homebrew packages organized by category
-	@./script/brew-deps.sh categorized
-
-brew-generate: ## Generate Brewfiles for standalone packages
-	@echo "Generating standalone Brewfiles..."
-	@./script/brew-deps.sh generate
-
-brew-deps: ## Show dependencies of a specific package
-	@if [ -z "$(pkg)" ]; then echo "Usage: make brew-deps pkg=<package>"; exit 1; fi
-	@./script/brew-deps.sh deps $(pkg)
-
-brew-uses: ## Show packages that depend on a specific package
-	@if [ -z "$(pkg)" ]; then echo "Usage: make brew-uses pkg=<package>"; exit 1; fi
-	@./script/brew-deps.sh uses $(pkg)
 
 # Claude Code setup
 claude-setup: ## Setup Claude Code (sync settings + install plugins)

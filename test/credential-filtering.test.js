@@ -43,43 +43,8 @@ describe('Credential Filtering', () => {
     });
   });
 
-  describe('.zshrc credential filtering', () => {
-    const zshrcPath = path.join(__dirname, '..', 'dot', '.zshrc');
-
-    it('should have .zshrc file', () => {
-      expect(fs.existsSync(zshrcPath)).toBe(true);
-    });
-
-    it('should not contain NPM_TOKEN', () => {
-      const zshrc = fs.readFileSync(zshrcPath, 'utf8');
-      expect(zshrc).not.toMatch(/export\s+NPM_TOKEN=/);
-    });
-
-    it('should not contain BUNDLE_RUBYGEMS tokens', () => {
-      const zshrc = fs.readFileSync(zshrcPath, 'utf8');
-      expect(zshrc).not.toMatch(/export\s+BUNDLE_RUBYGEMS__[A-Z_]*=/);
-    });
-
-    it('should not contain generic API keys', () => {
-      const zshrc = fs.readFileSync(zshrcPath, 'utf8');
-
-      // Check for common API key patterns
-      expect(zshrc).not.toMatch(/export\s+[A-Z_]*API_KEY=/);
-      expect(zshrc).not.toMatch(/export\s+[A-Z_]*SECRET=/);
-      expect(zshrc).not.toMatch(/export\s+[A-Z_]*PASSWORD=/);
-      expect(zshrc).not.toMatch(/export\s+[A-Z_]*CREDENTIAL=/);
-    });
-
-    it('should not contain actual tokens (pattern check)', () => {
-      const zshrc = fs.readFileSync(zshrcPath, 'utf8');
-
-      // Check for GitHub token patterns (ghp_, gho_, etc.)
-      expect(zshrc).not.toMatch(/gh[ps]_[A-Za-z0-9]{36}/);
-
-      // Check for generic base64-like tokens
-      expect(zshrc).not.toMatch(/export\s+[A-Z_]*TOKEN="[A-Za-z0-9+/]{20,}"/);
-    });
-  });
+  // .zshrc credential filtering is no longer needed
+  // macOS: .zshrc is managed by nix home-manager (nix/home/zsh.nix)
 
   describe('.claude/settings.json credential filtering', () => {
     const settingsPath = path.join(__dirname, '..', '.claude', 'settings.json');

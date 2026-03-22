@@ -70,28 +70,16 @@ describe('Configuration Validation', () => {
       expect(fs.existsSync(linuxBrewfilePath)).toBe(true);
     });
 
-    test('should have macOS Brewfile', () => {
-      const macosBrewfilePath = path.join(repoPath, 'brew', 'MacOSBrewfile');
-      expect(fs.existsSync(macosBrewfilePath)).toBe(true);
+    test('LinuxBrewfile should have valid syntax', () => {
+      const brewfilePath = path.join(repoPath, 'brew', 'LinuxBrewfile');
+      const content = fs.readFileSync(brewfilePath, 'utf8');
+      expect(content).not.toMatch(/^\s*$/);
+      expect(content).toMatch(/^#|^brew|^cask|^tap|^mas/);
     });
 
-    test('should have Standalone Brewfile', () => {
-      const standaloneBrewfilePath = path.join(repoPath, 'brew', 'StandaloneBrewfile');
-      expect(fs.existsSync(standaloneBrewfilePath)).toBe(true);
-    });
-
-    test('Brewfiles should have valid syntax', () => {
-      const brewfiles = ['brew/LinuxBrewfile', 'brew/MacOSBrewfile', 'brew/StandaloneBrewfile'];
-
-      brewfiles.forEach((brewfile) => {
-        const brewfilePath = path.join(repoPath, brewfile);
-        if (fs.existsSync(brewfilePath)) {
-          const content = fs.readFileSync(brewfilePath, 'utf8');
-          // Basic syntax validation - should not have obvious syntax errors
-          expect(content).not.toMatch(/^\s*$/); // Should not be empty
-          expect(content).toMatch(/^#|^brew|^cask|^tap|^mas/); // Should start with valid brew commands or comments
-        }
-      });
+    test('should have Nix flake for macOS package management', () => {
+      const flakePath = path.join(repoPath, 'nix', 'flake.nix');
+      expect(fs.existsSync(flakePath)).toBe(true);
     });
   });
 
