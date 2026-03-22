@@ -1,0 +1,60 @@
+name: Claude Code Health Check
+
+on:
+  schedule:
+    - cron: '0 0 * * 1' # Every Monday 00:00 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Check Claude Code token validity
+        id: check
+        uses: anthropics/claude-code-action@d59651bd82c48d81756854675ce4fa4d69722200 # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          direct_prompt: 'Reply with only: OK'
+          timeout_minutes: 2
+        continue-on-error: true
+
+      - name: Create issue on failure
+        if: steps.check.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          EXISTING=$(gh issue list --label "claude-health" --state open --json number --jq 'length')
+          if [ "$EXISTING" -gt 0 ]; then
+            echo "Open health check issue already exists. Skipping."
+            exit 0
+          fi
+
+          gh issue create \
+            --title "fix: Claude Code OAuth トークンが無効です" \
+            --label "claude-health,bug" \
+            --body "$(cat <<'BODY'
+          ## 問題
+
+          Claude Code Health Check が失敗しました。
+          `CLAUDE_CODE_OAUTH_TOKEN` が期限切れまたは無効になっている可能性があります。
+
+          ## 対応手順
+
+          1. [Claude Code OAuth](https://console.anthropic.com/) でトークンを再発行
+          2. GitHub Settings → Secrets → `CLAUDE_CODE_OAUTH_TOKEN` を更新
+          3. このワークフローを手動実行して復旧を確認
+
+          ## 影響
+
+          - `claude.yml` (`@claude` メンション) が機能停止
+          - `claude-code-review.yml` (AI コードレビュー) が機能停止
+
+          ---
+          *このIssueは Claude Code Health Check ワークフローにより自動作成されました。*
+          BODY
+          )"

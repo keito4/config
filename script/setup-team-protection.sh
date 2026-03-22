@@ -26,7 +26,7 @@
 #
 # Branch-type defaults (when --uniform is NOT set):
 #   main (default_branch):
-#     enforce_admins=true, required_reviews=0, require_code_owner_reviews=false
+#     enforce_admins=false, required_reviews=0, require_code_owner_reviews=false
 #   pre-production / production:
 #     enforce_admins=false, required_reviews=1, require_code_owner_reviews=true
 
@@ -239,11 +239,11 @@ setup_branch_protection() {
         info "Applying environment branch defaults (enforce_admins=false, reviewers=1, code_owner_reviews=true)"
         ;;
       main|master)
-        # Default branch: admin enforcement, no mandatory reviews
-        enforce_admins=true
+        # Default branch: no admin enforcement, no mandatory reviews
+        enforce_admins=false
         reviewers=0
         require_code_owner_reviews=false
-        info "Applying default branch defaults (enforce_admins=true, reviewers=0, code_owner_reviews=false)"
+        info "Applying default branch defaults (enforce_admins=false, reviewers=0, code_owner_reviews=false)"
         ;;
     esac
   fi

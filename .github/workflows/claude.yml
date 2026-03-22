@@ -21,6 +21,7 @@ jobs:
     if: |
       github.actor != 'github-actions[bot]' &&
       github.actor != 'dependabot[bot]' &&
+      github.actor != 'claude[bot]' &&
       (
         (github.event_name == 'issue_comment' && contains(github.event.comment.body || '', '@claude') &&
           !(github.event.issue.pull_request && github.event.issue.pull_request.url && github.event.issue.draft == true)) ||
