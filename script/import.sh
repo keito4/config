@@ -29,9 +29,8 @@ install_packages_linux() {
 }
 
 install_packages_darwin() {
-	if type brew >/dev/null 2>&1; then
-		brew bundle --file "$REPO_PATH/brew/MacOSBrewfile"
-	fi
+	# macOS packages are managed by nix-darwin. Run: make nix-switch
+	echo "macOS: Packages are managed by nix-darwin. Run 'make nix-switch' to apply."
 	if type cursor >/dev/null 2>&1 && [[ -f "$REPO_PATH/vscode/extensions.txt" ]]; then
 		<"$REPO_PATH/vscode/extensions.txt" xargs -L1 cursor --install-extension
 	fi
@@ -68,15 +67,7 @@ fi
 [[ -f "$REPO_PATH/git/gitattributes" ]] && cp "$REPO_PATH/git/gitattributes" ~/.gitattributes
 
 # Individual dotfiles
-[[ -f "$REPO_PATH/dot/.zprofile" ]] && cp "$REPO_PATH/dot/.zprofile" ~/.zprofile
-
-# Import .zshrc with warning about missing credentials
-if [[ -f "$REPO_PATH/dot/.zshrc" ]]; then
-	cp "$REPO_PATH/dot/.zshrc" ~/.zshrc
-	echo "⚠️  注意: ~/.zshrc にトークンがなくなっています"
-	echo "    トークンは ~/.zsh/configs/pre/.env.secret に設定してください"
-fi
-
+# macOS: .zshrc and .zprofile are managed by nix home-manager (nix/home/zsh.nix)
 [[ -f "$REPO_PATH/dot/.zshrc.devcontainer" ]] && cp "$REPO_PATH/dot/.zshrc.devcontainer" ~/.zshrc.devcontainer
 
 # Peco configuration

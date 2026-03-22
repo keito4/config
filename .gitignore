@@ -76,3 +76,6 @@ report.log
 
 # MCP local overrides (use .mcp.local.json for personal settings)
 .mcp.local.json
+
+# Nix build output
+result

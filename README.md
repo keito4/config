@@ -175,15 +175,19 @@ config/
 │       ├── process
 │       ├── terraform
 │       └── utilities
-├── brew/                           # Homebrew 設定
-│   ├── README.md
-│   ├── CategorizedBrewfile
+├── brew/                           # Homebrew 設定（Linux 用）
 │   ├── LinuxBrewfile
-│   ├── LinuxBrewfile.lock.json
-│   ├── MacOSBrewfile
-│   ├── MacOSBrewfile.lock.json
-│   ├── StandaloneBrewfile
-│   └── categories.json
+│   └── LinuxBrewfile.lock.json
+├── nix/                            # Nix 環境管理（macOS）
+│   ├── flake.nix                   # nix-darwin + home-manager flake
+│   ├── flake.lock
+│   ├── home/                       # home-manager モジュール
+│   │   ├── default.nix
+│   │   ├── packages.nix
+│   │   ├── git.nix
+│   │   └── zsh.nix
+│   ├── hosts/darwin/default.nix    # macOS システム設定
+│   └── modules/homebrew.nix        # Homebrew cask/tap 管理
 ├── credentials/                    # 認証情報管理
 │   ├── README.md
 │   ├── setup.md
@@ -212,8 +216,6 @@ config/
 │       └── web-app-nextjs.md
 ├── dot/                            # ホームディレクトリ用 dotfiles
 │   ├── .peco/config.json
-│   ├── .zprofile
-│   ├── .zshrc
 │   └── .zshrc.devcontainer
 ├── eslint/                         # ESLint 設定テンプレート
 │   ├── README.md
@@ -395,10 +397,11 @@ config/
 - **`.devcontainer/`**: DevContainer / Codespaces 設定。`templates/` にオプション言語サポート
 - **`.github/`**: GitHub Actions ワークフロー、Issue/PR テンプレート、カスタムアクション
 - **`.zsh/`**: Zsh モジュール構成（aliases, functions, 言語バージョン管理）
-- **`brew/`**: OS 別 Brewfile とカテゴリ管理
+- **`brew/`**: Linux 用 Brewfile
 - **`credentials/`**: 1Password CLI 連携の認証情報テンプレート
 - **`docs/`**: セットアップガイド、ADR、ツールカタログ
-- **`dot/`**: ホームディレクトリ用 dotfiles（.zshrc, .zprofile 等）
+- **`dot/`**: ホームディレクトリ用 dotfiles（DevContainer 用 .zshrc 等）
+- **`nix/`**: nix-darwin + home-manager による macOS 環境の宣言的管理
 - **`eslint/`**: ESLint 複雑度ルールテンプレート
 - **`git/`**: gitconfig, gitignore, commitlint 設定
 - **`npm/`**: npm グローバルパッケージ定義
@@ -470,9 +473,9 @@ git config --global user.signingkey ~/.ssh/id_ed25519.pub
    git config --global user.signingkey ~/.ssh/id_ed25519.pub
    ```
 
-5. **Install packages using Homebrew**
+5. **Apply Nix configuration (macOS)**
    ```bash
-   brew bundle --file=brew/StandaloneBrewfile
+   make nix-switch
    ```
 
 #### What Gets Set Up
@@ -666,17 +669,18 @@ cd "$REPO_PATH"
 
 The script performs the following actions:
 
-- Installs Homebrew packages listed in OS-specific Brewfiles
+- Linux: Installs Homebrew packages from LinuxBrewfile
+- macOS: Guides to use `make nix-switch` for Nix-managed packages
 - Installs Oh My Zsh and zsh-autosuggestions plugin
 - Installs VS Code/Cursor extensions
 - Copies Git configuration files (`.gitconfig`, `.gitignore`, `.gitattributes`)
-- Copies Zsh configuration files (`.zprofile`, `.zshrc`, `.zshrc.devcontainer`, `.zsh/`)
+- Copies DevContainer Zsh configuration (`.zshrc.devcontainer`, `.zsh/`)
 - Copies Peco configuration (`.peco/`)
 - Installs npm global packages
 - Copies Claude Code shared configuration (`settings.json`, `commands/`, `agents/`, `hooks/`, `skills/`, `plugins/`)
 - Clones GitHub repositories using `ghq` (if available)
 
-⚠️ **Note**: Local-only files like `settings.local.json` are not overwritten.
+⚠️ **Note**: macOS の Zsh/Git 設定は nix home-manager (`nix/home/`) で管理されています。`settings.local.json` 等のローカル専用ファイルは上書きされません。
 
 ### Exporting Configuration Settings
 
@@ -690,10 +694,11 @@ cd "$REPO_PATH"
 
 The script performs the following actions:
 
-- Exports Homebrew package lists to OS-specific Brewfiles
+- Linux: Exports Homebrew package lists to LinuxBrewfile
+- macOS: Skips Brewfile export (managed by nix-darwin)
 - Exports VS Code/Cursor extensions list
 - Exports Git configuration files (`.gitconfig`, `.gitignore`, `.gitattributes`)
-- Exports Zsh configuration files (`.zprofile`, `.zshrc`, `.zshrc.devcontainer`, `.zsh/`)
+- Exports DevContainer Zsh configuration (`.zshrc.devcontainer`, `.zsh/`)
 - Exports Peco configuration (`.peco/`)
 - Exports npm global packages list
 - Exports Claude Code shared configuration (`settings.json`, `commands/`, `agents/`, `hooks/`, `skills/`, `plugins/`)
@@ -875,23 +880,20 @@ make clean-credentials      # Clean up credential files
 make list-credentials       # List available credential templates
 ```
 
-#### Homebrew Package Management
+#### Nix Environment Management (macOS)
 
 ```bash
-# List packages without dependencies (standalone packages)
-make brew-leaves
+# Apply Nix configuration
+make nix-switch
 
-# List packages organized by category
-make brew-categorized
+# Build without applying (dry run)
+make nix-build
 
-# Generate Brewfiles for standalone packages
-make brew-generate
+# Update flake inputs (nixpkgs, home-manager, nix-darwin)
+make nix-update
 
-# Show dependencies of a specific package
-make brew-deps pkg=<package>
-
-# Show packages that depend on a specific package
-make brew-uses pkg=<package>
+# Check flake for errors
+make nix-check
 ```
 
 ### CI/CD and Development Workflow
@@ -1087,8 +1089,9 @@ The repository includes automated Slack notifications for development workflow e
 ## Glossary
 
 - **act**: A tool that allows you to run GitHub Actions workflows locally on your machine for testing and debugging before pushing to GitHub.
-- **Homebrew (Brew)**: A package manager for macOS and Linux that allows easy installation and management of software packages.
-- **Brewfile**: A file format used by Homebrew to declare and install packages in a reproducible way.
+- **Homebrew (Brew)**: A package manager for macOS and Linux. macOS では GUI アプリ (cask) と tap 依存パッケージの管理に使用。CLI ツールは Nix で管理。
+- **Nix / nix-darwin**: macOS 環境の宣言的パッケージ管理。`nix/flake.nix` で CLI ツール、シェル設定、システム設定を一元管理。
+- **home-manager**: Nix ベースのユーザー環境管理ツール。dotfiles やユーザーパッケージを宣言的に管理。
 - **1Password**: A password manager that securely stores credentials, with CLI integration for automated credential management.
 - **1Password CLI**: Command-line tool for 1Password that enables automated credential retrieval using `op inject` command.
 - **op inject**: 1Password CLI command that replaces `op://Vault/Item/Field` references in templates with actual credential values.

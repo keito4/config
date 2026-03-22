@@ -20,7 +20,8 @@ export_brew_bundle_linux() {
 }
 
 export_brew_bundle_darwin() {
-	brew bundle dump --file "$REPO_PATH/brew/MacOSBrewfile" --force --all
+	# macOS packages are managed by nix-darwin (nix/modules/homebrew.nix)
+	echo "macOS: Homebrew packages are managed by nix-darwin. Skipping brew bundle dump."
 }
 
 platform::run_task export_extensions
@@ -40,13 +41,7 @@ fi
 [[ -d ~/.zsh ]] && cp -r -f ~/.zsh "$REPO_PATH"
 
 # Individual dotfiles
-[[ -f ~/.zprofile ]] && cp ~/.zprofile "$REPO_PATH/dot/.zprofile"
-
-# Export .zshrc but filter out sensitive environment variables
-if [[ -f ~/.zshrc ]]; then
-	config::filter_credentials ~/.zshrc "$REPO_PATH/dot/.zshrc"
-fi
-
+# macOS: .zshrc and .zprofile are managed by nix home-manager (nix/home/zsh.nix)
 [[ -f ~/.zshrc.devcontainer ]] && cp ~/.zshrc.devcontainer "$REPO_PATH/dot/.zshrc.devcontainer"
 
 # Peco configuration
