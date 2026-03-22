@@ -807,22 +807,42 @@ echo "$AUTO_CONTENT" >> AGENTS.md
 echo "$TAIL" >> AGENTS.md
 ```
 
-**重要:** 上記のシェルスクリプトは参考ロジック。実際の実行は Claude Code が以下の手順で行う:
+**実行スクリプト:** `script/update-agents-md.sh`
 
-1. リポジトリの現在の状態を読み取る（コマンド、ワークフロー、スクリプト、フック）
-2. 各セクションの内容を生成
-3. AGENTS.md の `<!-- BEGIN AUTO-GENERATED -->` 〜 `<!-- END AUTO-GENERATED -->` 間を置換
-4. `CLAUDE.md` が `AGENTS.md` へのシンボリックリンクであることを確認（Step 3.4 で実施済み）
+このスクリプトは以下を自動収集し、マーカー間を置換する:
 
-**Hooks の情報取得:**
+1. Tech stack（`package.json` の engines、ロックファイルからパッケージマネージャー検出、`nix/flake.nix` の有無）
+2. Project Structure（dot ディレクトリ + 通常ディレクトリを列挙し、既知のディレクトリには説明を付与）
+3. Available Commands（`.claude/commands/*.md` の frontmatter description を取得）
+4. CI/CD Workflows（`.github/workflows/*.yml` の `name:` を取得）
+5. Quality Gates（`package.json` scripts から `format:check`, `lint`, `test`, `shellcheck`, `typecheck` 等を検出）
+6. Hooks（`.claude/hooks/*.py` のファイル名からトリガーと目的を推定）
+7. Development Standards（release-types ルール等の固定セクション）
 
-`.claude/hooks/README.md` が存在する場合はそこから説明を取得。
-存在しない場合はファイル名から推測（`pre_` = Pre trigger, `post_` = Post trigger, `block_` = Pre blocker, `stop_` = Stop trigger）。
+生成後に Prettier でフォーマットし、冪等性を保証する。
+
+**実行方法:**
+
+```bash
+# 更新を適用
+bash script/update-agents-md.sh
+
+# 差分チェックのみ（変更なし、差分があれば exit 1）
+bash script/update-agents-md.sh --check
+```
+
+**MODE ごとの動作:**
+
+| MODE       | 動作                                                         |
+| ---------- | ------------------------------------------------------------ |
+| full       | `bash script/update-agents-md.sh` を実行し、差分があれば更新 |
+| quick      | `bash script/update-agents-md.sh --check` で差分を報告のみ   |
+| check-only | `bash script/update-agents-md.sh --check` で差分を報告のみ   |
 
 **結果:**
 
 - ✅ AGENTS.md 自動生成セクション: 最新に更新済み
-- 🔧 AGENTS.md 自動生成セクション: X 件のセクションを更新
+- 🔧 AGENTS.md 自動生成セクション: 更新しました
 - ⏭️ スキップ（AGENTS.md 未対応 / マーカーなし）
 
 ### 3.5 CI/CD Setup Check (full mode only)
