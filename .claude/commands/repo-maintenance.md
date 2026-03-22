@@ -809,6 +809,25 @@ echo "$TAIL" >> AGENTS.md
 
 **実行スクリプト:** `script/update-agents-md.sh`
 
+スクリプトが存在しない場合（他リポジトリ）は、以下の優先順でフォールバック取得する:
+
+```bash
+SCRIPT="script/update-agents-md.sh"
+if [ ! -f "$SCRIPT" ]; then
+  CONFIG_LOCAL="$HOME/develop/github.com/keito4/config/script/update-agents-md.sh"
+  if [ -f "$CONFIG_LOCAL" ]; then
+    SCRIPT="$CONFIG_LOCAL"
+  elif [ -f "/usr/local/script/update-agents-md.sh" ]; then
+    SCRIPT="/usr/local/script/update-agents-md.sh"
+  else
+    TMPSCRIPT=$(mktemp /tmp/update-agents-md-XXXXX.sh)
+    curl -fsSL "https://raw.githubusercontent.com/keito4/config/main/script/update-agents-md.sh" -o "$TMPSCRIPT"
+    chmod +x "$TMPSCRIPT"
+    SCRIPT="$TMPSCRIPT"
+  fi
+fi
+```
+
 このスクリプトは以下を自動収集し、マーカー間を置換する:
 
 1. Tech stack（`package.json` の engines、ロックファイルからパッケージマネージャー検出、`nix/flake.nix` の有無）
@@ -821,23 +840,13 @@ echo "$TAIL" >> AGENTS.md
 
 生成後に Prettier でフォーマットし、冪等性を保証する。
 
-**実行方法:**
-
-```bash
-# 更新を適用
-bash script/update-agents-md.sh
-
-# 差分チェックのみ（変更なし、差分があれば exit 1）
-bash script/update-agents-md.sh --check
-```
-
 **MODE ごとの動作:**
 
-| MODE       | 動作                                                         |
-| ---------- | ------------------------------------------------------------ |
-| full       | `bash script/update-agents-md.sh` を実行し、差分があれば更新 |
-| quick      | `bash script/update-agents-md.sh --check` で差分を報告のみ   |
-| check-only | `bash script/update-agents-md.sh --check` で差分を報告のみ   |
+| MODE       | 動作                                |
+| ---------- | ----------------------------------- |
+| full       | `bash "$SCRIPT"` を実行し更新を適用 |
+| quick      | `bash "$SCRIPT" --check` で差分報告 |
+| check-only | `bash "$SCRIPT" --check` で差分報告 |
 
 **結果:**
 
