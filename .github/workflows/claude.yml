@@ -10,6 +10,8 @@ on:
   pull_request_review:
     types: [submitted]
 
+permissions: {}
+
 concurrency:
   group: claude-${{ github.repository }}-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
   cancel-in-progress: false
@@ -39,13 +41,13 @@ jobs:
       checks: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 1
 
       - name: Run Claude Code
         id: claude
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@d59651bd82c48d81756854675ce4fa4d69722200 # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 

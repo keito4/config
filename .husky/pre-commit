@@ -10,4 +10,7 @@ npm run lint
 echo "[pre-commit] Running tests..."
 npm test
 
+# check-file-length
+bash script/check-file-length.sh
+
 echo "[pre-commit] All checks passed. Proceeding with commit."
