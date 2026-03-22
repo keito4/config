@@ -1,4 +1,4 @@
-.PHONY: version-patch version-minor version-major version-dry-run credentials clean-credentials list-credentials brew-leaves brew-categorized brew-generate brew-deps brew-uses claude-setup
+.PHONY: version-patch version-minor version-major version-dry-run credentials clean-credentials list-credentials brew-leaves brew-categorized brew-generate brew-deps brew-uses claude-setup nix-switch nix-build nix-update nix-check
 
 # Semantic versioning for devcontainer
 version-patch:
@@ -47,3 +47,16 @@ brew-uses: ## Show packages that depend on a specific package
 # Claude Code setup
 claude-setup: ## Setup Claude Code (sync settings + install plugins)
 	@./script/setup-claude.sh
+
+# Nix management
+nix-switch: ## Apply Nix configuration (darwin-rebuild switch)
+	sudo darwin-rebuild switch --flake ./nix
+
+nix-build: ## Build Nix configuration without applying
+	darwin-rebuild build --flake ./nix
+
+nix-update: ## Update Nix flake inputs
+	cd nix && nix flake update
+
+nix-check: ## Check Nix flake for errors
+	cd nix && nix flake check
