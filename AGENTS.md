@@ -48,12 +48,13 @@ Development infrastructure template repository providing DevContainer images, CI
 | `.github/workflows/` | GitHub Actions CI/CD workflows                   |
 | `.husky/`            | Git hooks (pre-commit, commit-msg)               |
 | `.vscode/`           | VS Code workspace settings                       |
-| `brew/`              | Homebrew package management                      |
+| `brew/`              | Homebrew package management (Linux only)         |
 | `credentials/`       | Credential templates and filtering documentation |
 | `docs/`              | Documentation                                    |
-| `dot/`               | Dotfiles (zsh, git, etc.)                        |
+| `dot/`               | Dotfiles (DevContainer .zshrc, peco)             |
 | `eslint/`            | ESLint configuration and plugins                 |
 | `git/`               | Git hooks and configuration                      |
+| `nix/`               | nix-darwin + home-manager (macOS environment)    |
 | `npm/`               | npm global configuration and library management  |
 | `script/`            | Utility shell scripts                            |
 | `templates/`         | Workflow, testing, and dotfile templates         |
