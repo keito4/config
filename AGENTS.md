@@ -33,96 +33,100 @@ Development infrastructure template repository providing DevContainer images, CI
 - **Package Manager**: npm
 - **Base Image**: `ghcr.io/keito4/config-base:latest`
 - **Release**: semantic-release (Conventional Commits)
+- **macOS Environment**: nix-darwin + home-manager (`nix/flake.nix`)
 
 ## Project Structure
 
 | Directory            | Purpose                                          |
 | -------------------- | ------------------------------------------------ |
 | `.agents/`           | AI agent skills and configurations               |
-| `.claude/commands/`  | Claude Code slash commands (28 commands)         |
+| `.claude/commands/`  | Claude Code slash commands                       |
 | `.claude/hooks/`     | Pre/post hook scripts for quality enforcement    |
+| `.claude/rules/`     | Claude Code rules for development standards      |
 | `.codex/`            | Codex AI agent configuration                     |
 | `.cursor/`           | Cursor editor settings                           |
 | `.devcontainer/`     | DevContainer configuration and Dockerfile        |
 | `.gemini/`           | Gemini AI agent configuration                    |
-| `.github/workflows/` | GitHub Actions CI/CD workflows                   |
+| `.github/workflows/` | GitHub Actions CI/CD workflows (20 workflows)    |
 | `.husky/`            | Git hooks (pre-commit, commit-msg)               |
 | `.vscode/`           | VS Code workspace settings                       |
 | `brew/`              | Homebrew package management (Linux only)         |
 | `credentials/`       | Credential templates and filtering documentation |
-| `docs/`              | Documentation                                    |
+| `docs/`              | Documentation and ADRs                           |
 | `dot/`               | Dotfiles (DevContainer .zshrc, peco)             |
 | `eslint/`            | ESLint configuration and plugins                 |
 | `git/`               | Git hooks and configuration                      |
+| `next/`              | Next.js project templates                        |
 | `nix/`               | nix-darwin + home-manager (macOS environment)    |
 | `npm/`               | npm global configuration and library management  |
 | `script/`            | Utility shell scripts                            |
 | `templates/`         | Workflow, testing, and dotfile templates         |
 | `test/`              | Test suites (Jest unit, BATS integration)        |
+| `vscode/`            | VS Code extensions list                          |
 
 ## Available Commands
 
-| Command                         | Description                                                              |
-| ------------------------------- | ------------------------------------------------------------------------ |
-| `/repo-maintenance`             | Comprehensive repository maintenance - run all health checks and updates |
-| `/setup-new-repo`               | Setup new repository with DevContainer, CI/CD, and development tools     |
-| `/setup-ci`                     | Setup comprehensive CI/CD workflows                                      |
-| `/setup-tests`                  | Setup comprehensive testing infrastructure for Next.js projects          |
-| `/setup-husky`                  | Husky + lint-staged + commitlint setup                                   |
-| `/setup-team-protection`        | GitHub repository protection rules                                       |
-| `/setup-doppler`                | Setup Doppler secret management                                          |
-| `/create-pr`                    | Create PR with latest base branch changes merged                         |
-| `/create-codespace`             | Create GitHub Codespace                                                  |
-| `/config-base-sync-check`       | Check current and latest config-base image versions                      |
-| `/config-base-sync-update`      | Update DevContainer to latest config-base image and create PR            |
-| `/config-contribution-discover` | Discover useful features and create issues for config repo               |
-| `/sync-settings`                | Sync Claude & Codex settings to DevContainer configuration               |
-| `/update-claude-code`           | Update Claude Code version                                               |
-| `/update-actions`               | Update GitHub Actions versions                                           |
-| `/container-health`             | Container environment health check                                       |
-| `/codespaces-secrets`           | Codespaces secrets management                                            |
-| `/branch-cleanup`               | Clean up merged and stale branches                                       |
-| `/pre-pr-checklist`             | Pre-PR validation checklist                                              |
-| `/devcontainer-checklist`       | DevContainer restart verification checklist                              |
-| `/git-sync`                     | Git sync commands                                                        |
-| `/changelog-generator`          | Generate changelog                                                       |
-| `/dependency-health-check`      | Check dependency health                                                  |
-| `/security-credential-scan`     | Scan for leaked credentials                                              |
-| `/security-review`              | Security review with improvement suggestions                             |
-| `/similarity-analysis`          | Detect duplicate code patterns                                           |
-| `/code-complexity-check`        | Code complexity analysis                                                 |
-| `/test-coverage-trend`          | Test coverage trend analysis                                             |
+| Command                         | Description                                                                               |
+| ------------------------------- | ----------------------------------------------------------------------------------------- |
+| `/branch-cleanup`               | (no description)                                                                          |
+| `/changelog-generator`          | (no description)                                                                          |
+| `/code-complexity-check`        | (no description)                                                                          |
+| `/codespaces-secrets`           | (no description)                                                                          |
+| `/config-base-sync-check`       | Check current and latest config-base image versions                                       |
+| `/config-base-sync-update`      | Update DevContainer to latest config-base image, sync recommended features, and create PR |
+| `/config-contribution-discover` | Discover useful features in current repository and create issues for config repository    |
+| `/container-health`             | (no description)                                                                          |
+| `/create-codespace`             | (no description)                                                                          |
+| `/create-pr`                    | Create PR with latest base branch changes merged                                          |
+| `/dependency-health-check`      | (no description)                                                                          |
+| `/devcontainer-checklist`       | (no description)                                                                          |
+| `/git-sync`                     | (no description)                                                                          |
+| `/pre-pr-checklist`             | (no description)                                                                          |
+| `/repo-maintenance`             | Comprehensive repository maintenance - run all health checks and updates                  |
+| `/security-credential-scan`     | (no description)                                                                          |
+| `/security-review`              | (no description)                                                                          |
+| `/setup-ci`                     | Setup comprehensive CI/CD workflows for your repository                                   |
+| `/setup-doppler`                | Setup Doppler secret management with dev/dev_personal configuration                       |
+| `/setup-husky`                  | (no description)                                                                          |
+| `/setup-new-repo`               | Setup new repository with DevContainer, CI/CD, and development tools from config template |
+| `/setup-team-protection`        | (no description)                                                                          |
+| `/setup-tests`                  | Setup comprehensive testing infrastructure for Next.js projects                           |
+| `/similarity-analysis`          | Analyze code similarity in the repository to detect duplicate functions and patterns      |
+| `/sync-settings`                | Sync Claude & Codex settings from your-org projects to DevContainer configuration         |
+| `/test-coverage-trend`          | (no description)                                                                          |
+| `/update-actions`               | (no description)                                                                          |
+| `/update-claude-code`           | (no description)                                                                          |
 
 ## CI/CD Workflows
 
-| Workflow                    | Purpose                                                                                    |
-| --------------------------- | ------------------------------------------------------------------------------------------ |
-| `ci.yml`                    | Code quality validation (lint, format, test, build). Required status check: `Quality Gate` |
-| `docker-image.yml`          | Build and Release DevContainer Image with semantic versioning                              |
-| `security.yml`              | Dependency review, license compliance, secret detection, npm audit                         |
-| `claude.yml`                | AI assistance triggered by `@claude` mentions in issues/PRs                                |
-| `claude-code-review.yml`    | Automated AI code review on PRs                                                            |
-| `update-libraries.yml`      | Scheduled `npm run update:libs` with auto PR                                               |
-| `update-dev-tools.yml`      | Update development tools                                                                   |
-| `update-claude-plugins.yml` | Update Claude plugins                                                                      |
-| `container-security.yml`    | Container security scanning                                                                |
-| `coverage-report.yml`       | Coverage report generation                                                                 |
-| `label-sync.yml`            | GitHub label IaC management                                                                |
-| `dependabot-auto-merge.yml` | Dependabot PR auto-merge                                                                   |
-| `quality-gate-fallback.yml` | CI quality gate fallback for non-code changes                                              |
-| `manual-release.yml`        | Manual release trigger                                                                     |
-| `rebuild-docker-cache.yml`  | Weekly Docker cache rebuild                                                                |
+| Workflow                    | Purpose                              |
+| --------------------------- | ------------------------------------ |
+| `ci.yml`                    | CI                                   |
+| `claude-code-review.yml`    | Claude Code Review                   |
+| `claude.yml`                | Claude Code                          |
+| `container-security.yml`    | Container Security Scan              |
+| `coverage-report.yml`       | Coverage Report                      |
+| `dependabot-auto-merge.yml` | Dependabot Auto-merge                |
+| `docker-image.yml`          | Build and Release DevContainer Image |
+| `label-sync.yml`            | Label Sync                           |
+| `manual-release.yml`        | Manual Release                       |
+| `quality-gate-fallback.yml` | CI                                   |
+| `rebuild-docker-cache.yml`  | Rebuild Docker Cache (Weekly)        |
+| `security.yml`              | Security Scans                       |
+| `update-claude-plugins.yml` | Update Claude Plugins                |
+| `update-dev-tools.yml`      | Update Development Tools             |
+| `update-libraries.yml`      | Auto Update Libraries                |
 
 ## Quality Gates
 
 The following scripts are auto-detected and run before git commit/push:
 
-| Script         | Command                                               | Purpose                    |
-| -------------- | ----------------------------------------------------- | -------------------------- |
-| `format:check` | `prettier --check .`                                  | Code formatting validation |
-| `lint`         | `eslint . --ext .js`                                  | Code quality validation    |
-| `test`         | `jest --runInBand`                                    | Unit test execution        |
-| `shellcheck`   | `find script -name '*.sh' ... \| xargs shellcheck -x` | Shell script validation    |
+| Script         | Command                            | Purpose                              |
+| -------------- | ---------------------------------- | ------------------------------------ | ----------------------- | ----------------------- |
+| `format:check` | `prettier --check .`               | Code formatting validation           |
+| `lint`         | `eslint . --ext .js`               | Code quality validation              |
+| `test`         | `jest --runInBand`                 | Unit test execution                  |
+| `shellcheck`   | `find script -name '\*.sh' -type f | grep -vFf script/.shellcheck-exclude | xargs -r shellcheck -x` | Shell script validation |
 
 Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + coverage), `test:all` (unit + integration)
 
@@ -130,16 +134,25 @@ Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + cov
 
 | Hook                          | Trigger             | Purpose                              |
 | ----------------------------- | ------------------- | ------------------------------------ |
-| `block_git_no_verify.py`      | Pre git commit/push | Block `--no-verify` and `HUSKY=0`    |
-| `pre_git_quality_gates.py`    | Pre git commit/push | Auto-detect and run quality gates    |
 | `block_config_edit.py`        | Pre edit            | Protect configuration files          |
 | `block_dangerous_commands.py` | Pre Bash            | Block destructive commands           |
+| `block_git_no_verify.py`      | Pre git commit/push | Block `--no-verify` and `HUSKY=0`    |
+| `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes |
 | `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint                 |
 | `post_git_push_ci.py`         | Post git push       | Monitor CI status                    |
 | `post_pr_ai_review.py`        | Post PR creation    | Run AI code review                   |
 | `post_pr_ci_watch.py`         | Post PR creation    | Monitor PR CI status                 |
-| `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes |
 | `pre_exit_plan_ai_review.py`  | Pre ExitPlanMode    | AI review before plan exit           |
+| `pre_git_quality_gates.py`    | Pre git commit/push | Auto-detect and run quality gates    |
 | `stop_test_verification.py`   | Stop                | Verify test results on session end   |
+
+## Development Standards
+
+### Code Quality Requirements
+
+- **Test-Driven Development (TDD)**: Red -> Green -> Refactor methodology with 70%+ line coverage requirement
+- **Static Quality Gates**: Automated linting, formatting, security analysis, and license checking
+- **Git Workflow**: Conventional commits, branch naming conventions, and pull request requirements
+- **Release Types Required for Tooling Changes**: Commits that touch `.codex/**`, `.devcontainer/codex*`, `package*.json`, or `npm/global.json` must use release-triggering types (`feat` / `fix` / `perf` / `revert` / `docs`). commitlint blocks `chore` etc. to align with semantic-release.
 
 <!-- END AUTO-GENERATED -->
