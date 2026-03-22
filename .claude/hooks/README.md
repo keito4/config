@@ -325,6 +325,33 @@ result = subprocess.run(
 }
 ```
 
+### 7. `post_commit_adr_reminder.py`
+
+**目的**: git commit後にアーキテクチャ関連の変更を検出し、ADR（Architecture Decision Records）作成をリマインド
+
+**トリガー**: `PostToolUse(Bash)` で `git commit` を検出
+
+**検出するアーキテクチャシグナル**:
+
+| シグナル                   | 対象ファイル                            |
+| -------------------------- | --------------------------------------- |
+| 依存関係の変更             | `package.json`                          |
+| Linter/Formatter設定       | `biome.json`, `.eslintrc`, `oxlint`     |
+| TypeScript設定             | `tsconfig*.json`                        |
+| ハーネス/Hook設定          | `lefthook.yml`, `.claude/settings.json` |
+| モジュールエントリポイント | `src/**/index.*`, `src/**/main.*`       |
+| コンテナ設定               | `Dockerfile`, `docker-compose*`         |
+| IaC                        | `terraform/`                            |
+| CI/CD                      | `.github/workflows/`                    |
+| DBマイグレーション         | `supabase/migrations/`                  |
+
+**動作**:
+
+- commit に `docs/adr/` のファイルが含まれている場合はスキップ
+- シグナルに一致するファイルがない場合はスキップ
+- シグナル検出時に `hookSpecificOutput` でリマインドメッセージを表示
+- ブロックはしない（情報提供のみ、常に exit 0）
+
 ## カスタムHooksの作成
 
 新しいHookスクリプトを作成する場合の基本構造：

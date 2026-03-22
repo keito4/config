@@ -173,6 +173,15 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { [ -f .claude/hooks/block_dangerous_commands.py ] && python3 .claude/hooks/block_dangerous_commands.py || echo \"[hooks] .claude/hooks/block_dangerous_commands.py not found. Run /repo-maintenance to set up quality hooks.\"; }'"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
             "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { [ -f .claude/hooks/block_git_no_verify.py ] && python3 .claude/hooks/block_git_no_verify.py || echo \"[hooks] .claude/hooks/block_git_no_verify.py not found. Run /repo-maintenance to set up quality hooks.\"; }'"
           }
         ]
@@ -239,6 +248,15 @@
           {
             "type": "command",
             "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { [ -f .claude/hooks/post_pr_ci_watch.py ] && python3 .claude/hooks/post_pr_ci_watch.py || echo \"[hooks] .claude/hooks/post_pr_ci_watch.py not found. Run /repo-maintenance to set up quality hooks.\"; }'"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { [ -f .claude/hooks/post_commit_adr_reminder.py ] && python3 .claude/hooks/post_commit_adr_reminder.py || true; }'"
           }
         ]
       }

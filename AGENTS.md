@@ -1,6 +1,24 @@
 # Agent Guidelines
 
-Always prefer simplicity over pathological complexity. YAGNI, KISS, DRY, and SOLID. No backward-compat shims or fallback paths unless they come free without adding cyclomatic complexity.
+Always prefer simplicity over pathological correctness. YAGNI, KISS, DRY. No backward-compat shims or fallback paths unless they come free without adding cyclomatic complexity.
+
+## Operational Rules
+
+### Memory Management
+
+Session memory is not persistent across worktree-based sessions. All information that must survive sessions MUST be committed to git. Do NOT rely on auto memory or in-memory state for cross-session continuity. Auto memory contents should be properly documented in the repository (e.g., AGENTS.md, docs/).
+
+### Temporary Files
+
+Subagents and other agents need to read intermediate artifacts. Place all temporary and context files under `.context/` in the repository root. Do NOT use `/tmp/` or other OS-level temp directories — they are invisible to other agents and difficult to clean up.
+
+### Architecture Decision Records (ADR)
+
+For any non-trivial architectural change, create an ADR in `docs/adr/` before implementation. ADRs document the context, decision, and consequences of significant technical choices. This ensures decisions are traceable and reviewable.
+
+### Plan Review
+
+Before presenting a plan to the user, run an AI review pass to identify and resolve issues. Plans shown to users must be pre-validated — do not expose draft plans with known gaps or contradictions.
 
 ---
 
@@ -109,43 +127,18 @@ Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + cov
 
 ## Hooks
 
-| Hook                          | Trigger             | Purpose                            |
-| ----------------------------- | ------------------- | ---------------------------------- |
-| `block_git_no_verify.py`      | Pre git commit/push | Block `--no-verify` and `HUSKY=0`  |
-| `pre_git_quality_gates.py`    | Pre git commit/push | Auto-detect and run quality gates  |
-| `block_config_edit.py`        | Pre edit            | Protect configuration files        |
-| `block_dangerous_commands.py` | Pre bash            | Block destructive commands         |
-| `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint               |
-| `post_git_push_ci.py`         | Post git push       | Monitor CI status                  |
-| `post_pr_ai_review.py`        | Post PR creation    | Run AI code review                 |
-| `post_pr_ci_watch.py`         | Post PR creation    | Monitor PR CI status               |
-| `pre_exit_plan_ai_review.py`  | Pre ExitPlanMode    | AI review before plan exit         |
-| `stop_test_verification.py`   | Stop                | Verify test results on session end |
+| Hook                          | Trigger             | Purpose                              |
+| ----------------------------- | ------------------- | ------------------------------------ |
+| `block_git_no_verify.py`      | Pre git commit/push | Block `--no-verify` and `HUSKY=0`    |
+| `pre_git_quality_gates.py`    | Pre git commit/push | Auto-detect and run quality gates    |
+| `block_config_edit.py`        | Pre edit            | Protect configuration files          |
+| `block_dangerous_commands.py` | Pre Bash            | Block destructive commands           |
+| `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint                 |
+| `post_git_push_ci.py`         | Post git push       | Monitor CI status                    |
+| `post_pr_ai_review.py`        | Post PR creation    | Run AI code review                   |
+| `post_pr_ci_watch.py`         | Post PR creation    | Monitor PR CI status                 |
+| `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes |
+| `pre_exit_plan_ai_review.py`  | Pre ExitPlanMode    | AI review before plan exit           |
+| `stop_test_verification.py`   | Stop                | Verify test results on session end   |
 
 <!-- END AUTO-GENERATED -->
-
-## Development Standards
-
-### Code Quality Requirements
-
-- **Test-Driven Development (TDD)**: Red -> Green -> Refactor methodology with 70%+ line coverage requirement
-- **Static Quality Gates**: Automated linting, formatting, security analysis, and license checking
-- **Git Workflow**: Conventional commits, branch naming conventions, and pull request requirements
-- **Release Types Required for Tooling Changes**: Commits that touch `.codex/**`, `.devcontainer/codex*`, `package*.json`, or `npm/global.json` must use release-triggering types (`feat` / `fix` / `perf` / `revert` / `docs`). commitlint blocks `chore` etc. to align with semantic-release.
-
-### AI Prompt Design Guidelines
-
-- Structured approach for requirements definition, implementation, and bug reporting
-- Clear separation between requirements gathering and code generation phases
-- Emphasis on test-first development practices
-
-### Definition of Ready/Done Criteria
-
-- **Ready**: Acceptance criteria defined, dependencies resolved
-- **Done**: Quality gates passed, documentation updated, monitoring stable, release notes complete
-
-### Git Conventions
-
-- Branch naming: `feat|fix|chore/<issue#>-slug`
-- Commit format: Conventional Commits
-- PR guard: Diff <= 400 lines, <= 25 files, linked issue required, 1+ reviewer
