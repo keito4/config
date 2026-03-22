@@ -33,6 +33,7 @@ Development infrastructure template repository providing DevContainer images, CI
 - **Package Manager**: npm
 - **Base Image**: `ghcr.io/keito4/config-base:latest`
 - **Release**: semantic-release (Conventional Commits)
+- **macOS Environment**: nix-darwin + home-manager (`nix/flake.nix`)
 
 ## Project Structure
 
@@ -41,16 +42,17 @@ Development infrastructure template repository providing DevContainer images, CI
 | `.agents/`           | AI agent skills and configurations               |
 | `.claude/commands/`  | Claude Code slash commands (28 commands)         |
 | `.claude/hooks/`     | Pre/post hook scripts for quality enforcement    |
+| `.claude/rules/`     | Claude Code rules for development standards      |
 | `.codex/`            | Codex AI agent configuration                     |
 | `.cursor/`           | Cursor editor settings                           |
 | `.devcontainer/`     | DevContainer configuration and Dockerfile        |
 | `.gemini/`           | Gemini AI agent configuration                    |
-| `.github/workflows/` | GitHub Actions CI/CD workflows                   |
+| `.github/workflows/` | GitHub Actions CI/CD workflows (15 workflows)    |
 | `.husky/`            | Git hooks (pre-commit, commit-msg)               |
 | `.vscode/`           | VS Code workspace settings                       |
 | `brew/`              | Homebrew package management (Linux only)         |
 | `credentials/`       | Credential templates and filtering documentation |
-| `docs/`              | Documentation                                    |
+| `docs/`              | Documentation and ADRs                           |
 | `dot/`               | Dotfiles (DevContainer .zshrc, peco)             |
 | `eslint/`            | ESLint configuration and plugins                 |
 | `git/`               | Git hooks and configuration                      |
@@ -59,6 +61,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `script/`            | Utility shell scripts                            |
 | `templates/`         | Workflow, testing, and dotfile templates         |
 | `test/`              | Test suites (Jest unit, BATS integration)        |
+| `vscode/`            | VS Code extensions list                          |
 
 ## Available Commands
 
@@ -89,7 +92,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `/dependency-health-check`      | Check dependency health                                                  |
 | `/security-credential-scan`     | Scan for leaked credentials                                              |
 | `/security-review`              | Security review with improvement suggestions                             |
-| `/similarity-analysis`          | Detect duplicate code patterns                                           |
+| `/similarity-analysis`          | Analyze code similarity to detect duplicate functions and patterns       |
 | `/code-complexity-check`        | Code complexity analysis                                                 |
 | `/test-coverage-trend`          | Test coverage trend analysis                                             |
 
@@ -105,7 +108,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `update-libraries.yml`      | Scheduled `npm run update:libs` with auto PR                                               |
 | `update-dev-tools.yml`      | Update development tools                                                                   |
 | `update-claude-plugins.yml` | Update Claude plugins                                                                      |
-| `container-security.yml`    | Container security scanning                                                                |
+| `container-security.yml`    | Container security scanning (Trivy, CodeQL, SBOM)                                          |
 | `coverage-report.yml`       | Coverage report generation                                                                 |
 | `label-sync.yml`            | GitHub label IaC management                                                                |
 | `dependabot-auto-merge.yml` | Dependabot PR auto-merge                                                                   |
@@ -117,12 +120,12 @@ Development infrastructure template repository providing DevContainer images, CI
 
 The following scripts are auto-detected and run before git commit/push:
 
-| Script         | Command                                               | Purpose                    |
-| -------------- | ----------------------------------------------------- | -------------------------- |
-| `format:check` | `prettier --check .`                                  | Code formatting validation |
-| `lint`         | `eslint . --ext .js`                                  | Code quality validation    |
-| `test`         | `jest --runInBand`                                    | Unit test execution        |
-| `shellcheck`   | `find script -name '*.sh' ... \| xargs shellcheck -x` | Shell script validation    |
+| Script         | Command                                                                                              | Purpose                    |
+| -------------- | ---------------------------------------------------------------------------------------------------- | -------------------------- |
+| `format:check` | `prettier --check .`                                                                                 | Code formatting validation |
+| `lint`         | `eslint . --ext .js`                                                                                 | Code quality validation    |
+| `test`         | `jest --runInBand`                                                                                   | Unit test execution        |
+| `shellcheck`   | `find script -name '*.sh' -type f \| grep -vFf script/.shellcheck-exclude \| xargs -r shellcheck -x` | Shell script validation    |
 
 Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + coverage), `test:all` (unit + integration)
 
@@ -141,5 +144,14 @@ Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + cov
 | `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes |
 | `pre_exit_plan_ai_review.py`  | Pre ExitPlanMode    | AI review before plan exit           |
 | `stop_test_verification.py`   | Stop                | Verify test results on session end   |
+
+## Development Standards
+
+### Code Quality Requirements
+
+- **Test-Driven Development (TDD)**: Red -> Green -> Refactor methodology with 70%+ line coverage requirement
+- **Static Quality Gates**: Automated linting, formatting, security analysis, and license checking
+- **Git Workflow**: Conventional commits, branch naming conventions, and pull request requirements
+- **Release Types Required for Tooling Changes**: Commits that touch `.codex/**`, `.devcontainer/codex*`, `package*.json`, or `npm/global.json` must use release-triggering types (`feat` / `fix` / `perf` / `revert` / `docs`). commitlint blocks `chore` etc. to align with semantic-release.
 
 <!-- END AUTO-GENERATED -->
