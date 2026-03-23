@@ -39,7 +39,6 @@ Development infrastructure template repository providing DevContainer images, CI
 
 | Directory            | Purpose                                          |
 | -------------------- | ------------------------------------------------ |
-| `.agents/`           | AI agent skills and configurations               |
 | `.claude/commands/`  | Claude Code slash commands                       |
 | `.claude/hooks/`     | Pre/post hook scripts for quality enforcement    |
 | `.claude/rules/`     | Claude Code rules for development standards      |
@@ -47,7 +46,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `.cursor/`           | Cursor editor settings                           |
 | `.devcontainer/`     | DevContainer configuration and Dockerfile        |
 | `.gemini/`           | Gemini AI agent configuration                    |
-| `.github/workflows/` | GitHub Actions CI/CD workflows (20 workflows)    |
+| `.github/workflows/` | GitHub Actions CI/CD workflows (21 workflows)    |
 | `.husky/`            | Git hooks (pre-commit, commit-msg)               |
 | `.vscode/`           | VS Code workspace settings                       |
 | `brew/`              | Homebrew package management (Linux only)         |
@@ -56,7 +55,6 @@ Development infrastructure template repository providing DevContainer images, CI
 | `dot/`               | Dotfiles (DevContainer .zshrc, peco)             |
 | `eslint/`            | ESLint configuration and plugins                 |
 | `git/`               | Git hooks and configuration                      |
-| `next/`              | Next.js project templates                        |
 | `nix/`               | nix-darwin + home-manager (macOS environment)    |
 | `npm/`               | npm global configuration and library management  |
 | `script/`            | Utility shell scripts                            |
@@ -112,6 +110,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `manual-release.yml`        | Manual Release                       |
 | `quality-gate-fallback.yml` | CI                                   |
 | `rebuild-docker-cache.yml`  | Rebuild Docker Cache (Weekly)        |
+| `scheduled-maintenance.yml` | Scheduled Maintenance                |
 | `security.yml`              | Security Scans                       |
 | `update-claude-plugins.yml` | Update Claude Plugins                |
 | `update-dev-tools.yml`      | Update Development Tools             |
