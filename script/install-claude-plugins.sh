@@ -9,7 +9,14 @@ set -euo pipefail
 
 PLUGINS_FILE="${1:-/home/vscode/.claude/plugins/plugins.txt}"
 CLAUDE_DIR="/home/vscode/.claude"
-CREDENTIALS_SECRET="/run/secrets/claude_credentials"
+# BuildKit secret (root RUN) or temp copy (vscode RUN)
+CREDENTIALS_SECRET=""
+for _secret_path in "/run/secrets/claude_credentials" "/tmp/claude-secret/token"; do
+    if [[ -f "$_secret_path" ]] && [[ -s "$_secret_path" ]]; then
+        CREDENTIALS_SECRET="$_secret_path"
+        break
+    fi
+done
 
 # --- PATH フォールバック ---
 # Dockerfile の ENV PATH で設定されるが、root ユーザーで実行される場合や
@@ -52,7 +59,7 @@ fi
 # --- 認証情報の設定 ---
 mkdir -p "$CLAUDE_DIR"
 
-if [[ -f "$CREDENTIALS_SECRET" ]] && [[ -s "$CREDENTIALS_SECRET" ]]; then
+if [[ -n "$CREDENTIALS_SECRET" ]]; then
     log_info "BuildKit secret から認証情報を読み込み中..."
     SECRET_CONTENT=$(cat "$CREDENTIALS_SECRET")
     if echo "$SECRET_CONTENT" | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null; then
