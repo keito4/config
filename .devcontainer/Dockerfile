@@ -183,13 +183,21 @@ RUN chown -R vscode:vscode /home/vscode/.agents /home/vscode/.claude/skills
 # Build with: DOCKER_BUILDKIT=1 docker build --secret id=claude_credentials,src=$HOME/.claude/.credentials.json .
 # Or with: docker build --build-arg CLAUDE_CODE_OAUTH_TOKEN=$CLAUDE_CODE_OAUTH_TOKEN .
 # Or with: docker build --build-arg ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY .
-# Note: Run as root to access BuildKit secret, but use vscode's HOME for plugin installation
+# Note: Secret is copied to a temp file readable by vscode, then plugin install runs as vscode
 RUN --mount=type=secret,id=claude_credentials,uid=0,gid=0 \
-    env HOME=/home/vscode CLAUDE_CODE_OAUTH_TOKEN="${CLAUDE_CODE_OAUTH_TOKEN}" ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}" /tmp/install-claude-plugins.sh /home/vscode/.claude/plugins/plugins.txt || ( \
+    mkdir -p /tmp/claude-secret \
+    && if [ -f /run/secrets/claude_credentials ]; then \
+        cp /run/secrets/claude_credentials /tmp/claude-secret/token && \
+        chmod 644 /tmp/claude-secret/token; \
+    fi
+USER vscode
+RUN /tmp/install-claude-plugins.sh /home/vscode/.claude/plugins/plugins.txt || ( \
         echo "[WARN] Claude プラグインのインストールに失敗しました（認証情報が不足している可能性があります）" && \
         echo "[INFO] コンテナ起動後に手動でインストールしてください: claude plugin install <plugin>@<marketplace>" \
-    ) \
-    && chown -R vscode:vscode /home/vscode/.claude
+    )
+RUN rm -rf /tmp/claude-secret
+USER root
+RUN chown -R vscode:vscode /home/vscode/.claude
 
 # ビルド時にClaude設定を完全にセットアップ
 USER vscode
