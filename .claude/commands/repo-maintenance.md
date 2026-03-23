@@ -864,6 +864,7 @@ CI/CD ワークフローの設定状況を確認：
 - 必須ジョブ（Quality Gate による全チェック集約）の確認
 - セキュリティスキャンの設定確認
 - Claude Code Review の統合確認
+- Scheduled Maintenance ワークフローの存在確認
 
 これは `/setup-ci --dry-run` コマンドと同等の処理を実行します。
 
@@ -876,6 +877,58 @@ CI/CD ワークフローの設定状況を確認：
 MODE が `full` かつ CI/CD が未設定の場合:
 
 `/setup-ci` コマンドの実行を提案。
+
+### 3.5.0.1 Scheduled Maintenance Workflow Check
+
+定期メンテナンス用ワークフローの存在と設定を確認：
+
+**確認ロジック:**
+
+```bash
+SCHED_MAINT=".github/workflows/scheduled-maintenance.yml"
+TEMPLATE="templates/workflows/scheduled-maintenance.yml"
+TEMPLATE_RAW_URL="https://raw.githubusercontent.com/keito4/config/main/templates/workflows/scheduled-maintenance.yml"
+
+if [ -f "$SCHED_MAINT" ]; then
+  echo "scheduled-maintenance.yml: 存在"
+else
+  echo "scheduled-maintenance.yml: 未配置"
+fi
+```
+
+**結果パターン:**
+
+| 状態                                  | 対応                                    |
+| ------------------------------------- | --------------------------------------- |
+| ワークフロー存在 + テンプレートと一致 | ✅ スキップ                             |
+| ワークフロー存在 + テンプレートと乖離 | ⚠️ テンプレートとの差分を表示           |
+| ワークフロー未配置                    | ⚠️ → full mode でテンプレートからコピー |
+
+**MODE が `full` かつ未配置の場合:**
+
+```bash
+mkdir -p .github/workflows
+
+# テンプレート取得（優先順位順）
+if [ -f "$TEMPLATE" ]; then
+  cp "$TEMPLATE" "$SCHED_MAINT"
+elif curl -fsSL "$TEMPLATE_RAW_URL" -o "$SCHED_MAINT" 2>/dev/null; then
+  echo "テンプレートを GitHub から取得しました"
+else
+  echo "テンプレート取得に失敗しました"
+fi
+```
+
+**前提条件:**
+
+- `CLAUDE_CODE_OAUTH_TOKEN` シークレットがリポジトリに設定されていること
+- シークレット未設定の場合は設定手順を案内
+
+**結果:**
+
+- ✅ scheduled-maintenance.yml 設定済み
+- 🔧 scheduled-maintenance.yml を配置しました
+- ⚠️ `CLAUDE_CODE_OAUTH_TOKEN` シークレットの設定が必要です
 
 ### 3.5.1 CI Workflow Template Sync Check
 
@@ -1339,7 +1392,115 @@ gh api -X PUT "repos/$REPO/actions/workflows/$WORKFLOW_ID/disable"
 - ⚠️ 常時失敗ワークフロー: X 件（リスト表示）
 - 📝 schedule ワークフロー: X 件（要確認リスト表示）
 
-#### 3.6.7 Actions Runner サイズチェック
+#### 3.6.7 不要ワークフロー削除 (full mode only)
+
+検出された不要ワークフローの削除を提案・実行：
+
+**背景:**
+リポジトリの進化に伴い、役割を終えたワークフローや重複するワークフローが残存することがある。
+これらは不要な Actions 課金、メンテナンスコスト増加、混乱の原因となる。
+
+**削除候補の判定基準:**
+
+| #   | 判定基準                                 | 対応                     |
+| --- | ---------------------------------------- | ------------------------ |
+| 1   | 90日以上実行なし + schedule トリガーなし | 削除候補                 |
+| 2   | 直近10回すべて失敗                       | 削除候補（修正不可なら） |
+| 3   | 同一目的のワークフローが重複             | 統合・削除候補           |
+| 4   | deprecated action のみに依存             | 移行 or 削除候補         |
+| 5   | config テンプレートに置き換え済み        | 旧ファイル削除候補       |
+
+**確認ロジック:**
+
+```bash
+REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+NINETY_DAYS_AGO=$(date -u -v-90d +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '90 days ago' +%Y-%m-%dT%H:%M:%SZ)
+DELETE_CANDIDATES=()
+
+for workflow in .github/workflows/*.yml; do
+  [ ! -f "$workflow" ] && continue
+  BASENAME=$(basename "$workflow")
+  CONTENT=$(cat "$workflow")
+
+  # 1. API でワークフロー ID を取得
+  WORKFLOW_ID=$(gh api "repos/$REPO/actions/workflows" \
+    --jq ".workflows[] | select(.path == \".github/workflows/$BASENAME\") | .id" 2>/dev/null)
+  [ -z "$WORKFLOW_ID" ] && continue
+
+  # 2. 最新実行日を取得
+  LATEST_RUN=$(gh api "repos/$REPO/actions/workflows/$WORKFLOW_ID/runs?per_page=1" \
+    --jq '.workflow_runs[0].created_at' 2>/dev/null)
+
+  # 3. 90日以上未実行 + schedule なし → 削除候補
+  if [ -n "$LATEST_RUN" ] && [[ "$LATEST_RUN" < "$NINETY_DAYS_AGO" ]]; then
+    if ! echo "$CONTENT" | grep -q "schedule:"; then
+      DELETE_CANDIDATES+=("$BASENAME: 90日以上未実行（最終: $LATEST_RUN）")
+    fi
+  fi
+
+  # 4. 実行履歴なし + 30日以上前にファイル作成 → 削除候補
+  if [ -z "$LATEST_RUN" ] || [ "$LATEST_RUN" = "null" ]; then
+    DELETE_CANDIDATES+=("$BASENAME: 実行履歴なし")
+  fi
+
+  # 5. 直近10回すべて失敗 → 削除候補
+  ALL_FAILED=$(gh api "repos/$REPO/actions/workflows/$WORKFLOW_ID/runs?per_page=10" \
+    --jq '[.workflow_runs[].conclusion] | map(select(. != null)) | if length > 0 then all(. == "failure") else false end' 2>/dev/null)
+  if [ "$ALL_FAILED" = "true" ]; then
+    DELETE_CANDIDATES+=("$BASENAME: 直近10回すべて失敗")
+  fi
+done
+
+# 6. 重複ワークフロー検出（同一 name: を持つワークフロー）
+declare -A WF_NAMES
+for workflow in .github/workflows/*.yml; do
+  [ ! -f "$workflow" ] && continue
+  BASENAME=$(basename "$workflow")
+  NAME=$(grep -m1 '^name:' "$workflow" | sed 's/^name: *//' | tr -d "'\"")
+  if [ -n "${WF_NAMES[$NAME]}" ]; then
+    DELETE_CANDIDATES+=("$BASENAME: '$NAME' が ${WF_NAMES[$NAME]} と重複")
+  fi
+  WF_NAMES[$NAME]=$BASENAME
+done
+```
+
+**MODE が `full` かつ削除候補がある場合:**
+
+各候補をユーザーに確認してから削除：
+
+```bash
+for candidate in "${DELETE_CANDIDATES[@]}"; do
+  FILENAME=$(echo "$candidate" | cut -d: -f1)
+  REASON=$(echo "$candidate" | cut -d: -f2-)
+
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "削除候補: $FILENAME"
+  echo "理由: $REASON"
+  echo ""
+
+  # ワークフロー内容のサマリを表示
+  grep -E '^(name:|on:|  schedule:|  push:|  pull_request:)' ".github/workflows/$FILENAME"
+  echo ""
+
+  # ユーザー確認後に削除
+  # git rm ".github/workflows/$FILENAME"
+done
+```
+
+**安全策:**
+
+- `schedule` トリガーを持つワークフローは自動削除しない（意図的な定期実行の可能性）
+- config テンプレート (`templates/workflows/`) に含まれるワークフローは削除しない
+- 削除前に必ずユーザーに確認を求める
+- 削除はコミットせず、PR に含めてレビュー可能にする
+
+**結果:**
+
+- ✅ 不要ワークフローなし
+- 🗑️ X 件の不要ワークフローを削除しました
+- ⚠️ X 件の削除候補あり（手動確認が必要）
+
+#### 3.6.8 Actions Runner サイズチェック
 
 不必要に高スペックな Runner の使用を検出：
 
