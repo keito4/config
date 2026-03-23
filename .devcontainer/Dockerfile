@@ -195,9 +195,9 @@ RUN /tmp/install-claude-plugins.sh /home/vscode/.claude/plugins/plugins.txt || (
         echo "[WARN] Claude プラグインのインストールに失敗しました（認証情報が不足している可能性があります）" && \
         echo "[INFO] コンテナ起動後に手動でインストールしてください: claude plugin install <plugin>@<marketplace>" \
     )
-RUN rm -rf /tmp/claude-secret
 USER root
-RUN chown -R vscode:vscode /home/vscode/.claude
+RUN rm -rf /tmp/claude-secret \
+ && chown -R vscode:vscode /home/vscode/.claude
 
 # ビルド時にClaude設定を完全にセットアップ
 USER vscode
