@@ -646,6 +646,7 @@ jobs:
 | License Check    | ❌      | ✅          | MISSING |
 | CodeQL SAST      | ❌      | ✅          | MISSING |
 | Claude Review    | ✅      | ✅          | OK     |
+| Sched Maint      | ❌      | ✅          | MISSING |
 | Concurrency      | ❌      | ✅          | MISSING |
 
 Missing components: 6
@@ -669,6 +670,7 @@ mkdir -p .github/workflows
 - `.github/workflows/ci.yml`
 - `.github/workflows/security.yml` (comprehensive)
 - `.github/workflows/claude-code-review.yml` (comprehensive)
+- `.github/workflows/scheduled-maintenance.yml` (standard+) — `templates/workflows/scheduled-maintenance.yml` をコピー
 
 ### 6.3 Update package.json Scripts
 
@@ -746,13 +748,14 @@ Next Steps:
 
 レベルに応じて必要なSecrets：
 
-| Secret            | Level         | Purpose            |
-| ----------------- | ------------- | ------------------ |
-| CODECOV_TOKEN     | standard+     | Coverage reports   |
-| ANTHROPIC_API_KEY | comprehensive | Claude Code Review |
-| NPM_TOKEN         | release       | npm publish        |
-| VERCEL_TOKEN      | deploy        | Vercel deployment  |
-| AWS_ACCESS_KEY_ID | deploy        | AWS deployment     |
+| Secret                  | Level         | Purpose               |
+| ----------------------- | ------------- | --------------------- |
+| CLAUDE_CODE_OAUTH_TOKEN | standard+     | Scheduled Maintenance |
+| CODECOV_TOKEN           | standard+     | Coverage reports      |
+| ANTHROPIC_API_KEY       | comprehensive | Claude Code Review    |
+| NPM_TOKEN               | release       | npm publish           |
+| VERCEL_TOKEN            | deploy        | Vercel deployment     |
+| AWS_ACCESS_KEY_ID       | deploy        | AWS deployment        |
 
 ## CI Level Comparison
 
@@ -769,6 +772,7 @@ Next Steps:
 | CodeQL SAST             |   ❌    |    ❌    |      ✅       |
 | E2E Tests               |   ❌    |    ❌    |      ✅       |
 | Claude Code Review      |   ❌    |    ❌    |      ✅       |
+| Scheduled Maintenance   |   ❌    |    ✅    |      ✅       |
 | Scheduled Security Scan |   ❌    |    ❌    |      ✅       |
 | Concurrency Control     |   ❌    |    ✅    |      ✅       |
 | PR Templates            |   ❌    |    ✅    |      ✅       |
