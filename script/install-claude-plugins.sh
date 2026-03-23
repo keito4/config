@@ -12,9 +12,10 @@ CLAUDE_DIR="/home/vscode/.claude"
 CREDENTIALS_SECRET="/run/secrets/claude_credentials"
 
 # --- PATH フォールバック ---
-# Dockerfile の ENV PATH で設定されるが、念のため確認
+# Dockerfile の ENV PATH で設定されるが、root ユーザーで実行される場合や
+# env コマンド経由の場合に PATH が引き継がれないケースがあるため明示的に追加
 for _bin_dir in "/home/vscode/.claude/local/bin" "${HOME}/.claude/local/bin"; do
-    if [[ -d "$_bin_dir" ]] && [[ ":${PATH}:" != *":${_bin_dir}:"* ]]; then
+    if [[ ":${PATH}:" != *":${_bin_dir}:"* ]]; then
         export PATH="${_bin_dir}:${PATH}"
     fi
 done
@@ -108,7 +109,21 @@ if [[ -f "$TEMPLATE" ]]; then
 fi
 
 # --- Claude CLI 確認 ---
-log_info "Claude version: $(claude --version 2>&1 || echo 'not found')"
+if ! command -v claude &>/dev/null; then
+    log_warn "claude コマンドが PATH に見つかりません"
+    log_info "PATH: $PATH"
+    # which で探索してパスを特定
+    CLAUDE_BIN=$(find /home/vscode/.claude/local/bin /usr/local/bin -name claude -type f 2>/dev/null | head -1)
+    if [[ -n "$CLAUDE_BIN" ]]; then
+        log_info "claude を発見: $CLAUDE_BIN"
+        CLAUDE_BIN_DIR="$(dirname "$CLAUDE_BIN")"
+        export PATH="${CLAUDE_BIN_DIR}:${PATH}"
+    else
+        log_warn "claude バイナリが見つかりません。プラグインインストールをスキップします。"
+        exit 0
+    fi
+fi
+log_info "Claude version: $(claude --version 2>&1 || echo 'unknown')"
 
 # --- マーケットプレイス追加 ---
 plugins::detect_and_add_marketplaces "$PLUGINS_FILE" "$KNOWN_MARKETPLACES"
