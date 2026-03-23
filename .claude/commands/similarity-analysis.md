@@ -22,7 +22,25 @@ arguments:
 
 ## 実行手順
 
-1. **similarity-ts コマンドを実行**
+1. **similarity-ts のインストール確認**
+
+similarity-ts が未インストールの場合、オンデマンドでインストールします:
+
+```bash
+if ! command -v similarity-ts &>/dev/null; then
+  echo "similarity-ts が未インストールです。インストールを開始します..."
+  if command -v cargo-binstall &>/dev/null; then
+    cargo binstall similarity-ts -y
+  elif command -v cargo &>/dev/null; then
+    cargo install similarity-ts
+  else
+    echo "Rust ツールチェインが必要です: curl -sSf https://sh.rustup.rs | sh"
+    exit 1
+  fi
+fi
+```
+
+2. **similarity-ts コマンドを実行**
 
 ```bash
 similarity-ts ${path:-.} --threshold ${threshold:-0.8} --print --exclude node_modules --exclude dist --exclude .git --exclude coverage
