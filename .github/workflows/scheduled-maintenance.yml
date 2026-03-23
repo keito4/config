@@ -42,7 +42,7 @@ jobs:
         uses: anthropics/claude-code-action@d59651bd82c48d81756854675ce4fa4d69722200 # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          direct_prompt: |
+          prompt: |
             /repo-maintenance --mode ${{ inputs.mode || 'full' }} --create-pr
 
             After completing maintenance, create a summary issue comment or issue with:
@@ -51,7 +51,6 @@ jobs:
             - What needs manual attention
 
             If no updates are needed, do NOT create an issue.
-          timeout_minutes: 25
           settings: |
             {
               "permissions": {
