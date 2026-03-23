@@ -51,9 +51,24 @@ fi
 # --- 認証情報の設定 ---
 mkdir -p "$CLAUDE_DIR"
 
-if [[ -f "$CREDENTIALS_SECRET" ]]; then
+if [[ -f "$CREDENTIALS_SECRET" ]] && [[ -s "$CREDENTIALS_SECRET" ]]; then
     log_info "BuildKit secret から認証情報を読み込み中..."
-    cp "$CREDENTIALS_SECRET" "${CLAUDE_DIR}/.credentials.json"
+    SECRET_CONTENT=$(cat "$CREDENTIALS_SECRET")
+    if echo "$SECRET_CONTENT" | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null; then
+        # JSON 形式: そのままコピー
+        cp "$CREDENTIALS_SECRET" "${CLAUDE_DIR}/.credentials.json"
+    else
+        # プレーンテキスト（トークン文字列）: JSON に変換
+        log_info "トークン文字列を credentials JSON に変換中..."
+        cat > "${CLAUDE_DIR}/.credentials.json" << CRED_EOF
+{
+  "claudeAiOauth": {
+    "accessToken": "${SECRET_CONTENT}",
+    "expiresAt": 9999999999999
+  }
+}
+CRED_EOF
+    fi
     chmod 600 "${CLAUDE_DIR}/.credentials.json"
 elif [[ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]]; then
     log_info "CLAUDE_CODE_OAUTH_TOKEN から認証情報を作成中..."
