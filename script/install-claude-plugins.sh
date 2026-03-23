@@ -68,36 +68,33 @@ if [[ -n "$CREDENTIALS_SECRET" ]]; then
     else
         # プレーンテキスト（トークン文字列）: JSON に変換
         log_info "トークン文字列を credentials JSON に変換中..."
-        cat > "${CLAUDE_DIR}/.credentials.json" << CRED_EOF
-{
-  "claudeAiOauth": {
-    "accessToken": "${SECRET_CONTENT}",
-    "expiresAt": 9999999999999
-  }
-}
-CRED_EOF
+        python3 -c "
+import json, sys
+token = sys.argv[1]
+creds = {'claudeAiOauth': {'accessToken': token, 'expiresAt': 9999999999999}}
+with open(sys.argv[2], 'w') as f:
+    json.dump(creds, f, indent=2)
+" "$SECRET_CONTENT" "${CLAUDE_DIR}/.credentials.json"
     fi
     chmod 600 "${CLAUDE_DIR}/.credentials.json"
 elif [[ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]]; then
     log_info "CLAUDE_CODE_OAUTH_TOKEN から認証情報を作成中..."
-    cat > "${CLAUDE_DIR}/.credentials.json" << EOF
-{
-  "claudeAiOauth": {
-    "accessToken": "${CLAUDE_CODE_OAUTH_TOKEN}",
-    "expiresAt": 9999999999999
-  }
-}
-EOF
+    python3 -c "
+import json, sys
+token = sys.argv[1]
+creds = {'claudeAiOauth': {'accessToken': token, 'expiresAt': 9999999999999}}
+with open(sys.argv[2], 'w') as f:
+    json.dump(creds, f, indent=2)
+" "$CLAUDE_CODE_OAUTH_TOKEN" "${CLAUDE_DIR}/.credentials.json"
 elif [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
     log_info "ANTHROPIC_API_KEY から認証情報を作成中..."
-    cat > "${CLAUDE_DIR}/.credentials.json" << EOF
-{
-  "claudeAiOauth": {
-    "accessToken": "${ANTHROPIC_API_KEY}",
-    "expiresAt": 9999999999999
-  }
-}
-EOF
+    python3 -c "
+import json, sys
+token = sys.argv[1]
+creds = {'claudeAiOauth': {'accessToken': token, 'expiresAt': 9999999999999}}
+with open(sys.argv[2], 'w') as f:
+    json.dump(creds, f, indent=2)
+" "$ANTHROPIC_API_KEY" "${CLAUDE_DIR}/.credentials.json"
 else
     log_warn "認証情報が見つかりません"
     echo "  - BuildKit secret: $CREDENTIALS_SECRET"
