@@ -15,12 +15,7 @@ LABEL org.opencontainers.image.version="${IMAGE_VERSION}" \
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
     git \
-    alsa-utils \
-    sox \
     build-essential \
-    pkg-config \
-    libssl-dev \
-    libasound2-dev \
     ca-certificates \
     gnupg \
     wget \
@@ -86,17 +81,10 @@ RUN npm install -g pnpm@${PNPM_VERSION}
 USER vscode
 ENV SHELL=/bin/bash
 ENV PNPM_HOME="/home/vscode/.local/share/pnpm"
-ENV RUSTUP_HOME="/home/vscode/.rustup"
-ENV CARGO_HOME="/home/vscode/.cargo"
-ENV PATH="${CARGO_HOME}/bin:${PNPM_HOME}:${PATH}"
+ENV PATH="${PNPM_HOME}:${PATH}"
 RUN bash -c "pnpm setup" \
  && echo "export PNPM_HOME=\"/home/vscode/.local/share/pnpm\"" >> /home/vscode/.bashrc \
  && echo "export PATH=\"\$PNPM_HOME:\$PATH\"" >> /home/vscode/.bashrc \
- && echo "export RUSTUP_HOME=\"/home/vscode/.rustup\"" >> /home/vscode/.bashrc \
- && echo "export CARGO_HOME=\"/home/vscode/.cargo\"" >> /home/vscode/.bashrc \
- && echo "export PATH=\"\$CARGO_HOME/bin:\$PATH\"" >> /home/vscode/.bashrc \
- && curl -sSf https://sh.rustup.rs | bash -s -- -y --default-toolchain stable \
- && bash -lc "rustup component add rustfmt clippy" \
  && bash -c "source /home/vscode/.bashrc && pnpm add -g supabase"
 
 USER root
@@ -109,8 +97,8 @@ COPY npm/global.json /tmp/npm-global.json
 ARG CLAUDE_CODE_VERSION=2.1.81
 USER vscode
 RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
- && echo 'export PATH="$HOME/.claude/local/bin:$PATH"' >> /home/vscode/.bashrc
-ENV PATH="/home/vscode/.claude/local/bin:${PATH}"
+ && echo 'export PATH="$HOME/.local/bin:$HOME/.claude/local/bin:$PATH"' >> /home/vscode/.bashrc
+ENV PATH="/home/vscode/.local/bin:/home/vscode/.claude/local/bin:${PATH}"
 USER root
 
 # Install other global npm packages
@@ -129,8 +117,7 @@ RUN CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@ope
     difit@${DIFIT_VERSION}
 
 USER vscode
-RUN bash -lc "cargo install similarity-ts" || true \
-    && curl https://cursor.com/install -fsS | bash \
+RUN curl https://cursor.com/install -fsS | bash \
     && echo 'export PATH="$HOME/.local/bin:$PATH"' >> /home/vscode/.bashrc
 USER root
 
