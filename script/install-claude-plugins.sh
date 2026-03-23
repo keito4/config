@@ -21,7 +21,7 @@ done
 # --- PATH フォールバック ---
 # Dockerfile の ENV PATH で設定されるが、root ユーザーで実行される場合や
 # env コマンド経由の場合に PATH が引き継がれないケースがあるため明示的に追加
-for _bin_dir in "/home/vscode/.claude/local/bin" "${HOME}/.claude/local/bin"; do
+for _bin_dir in "/home/vscode/.local/bin" "/home/vscode/.claude/local/bin" "${HOME}/.local/bin" "${HOME}/.claude/local/bin"; do
     if [[ ":${PATH}:" != *":${_bin_dir}:"* ]]; then
         export PATH="${_bin_dir}:${PATH}"
     fi

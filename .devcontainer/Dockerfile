@@ -97,8 +97,8 @@ COPY npm/global.json /tmp/npm-global.json
 ARG CLAUDE_CODE_VERSION=2.1.81
 USER vscode
 RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
- && echo 'export PATH="$HOME/.claude/local/bin:$PATH"' >> /home/vscode/.bashrc
-ENV PATH="/home/vscode/.claude/local/bin:${PATH}"
+ && echo 'export PATH="$HOME/.local/bin:$HOME/.claude/local/bin:$PATH"' >> /home/vscode/.bashrc
+ENV PATH="/home/vscode/.local/bin:/home/vscode/.claude/local/bin:${PATH}"
 USER root
 
 # Install other global npm packages
