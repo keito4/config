@@ -864,6 +864,7 @@ CI/CD ワークフローの設定状況を確認：
 - 必須ジョブ（Quality Gate による全チェック集約）の確認
 - セキュリティスキャンの設定確認
 - Claude Code Review の統合確認
+- Scheduled Maintenance ワークフローの存在確認
 
 これは `/setup-ci --dry-run` コマンドと同等の処理を実行します。
 
@@ -876,6 +877,58 @@ CI/CD ワークフローの設定状況を確認：
 MODE が `full` かつ CI/CD が未設定の場合:
 
 `/setup-ci` コマンドの実行を提案。
+
+### 3.5.0.1 Scheduled Maintenance Workflow Check
+
+定期メンテナンス用ワークフローの存在と設定を確認：
+
+**確認ロジック:**
+
+```bash
+SCHED_MAINT=".github/workflows/scheduled-maintenance.yml"
+TEMPLATE="templates/workflows/scheduled-maintenance.yml"
+TEMPLATE_RAW_URL="https://raw.githubusercontent.com/keito4/config/main/templates/workflows/scheduled-maintenance.yml"
+
+if [ -f "$SCHED_MAINT" ]; then
+  echo "scheduled-maintenance.yml: 存在"
+else
+  echo "scheduled-maintenance.yml: 未配置"
+fi
+```
+
+**結果パターン:**
+
+| 状態                                  | 対応                                    |
+| ------------------------------------- | --------------------------------------- |
+| ワークフロー存在 + テンプレートと一致 | ✅ スキップ                             |
+| ワークフロー存在 + テンプレートと乖離 | ⚠️ テンプレートとの差分を表示           |
+| ワークフロー未配置                    | ⚠️ → full mode でテンプレートからコピー |
+
+**MODE が `full` かつ未配置の場合:**
+
+```bash
+mkdir -p .github/workflows
+
+# テンプレート取得（優先順位順）
+if [ -f "$TEMPLATE" ]; then
+  cp "$TEMPLATE" "$SCHED_MAINT"
+elif curl -fsSL "$TEMPLATE_RAW_URL" -o "$SCHED_MAINT" 2>/dev/null; then
+  echo "テンプレートを GitHub から取得しました"
+else
+  echo "テンプレート取得に失敗しました"
+fi
+```
+
+**前提条件:**
+
+- `CLAUDE_CODE_OAUTH_TOKEN` シークレットがリポジトリに設定されていること
+- シークレット未設定の場合は設定手順を案内
+
+**結果:**
+
+- ✅ scheduled-maintenance.yml 設定済み
+- 🔧 scheduled-maintenance.yml を配置しました
+- ⚠️ `CLAUDE_CODE_OAUTH_TOKEN` シークレットの設定が必要です
 
 ### 3.5.1 CI Workflow Template Sync Check
 
