@@ -3,17 +3,13 @@
     "playwright": {
       "type": "stdio",
       "command": "npx",
-      "args": ["@playwright/mcp@latest"],
+      "args": ["--yes", "@playwright/mcp@latest"],
       "env": {}
     },
     "github": {
-      "type": "http",
-      "url": "https://api.githubcopilot.com/mcp/"
-    },
-    "figma": {
-      "type": "http",
-      "url": "https://mcp.figma.com/mcp",
-      "headers": {}
+      "type": "stdio",
+      "command": "bash",
+      "args": ["-c", "GITHUB_PERSONAL_ACCESS_TOKEN=$(gh auth token) npx --yes @modelcontextprotocol/server-github"]
     }
   }
 }
