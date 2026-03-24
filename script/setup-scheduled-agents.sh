@@ -4,9 +4,20 @@
 
 set -euo pipefail
 
-REPO="https://github.com/keito4/config"
+# Claude CLI の存在確認
+if ! command -v claude &> /dev/null; then
+    echo "エラー: Claude CLI が見つかりません。先にインストールしてください。" >&2
+    exit 1
+fi
+
+# リポジトリ URL を git remote から動的に取得（fallback あり）
+REPO="$(git remote get-url origin 2>/dev/null | sed 's|git@github.com:|https://github.com/|; s|\.git$||')"
+if [[ -z "$REPO" ]]; then
+    REPO="https://github.com/keito4/config"
+fi
 
 echo "=== Scheduled Remote Agents セットアップ ==="
+echo "リポジトリ: $REPO"
 echo ""
 
 # 1. 依存関係の健全性レビュー（毎週月曜 10:00 JST = 1:00 UTC）
@@ -126,7 +137,7 @@ claude schedule create \
   --cron "0 2 * * 1" \
   --repo "$REPO" \
   --prompt "先週マージされたPRから週次リリースノートを作成してください。
-1. gh pr list --state merged --search 'merged:>=$(date -d '7 days ago' +%Y-%m-%d)' でPRを取得
+1. 今日の日付から7日前の日付を計算し、gh pr list --state merged で先週マージされたPRを取得（--limit 50 で十分な件数を確保）
 2. PRをカテゴリ別に分類（feat, fix, chore, docs等）
 3. 主要な変更点のハイライトとPRリンクを含むサマリを作成
 4. リスクのある変更や破壊的変更があれば明示
