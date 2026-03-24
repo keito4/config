@@ -39,7 +39,6 @@
       "Bash(touch:*)",
       "Bash(cp:*)",
       "Bash(mv:*)",
-      "Bash(chmod:*)",
       "Bash(ln:*)",
       "Bash(zip:*)",
       "Bash(unzip:*)",
@@ -141,13 +140,10 @@
       "Bash(terraform destroy:*)",
       "Bash(supabase db branch delete)",
       "Bash(supabase db branch delete:*)",
-      "Bash(curl:*)",
-      "Bash(wget:*)",
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(**/*.pem)",
-      "Read(**/*.key)",
-      "Bash(chmod 777:*)"
+      "Read(**/*.key)"
     ],
     "ask": [
       "Bash(rm:*)",
@@ -168,7 +164,10 @@
       "Bash(supabase db reset:*)",
       "Bash(supabase migration squash)",
       "Bash(supabase migration squash:*)",
-      "mcp__supabase__execute_sql"
+      "mcp__supabase__execute_sql",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(chmod:*)"
     ]
   },
   "hooks": {
