@@ -20,9 +20,26 @@ echo "=== Scheduled Remote Agents セットアップ ==="
 echo "リポジトリ: $REPO"
 echo ""
 
+# 既存スケジュール一覧を取得（冪等性確保）
+existing_schedules="$(claude schedule list 2>/dev/null | grep -oP '(?<=Name: ).*' || true)"
+
+# スケジュールが未登録の場合のみ作成するヘルパー関数
+create_schedule_if_not_exists() {
+  local name="$1"
+  shift
+  if echo "$existing_schedules" | grep -qF "$name"; then
+    echo "  → スキップ（登録済み）: $name"
+    return 0
+  fi
+  claude schedule create --name "$name" "$@" || {
+    echo "  → 作成失敗（プラン上限の可能性）: $name" >&2
+    return 0
+  }
+}
+
 # 1. 依存関係の健全性レビュー（毎週月曜 10:00 JST = 1:00 UTC）
 echo "[1/9] 依存関係健全性レビュー（毎週月曜 10:00 JST）"
-claude schedule create \
+create_schedule_if_not_exists "依存関係健全性レビュー" \
   --name "依存関係健全性レビュー" \
   --cron "0 1 * * 1" \
   --repo "$REPO" \
@@ -36,8 +53,7 @@ echo ""
 
 # 2. config-base イメージ同期チェック（毎週水曜 10:00 JST = 1:00 UTC）
 echo "[2/9] config-base同期チェック（毎週水曜 10:00 JST）"
-claude schedule create \
-  --name "config-base同期チェック" \
+create_schedule_if_not_exists "config-base同期チェック" \
   --cron "0 1 * * 3" \
   --repo "$REPO" \
   --prompt "config-baseイメージの同期状態を確認してください。
@@ -49,8 +65,7 @@ echo ""
 
 # 3. コード複雑度トレンド監視（毎週金曜 10:00 JST = 1:00 UTC）
 echo "[3/9] コード複雑度監視（毎週金曜 10:00 JST）"
-claude schedule create \
-  --name "コード複雑度監視" \
+create_schedule_if_not_exists "コード複雑度監視" \
   --cron "0 1 * * 5" \
   --repo "$REPO" \
   --prompt "リポジトリのコード複雑度を分析してください。
@@ -63,8 +78,7 @@ echo ""
 
 # 4. テンプレート乖離チェック（毎月1日 10:00 JST = 1:00 UTC）
 echo "[4/9] テンプレート乖離チェック（毎月1日 10:00 JST）"
-claude schedule create \
-  --name "テンプレート乖離チェック" \
+create_schedule_if_not_exists "テンプレート乖離チェック" \
   --cron "0 1 1 * *" \
   --repo "$REPO" \
   --prompt "templates/ ディレクトリのテンプレートと実際のファイルの乖離を確認してください。
@@ -76,8 +90,7 @@ echo ""
 
 # 5. ドキュメント鮮度チェック（毎月15日 10:00 JST = 1:00 UTC）
 echo "[5/9] ドキュメント鮮度チェック（毎月15日 10:00 JST）"
-claude schedule create \
-  --name "ドキュメント鮮度チェック" \
+create_schedule_if_not_exists "ドキュメント鮮度チェック" \
   --cron "0 1 15 * *" \
   --repo "$REPO" \
   --prompt "ドキュメントの鮮度を確認してください。
@@ -90,8 +103,7 @@ echo ""
 
 # 6. CI失敗分析（毎日 10:00 JST = 1:00 UTC）
 echo "[6/9] CI失敗分析（毎日 10:00 JST）"
-claude schedule create \
-  --name "CI失敗分析" \
+create_schedule_if_not_exists "CI失敗分析" \
   --cron "0 1 * * *" \
   --repo "$REPO" \
   --prompt "過去24時間のCI失敗を分析してください。
@@ -104,8 +116,7 @@ echo ""
 
 # 7. 未テストパス検出（毎週木曜 10:00 JST = 1:00 UTC）
 echo "[7/9] 未テストパス検出（毎週木曜 10:00 JST）"
-claude schedule create \
-  --name "未テストパス検出" \
+create_schedule_if_not_exists "未テストパス検出" \
   --cron "0 1 * * 4" \
   --repo "$REPO" \
   --prompt "最近の変更からテストされていないコードパスを特定してください。
@@ -118,8 +129,7 @@ echo ""
 
 # 8. 新規Issueトリアージ（毎日 11:00 JST = 2:00 UTC）
 echo "[8/9] 新規Issueトリアージ（毎日 11:00 JST）"
-claude schedule create \
-  --name "新規Issueトリアージ" \
+create_schedule_if_not_exists "新規Issueトリアージ" \
   --cron "0 2 * * *" \
   --repo "$REPO" \
   --prompt "未トリアージのIssueを整理してください。
@@ -132,8 +142,7 @@ echo ""
 
 # 9. 週次リリースノート（毎週月曜 11:00 JST = 2:00 UTC）
 echo "[9/9] 週次リリースノート（毎週月曜 11:00 JST）"
-claude schedule create \
-  --name "週次リリースノート" \
+create_schedule_if_not_exists "週次リリースノート" \
   --cron "0 2 * * 1" \
   --repo "$REPO" \
   --prompt "先週マージされたPRから週次リリースノートを作成してください。
