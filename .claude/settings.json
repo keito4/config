@@ -41,8 +41,6 @@
       "Bash(mv:*)",
       "Bash(chmod:*)",
       "Bash(ln:*)",
-      "Bash(curl:*)",
-      "Bash(wget:*)",
       "Bash(zip:*)",
       "Bash(unzip:*)",
       "Bash(tar:*)",
@@ -142,7 +140,14 @@
       "Bash(terraform destroy)",
       "Bash(terraform destroy:*)",
       "Bash(supabase db branch delete)",
-      "Bash(supabase db branch delete:*)"
+      "Bash(supabase db branch delete:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Bash(chmod 777:*)"
     ],
     "ask": [
       "Bash(rm:*)",

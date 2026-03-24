@@ -29,6 +29,9 @@ DANGEROUS_PATTERNS = [
     (r"git\s+reflog\s+expire", "git reflog expire (destroy recovery data)"),
     (r"git\s+reset\s+--hard", "git reset --hard (discard all changes)"),
 
+    # === chmod dangerous operations ===
+    (r"chmod\s+777\b", "chmod 777 (world-writable permissions)"),
+
     # === rm destructive operations ===
     (r"rm\s+.*-r.*-f|rm\s+.*-f.*-r|rm\s+-rf", "rm -rf (recursive force delete)"),
 
