@@ -21,7 +21,7 @@ echo "リポジトリ: $REPO"
 echo ""
 
 # 既存スケジュール一覧を取得（冪等性確保）
-existing_schedules="$(claude schedule list 2>/dev/null | grep -oP '(?<=Name: ).*' || true)"
+existing_schedules="$(claude schedule list 2>/dev/null | sed -n 's/^Name: //p' || true)"
 
 # スケジュールが未登録の場合のみ作成するヘルパー関数
 create_schedule_if_not_exists() {
@@ -40,7 +40,6 @@ create_schedule_if_not_exists() {
 # 1. 依存関係の健全性レビュー（毎週月曜 10:00 JST = 1:00 UTC）
 echo "[1/9] 依存関係健全性レビュー（毎週月曜 10:00 JST）"
 create_schedule_if_not_exists "依存関係健全性レビュー" \
-  --name "依存関係健全性レビュー" \
   --cron "0 1 * * 1" \
   --repo "$REPO" \
   --prompt "このリポジトリの依存関係の健全性をチェックしてください。
@@ -133,7 +132,7 @@ create_schedule_if_not_exists "新規Issueトリアージ" \
   --cron "0 2 * * *" \
   --repo "$REPO" \
   --prompt "未トリアージのIssueを整理してください。
-1. gh issue list --label '' --state open でラベルなしのIssueを取得
+1. gh issue list --search 'no:label' --state open でラベルなしのIssueを取得
 2. Issue内容を分析し、適切なラベルを提案（bug, enhancement, documentation, maintenance等）
 3. 優先度を判定（critical/high/medium/low）
 4. 関連するファイルやコンポーネントを特定
