@@ -13,15 +13,35 @@ on:
 permissions: {}
 
 concurrency:
+<<<<<<< Updated upstream
   group: claude-${{ github.repository }}-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
+=======
+  # イベント種別 + トリガーのコメント/レビューIDを含めることで、
+  # 同一 PR/Issue 内でも異なるメンションが互いをキャンセルしない
+  group: >-
+    claude-${{ github.repository }}-${{
+      github.event.issue.number
+      || github.event.pull_request.number
+      || github.run_id
+    }}-${{
+      github.event.comment.id
+      || github.event.review.id
+      || github.run_id
+    }}
+>>>>>>> Stashed changes
   cancel-in-progress: false
 
 jobs:
   claude:
+    # Bot 全般を除外（sender.type で判定するため、Bot 名のハードコードが不要）
     if: |
+<<<<<<< Updated upstream
       github.actor != 'github-actions[bot]' &&
       github.actor != 'dependabot[bot]' &&
       github.actor != 'claude[bot]' &&
+=======
+      github.event.sender.type != 'Bot' &&
+>>>>>>> Stashed changes
       (
         (github.event_name == 'issue_comment' && contains(github.event.comment.body || '', '@claude') &&
           !(github.event.issue.pull_request && github.event.issue.pull_request.url && github.event.issue.draft == true)) ||
