@@ -3,13 +3,19 @@
     "playwright": {
       "type": "stdio",
       "command": "npx",
-      "args": ["--yes", "@playwright/mcp@latest"],
+      "args": [
+        "--yes",
+        "@playwright/mcp@latest"
+      ],
       "env": {}
     },
     "github": {
       "type": "stdio",
       "command": "bash",
-      "args": ["-c", "GITHUB_PERSONAL_ACCESS_TOKEN=$(gh auth token) npx --yes @modelcontextprotocol/server-github"]
+      "args": [
+        "-c",
+        "TOKEN=\"${GITHUB_PERSONAL_ACCESS_TOKEN:-${GITHUB_TOKEN:-$(gh auth token 2>/dev/null)}}\"; [ -n \"$TOKEN\" ] || { echo 'GitHub MCP: missing token (run gh auth login or set GITHUB_PERSONAL_ACCESS_TOKEN/GITHUB_TOKEN)' >&2; exit 1; }; export GITHUB_PERSONAL_ACCESS_TOKEN=\"$TOKEN\"; exec npx --yes @modelcontextprotocol/server-github"
+      ]
     }
   }
 }
