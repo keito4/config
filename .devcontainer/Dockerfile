@@ -51,7 +51,7 @@ RUN DOPPLER_VERSION="${DOPPLER_CLI_VERSION}" \
  && dpkg -i /tmp/doppler.deb \
  && rm /tmp/doppler.deb
 
-ARG OP_CLI_VERSION=2.33.0
+ARG OP_CLI_VERSION=2.33.1
 
 # Install 1Password CLI (op)
 # https://developer.1password.com/docs/cli/get-started/
@@ -66,7 +66,7 @@ RUN OP_VERSION="${OP_CLI_VERSION}" \
 
 # Install Node.js
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG NODE_VERSION=24.14.0
+ARG NODE_VERSION=24.14.1
 RUN NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/arm64/arm64/') \
  && wget -q https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
  && tar -xJf node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz -C /usr/local --strip-components=1 \
@@ -75,7 +75,7 @@ RUN NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/
 
 # Install pnpm
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG PNPM_VERSION=10.32.1
+ARG PNPM_VERSION=10.33.0
 RUN npm install -g pnpm@${PNPM_VERSION}
 
 USER vscode
