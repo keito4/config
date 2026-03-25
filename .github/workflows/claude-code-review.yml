@@ -120,7 +120,7 @@ jobs:
 
   claude-review:
     # CIが成功した場合のみ実行（Draft PR、Dependabotはスキップ）
-    if: github.event.pull_request.draft == false && needs.check-ci-status.outputs.ci_passed == 'true' && github.actor != 'dependabot[bot]'
+    if: github.event.pull_request.draft == false && needs.check-ci-status.outputs.ci_passed == 'true' && github.event.sender.type != 'Bot'
     needs: [check-ci-status]
     runs-on: ubuntu-latest
     timeout-minutes: 20
