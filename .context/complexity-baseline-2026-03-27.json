@@ -1,0 +1,40 @@
+{
+  "date": "2026-03-27",
+  "overall_score": "19/20",
+  "rating": "Poor",
+  "distribution": {
+    "low": 2,
+    "medium": 9,
+    "high": 13,
+    "critical": 12
+  },
+  "critical_files": [
+    {"file": "script/changelog-generator.sh", "complexity": 33, "lines": 301},
+    {"file": "script/setup-team-protection.sh", "complexity": 40, "lines": 485},
+    {"file": "script/security-credential-scan.sh", "complexity": 46, "lines": 388},
+    {"file": "script/pre-pr-checklist.sh", "complexity": 25, "lines": 215},
+    {"file": "script/container-health.sh", "complexity": 55, "lines": 324},
+    {"file": "script/test-coverage-trend.sh", "complexity": 20, "lines": 263},
+    {"file": "script/code-complexity-check.sh", "complexity": 43, "lines": 282},
+    {"file": "script/codespaces-secrets.sh", "complexity": 43, "lines": 421},
+    {"file": "script/update-actions.sh", "complexity": 34, "lines": 219},
+    {"file": "script/branch-cleanup.sh", "complexity": 37, "lines": 243},
+    {"file": "script/dependency-health-check.sh", "complexity": 36, "lines": 188},
+    {"file": "script/update-agents-md.sh", "complexity": 46, "lines": 302}
+  ],
+  "high_files": [
+    {"file": "script/update-libraries.sh", "complexity": 10, "lines": 87},
+    {"file": "script/check-file-length.sh", "complexity": 11, "lines": 65},
+    {"file": "script/update-all.sh", "complexity": 13, "lines": 132},
+    {"file": "script/fix-container-plugins.sh", "complexity": 10, "lines": 78},
+    {"file": "script/update-claude-code.sh", "complexity": 10, "lines": 106},
+    {"file": "script/import.sh", "complexity": 19, "lines": 116},
+    {"file": "script/create-codespace.sh", "complexity": 12, "lines": 233},
+    {"file": "script/version.sh", "complexity": 11, "lines": 132},
+    {"file": "script/install-skills.sh", "complexity": 14, "lines": 114},
+    {"file": "script/brew-deps.sh", "complexity": 14, "lines": 208},
+    {"file": "script/install-claude-plugins.sh", "complexity": 19, "lines": 141},
+    {"file": "script/setup-claude.sh", "complexity": 11, "lines": 133},
+    {"file": "script/export.sh", "complexity": 14, "lines": 81}
+  ]
+}
