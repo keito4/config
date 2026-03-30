@@ -160,8 +160,8 @@ EOF
   assert_file_exists "$workflow"
 
   # CI workflowの実行順序を確認
-  # 1. npm ci
-  grep -q "npm ci" "$workflow"
+  # 1. Node.js setup (via composite action or direct npm ci)
+  grep -q "setup-node-ci\|npm ci" "$workflow"
 
   # 2. linter
   grep -q "npm run lint" "$workflow"

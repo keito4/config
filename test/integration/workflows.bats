@@ -31,12 +31,12 @@ load ../test_helper/test_helper
 @test "CI workflow uses secure practices" {
   local workflow="${REPO_ROOT}/.github/workflows/ci.yml"
 
-  # Should use npm ci instead of npm install
-  grep -q "npm ci" "$workflow"
+  # Should use npm ci (directly or via composite action)
+  grep -q "npm ci\|setup-node-ci" "$workflow"
 
-  # Should use pinned action versions (SHA or tag)
+  # Should use pinned action versions (SHA or tag) or composite actions
   grep -q "actions/checkout@" "$workflow"
-  grep -q "actions/setup-node@" "$workflow"
+  grep -q "actions/setup-node@\|setup-node-ci" "$workflow"
 }
 
 @test "docker-image workflow has proper permissions" {
