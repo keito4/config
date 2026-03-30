@@ -2,10 +2,10 @@
 import sys
 import json
 import shlex
+from common import load_hook_input, get_command
 
-# Read input from Claude
-data = json.load(sys.stdin)
-cmd = (data.get("tool_input", {}) or {}).get("command") or ""
+data = load_hook_input()
+cmd = get_command(data)
 tokens = shlex.split(cmd) if cmd else []
 
 if not tokens:

@@ -12,49 +12,37 @@ import json
 import subprocess
 import shutil
 import os
-import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from common import (load_hook_input, parse_tool_context, is_bash_command,
+                    is_help_command, extract_pr_url, print_header, print_footer,
+                    print_section, print_status)
 
 # モデル設定（空文字列の場合はCLIのデフォルトモデルを使用）
 CODEX_MODEL = ""  # デフォルトモデルを使用（ChatGPTアカウント互換）
 GEMINI_MODEL = ""  # デフォルトモデルを使用
 
-# Read input from Claude
-data = json.load(sys.stdin)
+data = load_hook_input()
+tool_name, tool_input, tool_response = parse_tool_context(data)
 
-tool_name = data.get("tool_name", "")
-tool_input = data.get("tool_input", {}) or {}
-tool_response = data.get("tool_response", {}) or {}
-
-# Bashツールでない場合はスキップ
-if tool_name != "Bash":
+if not is_bash_command(tool_name):
     sys.exit(0)
 
-# コマンドを取得
 command = tool_input.get("command", "").strip()
-
-# gh pr create コマンドかどうかを厳密に判定（プレフィックス判定）
 if not command.startswith("gh pr create"):
     sys.exit(0)
 
-# ヘルプコマンドは除外
-if "--help" in command or "-h" in command:
+if is_help_command(command):
     sys.exit(0)
 
-# ツール実行が成功したかチェック
 stdout = tool_response.get("stdout", "")
 stderr = tool_response.get("stderr", "")
-
-# PR URLパターン（https://github.com/owner/repo/pull/123 形式）
-pr_url_pattern = r"https://github\.com/[^/]+/[^/]+/pull/\d+"
 combined_output = stdout + stderr
 
-# PR URLを抽出
-pr_url_match = re.search(pr_url_pattern, combined_output)
-if not pr_url_match:
+pr_info = extract_pr_url(combined_output)
+if not pr_info:
     sys.exit(0)
 
-pr_url = pr_url_match.group(0)
+pr_url = pr_info[0]
 
 # 利用可能なAIツールを確認
 has_codex = shutil.which("codex") is not None
@@ -76,18 +64,12 @@ git merge-baseを使用してマージベースを見つけ、そのマージベ
 
 **重要: 必ず日本語で回答してください。**"""
 
-print("", file=sys.stderr, flush=True)
-print("=" * 60, file=sys.stderr, flush=True)
-print("🔍 PR作成完了。AIレビューを実行中...", file=sys.stderr, flush=True)
-print(f"📎 PR: {pr_url}", file=sys.stderr, flush=True)
-print("=" * 60, file=sys.stderr, flush=True)
+print_header(f"🔍 PR作成完了。AIレビューを実行中...\n📎 PR: {pr_url}")
 
 
 def run_codex_review():
     """Codexによるレビューを実行し、結果を返す"""
-    print("", file=sys.stderr, flush=True)
-    print("## 🤖 Codex Review", file=sys.stderr, flush=True)
-    print("-" * 40, file=sys.stderr, flush=True)
+    print_section("🤖 Codex Review")
 
     codex_command = ["codex", "exec", "--sandbox", "read-only"]
     if CODEX_MODEL:
@@ -125,9 +107,7 @@ def run_codex_review():
 
 def run_gemini_review():
     """Geminiによるレビューを実行し、結果を返す"""
-    print("", file=sys.stderr, flush=True)
-    print("## ✨ Gemini Review", file=sys.stderr, flush=True)
-    print("-" * 40, file=sys.stderr, flush=True)
+    print_section("✨ Gemini Review")
 
     try:
         # マージベースを取得
@@ -291,13 +271,12 @@ else:
     print("", file=sys.stderr, flush=True)
     print("⚠️  レビュー結果がないため、PRコメントはスキップします", file=sys.stderr, flush=True)
 
-print("", file=sys.stderr, flush=True)
-print("=" * 60, file=sys.stderr, flush=True)
+print_footer()
 if issues_found:
-    print("⚠️  AIレビュー完了 - 問題が検出されました。修正を検討してください。", file=sys.stderr, flush=True)
+    print_status("⚠️  AIレビュー完了 - 問題が検出されました。修正を検討してください。")
 else:
-    print("✅ AIレビュー完了", file=sys.stderr, flush=True)
-print("=" * 60, file=sys.stderr, flush=True)
+    print_status("✅ AIレビュー完了")
+print_footer()
 
 # PostToolUseフックは常に成功で終了（ブロックしない）
 sys.exit(0)

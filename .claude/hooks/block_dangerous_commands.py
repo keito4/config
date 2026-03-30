@@ -8,9 +8,10 @@ Works alongside the deny list which only matches command prefixes.
 import sys
 import json
 import re
+from common import load_hook_input, get_command
 
-data = json.load(sys.stdin)
-cmd = (data.get("tool_input", {}) or {}).get("command") or ""
+data = load_hook_input()
+cmd = get_command(data)
 
 if not cmd.strip():
     sys.exit(0)

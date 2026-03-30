@@ -15,8 +15,9 @@ import json
 import subprocess
 import shutil
 from pathlib import Path
+from common import load_hook_input
 
-data = json.load(sys.stdin)
+data = load_hook_input()
 tool_input = data.get("tool_input", {}) or {}
 file_path = tool_input.get("file_path") or tool_input.get("path") or ""
 

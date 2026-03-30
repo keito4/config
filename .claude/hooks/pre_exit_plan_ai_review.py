@@ -11,10 +11,9 @@ import subprocess
 import shutil
 import os
 import glob
+from common import load_hook_input, print_header, print_footer, print_section, print_status
 
-# Read input from Claude
-data = json.load(sys.stdin)
-
+data = load_hook_input()
 tool_name = data.get("tool_name", "")
 
 # ExitPlanMode でない場合はスキップ
@@ -55,10 +54,7 @@ except Exception as e:
     print(f"⚠️  プランファイル読み込みエラー: {e}", file=sys.stderr, flush=True)
     sys.exit(0)
 
-print("", file=sys.stderr, flush=True)
-print("=" * 60, file=sys.stderr, flush=True)
-print(f"🔍 プラン '{plan_name}' をAIでレビュー中...", file=sys.stderr, flush=True)
-print("=" * 60, file=sys.stderr, flush=True)
+print_header(f"🔍 プラン '{plan_name}' をAIでレビュー中...")
 
 # レビュープロンプト
 review_prompt = f"""You are reviewing a software implementation plan before it is approved for execution.
@@ -99,9 +95,7 @@ review_results = {
 
 def run_codex_review():
     """Codexによるプランレビューを実行"""
-    print("", file=sys.stderr, flush=True)
-    print("## 🤖 Codex Plan Review", file=sys.stderr, flush=True)
-    print("-" * 40, file=sys.stderr, flush=True)
+    print_section("🤖 Codex Plan Review")
 
     codex_command = [
         "codex", "exec",
@@ -139,9 +133,7 @@ def run_codex_review():
 
 def run_gemini_review():
     """Geminiによるプランレビューを実行"""
-    print("", file=sys.stderr, flush=True)
-    print("## ✨ Gemini Plan Review", file=sys.stderr, flush=True)
-    print("-" * 40, file=sys.stderr, flush=True)
+    print_section("✨ Gemini Plan Review")
 
     gemini_command = [
         "gemini",
@@ -198,20 +190,19 @@ any_success = (
 )
 
 # 結果の表示と判定
-print("", file=sys.stderr, flush=True)
-print("=" * 60, file=sys.stderr, flush=True)
+print_footer()
 
 if any_needs_revision:
-    print("❌ プランに修正が必要です。上記の指摘を確認してください。", file=sys.stderr, flush=True)
-    print("=" * 60, file=sys.stderr, flush=True)
+    print_status("❌ プランに修正が必要です。上記の指摘を確認してください。")
+    print_footer()
     sys.exit(2)
 
 if any_ready:
-    print("✅ AIプランレビュー完了 - 問題なし", file=sys.stderr, flush=True)
+    print_status("✅ AIプランレビュー完了 - 問題なし")
 elif any_success:
-    print("⚠️  AIプランレビュー完了 - 明確な承認なし（続行を許可）", file=sys.stderr, flush=True)
+    print_status("⚠️  AIプランレビュー完了 - 明確な承認なし（続行を許可）")
 else:
-    print("⚠️  AIレビューが実行できませんでした（続行を許可）", file=sys.stderr, flush=True)
+    print_status("⚠️  AIレビューが実行できませんでした（続行を許可）")
 
-print("=" * 60, file=sys.stderr, flush=True)
+print_footer()
 sys.exit(0)
