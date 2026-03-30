@@ -11,14 +11,12 @@ import shutil
 import subprocess
 import re
 import shlex
+from common import load_hook_input, parse_tool_context, is_bash_command
 
-data = json.load(sys.stdin)
+data = load_hook_input()
+tool_name, tool_input, tool_response = parse_tool_context(data)
 
-tool_name = data.get("tool_name", "")
-tool_input = data.get("tool_input", {}) or {}
-tool_response = data.get("tool_response", {}) or {}
-
-if tool_name != "Bash":
+if not is_bash_command(tool_name):
     sys.exit(0)
 
 command = tool_input.get("command", "").strip()

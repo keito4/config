@@ -13,15 +13,15 @@ import subprocess
 import os
 import time
 from pathlib import Path
+from common import load_hook_input, get_command
 
 # 設定
 DEFAULT_TIMEOUT = 300  # 5分
 MAX_RETRIES = 2  # 最大リトライ回数
 RETRY_DELAY = 2  # リトライ間隔（秒）
 
-# Read input from Claude
-data = json.load(sys.stdin)
-cmd = (data.get("tool_input", {}) or {}).get("command") or ""
+data = load_hook_input()
+cmd = get_command(data)
 tokens = shlex.split(cmd) if cmd else []
 
 if not tokens:

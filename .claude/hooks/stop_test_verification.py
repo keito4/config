@@ -12,6 +12,7 @@ import json
 import subprocess
 import os
 from pathlib import Path
+from common import get_git_root, detect_package_manager
 
 # 無限ループ防止
 if os.environ.get("STOP_HOOK_ACTIVE") == "1":
@@ -19,16 +20,8 @@ if os.environ.get("STOP_HOOK_ACTIVE") == "1":
 
 os.environ["STOP_HOOK_ACTIVE"] = "1"
 
-# Git リポジトリのルートを取得
-try:
-    result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        capture_output=True, text=True, timeout=10
-    )
-    if result.returncode != 0:
-        sys.exit(0)
-    repo_root = Path(result.stdout.strip())
-except (subprocess.TimeoutExpired, FileNotFoundError):
+repo_root = get_git_root()
+if not repo_root:
     sys.exit(0)
 
 # ── Git 変更の有無を確認 ──────────────────────────────────
@@ -70,13 +63,7 @@ except (json.JSONDecodeError, OSError):
 scripts = pkg.get("scripts", {})
 
 # パッケージマネージャーを判定
-PM = "npm"
-if (repo_root / "pnpm-lock.yaml").exists():
-    PM = "pnpm"
-elif (repo_root / "yarn.lock").exists():
-    PM = "yarn"
-elif (repo_root / "bun.lockb").exists() or (repo_root / "bun.lock").exists():
-    PM = "bun"
+PM = detect_package_manager(repo_root)
 
 # ── テスト実行 ────────────────────────────────────────────
 TEST_SCRIPTS = ["test", "test:unit"]

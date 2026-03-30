@@ -1,0 +1,21 @@
+name: 'Setup Node.js and Install Dependencies'
+description: 'Setup Node.js from .node-version file, configure npm cache, and install dependencies'
+
+inputs:
+  install:
+    description: 'Whether to run npm ci to install dependencies'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      with:
+        node-version-file: '.node-version'
+        cache: 'npm'
+
+    - name: Install dependencies
+      if: inputs.install == 'true'
+      run: npm ci
+      shell: bash

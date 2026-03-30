@@ -8,52 +8,34 @@ CI完了まで待機（最大10分）し、失敗時は修正を促します。
 import sys
 import json
 import subprocess
-import re
 import time
+from common import (load_hook_input, parse_tool_context, is_bash_command,
+                    is_help_command, extract_pr_url, print_header, print_footer, print_status)
 
-# Read input from Claude
-data = json.load(sys.stdin)
+data = load_hook_input()
+tool_name, tool_input, tool_response = parse_tool_context(data)
 
-tool_name = data.get("tool_name", "")
-tool_input = data.get("tool_input", {}) or {}
-tool_response = data.get("tool_response", {}) or {}
-
-# Bashツールでない場合はスキップ
-if tool_name != "Bash":
+if not is_bash_command(tool_name):
     sys.exit(0)
 
-# コマンドを取得
 command = tool_input.get("command", "").strip()
-
-# gh pr create コマンドかどうかを判定
 if not command.startswith("gh pr create"):
     sys.exit(0)
 
-# ヘルプコマンドは除外
-if "--help" in command or "-h" in command:
+if is_help_command(command):
     sys.exit(0)
 
-# ツール実行が成功したかチェック
 stdout = tool_response.get("stdout", "")
 stderr = tool_response.get("stderr", "")
-
-# PR URLパターン
-pr_url_pattern = r"https://github\.com/([^/]+)/([^/]+)/pull/(\d+)"
 combined_output = stdout + stderr
 
-# PR URLを抽出
-pr_url_match = re.search(pr_url_pattern, combined_output)
-if not pr_url_match:
+pr_info = extract_pr_url(combined_output)
+if not pr_info:
     sys.exit(0)
 
-pr_url = pr_url_match.group(0)
-pr_number = pr_url_match.group(3)
+pr_url, _, _, pr_number = pr_info
 
-print("", file=sys.stderr, flush=True)
-print("=" * 60, file=sys.stderr, flush=True)
-print("🔄 PR作成完了。CIステータスを監視中...", file=sys.stderr, flush=True)
-print(f"📎 PR: {pr_url}", file=sys.stderr, flush=True)
-print("=" * 60, file=sys.stderr, flush=True)
+print_header(f"🔄 PR作成完了。CIステータスを監視中...\n📎 PR: {pr_url}")
 
 
 def get_pr_checks(pr_number: str, timeout_seconds: int = 600):
@@ -140,8 +122,7 @@ elif conclusion == "no_checks":
     print("\n⚠️  CIチェックが見つかりません", file=sys.stderr, flush=True)
     print("   （CI未設定、またはワークフロー起動中の可能性があります）", file=sys.stderr, flush=True)
 
-print("", file=sys.stderr, flush=True)
-print("=" * 60, file=sys.stderr, flush=True)
+print_footer()
 
 # PostToolUseフックは常に成功で終了（ブロックしない）
 sys.exit(0)

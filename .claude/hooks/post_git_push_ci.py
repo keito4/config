@@ -9,26 +9,19 @@ import json
 import subprocess
 import re
 import time
+from common import (load_hook_input, parse_tool_context, is_bash_command,
+                    print_header, print_footer, print_status)
 
-# Read input from Claude
-data = json.load(sys.stdin)
+data = load_hook_input()
+tool_name, tool_input, tool_response = parse_tool_context(data)
 
-tool_name = data.get("tool_name", "")
-tool_input = data.get("tool_input", {}) or {}
-tool_response = data.get("tool_response", {}) or {}
-
-# Bashツールでない場合はスキップ
-if tool_name != "Bash":
+if not is_bash_command(tool_name):
     sys.exit(0)
 
-# コマンドを取得
 command = tool_input.get("command", "").strip()
-
-# git push コマンドかどうかを判定
 if not command.startswith("git push"):
     sys.exit(0)
 
-# --help や --dry-run は除外
 if "--help" in command or "-h" in command or "--dry-run" in command or "-n" in command:
     sys.exit(0)
 
@@ -62,10 +55,7 @@ is_success = any(re.search(p, combined_output) for p in success_patterns)
 if not is_success:
     sys.exit(0)
 
-print("", file=sys.stderr, flush=True)
-print("=" * 60, file=sys.stderr, flush=True)
-print("🚀 Push完了。GitHub Actions CIを確認中...", file=sys.stderr, flush=True)
-print("=" * 60, file=sys.stderr, flush=True)
+print_header("🚀 Push完了。GitHub Actions CIを確認中...")
 
 
 def get_current_branch():
@@ -197,8 +187,7 @@ else:
     else:
         print(f"\n⚠️  CI結果: {conclusion}", file=sys.stderr, flush=True)
 
-print("", file=sys.stderr, flush=True)
-print("=" * 60, file=sys.stderr, flush=True)
+print_footer()
 
 # PostToolUseフックは常に成功で終了（ブロックしない）
 sys.exit(0)

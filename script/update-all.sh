@@ -8,17 +8,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# カラー出力
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
-
-log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
-log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+# Source shared output library (provides log_info, log_success, log_warn, color vars)
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR/lib/output.sh" 2>/dev/null || {
+  GREEN='\033[0;32m' YELLOW='\033[1;33m' BLUE='\033[0;34m' RED='\033[0;31m' NC='\033[0m'
+  log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+  log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+  log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+  log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+}
 
 # オプション解析
 skip_libs=false
