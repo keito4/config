@@ -203,4 +203,5 @@ RUN echo "${IMAGE_VERSION}" > /etc/config-base-version \
 COPY package.json package-lock.json /tmp/
 COPY .husky /tmp/.husky/
 COPY git/commitlint.config.js /tmp/commitlint.config.js
+# package.json の overrides により handlebars >= 4.7.9 (CVE-2026-33937対応) が強制インストールされる
 RUN cd /tmp && npm ci && npm run prepare || true
