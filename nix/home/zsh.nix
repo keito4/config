@@ -86,7 +86,7 @@
   home.file = {
     ".zsh/configs/pre/completion.zsh" = {
       text = ''
-        # completion; use cache unconditionally for fast startup
+        # compinit: use cache within 24h, full security check once per day
         autoload -Uz compinit
         if [[ -n $HOME/.zcompdump(#qN.mh+24) ]]; then
           compinit -d $HOME/.zcompdump;
@@ -106,19 +106,21 @@
           local brew_prefix="''${HOMEBREW_PREFIX:-/opt/homebrew}"
           local nvm_sh="$brew_prefix/opt/nvm/nvm.sh"
           local nvm_comp="$brew_prefix/opt/nvm/etc/bash_completion.d/nvm"
-          [ -s "$nvm_sh" ] && \. "$nvm_sh"
-          [ -s "$nvm_comp" ] && \. "$nvm_comp"
+          if [ -s "$nvm_sh" ]; then
+            \. "$nvm_sh"
+            [ -s "$nvm_comp" ] && \. "$nvm_comp"
+          elif [ -s "''${NVM_DIR}/nvm.sh" ]; then
+            # フォールバック: 非Homebrew インストール ($NVM_DIR) を使用
+            \. "''${NVM_DIR}/nvm.sh"
+          else
+            echo "nvm: nvm.sh not found (checked: $nvm_sh, ''${NVM_DIR}/nvm.sh)" >&2
+            return 1
+          fi
         }
         nvm()  { _nvm_lazy_load; nvm "$@"; }
         node() { _nvm_lazy_load; node "$@"; }
         npm()  { _nvm_lazy_load; npm "$@"; }
         npx()  { _nvm_lazy_load; npx "$@"; }
-
-        export PNPM_HOME="$HOME/Library/pnpm"
-        case ":$PATH:" in
-          *":$PNPM_HOME:"*) ;;
-          *) export PATH="$PNPM_HOME:$PATH" ;;
-        esac
       '';
     };
 
@@ -129,8 +131,10 @@
         # kubectl
         if (( $+commands[kubectl] )); then
           function _lazy_kubectl_completion() {
+            unfunction _lazy_kubectl_completion
             source <(kubectl completion zsh)
             compdef _kubectl kubectl
+            _kubectl "$@"
           }
           compdef _lazy_kubectl_completion kubectl
         fi
@@ -138,8 +142,10 @@
         # supabase
         if (( $+commands[supabase] )); then
           function _lazy_supabase_completion() {
+            unfunction _lazy_supabase_completion
             source <(supabase completion zsh)
             compdef _supabase supabase
+            _supabase "$@"
           }
           compdef _lazy_supabase_completion supabase
         fi
@@ -147,16 +153,20 @@
         # 1password
         if (( $+commands[op] )); then
           function _lazy_op_completion() {
+            unfunction _lazy_op_completion
             eval "$(op completion zsh)"
             compdef _op op
+            _op "$@"
           }
           compdef _lazy_op_completion op
         fi
 
-        # Vagrant
-        if [ -d /opt/vagrant/embedded/gems/2.3.0/gems/vagrant-2.3.0/contrib/zsh ]; then
-          fpath=(/opt/vagrant/embedded/gems/2.3.0/gems/vagrant-2.3.0/contrib/zsh $fpath)
-        fi
+        # Vagrant (glob でバージョンに依存しない動的パス解決)
+        for _vagrant_comp_dir in /opt/vagrant/embedded/gems/*/gems/vagrant-*/contrib/zsh(/N); do
+          fpath=("$_vagrant_comp_dir" $fpath)
+          break
+        done
+        unset _vagrant_comp_dir
 
         # nvm completion は node.zsh の遅延読み込み時に処理
       '';
