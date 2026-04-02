@@ -47,6 +47,10 @@ on:
         type: string
         default: 'Coverage Report'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write
@@ -55,6 +59,7 @@ jobs:
   report-jacoco:
     name: JaCoCo Coverage Report
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: inputs.format == 'jacoco'
     steps:
       - name: Checkout code
@@ -80,6 +85,7 @@ jobs:
   report-jest:
     name: Jest Coverage Report
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: inputs.format == 'jest'
     steps:
       - name: Checkout code
@@ -161,6 +167,7 @@ jobs:
   report-cobertura:
     name: Cobertura Coverage Report
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: inputs.format == 'cobertura'
     steps:
       - name: Checkout code
@@ -194,6 +201,7 @@ jobs:
   report-lcov:
     name: LCOV Coverage Report
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: inputs.format == 'lcov'
     steps:
       - name: Checkout code

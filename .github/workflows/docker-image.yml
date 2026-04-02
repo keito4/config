@@ -194,6 +194,7 @@ jobs:
         with:
           name: devcontainer-info
           path: devcontainer-info.txt
+          retention-days: 7
 
       - name: Create Release
         if: steps.release.outputs.skip_release != 'true' && (github.event_name != 'workflow_dispatch' || inputs.release_mode == 'auto')

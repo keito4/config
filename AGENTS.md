@@ -39,6 +39,7 @@ Development infrastructure template repository providing DevContainer images, CI
 
 | Directory            | Purpose                                          |
 | -------------------- | ------------------------------------------------ |
+| `.agents/`           | AI agent skills and configurations               |
 | `.claude/commands/`  | Claude Code slash commands                       |
 | `.claude/hooks/`     | Pre/post hook scripts for quality enforcement    |
 | `.claude/rules/`     | Claude Code rules for development standards      |
@@ -51,10 +52,12 @@ Development infrastructure template repository providing DevContainer images, CI
 | `.vscode/`           | VS Code workspace settings                       |
 | `brew/`              | Homebrew package management (Linux only)         |
 | `credentials/`       | Credential templates and filtering documentation |
+| `dist/`              | dist                                             |
 | `docs/`              | Documentation and ADRs                           |
 | `dot/`               | Dotfiles (DevContainer .zshrc, peco)             |
 | `eslint/`            | ESLint configuration and plugins                 |
 | `git/`               | Git hooks and configuration                      |
+| `next/`              | Next.js project templates                        |
 | `nix/`               | nix-darwin + home-manager (macOS environment)    |
 | `npm/`               | npm global configuration and library management  |
 | `script/`            | Utility shell scripts                            |
@@ -136,6 +139,7 @@ Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + cov
 | `block_config_edit.py`        | Pre edit            | Protect configuration files          |
 | `block_dangerous_commands.py` | Pre Bash            | Block destructive commands           |
 | `block_git_no_verify.py`      | Pre git commit/push | Block `--no-verify` and `HUSKY=0`    |
+| `common.py`                   | Unknown             | common                               |
 | `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes |
 | `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint                 |
 | `post_git_push_ci.py`         | Post git push       | Monitor CI status                    |
