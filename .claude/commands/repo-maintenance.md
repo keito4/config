@@ -1152,7 +1152,7 @@ done
 | 2   | `claude.yml` の issues トリガー                | `[opened]` のみ                          | `assigned` での不要起動防止    |
 | 3   | `claude.yml` の bot 除外                       | `github-actions[bot]`, `dependabot[bot]` | bot連鎖防止                    |
 | 4   | `claude.yml` の timeout                        | `20` 分以下                              | 長時間実行抑制                 |
-| 5   | `claude-code-review.yml` の `synchronize` 除外 | `[opened, ready_for_review]`             | push毎のレビュー実行防止       |
+| 5   | `claude-code-review.yml` の `synchronize` 除外 | `[opened, ready_for_review, reopened]`   | push毎のレビュー実行防止       |
 | 6   | Copilot code review との重複                   | どちらか1つに統一                        | AIレビュー重複防止             |
 
 ```bash
