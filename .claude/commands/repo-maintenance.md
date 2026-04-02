@@ -620,6 +620,43 @@ PR 作成前のチェック項目を検証：
 - ✅ すべてのチェック項目が設定済み
 - ⚠️ 不足している項目あり（詳細をリスト）
 
+### 3.3.1 Code Review Rules Check
+
+コードレビュー基準の設定状況を確認：
+
+実行内容:
+
+- `.claude/rules/code-review-standards.md` の存在確認
+- `.claude/rules/development-standards.md` の存在確認
+- `.claude/rules/git-conventions.md` の存在確認
+- config リポジトリのルールファイルとの差分確認（config リポジトリ自身は除く）
+
+結果:
+
+- ✅ すべてのレビュールールが設定済み
+- ⚠️ 不足しているルールあり（詳細をリスト）
+- 🔄 config リポジトリとの差分あり（更新推奨ファイルをリスト）
+
+MODE が `full` の場合:
+
+- 不足ルールを config リポジトリからコピー
+- 差分があるファイルについて更新を提案
+
+```bash
+# config リポジトリのパスを取得（このリポジトリ自身なら SKIP）
+CONFIG_REPO="$(git -C /path/to/config rev-parse --show-toplevel 2>/dev/null)"
+
+# ルールファイルの存在確認
+RULES_DIR=".claude/rules"
+REQUIRED_RULES=("code-review-standards.md" "development-standards.md" "git-conventions.md")
+
+for rule in "${REQUIRED_RULES[@]}"; do
+  if [ ! -f "${RULES_DIR}/${rule}" ]; then
+    echo "⚠️ Missing: ${RULES_DIR}/${rule}"
+  fi
+done
+```
+
 ### 3.4 CLAUDE.md Symlink Check
 
 CLAUDE.md が AGENTS.md へのシンボリックリンクであることを確認：
@@ -2716,6 +2753,7 @@ fi
 ├── .editorconfig: ✅ Configured (or 🔧 Generated)
 ├── scripts: ✅ All standard scripts defined (or ⚠️ Missing: test, lint)
 ├── Pre-PR Checklist: ✅ CI workflow exists
+├── Code Review Rules: ✅ All rules configured (or ⚠️ Missing rules)
 ├── CLAUDE.md: ✅ Symlink to AGENTS.md
 ├── AGENTS.md: ✅ Auto-generated sections up to date (or 🔧 Updated)
 ├── CI/CD: ✅ Standard level configured

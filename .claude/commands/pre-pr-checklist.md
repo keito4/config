@@ -21,6 +21,19 @@ This command runs a comprehensive checklist to ensure your changes are ready for
 5. **Integration Tests**: Runs Bats integration tests
 6. **Shellcheck**: Validates shell scripts
 
+### Code Review (5観点)
+
+差分に対して以下の5観点でクイックレビューを実施する:
+
+1. **Security**: 機密情報露出、インジェクション、認証漏れ
+2. **Performance**: N+1クエリ、メモリリーク、不要な再レンダリング
+3. **Quality**: 命名、単一責任、テストカバレッジ、エラーハンドリング
+4. **Accessibility**: ARIA属性、キーボードナビ、セマンティックHTML
+5. **AI Residuals**: `it.skip`、`localhost`ハードコード、`TODO`/`FIXME`残骸、仮実装
+
+critical / major の指摘があれば REQUEST_CHANGES 相当として扱い、PR作成前に修正必須とする。
+minor / recommendation のみなら APPROVE 相当として通過。
+
 ### PR Analysis
 
 - **Size Estimation**: Calculates diff lines and file count
@@ -54,6 +67,14 @@ This command runs a comprehensive checklist to ensure your changes are ready for
   ✓ Format check passed
   ✓ Tests passed (101/101)
   ✓ Coverage: 82.5% (threshold: 70%)
+
+🔍 Code Review (5観点)
+  ✓ Security: No issues
+  ✓ Performance: No issues
+  ⚠ Quality: 1 minor (naming in src/utils.ts:42)
+  ✓ Accessibility: No issues
+  ⚠ AI Residuals: 1 minor (TODO in src/handler.ts:15)
+  → Verdict: APPROVE (minor only)
 
 📊 PR Analysis
   • Size: Medium (247 lines, 8 files)
