@@ -13,6 +13,7 @@
 
     sessionVariables = {
       PNPM_HOME = "$HOME/Library/pnpm";
+      SUPABASE_UPDATE_CHECK = "false";
     };
 
     initContent = ''
@@ -78,6 +79,87 @@
       # Nix shortcuts
       nix-switch = "darwin-rebuild switch --flake ~/develop/github.com/keito4/config/nix";
       nix-update = "cd ~/develop/github.com/keito4/config/nix && nix flake update";
+    };
+  };
+
+  # zsh config files managed by home-manager (startup optimization)
+  home.file = {
+    ".zsh/configs/pre/completion.zsh" = {
+      text = ''
+        # completion; use cache unconditionally for fast startup
+        autoload -Uz compinit
+        if [[ -n $HOME/.zcompdump(#qN.mh+24) ]]; then
+          compinit -d $HOME/.zcompdump;
+        else
+          compinit -C -d $HOME/.zcompdump;
+        fi;
+      '';
+    };
+
+    ".zsh/configs/virtual/node.zsh" = {
+      text = ''
+        export NVM_DIR="$HOME/.nvm"
+
+        # nvm lazy load: node/npm/npx/nvm 初回実行時にロード (~700ms 短縮)
+        _nvm_lazy_load() {
+          unset -f nvm node npm npx
+          local brew_prefix="''${HOMEBREW_PREFIX:-/opt/homebrew}"
+          local nvm_sh="$brew_prefix/opt/nvm/nvm.sh"
+          local nvm_comp="$brew_prefix/opt/nvm/etc/bash_completion.d/nvm"
+          [ -s "$nvm_sh" ] && \. "$nvm_sh"
+          [ -s "$nvm_comp" ] && \. "$nvm_comp"
+        }
+        nvm()  { _nvm_lazy_load; nvm "$@"; }
+        node() { _nvm_lazy_load; node "$@"; }
+        npm()  { _nvm_lazy_load; npm "$@"; }
+        npx()  { _nvm_lazy_load; npx "$@"; }
+
+        export PNPM_HOME="$HOME/Library/pnpm"
+        case ":$PATH:" in
+          *":$PNPM_HOME:"*) ;;
+          *) export PATH="$PNPM_HOME:$PATH" ;;
+        esac
+      '';
+    };
+
+    ".zsh/configs/completion.zsh" = {
+      text = ''
+        # 補完の遅延読み込み: 各コマンド初回 Tab 時にロード
+
+        # kubectl
+        if (( $+commands[kubectl] )); then
+          function _lazy_kubectl_completion() {
+            source <(kubectl completion zsh)
+            compdef _kubectl kubectl
+          }
+          compdef _lazy_kubectl_completion kubectl
+        fi
+
+        # supabase
+        if (( $+commands[supabase] )); then
+          function _lazy_supabase_completion() {
+            source <(supabase completion zsh)
+            compdef _supabase supabase
+          }
+          compdef _lazy_supabase_completion supabase
+        fi
+
+        # 1password
+        if (( $+commands[op] )); then
+          function _lazy_op_completion() {
+            eval "$(op completion zsh)"
+            compdef _op op
+          }
+          compdef _lazy_op_completion op
+        fi
+
+        # Vagrant
+        if [ -d /opt/vagrant/embedded/gems/2.3.0/gems/vagrant-2.3.0/contrib/zsh ]; then
+          fpath=(/opt/vagrant/embedded/gems/2.3.0/gems/vagrant-2.3.0/contrib/zsh $fpath)
+        fi
+
+        # nvm completion は node.zsh の遅延読み込み時に処理
+      '';
     };
   };
 
