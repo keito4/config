@@ -79,6 +79,17 @@ CVE-2026-29786
 # Review date: 2026-04-09
 CVE-2026-27903
 
+# CVE-2026-23112: kernel: nvmet-tcp: add bounds checks in nvmet_tcp_build_pdu_iovec
+# Severity: CRITICAL
+# Affected: linux-libc-dev 6.8.0-106.106 (Ubuntu 24.04 base image)
+# Fixed in: no fix available yet
+# Reason: Kernel header package from base image (mcr.microsoft.com/devcontainers/base:2.0-ubuntu-24.04)
+#   pulled in as a transitive dependency of build-essential; cannot remove or update independently
+# Expected resolution: Wait for Ubuntu to release patched linux-libc-dev package
+# Tracking: https://ubuntu.com/security/CVE-2026-23112
+# Review date: 2026-05-02
+CVE-2026-23112
+
 # CVE-2026-33186: gRPC-Go authorization bypass via missing leading slash in :path
 # Severity: CRITICAL
 # Affected: google.golang.org/grpc v1.79.2 (usr/bin/gh), v1.75.1 (usr/local/bin/op)
