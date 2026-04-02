@@ -12,6 +12,8 @@ LABEL org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.description="DevContainer base image with Claude Code, Codex, and development tools"
 
 # Install dependencies and Node.js using official binaries
+# Note: build-essential pulls in linux-libc-dev which has CVE-2026-23112 (CRITICAL);
+#   suppressed in .trivyignore until Ubuntu releases a patched linux-libc-dev package.
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
     git \
