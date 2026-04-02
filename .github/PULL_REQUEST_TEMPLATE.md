@@ -1,57 +1,32 @@
 ## Summary
 
-<!-- Brief description of the changes (1-3 sentences) -->
+<!-- 変更の概要を1-3行で記述 -->
 
-## Type of Change
+## Why
 
-<!-- Check all that apply -->
+<!-- なぜこの変更が必要か -->
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-- [ ] Refactoring (no functional changes)
-- [ ] CI/CD changes
-- [ ] Dependencies update
+## What
 
-## Related Issues
-
-<!-- Link to related issues: Fixes #123, Closes #456 -->
-
-## Changes Made
-
-<!-- Detailed list of changes -->
+<!-- 何を変更したか（箇条書き推奨） -->
 
 -
--
--
 
-## Testing
+## How to test
 
-<!-- Describe the tests you ran -->
+<!-- テスト方法・確認手順 -->
 
-- [ ] Unit tests pass (`npm test`)
-- [ ] Integration tests pass (`npm run test:integration`)
-- [ ] Linting passes (`npm run lint`)
-- [ ] Format check passes (`npm run format:check`)
+- [ ]
 
 ## Checklist
 
-<!-- Ensure all items are checked before requesting review -->
+- [ ] セルフレビュー済み
+- [ ] テストを追加・更新した（該当する場合）
+- [ ] ドキュメントを更新した（該当する場合）
+- [ ] 破壊的変更がない（ある場合は詳細を記述）
 
-- [ ] My code follows the project's style guidelines
-- [ ] I have performed a self-review of my code
-- [ ] I have commented my code where necessary
-- [ ] I have updated the documentation accordingly
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix/feature works
-- [ ] All existing tests still pass
-- [ ] This PR has a clear, descriptive title
+## Related
 
-## Screenshots (if applicable)
+<!-- 関連 Issue / PR / ドキュメント -->
 
-<!-- Add screenshots to help explain your changes -->
-
-## Additional Notes
-
-<!-- Any additional information reviewers should know -->
+Closes #
