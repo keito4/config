@@ -31,7 +31,7 @@ This command runs a comprehensive checklist to ensure your changes are ready for
 4. **Accessibility**: ARIA属性、キーボードナビ、セマンティックHTML
 5. **AI Residuals**: `it.skip`、`localhost`ハードコード、`TODO`/`FIXME`残骸、仮実装
 
-critical / major の指摘があれば警告を表示し、PR作成前の修正を推奨する。
+critical / major の指摘があれば REQUEST_CHANGES 相当として扱い、PR作成前に修正必須とする。
 minor / recommendation のみなら APPROVE 相当として通過。
 
 ### PR Analysis
