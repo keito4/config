@@ -86,6 +86,13 @@
   home.file = {
     ".zsh/configs/pre/completion.zsh" = {
       text = ''
+        # Vagrant (compinit より前に fpath へ追加する必要がある)
+        for _vagrant_comp_dir in /opt/vagrant/embedded/gems/*/gems/vagrant-*/contrib/zsh(/N); do
+          fpath=("$_vagrant_comp_dir" $fpath)
+          break
+        done
+        unset _vagrant_comp_dir
+
         # compinit: use cache within 24h, full security check once per day
         autoload -Uz compinit
         if [[ -n $HOME/.zcompdump(#qN.mh+24) ]]; then
@@ -160,13 +167,6 @@
           }
           compdef _lazy_op_completion op
         fi
-
-        # Vagrant (glob でバージョンに依存しない動的パス解決)
-        for _vagrant_comp_dir in /opt/vagrant/embedded/gems/*/gems/vagrant-*/contrib/zsh(/N); do
-          fpath=("$_vagrant_comp_dir" $fpath)
-          break
-        done
-        unset _vagrant_comp_dir
 
         # nvm completion は node.zsh の遅延読み込み時に処理
       '';
