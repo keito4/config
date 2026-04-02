@@ -16,11 +16,11 @@ jobs:
     steps:
       - name: Check Claude Code token validity
         id: check
-        uses: anthropics/claude-code-action@d59651bd82c48d81756854675ce4fa4d69722200 # v1
+        uses: anthropics/claude-code-action@58dbe8ed6879f0d3b02ac295b20d5fdfe7733e0c # v1.0.85
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          direct_prompt: 'Reply with only: OK'
-          timeout_minutes: 2
+          prompt: 'Reply with only: OK'
+          claude_args: '--max-turns 1'
         continue-on-error: true
 
       - name: Create issue on failure
