@@ -300,9 +300,9 @@ CI workflow と合わせて必ずコピーする。
 
 `claude-code-review.yml` は PR に対して Claude による自動コードレビューを実行する workflow。
 
-## Step 8: Setup Claude Code Hooks
+## Step 8: Setup Claude Code Hooks & Rules
 
-Claude Code の品質ゲートフックをセットアップする。
+Claude Code の品質ゲートフック・レビュールールをセットアップする。
 
 ### 8.1 hooks ディレクトリ作成とファイルコピー
 
@@ -311,6 +311,15 @@ mkdir -p TARGET_DIR/.claude/hooks
 cp CONFIG_REPO/.claude/hooks/block_git_no_verify.py TARGET_DIR/.claude/hooks/
 cp CONFIG_REPO/.claude/hooks/pre_git_quality_gates.py TARGET_DIR/.claude/hooks/
 cp CONFIG_REPO/.claude/hooks/post_git_push_ci.py TARGET_DIR/.claude/hooks/
+```
+
+### 8.1.5 rules ディレクトリ作成とファイルコピー
+
+```bash
+mkdir -p TARGET_DIR/.claude/rules
+cp CONFIG_REPO/.claude/rules/code-review-standards.md TARGET_DIR/.claude/rules/
+cp CONFIG_REPO/.claude/rules/development-standards.md TARGET_DIR/.claude/rules/
+cp CONFIG_REPO/.claude/rules/git-conventions.md TARGET_DIR/.claude/rules/
 ```
 
 ### 8.2 `.claude/settings.json` 作成
@@ -713,6 +722,7 @@ Files Created:
 ✅ .github/ISSUE_TEMPLATE/
 ✅ .github/PULL_REQUEST_TEMPLATE.md
 ✅ .claude/hooks/ (3 ファイル)
+✅ .claude/rules/ (3 ファイル: code-review-standards, development-standards, git-conventions)
 ✅ .claude/settings.json
 ✅ .claude/plugins.txt
 ✅ .claude/skills.txt

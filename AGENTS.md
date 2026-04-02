@@ -82,7 +82,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `/pre-pr-checklist`             | (no description)                                                                          |
 | `/repo-maintenance`             | Comprehensive repository maintenance - run all health checks and updates                  |
 | `/security-credential-scan`     | (no description)                                                                          |
-| `/security-review`              | (no description)                                                                          |
+| `/security-review`              | 5観点コードレビュー（Security / Performance / Quality / Accessibility / AI Residuals）    |
 | `/setup-ci`                     | Setup comprehensive CI/CD workflows for your repository                                   |
 | `/setup-doppler`                | Setup Doppler secret management with dev/dev_personal configuration                       |
 | `/setup-husky`                  | (no description)                                                                          |
