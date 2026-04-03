@@ -100,19 +100,30 @@
       text = ''
         export NVM_DIR="$HOME/.nvm"
 
-        # nvm lazy load: node/npm/npx/nvm 初回実行時にロード (~700ms 短縮)
+        # デフォルト Node.js の PATH を即座に設定（claude 等の shebang 用）
+        # nvm 本体の初期化のみ遅延させる
+        if [ -d "$NVM_DIR/versions/node" ]; then
+          NODE_DEFAULT_DIR="$NVM_DIR/alias/default"
+          if [ -L "$NODE_DEFAULT_DIR" ] || [ -f "$NODE_DEFAULT_DIR" ]; then
+            NODE_VER=$(cat "$NODE_DEFAULT_DIR" 2>/dev/null)
+            NODE_BIN="$NVM_DIR/versions/node/v''${NODE_VER#v}/bin"
+          else
+            # default alias がなければ最新バージョンを使用
+            NODE_BIN=$(ls -d "$NVM_DIR/versions/node"/*/bin 2>/dev/null | sort -V | tail -1)
+          fi
+          [ -d "$NODE_BIN" ] && export PATH="$NODE_BIN:$PATH"
+        fi
+
+        # nvm 本体の遅延読み込み（nvm コマンド初回実行時のみ）
         _nvm_lazy_load() {
-          unset -f nvm node npm npx
+          unset -f nvm
           local brew_prefix="''${HOMEBREW_PREFIX:-/opt/homebrew}"
           local nvm_sh="$brew_prefix/opt/nvm/nvm.sh"
           local nvm_comp="$brew_prefix/opt/nvm/etc/bash_completion.d/nvm"
           [ -s "$nvm_sh" ] && \. "$nvm_sh"
           [ -s "$nvm_comp" ] && \. "$nvm_comp"
         }
-        nvm()  { _nvm_lazy_load; nvm "$@"; }
-        node() { _nvm_lazy_load; node "$@"; }
-        npm()  { _nvm_lazy_load; npm "$@"; }
-        npx()  { _nvm_lazy_load; npx "$@"; }
+        nvm() { _nvm_lazy_load; nvm "$@"; }
 
         export PNPM_HOME="$HOME/Library/pnpm"
         case ":$PATH:" in
