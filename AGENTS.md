@@ -39,7 +39,6 @@ Development infrastructure template repository providing DevContainer images, CI
 
 | Directory            | Purpose                                          |
 | -------------------- | ------------------------------------------------ |
-| `.agents/`           | AI agent skills and configurations               |
 | `.claude/commands/`  | Claude Code slash commands                       |
 | `.claude/hooks/`     | Pre/post hook scripts for quality enforcement    |
 | `.claude/rules/`     | Claude Code rules for development standards      |
@@ -52,12 +51,10 @@ Development infrastructure template repository providing DevContainer images, CI
 | `.vscode/`           | VS Code workspace settings                       |
 | `brew/`              | Homebrew package management (Linux only)         |
 | `credentials/`       | Credential templates and filtering documentation |
-| `dist/`              | dist                                             |
 | `docs/`              | Documentation and ADRs                           |
 | `dot/`               | Dotfiles (DevContainer .zshrc, peco)             |
 | `eslint/`            | ESLint configuration and plugins                 |
 | `git/`               | Git hooks and configuration                      |
-| `next/`              | Next.js project templates                        |
 | `nix/`               | nix-darwin + home-manager (macOS environment)    |
 | `npm/`               | npm global configuration and library management  |
 | `script/`            | Utility shell scripts                            |
