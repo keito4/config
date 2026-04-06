@@ -334,7 +334,7 @@ For npm registry instead of GitHub Packages:
 - name: Setup Node.js
   uses: actions/setup-node@v6.2.0
   with:
-    node-version: '22'
+    node-version: '20'
     cache: 'npm'
     registry-url: 'https://registry.npmjs.org'
 
