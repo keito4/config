@@ -1,0 +1,100 @@
+# E2E Playwright テストワークフロー
+#
+# Playwright を使った E2E テストを実行する再利用可能ワークフロー。
+# Next.js アプリケーションのビルド → Playwright テスト → レポートアップロード。
+#
+# 使い方:
+#   .github/workflows/e2e-playwright.yml にコピーして配置
+#   package.json に test:e2e スクリプトを定義
+#
+# カスタマイズ:
+#   - NODE_VERSION: Node.js バージョン（デフォルト: 22）
+#   - PACKAGE_MANAGER: npm / pnpm（デフォルト: npm）
+#   - PLAYWRIGHT_VERSION: Playwright コンテナバージョン
+#   - E2E_COMMAND: テスト実行コマンド
+#   - WORKING_DIRECTORY: アプリケーションのルート
+#
+name: E2E Tests
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version'
+        type: string
+        default: '22'
+      package-manager:
+        description: 'Package manager (npm or pnpm)'
+        type: string
+        default: 'npm'
+      e2e-command:
+        description: 'E2E test command'
+        type: string
+        default: 'npm run test:e2e'
+      working-directory:
+        description: 'Working directory for the app'
+        type: string
+        default: '.'
+      build-command:
+        description: 'Build command (empty to skip)'
+        type: string
+        default: 'npm run build'
+
+# スタンドアロンで使う場合はこちらを有効化
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-e2e-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory || '.' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        if: inputs.package-manager == 'pnpm'
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version || '22' }}
+          cache: ${{ inputs.package-manager || 'npm' }}
+
+      - name: Install dependencies
+        run: ${{ inputs.package-manager == 'pnpm' && 'pnpm install --frozen-lockfile' || 'npm ci' }}
+
+      - name: Build
+        if: inputs.build-command != ''
+        run: ${{ inputs.build-command || 'npm run build' }}
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: ${{ inputs.e2e-command || 'npm run test:e2e' }}
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            ${{ inputs.working-directory || '.' }}/playwright-report/
+            ${{ inputs.working-directory || '.' }}/test-results/
+          retention-days: 14

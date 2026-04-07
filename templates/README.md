@@ -6,12 +6,14 @@
 
 ### ワークフロー（`workflows/`）
 
-| テンプレート                | 対象                            | 自動適用条件                     |
-| --------------------------- | ------------------------------- | -------------------------------- |
-| `dependabot-auto-merge.yml` | Dependabot を使う全プロジェクト | dependabot.yml が存在する場合    |
-| `label-sync.yml`            | 全プロジェクト                  | 常に推奨                         |
-| `stale.yml`                 | Issue/PR が多いプロジェクト     | 常に推奨                         |
-| `terraform-drift.yml`       | Terraform プロジェクト          | Terraform ファイルが存在する場合 |
+| テンプレート                | 対象                            | 自動適用条件                      |
+| --------------------------- | ------------------------------- | --------------------------------- |
+| `dependabot-auto-merge.yml` | Dependabot を使う全プロジェクト | dependabot.yml が存在する場合     |
+| `label-sync.yml`            | 全プロジェクト                  | 常に推奨                          |
+| `stale.yml`                 | Issue/PR が多いプロジェクト     | 常に推奨                          |
+| `terraform-drift.yml`       | Terraform プロジェクト          | Terraform ファイルが存在する場合  |
+| `e2e-playwright.yml`        | Playwright E2E テスト           | test:e2e スクリプトが存在する場合 |
+| `claude.yml`                | Claude Code 連携                | 常に推奨                          |
 
 ### pre-commit（`pre-commit-config-*.yaml`）
 
@@ -33,6 +35,25 @@
 | `CODEOWNERS`               | チーム開発でのレビュー自動アサイン               | 中     |
 | `SECURITY.md`              | セキュリティポリシー                             | 中     |
 | `CONTRIBUTING.md`          | コントリビューションガイド                       | 低     |
+
+### コードスタイル（Prettier / lint-staged）
+
+| テンプレート                      | いつ使う                                             |
+| --------------------------------- | ---------------------------------------------------- |
+| `prettierrc-base.json`            | **標準**: printWidth 80、arrowParens "avoid"         |
+| `prettierrc-wide.json`            | **ワイド**: printWidth 120、arrowParens "always"     |
+| `prettierignore`                  | **全プロジェクト**: 共通の除外パターン               |
+| `lintstagedrc-eslint.json`        | **ESLint + Prettier**: lint + format on staged files |
+| `lintstagedrc-biome.json`         | **Biome**: check + format on staged files            |
+| `lintstagedrc-prettier-only.json` | **Prettier のみ**: format on staged files            |
+
+### Git Hooks（`husky/`）
+
+| テンプレート | 内容                                                |
+| ------------ | --------------------------------------------------- |
+| `pre-commit` | lint-staged + ファイル長チェック                    |
+| `commit-msg` | commitlint（Conventional Commits）                  |
+| `pre-push`   | typecheck + lint + test（スクリプト存在時のみ実行） |
 
 ### その他
 

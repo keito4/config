@@ -1,0 +1,26 @@
+#!/bin/sh
+
+echo "Pre-push checks..."
+
+# TypeScript 型チェック（typecheck スクリプトが存在する場合）
+if npm run --silent typecheck --if-present 2>/dev/null; then
+  echo "-> TypeScript check passed"
+else
+  echo "TypeScript check failed"; exit 1
+fi
+
+# Lint
+if npm run --silent lint --if-present 2>/dev/null; then
+  echo "-> Lint passed"
+else
+  echo "Lint failed"; exit 1
+fi
+
+# テスト
+if npm run --silent test -- --ci --passWithNoTests 2>/dev/null; then
+  echo "-> Tests passed"
+else
+  echo "Tests failed"; exit 1
+fi
+
+echo "All pre-push checks passed"
