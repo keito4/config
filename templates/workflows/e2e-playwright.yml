@@ -40,8 +40,7 @@ on:
         type: string
         default: 'npm run build'
 
-# スタンドアロンで使う場合はこちらを有効化
-# on:
+# スタンドアロンで使う場合は上記 workflow_call を以下に置き換える:
 #   push:
 #     branches: [main]
 #   pull_request:
@@ -64,14 +63,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup pnpm
         if: inputs.package-manager == 'pnpm'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@a7487c7e89a18df77bdb2544e188270c5d72bfce # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ inputs.node-version || '22' }}
           cache: ${{ inputs.package-manager || 'npm' }}
@@ -91,7 +90,7 @@ jobs:
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-report
           path: |

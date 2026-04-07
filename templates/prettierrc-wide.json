@@ -9,6 +9,8 @@
   "arrowParens": "always",
   "bracketSpacing": true,
   "bracketSameLine": false,
+  "quoteProps": "as-needed",
+  "jsxSingleQuote": false,
   "overrides": [
     {
       "files": "*.json",
