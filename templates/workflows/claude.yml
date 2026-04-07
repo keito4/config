@@ -47,8 +47,7 @@ jobs:
     if: |
       github.event.sender.type != 'Bot' &&
       (
-        (github.event_name == 'issue_comment' && contains(github.event.comment.body || '', '@claude') &&
-          !(github.event.issue.pull_request && github.event.issue.pull_request.url && github.event.issue.draft == true)) ||
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body || '', '@claude')) ||
         (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body || '', '@claude') &&
           github.event.pull_request.draft == false) ||
         (github.event_name == 'pull_request_review' && contains(github.event.review.body || '', '@claude') &&
@@ -85,6 +84,7 @@ jobs:
               "permissions": {
                 "allowedTools": [
                   "Bash(gh:*)",
+                  "Bash(git:*)",
                   "Bash(npm:*)",
                   "Bash(pnpm:*)",
                   "Bash(npx:*)"
