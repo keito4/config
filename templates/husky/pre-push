@@ -17,7 +17,7 @@ else
 fi
 
 # テスト（スクリプト未定義時はスキップ）
-if npm run test --if-present -- --ci --passWithNoTests 2>/dev/null; then
+if npm run --if-present test 2>/dev/null; then
   echo "-> Tests passed"
 else
   echo "Tests failed"; exit 1

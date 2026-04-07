@@ -1,7 +1,9 @@
 # Claude Code ワークフロー
 #
 # Issue や PR で @claude をメンションすると Claude Code が応答する。
-# Bot からのイベントは自動除外、Draft PR も除外。
+# Bot からのイベントは自動除外。
+# PR イベント（pull_request_review_comment / pull_request_review）では Draft PR も除外。
+# issue_comment イベントでは Draft 判定不可のため除外なし。
 #
 # 使い方:
 #   .github/workflows/claude.yml にコピーして配置
@@ -43,9 +45,15 @@ concurrency:
 
 jobs:
   claude:
-    # Bot 全般を除外（sender.type で判定するため Bot 名のハードコードが不要）
+    # Bot 全般を除外し、信頼済み Association のみ許可
+    # OWNER / MEMBER / COLLABORATOR: リポジトリ管理者・チームメンバー・招待コラボレーター
     if: |
       github.event.sender.type != 'Bot' &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+        github.event.comment.author_association ||
+        github.event.review.author_association ||
+        github.event.issue.author_association
+      ) &&
       (
         (github.event_name == 'issue_comment' && contains(github.event.comment.body || '', '@claude')) ||
         (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body || '', '@claude') &&
