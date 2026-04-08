@@ -3,21 +3,21 @@
 echo "Pre-push checks..."
 
 # TypeScript 型チェック（スクリプト未定義時はスキップ）
-if npm run typecheck --if-present 2>/dev/null; then
+if npm run typecheck --if-present; then
   echo "-> TypeScript check passed"
 else
   echo "TypeScript check failed"; exit 1
 fi
 
 # Lint（スクリプト未定義時はスキップ）
-if npm run lint --if-present 2>/dev/null; then
+if npm run lint --if-present; then
   echo "-> Lint passed"
 else
   echo "Lint failed"; exit 1
 fi
 
 # テスト（スクリプト未定義時はスキップ）
-if npm run --if-present test 2>/dev/null; then
+if npm run --if-present test; then
   echo "-> Tests passed"
 else
   echo "Tests failed"; exit 1
