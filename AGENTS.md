@@ -39,14 +39,17 @@ Development infrastructure template repository providing DevContainer images, CI
 
 | Directory            | Purpose                                          |
 | -------------------- | ------------------------------------------------ |
+| `.claude/agents/`    | Claude Code specialized agents                   |
 | `.claude/commands/`  | Claude Code slash commands                       |
 | `.claude/hooks/`     | Pre/post hook scripts for quality enforcement    |
+| `.claude/plugins/`   | Claude Code plugin configuration                 |
 | `.claude/rules/`     | Claude Code rules for development standards      |
+| `.claude/skills/`    | Claude Code skill definitions                    |
 | `.codex/`            | Codex AI agent configuration                     |
 | `.cursor/`           | Cursor editor settings                           |
 | `.devcontainer/`     | DevContainer configuration and Dockerfile        |
 | `.gemini/`           | Gemini AI agent configuration                    |
-| `.github/workflows/` | GitHub Actions CI/CD workflows (21 workflows)    |
+| `.github/workflows/` | GitHub Actions CI/CD workflows (16 workflows)    |
 | `.husky/`            | Git hooks (pre-commit, commit-msg)               |
 | `.vscode/`           | VS Code workspace settings                       |
 | `brew/`              | Homebrew package management (Linux only)         |
