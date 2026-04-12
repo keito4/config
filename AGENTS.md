@@ -72,7 +72,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `/branch-cleanup`               | Clean up merged and stale branches both locally and remotely                              |
 | `/changelog-generator`          | Generate CHANGELOG.md from Conventional Commits history                                   |
 | `/code-complexity-check`        | Analyze code complexity and identify refactoring candidates                               |
-| `/codespaces-secrets`           | GitHub Codespaces のシークレットとリポジトリの紐付けを CLI で管理                        |
+| `/codespaces-secrets`           | GitHub Codespaces のシークレットとリポジトリの紐付けを CLI で管理                         |
 | `/config-base-sync-check`       | Check current and latest config-base image versions                                       |
 | `/config-base-sync-update`      | Update DevContainer to latest config-base image, sync recommended features, and create PR |
 | `/config-contribution-discover` | Discover useful features in current repository and create issues for config repository    |
@@ -100,27 +100,27 @@ Development infrastructure template repository providing DevContainer images, CI
 
 ## Agents
 
-| Agent                          | Description                                                  |
-| ------------------------------ | ------------------------------------------------------------ |
-| `act-local-ci-manager`         | Set up and manage local CI pipeline execution using act      |
-| `docs-consistency-checker`     | Review documentation consistency across formats              |
-| `issue-resolver-code-quality`  | Resolve code quality issues                                  |
-| `issue-resolver-dependencies`  | Resolve dependency update issues                             |
-| `issue-resolver-documentation` | Resolve documentation issues                                 |
-| `issue-resolver-orchestrator`  | Orchestrate issue resolution across specialized agents       |
-| `issue-resolver-security`      | Resolve security issues                                      |
-| `issue-resolver-test-coverage` | Resolve test coverage issues                                 |
+| Agent                          | Description                                                     |
+| ------------------------------ | --------------------------------------------------------------- |
+| `act-local-ci-manager`         | Set up and manage local CI pipeline execution using act         |
+| `docs-consistency-checker`     | Review documentation consistency across formats                 |
+| `issue-resolver-code-quality`  | Resolve code quality issues                                     |
+| `issue-resolver-dependencies`  | Resolve dependency update issues                                |
+| `issue-resolver-documentation` | Resolve documentation issues                                    |
+| `issue-resolver-orchestrator`  | Orchestrate issue resolution across specialized agents          |
+| `issue-resolver-security`      | Resolve security issues                                         |
+| `issue-resolver-test-coverage` | Resolve test coverage issues                                    |
 | `playwright-test-generator`    | Generate Playwright E2E tests by observing browser interactions |
-| `playwright-test-healer`       | Debug and fix failing Playwright E2E tests                   |
-| `playwright-test-planner`      | Create comprehensive E2E test plans for web applications     |
+| `playwright-test-healer`       | Debug and fix failing Playwright E2E tests                      |
+| `playwright-test-planner`      | Create comprehensive E2E test plans for web applications        |
 
 ## Skills
 
-| Skill           | Description                                                    |
-| --------------- | -------------------------------------------------------------- |
-| `ci-check`      | Check CI status for the current branch                         |
-| `codex-review`  | Run Codex AI code review on changed files                      |
-| `gemini-review` | Run Gemini AI code review on changed files                     |
+| Skill           | Description                                |
+| --------------- | ------------------------------------------ |
+| `ci-check`      | Check CI status for the current branch     |
+| `codex-review`  | Run Codex AI code review on changed files  |
+| `gemini-review` | Run Gemini AI code review on changed files |
 
 ## CI/CD Workflows
 
