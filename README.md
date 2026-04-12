@@ -62,6 +62,8 @@ config/
 │   │   ├── block_config_edit.py    # リンター設定の編集防止
 │   │   ├── block_dangerous_commands.py
 │   │   ├── block_git_no_verify.py
+│   │   ├── common.py               # 共通ユーティリティ
+│   │   ├── post_commit_adr_reminder.py # ADR作成リマインダー
 │   │   ├── post_edit_auto_lint.py  # ファイル編集後の自動リント
 │   │   ├── post_git_push_ci.py
 │   │   ├── post_pr_ai_review.py
