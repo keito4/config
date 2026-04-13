@@ -1,0 +1,6 @@
+# Issue テンプレート選択画面の設定
+blank_issues_enabled: true
+# contact_links:
+#   - name: 質問・相談
+#     url: https://github.com/orgs/YOUR_ORG/discussions
+#     about: 一般的な質問は Discussions で受け付けています
