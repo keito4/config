@@ -62,6 +62,8 @@ config/
 │   │   ├── block_config_edit.py    # リンター設定の編集防止
 │   │   ├── block_dangerous_commands.py
 │   │   ├── block_git_no_verify.py
+│   │   ├── common.py               # 共通ユーティリティ
+│   │   ├── post_commit_adr_reminder.py # ADR作成リマインダー
 │   │   ├── post_edit_auto_lint.py  # ファイル編集後の自動リント
 │   │   ├── post_git_push_ci.py
 │   │   ├── post_pr_ai_review.py
@@ -126,7 +128,9 @@ config/
 │       ├── docker-image.yml        # Docker イメージビルド
 │       ├── label-sync.yml          # ラベル同期
 │       ├── manual-release.yml      # 手動リリース
+│       ├── quality-gate-fallback.yml # 品質ゲートフォールバック
 │       ├── rebuild-docker-cache.yml # Docker キャッシュ再構築
+│       ├── scheduled-maintenance.yml # 定期メンテナンス
 │       ├── security.yml            # セキュリティスキャン
 │       ├── update-claude-plugins.yml # Claude プラグイン更新
 │       ├── update-dev-tools.yml    # 開発ツール更新
@@ -205,7 +209,8 @@ config/
 │   ├── adr/                        # Architecture Decision Records
 │   │   ├── README.md
 │   │   ├── 0001-devcontainer-base-image.md
-│   │   └── 0002-auto-version-updates.md
+│   │   ├── 0002-auto-version-updates.md
+│   │   └── 0003-remove-rust-from-base-image.md
 │   └── setup/                      # プロジェクト種別セットアップガイド
 │       ├── README.md
 │       ├── desktop-extension-ts.md
@@ -388,7 +393,7 @@ config/
 └── .trivyignore
 ```
 
-**ファイル総数**: 321 ファイル（Git 管理対象）
+**ファイル総数**: 343 ファイル（Git 管理対象）
 
 各ディレクトリの概要：
 
