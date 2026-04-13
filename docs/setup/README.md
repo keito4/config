@@ -151,7 +151,7 @@ pr-size-check:
   if: github.event_name == 'pull_request'
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/github-script@v7
+    - uses: actions/github-script@v9
       with:
         script: |
           const { additions, deletions, changed_files } = context.payload.pull_request;
@@ -196,7 +196,7 @@ notify-failure:
 actionlint:
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - uses: reviewdog/action-actionlint@v1
       with:
         reporter: github-pr-review
@@ -372,7 +372,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - run: npm update
-      - uses: peter-evans/create-pull-request@v7
+      - uses: peter-evans/create-pull-request@v8
         with:
           title: 'chore(deps): update dependencies'
           branch: chore/update-dependencies

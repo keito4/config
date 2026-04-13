@@ -335,14 +335,14 @@ mkdir -p tests/contract
 unit-tests:
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@v6
+    - uses: actions/setup-node@v6
       with:
         node-version: '22'
         cache: 'npm'
     - run: npm ci
     - run: npm run test:ci
-    - uses: codecov/codecov-action@v4
+    - uses: codecov/codecov-action@v6
 ```
 
 ### Standard Level (+)
@@ -351,8 +351,8 @@ unit-tests:
 e2e-tests:
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@v6
+    - uses: actions/setup-node@v6
     - run: npm ci
     - run: npx playwright install --with-deps chromium
     - run: npm run build
@@ -369,8 +369,8 @@ regression-tests:
   runs-on: ubuntu-latest
   if: github.base_ref == 'main' || github.base_ref == 'production'
   steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@v6
+    - uses: actions/setup-node@v6
     - run: npm ci
     - run: npx playwright install --with-deps chromium
     - run: npm run build
@@ -386,13 +386,13 @@ regression-tests:
 visual-tests:
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@v6
+    - uses: actions/setup-node@v6
     - run: npm ci
     - run: npx playwright install --with-deps
     - run: npm run build
     - run: npm run test:visual
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: failure()
       with:
         name: visual-diff
@@ -401,8 +401,8 @@ visual-tests:
 a11y-tests:
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@v6
+    - uses: actions/setup-node@v6
     - run: npm ci
     - run: npx playwright install --with-deps chromium
     - run: npm run build

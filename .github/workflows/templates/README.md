@@ -72,7 +72,7 @@ A reusable workflow that posts coverage summary as PR comments. Supports multipl
 | format      | Tools                      | Parser                                |
 | ----------- | -------------------------- | ------------------------------------- |
 | `jacoco`    | JaCoCo (Android/JVM)       | `madrapps/jacoco-report@v1.7.2`       |
-| `jest`      | Jest, Vitest, c8 (JS/TS)   | `actions/github-script@v8`            |
+| `jest`      | Jest, Vitest, c8 (JS/TS)   | `actions/github-script@v9`            |
 | `cobertura` | Cobertura (.NET/Python/Go) | `irongut/CodeCoverageSummary@v1.3.0`  |
 | `lcov`      | Istanbul, nyc, c8 (LCOV)   | `romeovs/lcov-reporter-action@v0.4.0` |
 
@@ -85,7 +85,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - run: npm ci && npm test -- --coverage
-      - uses: actions/upload-artifact@v6.0.0
+      - uses: actions/upload-artifact@v7.0.1
         if: github.event_name == 'pull_request'
         with:
           name: coverage-report
@@ -117,7 +117,7 @@ jobs:
           distribution: zulu
           java-version: 17
       - run: ./gradlew testDebugUnitTest createDebugUnitTestCoverageReport
-      - uses: actions/upload-artifact@v6.0.0
+      - uses: actions/upload-artifact@v7.0.1
         if: github.event_name == 'pull_request'
         with:
           name: jacoco-report
@@ -148,7 +148,7 @@ jobs:
         with:
           dotnet-version: '8.0'
       - run: dotnet test --collect:"XPlat Code Coverage"
-      - uses: actions/upload-artifact@v6.0.0
+      - uses: actions/upload-artifact@v7.0.1
         if: github.event_name == 'pull_request'
         with:
           name: cobertura-report
@@ -176,7 +176,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - run: npm ci && npm test -- --coverage --coverageReporters=lcov
-      - uses: actions/upload-artifact@v6.0.0
+      - uses: actions/upload-artifact@v7.0.1
         if: github.event_name == 'pull_request'
         with:
           name: lcov-report
