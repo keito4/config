@@ -1,7 +1,6 @@
 ---
 name: playwright-test-generator
 description: Use this agent to automatically generate Playwright E2E tests by observing browser interactions. This agent uses MCP Playwright tools to navigate web applications, record user flows, and generate corresponding test code. Use when: creating new E2E tests, converting manual test cases to automated tests, or generating regression tests for existing features.
-model: sonnet
 color: purple
 ---
 

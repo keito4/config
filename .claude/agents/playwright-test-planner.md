@@ -1,7 +1,6 @@
 ---
 name: playwright-test-planner
 description: Use this agent to create comprehensive E2E test plans for web applications. This agent explores applications using MCP browser tools to discover features, user flows, and edge cases, then generates structured test plans. Use when: starting E2E testing for a new feature, auditing existing test coverage, or planning regression test suites.
-model: sonnet
 color: blue
 ---
 
