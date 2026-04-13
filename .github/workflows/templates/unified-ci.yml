@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload coverage artifact
         if: github.event_name == 'pull_request' && hashFiles('coverage/coverage-summary.json') != ''
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: coverage-report
           path: coverage/coverage-summary.json
@@ -133,7 +133,7 @@ jobs:
           fetch-depth: 0
 
       - name: Calculate PR size and add label
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             // Get PR details

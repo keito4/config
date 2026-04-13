@@ -510,7 +510,7 @@ export default withBundleAnalyzer({
   env:
     NEXT_TELEMETRY_DISABLED: 1
 # .next/analyze/ に生成されたレポートをアーティファクトとして保存
-- uses: actions/upload-artifact@v4
+- uses: actions/upload-artifact@v7
   if: always()
   with:
     name: bundle-report

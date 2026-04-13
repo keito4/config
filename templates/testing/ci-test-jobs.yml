@@ -10,10 +10,10 @@ unit-tests:
   needs: quality-gate
   timeout-minutes: 15
   steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: '22'
         cache: 'npm'
@@ -25,7 +25,7 @@ unit-tests:
       run: npm test -- --coverage --watchAll=false
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v6
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage/lcov.info
@@ -34,7 +34,7 @@ unit-tests:
 
     - name: Comment PR with coverage report
       if: github.event_name == 'pull_request'
-      uses: actions/github-script@v7
+      uses: actions/github-script@v9
       with:
         script: |
           const fs = require('fs');
@@ -70,10 +70,10 @@ e2e-critical:
   if: github.event_name == 'pull_request'
   timeout-minutes: 20
   steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: '22'
         cache: 'npm'
@@ -100,7 +100,7 @@ e2e-critical:
         PLAYWRIGHT_BASE_URL: 'http://127.0.0.1:3000'
 
     - name: Upload Playwright report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: failure()
       with:
         name: playwright-report-critical
@@ -117,10 +117,10 @@ e2e-full:
   if: github.ref == 'refs/heads/main'
   timeout-minutes: 30
   steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: '22'
         cache: 'npm'
@@ -146,7 +146,7 @@ e2e-full:
         PLAYWRIGHT_BASE_URL: 'http://127.0.0.1:3000'
 
     - name: Upload Playwright report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: playwright-report-full

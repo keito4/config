@@ -106,13 +106,13 @@ jobs:
       # リポジトリのチェックアウト
       # -----------------------------------------------------------------
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # -----------------------------------------------------------------
       # Terraform セットアップ
       # -----------------------------------------------------------------
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           # TODO: プロジェクトで使用する Terraform バージョンを指定する
           terraform_version: '~> 1.9'
@@ -208,7 +208,7 @@ jobs:
       - name: Check existing drift issue
         id: check_issue
         if: steps.plan.outputs.drift_detected == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             // 既存の未解決ドリフト Issue を検索する
@@ -235,7 +235,7 @@ jobs:
         if: >-
           steps.plan.outputs.drift_detected == 'true' &&
           steps.check_issue.outputs.exists == 'false'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const issueTitle = `[Drift] ${{ matrix.environment }}: Terraform state drift detected`;
@@ -281,7 +281,7 @@ jobs:
         if: >-
           steps.plan.outputs.drift_detected == 'true' &&
           steps.check_issue.outputs.exists == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             // 既存 Issue にコメントを追加して最新のドリフト情報を記録する

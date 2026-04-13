@@ -10,7 +10,7 @@ test:
   needs: changes
   if: needs.changes.outputs.code == 'true' || needs.changes.outputs.dependencies == 'true'
   steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - uses: actions/setup-node@v6
       with:
@@ -39,7 +39,7 @@ test:
     # ===== ここまで追加 =====
 
     - name: Upload test results
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: test-results
