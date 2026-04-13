@@ -19,8 +19,8 @@ jobs:
         uses: anthropics/claude-code-action@b47fd721da662d48c5680e154ad16a73ed74d2e0 # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          direct_prompt: 'Reply with only: OK'
-          timeout_minutes: 2
+          prompt: 'Reply with only: OK'
+          claude_args: '--max-turns 1'
         continue-on-error: true
 
       - name: Create issue on failure

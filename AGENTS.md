@@ -39,25 +39,25 @@ Development infrastructure template repository providing DevContainer images, CI
 
 | Directory            | Purpose                                          |
 | -------------------- | ------------------------------------------------ |
-| `.agents/`           | AI agent skills and configurations               |
+| `.claude/agents/`    | Claude Code specialized agents                   |
 | `.claude/commands/`  | Claude Code slash commands                       |
 | `.claude/hooks/`     | Pre/post hook scripts for quality enforcement    |
+| `.claude/plugins/`   | Claude Code plugin configuration                 |
 | `.claude/rules/`     | Claude Code rules for development standards      |
+| `.claude/skills/`    | Claude Code skill definitions                    |
 | `.codex/`            | Codex AI agent configuration                     |
 | `.cursor/`           | Cursor editor settings                           |
 | `.devcontainer/`     | DevContainer configuration and Dockerfile        |
 | `.gemini/`           | Gemini AI agent configuration                    |
-| `.github/workflows/` | GitHub Actions CI/CD workflows (21 workflows)    |
+| `.github/workflows/` | GitHub Actions CI/CD workflows (16 workflows)    |
 | `.husky/`            | Git hooks (pre-commit, commit-msg)               |
 | `.vscode/`           | VS Code workspace settings                       |
 | `brew/`              | Homebrew package management (Linux only)         |
 | `credentials/`       | Credential templates and filtering documentation |
-| `dist/`              | dist                                             |
 | `docs/`              | Documentation and ADRs                           |
 | `dot/`               | Dotfiles (DevContainer .zshrc, peco)             |
 | `eslint/`            | ESLint configuration and plugins                 |
 | `git/`               | Git hooks and configuration                      |
-| `next/`              | Next.js project templates                        |
 | `nix/`               | nix-darwin + home-manager (macOS environment)    |
 | `npm/`               | npm global configuration and library management  |
 | `script/`            | Utility shell scripts                            |
@@ -69,34 +69,58 @@ Development infrastructure template repository providing DevContainer images, CI
 
 | Command                         | Description                                                                               |
 | ------------------------------- | ----------------------------------------------------------------------------------------- |
-| `/branch-cleanup`               | (no description)                                                                          |
-| `/changelog-generator`          | (no description)                                                                          |
-| `/code-complexity-check`        | (no description)                                                                          |
-| `/codespaces-secrets`           | (no description)                                                                          |
+| `/branch-cleanup`               | Clean up merged and stale branches both locally and remotely                              |
+| `/changelog-generator`          | Generate CHANGELOG.md from Conventional Commits history                                   |
+| `/code-complexity-check`        | Analyze code complexity and identify refactoring candidates                               |
+| `/codespaces-secrets`           | GitHub Codespaces のシークレットとリポジトリの紐付けを CLI で管理                         |
 | `/config-base-sync-check`       | Check current and latest config-base image versions                                       |
 | `/config-base-sync-update`      | Update DevContainer to latest config-base image, sync recommended features, and create PR |
 | `/config-contribution-discover` | Discover useful features in current repository and create issues for config repository    |
-| `/container-health`             | (no description)                                                                          |
-| `/create-codespace`             | (no description)                                                                          |
+| `/container-health`             | Verify DevContainer environment health and configuration                                  |
+| `/create-codespace`             | GitHub Codespace を CLI から作成                                                          |
 | `/create-pr`                    | Create PR with latest base branch changes merged                                          |
-| `/dependency-health-check`      | (no description)                                                                          |
-| `/devcontainer-checklist`       | (no description)                                                                          |
-| `/git-sync`                     | (no description)                                                                          |
-| `/pre-pr-checklist`             | (no description)                                                                          |
+| `/dependency-health-check`      | Comprehensive dependency health analysis including updates, security, and licensing       |
+| `/devcontainer-checklist`       | DevContainer 再起動後の確認チェックリスト                                                 |
+| `/git-sync`                     | Git Sync Commands                                                                         |
+| `/pre-pr-checklist`             | Automate comprehensive checks before creating a pull request                              |
 | `/repo-maintenance`             | Comprehensive repository maintenance - run all health checks and updates                  |
-| `/security-credential-scan`     | (no description)                                                                          |
+| `/security-credential-scan`     | Scan repository for hardcoded credentials and sensitive data                              |
 | `/security-review`              | 5観点コードレビュー（Security / Performance / Quality / Accessibility / AI Residuals）    |
 | `/setup-ci`                     | Setup comprehensive CI/CD workflows for your repository                                   |
 | `/setup-doppler`                | Setup Doppler secret management with dev/dev_personal configuration                       |
-| `/setup-husky`                  | (no description)                                                                          |
+| `/setup-husky`                  | Husky + lint-staged + commitlint + file-length 最小構成                                   |
 | `/setup-new-repo`               | Setup new repository with DevContainer, CI/CD, and development tools from config template |
-| `/setup-team-protection`        | (no description)                                                                          |
+| `/setup-team-protection`        | チーム開発のためのリポジトリ保護設定                                                      |
 | `/setup-tests`                  | Setup comprehensive testing infrastructure for Next.js projects                           |
 | `/similarity-analysis`          | Analyze code similarity in the repository to detect duplicate functions and patterns      |
 | `/sync-settings`                | Sync Claude & Codex settings from your-org projects to DevContainer configuration         |
-| `/test-coverage-trend`          | (no description)                                                                          |
-| `/update-actions`               | (no description)                                                                          |
-| `/update-claude-code`           | (no description)                                                                          |
+| `/test-coverage-trend`          | Track and visualize test coverage trends over time                                        |
+| `/update-actions`               | GitHub Actions のバージョンを最新に自動更新                                               |
+| `/update-claude-code`           | Claude Code の最新バージョンに更新（ネイティブインストーラー使用）                        |
+
+## Agents
+
+| Agent                          | Description                                                     |
+| ------------------------------ | --------------------------------------------------------------- |
+| `act-local-ci-manager`         | Set up and manage local CI pipeline execution using act         |
+| `docs-consistency-checker`     | Review documentation consistency across formats                 |
+| `issue-resolver-code-quality`  | Resolve code quality issues                                     |
+| `issue-resolver-dependencies`  | Resolve dependency update issues                                |
+| `issue-resolver-documentation` | Resolve documentation issues                                    |
+| `issue-resolver-orchestrator`  | Orchestrate issue resolution across specialized agents          |
+| `issue-resolver-security`      | Resolve security issues                                         |
+| `issue-resolver-test-coverage` | Resolve test coverage issues                                    |
+| `playwright-test-generator`    | Generate Playwright E2E tests by observing browser interactions |
+| `playwright-test-healer`       | Debug and fix failing Playwright E2E tests                      |
+| `playwright-test-planner`      | Create comprehensive E2E test plans for web applications        |
+
+## Skills
+
+| Skill           | Description                                |
+| --------------- | ------------------------------------------ |
+| `ci-check`      | Check CI status for the current branch     |
+| `codex-review`  | Run Codex AI code review on changed files  |
+| `gemini-review` | Run Gemini AI code review on changed files |
 
 ## CI/CD Workflows
 

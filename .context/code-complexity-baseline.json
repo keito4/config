@@ -1,0 +1,43 @@
+{
+  "generated": "2026-04-10",
+  "tool": "script/code-complexity-check.sh",
+  "overall_score": 19,
+  "rating": "Poor",
+  "total_files": 36,
+  "distribution": {
+    "low_lt5": 2,
+    "medium_5_10": 9,
+    "high_10_20": 13,
+    "critical_gt20": 12
+  },
+  "files": [
+    { "file": "script/container-health.sh", "complexity": 57, "lines": 324 },
+    { "file": "script/security-credential-scan.sh", "complexity": 48, "lines": 389 },
+    { "file": "script/update-agents-md.sh", "complexity": 46, "lines": 302 },
+    { "file": "script/code-complexity-check.sh", "complexity": 45, "lines": 282 },
+    { "file": "script/codespaces-secrets.sh", "complexity": 43, "lines": 421 },
+    { "file": "script/setup-team-protection.sh", "complexity": 40, "lines": 485 },
+    { "file": "script/branch-cleanup.sh", "complexity": 39, "lines": 243 },
+    { "file": "script/dependency-health-check.sh", "complexity": 38, "lines": 188 },
+    { "file": "script/changelog-generator.sh", "complexity": 35, "lines": 301 },
+    { "file": "script/update-actions.sh", "complexity": 35, "lines": 217 },
+    { "file": "script/update-agents-md.sh", "complexity": 33, "lines": 302 },
+    { "file": "script/pre-pr-checklist.sh", "complexity": 27, "lines": 215 },
+    { "file": "script/test-coverage-trend.sh", "complexity": 22, "lines": 263 },
+    { "file": "script/import.sh", "complexity": 19, "lines": 116 },
+    { "file": "script/install-claude-plugins.sh", "complexity": 19, "lines": 141 },
+    { "file": "script/update-all.sh", "complexity": 14, "lines": 130 },
+    { "file": "script/install-skills.sh", "complexity": 14, "lines": 114 },
+    { "file": "script/export.sh", "complexity": 14, "lines": 81 },
+    { "file": "script/brew-deps.sh", "complexity": 11, "lines": 208 },
+    { "file": "script/check-file-length.sh", "complexity": 11, "lines": 65 },
+    { "file": "script/brew-deps.sh", "complexity": 11, "lines": 208 },
+    { "file": "script/create-codespace.sh", "complexity": 12, "lines": 233 },
+    { "file": "script/install-skills.sh", "complexity": 12, "lines": 114 },
+    { "file": "script/update-libraries.sh", "complexity": 10, "lines": 87 },
+    { "file": "script/fix-container-plugins.sh", "complexity": 10, "lines": 78 },
+    { "file": "script/update-claude-code.sh", "complexity": 10, "lines": 106 },
+    { "file": "script/version.sh", "complexity": 11, "lines": 132 },
+    { "file": "script/setup-claude.sh", "complexity": 11, "lines": 133 }
+  ]
+}

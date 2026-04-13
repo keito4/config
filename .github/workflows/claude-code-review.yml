@@ -2,13 +2,7 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, ready_for_review]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    types: [opened, ready_for_review, reopened]
 
 permissions: {}
 
@@ -127,9 +121,11 @@ jobs:
     continue-on-error: true # ワークフローファイル変更時の初回PR用
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       issues: read
       id-token: write
+      actions: read
+      checks: read
 
     steps:
       - name: Checkout repository
@@ -139,10 +135,13 @@ jobs:
 
       - name: Run Claude Code Review
         id: claude-review
-        continue-on-error: true
         uses: anthropics/claude-code-action@b47fd721da662d48c5680e154ad16a73ed74d2e0 # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          # 進捗トラッキングを有効化
+          track_progress: true
+
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -156,17 +155,13 @@ jobs:
 
             Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
 
-            Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
+            Provide detailed feedback using inline comments for specific issues.
+            Use top-level comments for general observations.
 
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
-          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
+          claude_args: |
+            --allowedTools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr checks:*)"
 
-      - name: Report success
-        if: always()
-        run: |
-          if [ "${{ steps.claude-review.outcome }}" == "failure" ]; then
-            echo "⚠️ Claude Code Review encountered an issue but this is non-blocking"
-          else
-            echo "✅ Claude Code Review completed successfully"
-          fi
+          # CI結果の読み取り権限
+          additional_permissions: |
+            actions: read
+            checks: read
