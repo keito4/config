@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# lint-staged: フォーマット・リント
+npx lint-staged || exit 1
+
+# ファイル長チェック（script/check-file-length.sh が存在する場合のみ）
+if [ -f script/check-file-length.sh ]; then
+  bash script/check-file-length.sh || exit 1
+fi

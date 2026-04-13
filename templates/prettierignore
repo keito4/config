@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+coverage/
+
+# Lock files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Environment
+.env
+.env.*
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Claude Code
+.claude/settings.local.json
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Supabase
+supabase/.temp/
