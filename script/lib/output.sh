@@ -56,18 +56,6 @@ output::header() {
     echo -e "${OUTPUT_BLUE}=== ${message} ===${OUTPUT_NC}"
 }
 
-output::step() {
-    local step_num="${1:?Step number required}"
-    local message="${2:?Step message required}"
-    echo -e "${OUTPUT_BLUE}Step ${step_num}: ${message}${OUTPUT_NC}"
-}
-
-# Plain text output (no color prefix)
-output::plain() {
-    local message="${1:-}"
-    echo -e "${message}"
-}
-
 # ============================================================================
 # Error Handling Functions (migrated from errors.sh)
 # ============================================================================
@@ -116,18 +104,6 @@ output::require_directory() {
 # ============================================================================
 # Backward Compatibility Aliases
 # ============================================================================
-# These aliases support legacy naming conventions and can be removed after migration
-
-# For scripts using print_* pattern
-output::print_error() { output::error "$@"; }
-output::print_success() { output::success "$@"; }
-output::print_warning() { output::warning "$@"; }
-output::print_info() { output::info "$@"; }
-
-# For scripts using log_* pattern
-output::log_info() { output::info "$@"; }
-output::log_success() { output::success "$@"; }
-output::log_warn() { output::warning "$@"; }
 
 # Global function aliases for backward compatibility
 # These allow existing scripts to work without code changes
