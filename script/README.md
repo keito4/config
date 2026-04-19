@@ -4,14 +4,16 @@ This directory contains utility scripts for managing configuration, credentials,
 
 ## Quick Reference
 
-| Script                   | Purpose                          | Used By                |
-| ------------------------ | -------------------------------- | ---------------------- |
-| `setup-claude.sh`        | Claude Code CLI setup            | Makefile, DevContainer |
-| `credentials.sh`         | 1Password credential management  | Makefile               |
-| `update-libraries.sh`    | Library updates for Codex/Claude | package.json           |
-| `version.sh`             | Semantic versioning              | Makefile               |
-| `check-image-version.sh` | Show DevContainer image version  | Manual                 |
-| `.shellcheck-exclude`    | ShellCheck 除外パターン定義      | npm run shellcheck     |
+| Script                      | Purpose                                               | Used By                |
+| --------------------------- | ----------------------------------------------------- | ---------------------- |
+| `setup-claude.sh`           | Claude Code CLI setup                                 | Makefile, DevContainer |
+| `credentials.sh`            | 1Password credential management                       | Makefile               |
+| `update-libraries.sh`       | Library updates for Codex/Claude                      | package.json           |
+| `version.sh`                | Semantic versioning                                   | Makefile               |
+| `check-image-version.sh`    | Show DevContainer image version                       | Manual                 |
+| `.shellcheck-exclude`       | ShellCheck 除外パターン定義                           | npm run shellcheck     |
+| `setup-scheduled-agents.sh` | Claude Code スケジュール済みエージェント セットアップ | Manual                 |
+| `update-agents-md.sh`       | AGENTS.md 自動生成セクション更新                      | repo-maintenance       |
 
 ## Configuration Management
 
@@ -300,6 +302,41 @@ Creates a GitHub Codespace with configurable options.
 Sets up Language Server Protocol servers for various languages.
 
 **Usage**: `./script/setup-lsp.sh`
+
+### setup-scheduled-agents.sh
+
+Sets up Claude Code scheduled remote agents (9 agents) for automated repository maintenance.
+
+**Usage**: `./script/setup-scheduled-agents.sh`
+
+Registers the following scheduled agents:
+
+| #   | Agent Name               | Schedule           | Purpose                                |
+| --- | ------------------------ | ------------------ | -------------------------------------- |
+| 1   | 依存関係健全性レビュー   | 毎週月曜 10:00 JST | npm audit / outdated チェック          |
+| 2   | config-base同期チェック  | 毎週水曜 10:00 JST | ベースイメージのダイジスト比較・更新PR |
+| 3   | コード複雑度監視         | 毎週金曜 10:00 JST | 循環的複雑度の悪化検出                 |
+| 4   | テンプレート乖離チェック | 毎月1日 10:00 JST  | templates/ と実ファイルの差分確認      |
+| 5   | ドキュメント鮮度チェック | 毎月15日 10:00 JST | README / CLAUDE.md の陳腐化検出        |
+| 6   | CI失敗分析               | 毎日 10:00 JST     | 過去24時間のCI失敗を根本原因ごとに分類 |
+| 7   | 未テストパス検出         | 毎週木曜 10:00 JST | 変更ファイルのカバレッジ不足を検出     |
+| 8   | 新規Issueトリアージ      | 毎日 11:00 JST     | ラベルなしIssueに自動でラベル付与      |
+| 9   | 週次リリースノート       | 毎週月曜 11:00 JST | 先週マージPRからリリースノートを生成   |
+
+**Note**: 冪等性あり（登録済みのスケジュールはスキップ）。管理画面: https://claude.ai/code/scheduled
+
+### update-agents-md.sh
+
+Regenerates the auto-generated section of `AGENTS.md` from the current repository state.
+
+**Usage**:
+
+```bash
+./script/update-agents-md.sh          # Update AGENTS.md
+./script/update-agents-md.sh --check  # Check for diff only (exit 1 if diff exists)
+```
+
+**Used by**: `/repo-maintenance` command
 
 ## Git & GitHub
 

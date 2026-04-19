@@ -262,7 +262,9 @@ config/
 │   ├── setup-file-length-check.sh
 │   ├── setup-lsp.sh
 │   ├── setup-mcp.sh
+│   ├── setup-scheduled-agents.sh  # Scheduled remote agents セットアップ
 │   ├── setup-team-protection.sh
+│   ├── update-agents-md.sh         # AGENTS.md 自動生成セクション更新
 │   ├── test-coverage-trend.sh
 │   ├── update-actions.sh
 │   ├── update-all.sh
@@ -393,7 +395,7 @@ config/
 └── .trivyignore
 ```
 
-**ファイル総数**: 343 ファイル（Git 管理対象）
+**ファイル総数**: 357 ファイル（Git 管理対象）
 
 各ディレクトリの概要：
 
