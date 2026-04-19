@@ -41,17 +41,21 @@ collect_dirs() {
     case "$name" in
       .agents)          dirs+="| \`.agents/\`           | AI agent skills and configurations               |"$'\n' ;;
       .claude)
+        [[ -d ".claude/agents" ]]  && dirs+="| \`.claude/agents/\`    | Claude Code specialized agents                   |"$'\n'
         dirs+="| \`.claude/commands/\`  | Claude Code slash commands                       |"$'\n'
         dirs+="| \`.claude/hooks/\`     | Pre/post hook scripts for quality enforcement    |"$'\n'
-        [[ -d ".claude/rules" ]] && dirs+="| \`.claude/rules/\`     | Claude Code rules for development standards      |"$'\n'
+        [[ -d ".claude/plugins" ]] && dirs+="| \`.claude/plugins/\`   | Claude Code plugin configuration                 |"$'\n'
+        [[ -d ".claude/rules" ]]   && dirs+="| \`.claude/rules/\`     | Claude Code rules for development standards      |"$'\n'
+        [[ -d ".claude/skills" ]]  && dirs+="| \`.claude/skills/\`    | Claude Code skill definitions                    |"$'\n'
         ;;
       .codex)           dirs+="| \`.codex/\`            | Codex AI agent configuration                     |"$'\n' ;;
+      .context)         dirs+="| \`.context/\`          | Shared intermediate artifacts (complexity reports etc.) |"$'\n' ;;
       .cursor)          dirs+="| \`.cursor/\`           | Cursor editor settings                           |"$'\n' ;;
       .devcontainer)    dirs+="| \`.devcontainer/\`     | DevContainer configuration and Dockerfile        |"$'\n' ;;
       .gemini)          dirs+="| \`.gemini/\`           | Gemini AI agent configuration                    |"$'\n' ;;
       .github)
         local wf_count
-        wf_count=$(find .github/workflows -name '*.yml' 2>/dev/null | wc -l | tr -d ' ')
+        wf_count=$(find .github/workflows -maxdepth 1 -name '*.yml' 2>/dev/null | wc -l | tr -d ' ')
         dirs+="| \`.github/workflows/\` | GitHub Actions CI/CD workflows ($wf_count workflows)    |"$'\n'
         ;;
       .husky)           dirs+="| \`.husky/\`            | Git hooks (pre-commit, commit-msg)               |"$'\n' ;;

@@ -86,6 +86,9 @@ config/
 │   └── plugin.json
 ├── .codex/                         # Codex CLI 設定
 │   └── config.toml                 # MCP サーバー設定
+├── .context/                       # エージェント間共有の中間成果物
+│   ├── code-complexity-baseline.json # コード複雑度ベースライン
+│   └── complexity-report.md        # コード複雑度レポート
 ├── .cursor/                        # Cursor エディタ設定
 │   └── rules/base.mdc
 ├── .devcontainer/                  # DevContainer 設定
@@ -297,9 +300,19 @@ config/
 │   │       ├── bug_report.yml
 │   │       ├── config.yml
 │   │       └── feature_request.yml
+│   ├── husky/                      # Git フックテンプレート
+│   │   ├── commit-msg              # commitlint（Conventional Commits）
+│   │   ├── pre-commit              # lint-staged + ファイル長チェック
+│   │   └── pre-push               # typecheck + lint + test
+│   ├── lintstagedrc-biome.json     # lint-staged: Biome
+│   ├── lintstagedrc-eslint.json    # lint-staged: ESLint + Prettier
+│   ├── lintstagedrc-prettier-only.json # lint-staged: Prettier のみ
 │   ├── pre-commit-config-base.yaml
 │   ├── pre-commit-config-full.yaml
 │   ├── pre-commit-config-terraform.yaml
+│   ├── prettierignore              # Prettier 除外パターン
+│   ├── prettierrc-base.json        # Prettier 標準設定（printWidth: 80）
+│   ├── prettierrc-wide.json        # Prettier ワイド設定（printWidth: 120）
 │   ├── testing/                    # テスト設定テンプレート
 │   │   ├── README.md
 │   │   ├── ci-test-jobs.yml
@@ -333,8 +346,12 @@ config/
 │   │       ├── ssr-hydration.spec.ts
 │   │       └── visual.spec.ts
 │   └── workflows/                  # ワークフローテンプレート
+│       ├── claude-health-check.yml # Claude Code トークン有効性チェック
+│       ├── claude.yml              # Claude Code 連携
 │       ├── dependabot-auto-merge.yml
+│       ├── e2e-playwright.yml      # Playwright E2E CI
 │       ├── label-sync.yml
+│       ├── scheduled-maintenance.yml # 定期メンテナンス
 │       ├── stale.yml
 │       └── terraform-drift.yml
 ├── test/                           # テスト
@@ -401,6 +418,7 @@ config/
 
 - **`.claude/`**: Claude Code 設定（settings, commands, agents, hooks, skills, plugins）
 - **`.codex/`**: Codex CLI の MCP サーバー設定
+- **`.context/`**: エージェント間共有の中間成果物（コード複雑度レポート等）
 - **`.devcontainer/`**: DevContainer / Codespaces 設定。`templates/` にオプション言語サポート
 - **`.github/`**: GitHub Actions ワークフロー、Issue/PR テンプレート、カスタムアクション
 - **`.zsh/`**: Zsh モジュール構成（aliases, functions, 言語バージョン管理）
