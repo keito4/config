@@ -90,6 +90,14 @@
   color: 'bfdadc'
   description: '自動検出された機能・改善'
 
+- name: 'npm'
+  color: 'cb3837'
+  description: 'npm/yarn 依存関係の更新'
+
+- name: 'docker'
+  color: '0db7ed'
+  description: 'Docker 依存関係の更新'
+
 # ── CI/CD ─────────────────────────────────────────
 - name: 'ci'
   color: '006b75'
