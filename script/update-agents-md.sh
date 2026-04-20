@@ -41,17 +41,21 @@ collect_dirs() {
     case "$name" in
       .agents)          dirs+="| \`.agents/\`           | AI agent skills and configurations               |"$'\n' ;;
       .claude)
+        [[ -d ".claude/agents" ]]  && dirs+="| \`.claude/agents/\`    | Claude Code specialized agents                   |"$'\n'
         dirs+="| \`.claude/commands/\`  | Claude Code slash commands                       |"$'\n'
         dirs+="| \`.claude/hooks/\`     | Pre/post hook scripts for quality enforcement    |"$'\n'
-        [[ -d ".claude/rules" ]] && dirs+="| \`.claude/rules/\`     | Claude Code rules for development standards      |"$'\n'
+        [[ -d ".claude/plugins" ]] && dirs+="| \`.claude/plugins/\`   | Claude Code plugin configuration                 |"$'\n'
+        [[ -d ".claude/rules" ]]   && dirs+="| \`.claude/rules/\`     | Claude Code rules for development standards      |"$'\n'
+        [[ -d ".claude/skills" ]]  && dirs+="| \`.claude/skills/\`    | Claude Code skill definitions                    |"$'\n'
         ;;
       .codex)           dirs+="| \`.codex/\`            | Codex AI agent configuration                     |"$'\n' ;;
+      .context)         dirs+="| \`.context/\`          | Shared intermediate artifacts (complexity reports etc.) |"$'\n' ;;
       .cursor)          dirs+="| \`.cursor/\`           | Cursor editor settings                           |"$'\n' ;;
       .devcontainer)    dirs+="| \`.devcontainer/\`     | DevContainer configuration and Dockerfile        |"$'\n' ;;
       .gemini)          dirs+="| \`.gemini/\`           | Gemini AI agent configuration                    |"$'\n' ;;
       .github)
         local wf_count
-        wf_count=$(find .github/workflows -name '*.yml' 2>/dev/null | wc -l | tr -d ' ')
+        wf_count=$(find .github/workflows -maxdepth 1 -name '*.yml' 2>/dev/null | wc -l | tr -d ' ')
         dirs+="| \`.github/workflows/\` | GitHub Actions CI/CD workflows ($wf_count workflows)    |"$'\n'
         ;;
       .husky)           dirs+="| \`.husky/\`            | Git hooks (pre-commit, commit-msg)               |"$'\n' ;;
@@ -191,12 +195,12 @@ WORKFLOWS=$(collect_workflows)
 QUALITY_GATES=$(collect_quality_gates)
 HOOKS=$(collect_hooks)
 
-# Extra test info
+# Extra test info (avoid pipe subshell by using process substitution)
 EXTRA_TESTS=$(collect_extra_tests)
 EXTRA_LINE=""
 if [[ -n "$EXTRA_TESTS" ]]; then
   EXTRA_LINE="Additional test commands:"
-  echo "$EXTRA_TESTS" | while IFS= read -r t; do
+  while IFS= read -r t; do
     [[ -z "$t" ]] && continue
     case "$t" in
       test:integration) EXTRA_LINE+=" \`$t\` (BATS)," ;;
@@ -204,7 +208,8 @@ if [[ -n "$EXTRA_TESTS" ]]; then
       test:all)         EXTRA_LINE+=" \`$t\` (unit + integration)," ;;
       *)                EXTRA_LINE+=" \`$t\`," ;;
     esac
-  done
+  done < <(echo "$EXTRA_TESTS")
+  EXTRA_LINE="${EXTRA_LINE%,}"
 fi
 
 # Build the content
@@ -248,7 +253,7 @@ The following scripts are auto-detected and run before git commit/push:
 | Script | Command | Purpose |
 | --- | --- | --- |
 ${QUALITY_GATES}
-Additional test commands: \`test:integration\` (BATS), \`test:coverage\` (Jest + coverage), \`test:all\` (unit + integration)
+${EXTRA_LINE}
 
 ## Hooks
 
@@ -276,7 +281,8 @@ ${TAIL}"
 
 if [[ "$CHECK_ONLY" == "true" ]]; then
   # Write to temp file and format for accurate comparison
-  TMPFILE=$(mktemp /tmp/agents-md-check-XXXXX.md)
+  mkdir -p .context
+  TMPFILE=$(mktemp .context/agents-md-check-XXXXXXXXXX)
   trap 'rm -f "$TMPFILE"' EXIT
   echo "$NEW_CONTENT" > "$TMPFILE"
   if command -v npx >/dev/null 2>&1; then

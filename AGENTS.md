@@ -37,33 +37,34 @@ Development infrastructure template repository providing DevContainer images, CI
 
 ## Project Structure
 
-| Directory            | Purpose                                          |
-| -------------------- | ------------------------------------------------ |
-| `.claude/agents/`    | Claude Code specialized agents                   |
-| `.claude/commands/`  | Claude Code slash commands                       |
-| `.claude/hooks/`     | Pre/post hook scripts for quality enforcement    |
-| `.claude/plugins/`   | Claude Code plugin configuration                 |
-| `.claude/rules/`     | Claude Code rules for development standards      |
-| `.claude/skills/`    | Claude Code skill definitions                    |
-| `.codex/`            | Codex AI agent configuration                     |
-| `.cursor/`           | Cursor editor settings                           |
-| `.devcontainer/`     | DevContainer configuration and Dockerfile        |
-| `.gemini/`           | Gemini AI agent configuration                    |
-| `.github/workflows/` | GitHub Actions CI/CD workflows (16 workflows)    |
-| `.husky/`            | Git hooks (pre-commit, commit-msg)               |
-| `.vscode/`           | VS Code workspace settings                       |
-| `brew/`              | Homebrew package management (Linux only)         |
-| `credentials/`       | Credential templates and filtering documentation |
-| `docs/`              | Documentation and ADRs                           |
-| `dot/`               | Dotfiles (DevContainer .zshrc, peco)             |
-| `eslint/`            | ESLint configuration and plugins                 |
-| `git/`               | Git hooks and configuration                      |
-| `nix/`               | nix-darwin + home-manager (macOS environment)    |
-| `npm/`               | npm global configuration and library management  |
-| `script/`            | Utility shell scripts                            |
-| `templates/`         | Workflow, testing, and dotfile templates         |
-| `test/`              | Test suites (Jest unit, BATS integration)        |
-| `vscode/`            | VS Code extensions list                          |
+| Directory            | Purpose                                                 |
+| -------------------- | ------------------------------------------------------- |
+| `.claude/agents/`    | Claude Code specialized agents                          |
+| `.claude/commands/`  | Claude Code slash commands                              |
+| `.claude/hooks/`     | Pre/post hook scripts for quality enforcement           |
+| `.claude/plugins/`   | Claude Code plugin configuration                        |
+| `.claude/rules/`     | Claude Code rules for development standards             |
+| `.claude/skills/`    | Claude Code skill definitions                           |
+| `.codex/`            | Codex AI agent configuration                            |
+| `.context/`          | Shared intermediate artifacts (complexity reports etc.) |
+| `.cursor/`           | Cursor editor settings                                  |
+| `.devcontainer/`     | DevContainer configuration and Dockerfile               |
+| `.gemini/`           | Gemini AI agent configuration                           |
+| `.github/workflows/` | GitHub Actions CI/CD workflows (16 workflows)           |
+| `.husky/`            | Git hooks (pre-commit, commit-msg)                      |
+| `.vscode/`           | VS Code workspace settings                              |
+| `brew/`              | Homebrew package management (Linux only)                |
+| `credentials/`       | Credential templates and filtering documentation        |
+| `docs/`              | Documentation and ADRs                                  |
+| `dot/`               | Dotfiles (DevContainer .zshrc, peco)                    |
+| `eslint/`            | ESLint configuration and plugins                        |
+| `git/`               | Git hooks and configuration                             |
+| `nix/`               | nix-darwin + home-manager (macOS environment)           |
+| `npm/`               | npm global configuration and library management         |
+| `script/`            | Utility shell scripts                                   |
+| `templates/`         | Workflow, testing, and dotfile templates                |
+| `test/`              | Test suites (Jest unit, BATS integration)               |
+| `vscode/`            | VS Code extensions list                                 |
 
 ## Available Commands
 

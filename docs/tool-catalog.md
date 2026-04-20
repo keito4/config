@@ -32,7 +32,7 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | Rust (stable) | rustup 管理           | CLI ツールビルド           |
 | Python 3      | apt 管理              | スクリプト、AI ツール      |
 | pnpm          | npm 経由で最新        | パッケージマネージャ       |
-| npm           | 11.10.1 (global.json) | パッケージマネージャ       |
+| npm           | 11.12.0 (global.json) | パッケージマネージャ       |
 | corepack      | 0.34.6 (global.json)  | パッケージマネージャ切替   |
 
 ### 2.2 AI CLI ツール
@@ -40,8 +40,8 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | ツール                            | バージョン管理            | 用途                |
 | --------------------------------- | ------------------------- | ------------------- |
 | Claude Code                       | native installer (2.1.42) | AI コーディング支援 |
-| Codex (`@openai/codex`)           | 0.104.0 (global.json)     | OpenAI Codex CLI    |
-| Gemini CLI (`@google/gemini-cli`) | 0.29.5 (global.json)      | Google Gemini CLI   |
+| Codex (`@openai/codex`)           | 0.116.0 (global.json)     | OpenAI Codex CLI    |
+| Gemini CLI (`@google/gemini-cli`) | 0.34.0 (global.json)      | Google Gemini CLI   |
 | Happy Coder                       | 0.13.0 (global.json)      | AI コーディング     |
 | Cursor                            | curl installer            | AI エディタ CLI     |
 
@@ -58,16 +58,17 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 ### 2.3 ユーティリティ
 
-| ツール        | バージョン            | 用途                 |
-| ------------- | --------------------- | -------------------- |
-| shellcheck    | apt 管理              | シェルスクリプト検証 |
-| Doppler CLI   | 3.75.2                | シークレット管理     |
-| similarity-ts | cargo install         | コード類似度分析     |
-| eslint        | npm global            | JavaScript リンター  |
-| Supabase CLI  | pnpm global           | Supabase 操作        |
-| Vercel CLI    | 50.22.1 (global.json) | Vercel デプロイ      |
-| n8n           | 2.8.3 (global.json)   | ワークフロー自動化   |
-| pm2           | 6.0.14 (global.json)  | プロセスマネージャ   |
+| ツール        | バージョン            | 用途                   |
+| ------------- | --------------------- | ---------------------- |
+| shellcheck    | apt 管理              | シェルスクリプト検証   |
+| Doppler CLI   | 3.75.2                | シークレット管理       |
+| similarity-ts | cargo install         | コード類似度分析       |
+| eslint        | npm global            | JavaScript リンター    |
+| Supabase CLI  | pnpm global           | Supabase 操作          |
+| Vercel CLI    | 50.35.0 (global.json) | Vercel デプロイ        |
+| n8n           | 2.12.3 (global.json)  | ワークフロー自動化     |
+| pm2           | 6.0.14 (global.json)  | プロセスマネージャ     |
+| difit         | 3.1.17 (global.json)  | AI diff レビューツール |
 
 ### 2.4 Language Servers（global.json）
 
@@ -77,7 +78,7 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | typescript-language-server   | 5.1.3      | TypeScript LSP        |
 | bash-language-server         | 5.6.0      | Bash LSP              |
 | vscode-langservers-extracted | 4.10.0     | HTML/CSS/JSON LSP     |
-| yaml-language-server         | 1.20.0     | YAML LSP              |
+| yaml-language-server         | 1.21.0     | YAML LSP              |
 
 ### 2.5 MCP / Automation
 
@@ -91,8 +92,8 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | パッケージ                        | バージョン | 用途                   |
 | --------------------------------- | ---------- | ---------------------- |
 | husky                             | 9.1.7      | Git hooks              |
-| `@commitlint/cli`                 | 20.4.2     | コミットメッセージ検証 |
-| `@commitlint/config-conventional` | 20.4.2     | Conventional Commits   |
+| `@commitlint/cli`                 | 20.5.0     | コミットメッセージ検証 |
+| `@commitlint/config-conventional` | 20.5.0     | Conventional Commits   |
 
 ## 3. DevContainer Features（config ベースで提供）
 
