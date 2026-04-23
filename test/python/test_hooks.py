@@ -32,8 +32,8 @@ def test_pre_git_quality_gates_has_required_functions():
     hook_file = REPO_ROOT / ".claude" / "hooks" / "pre_git_quality_gates.py"
     content = hook_file.read_text()
 
+    # Functions defined locally in pre_git_quality_gates.py
     required_functions = [
-        "detect_package_manager",
         "has_biome",
         "get_package_scripts",
         "run_with_retry",
@@ -43,6 +43,28 @@ def test_pre_git_quality_gates_has_required_functions():
     for func in required_functions:
         assert f"def {func}" in content, \
             f"Missing function: {func} in pre_git_quality_gates.py"
+
+    # detect_package_manager and build_run_command are imported from common.py
+    assert "from common import" in content, "Missing common import"
+    assert "detect_package_manager" in content, "detect_package_manager not imported from common"
+    assert "build_run_command" in content, "build_run_command not imported from common"
+
+
+def test_common_has_shared_functions():
+    """Test common.py has shared utility functions"""
+    common_file = REPO_ROOT / ".claude" / "hooks" / "common.py"
+    content = common_file.read_text()
+
+    required_functions = [
+        "detect_package_manager",
+        "build_run_command",
+        "get_git_root",
+        "load_hook_input",
+    ]
+
+    for func in required_functions:
+        assert f"def {func}" in content, \
+            f"Missing function: {func} in common.py"
 
 
 def test_hook_files_have_shebang():
