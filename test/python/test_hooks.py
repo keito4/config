@@ -79,5 +79,6 @@ def test_hook_files_have_shebang():
 if __name__ == "__main__":
     test_hooks_valid_python()
     test_pre_git_quality_gates_has_required_functions()
+    test_common_has_shared_functions()
     test_hook_files_have_shebang()
     print("All tests passed!")
