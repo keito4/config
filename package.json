@@ -21,6 +21,7 @@
     "test:all": "npm test && npm run test:integration",
     "test:watch": "jest --runInBand --watch",
     "test:coverage": "jest --runInBand --coverage",
+    "test:python": "python3 test/python/test_hooks.py",
     "update:libs": "bash script/update-libraries.sh",
     "update:claude": "bash script/update-claude-code.sh",
     "update:actions": "bash script/update-actions.sh",
