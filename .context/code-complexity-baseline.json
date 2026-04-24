@@ -1,5 +1,5 @@
 {
-  "generated": "2026-04-17",
+  "generated": "2026-04-24",
   "tool": "script/code-complexity-check.sh",
   "overall_score": 19,
   "rating": "Poor",
@@ -13,7 +13,7 @@
   "files": [
     { "file": "script/container-health.sh", "complexity": 57, "lines": 324 },
     { "file": "script/security-credential-scan.sh", "complexity": 48, "lines": 389 },
-    { "file": "script/update-agents-md.sh", "complexity": 46, "lines": 302 },
+    { "file": "script/update-agents-md.sh", "complexity": 49, "lines": 308 },
     { "file": "script/code-complexity-check.sh", "complexity": 45, "lines": 282 },
     { "file": "script/codespaces-secrets.sh", "complexity": 43, "lines": 421 },
     { "file": "script/setup-team-protection.sh", "complexity": 40, "lines": 485 },
