@@ -12,7 +12,7 @@ Layer 3: プロジェクト依存 (package.json / pubspec.yaml / build.gradle)
 Layer 2: DevContainer Features (devcontainer.json)
     ├─ クラウド CLI、追加ランタイム、インフラツール
 Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
-    └─ Node.js, Rust, Python, AI CLI, Language Servers
+    └─ Node.js, Python, AI CLI, Language Servers
 ```
 
 | レイヤー             | 管理場所                            | 更新頻度          | 影響範囲     |
@@ -26,20 +26,21 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 ### 2.1 ランタイム
 
-| ツール        | バージョン            | 用途                       |
-| ------------- | --------------------- | -------------------------- |
-| Node.js       | 22.14.0               | JavaScript/TypeScript 実行 |
-| Rust (stable) | rustup 管理           | CLI ツールビルド           |
-| Python 3      | apt 管理              | スクリプト、AI ツール      |
-| pnpm          | npm 経由で最新        | パッケージマネージャ       |
-| npm           | 11.12.0 (global.json) | パッケージマネージャ       |
-| corepack      | 0.34.6 (global.json)  | パッケージマネージャ切替   |
+| ツール   | バージョン            | 用途                       |
+| -------- | --------------------- | -------------------------- |
+| Node.js  | 24.14.1               | JavaScript/TypeScript 実行 |
+| Python 3 | apt 管理              | スクリプト、AI ツール      |
+| pnpm     | 10.33.0               | パッケージマネージャ       |
+| npm      | 11.12.0 (global.json) | パッケージマネージャ       |
+| corepack | 0.34.6 (global.json)  | パッケージマネージャ切替   |
+
+> **Note**: Rust ツールチェインは [ADR #0003](adr/0003-remove-rust-from-base-image.md) によりベースイメージから削除。ビルド時間短縮（約20分削減）のため、`similarity-ts` は `/similarity-analysis` コマンドの初回実行時にオンデマンドインストールされる。
 
 ### 2.2 AI CLI ツール
 
 | ツール                            | バージョン管理            | 用途                |
 | --------------------------------- | ------------------------- | ------------------- |
-| Claude Code                       | native installer (2.1.42) | AI コーディング支援 |
+| Claude Code                       | native installer (2.1.92) | AI コーディング支援 |
 | Codex (`@openai/codex`)           | 0.116.0 (global.json)     | OpenAI Codex CLI    |
 | Gemini CLI (`@google/gemini-cli`) | 0.34.0 (global.json)      | Google Gemini CLI   |
 | Happy Coder                       | 0.13.0 (global.json)      | AI コーディング     |
@@ -58,17 +59,19 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 ### 2.3 ユーティリティ
 
-| ツール        | バージョン            | 用途                   |
-| ------------- | --------------------- | ---------------------- |
-| shellcheck    | apt 管理              | シェルスクリプト検証   |
-| Doppler CLI   | 3.75.2                | シークレット管理       |
-| similarity-ts | cargo install         | コード類似度分析       |
-| eslint        | npm global            | JavaScript リンター    |
-| Supabase CLI  | pnpm global           | Supabase 操作          |
-| Vercel CLI    | 50.35.0 (global.json) | Vercel デプロイ        |
-| n8n           | 2.12.3 (global.json)  | ワークフロー自動化     |
-| pm2           | 6.0.14 (global.json)  | プロセスマネージャ     |
-| difit         | 3.1.17 (global.json)  | AI diff レビューツール |
+| ツール          | バージョン            | 用途                                        |
+| --------------- | --------------------- | ------------------------------------------- |
+| shellcheck      | apt 管理              | シェルスクリプト検証                        |
+| GitHub CLI (gh) | 2.89.0                | GitHub 操作                                 |
+| Doppler CLI     | 3.75.3                | シークレット管理                            |
+| similarity-ts   | オンデマンド          | コード類似度分析（初回実行時に自動インストール） |
+| eslint          | npm global            | JavaScript リンター                         |
+| Supabase CLI    | pnpm global           | Supabase 操作                               |
+| Vercel CLI      | 50.35.0 (global.json) | Vercel デプロイ                             |
+| n8n             | 2.12.3 (global.json)  | ワークフロー自動化                          |
+| pm2             | 6.0.14 (global.json)  | プロセスマネージャ                          |
+| difit           | 3.1.17 (global.json)  | AI diff レビューツール                      |
+| `@antfu/ni`     | 29.0.0 (global.json)  | パッケージマネージャ抽象化 CLI              |
 
 ### 2.4 Language Servers（global.json）
 
