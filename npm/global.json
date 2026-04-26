@@ -2,7 +2,7 @@
   "name": "lib",
   "dependencies": {
     "@commitlint/cli": {
-      "version": "20.5.0",
+      "version": "20.5.2",
       "overridden": false
     },
     "@commitlint/config-conventional": {
@@ -14,15 +14,15 @@
       "overridden": false
     },
     "@openai/codex": {
-      "version": "0.116.0",
+      "version": "0.125.0",
       "overridden": false
     },
     "@google/gemini-cli": {
-      "version": "0.34.0",
+      "version": "0.39.1",
       "overridden": false
     },
     "happy-coder": {
-      "version": "0.13.0",
+      "version": "0.13.1",
       "overridden": false
     },
     "bash-language-server": {
@@ -30,7 +30,7 @@
       "overridden": false
     },
     "typescript": {
-      "version": "5.9.3",
+      "version": "6.0.3",
       "overridden": false
     },
     "typescript-language-server": {
@@ -42,19 +42,19 @@
       "overridden": false
     },
     "yaml-language-server": {
-      "version": "1.21.0",
+      "version": "1.22.0",
       "overridden": false
     },
     "corepack": {
-      "version": "0.34.6",
+      "version": "0.34.7",
       "overridden": false
     },
     "@antfu/ni": {
-      "version": "29.0.0",
+      "version": "30.1.0",
       "overridden": false
     },
     "difit": {
-      "version": "3.1.17",
+      "version": "4.0.4",
       "overridden": false
     },
     "mcp-remote": {
@@ -62,11 +62,11 @@
       "overridden": false
     },
     "n8n": {
-      "version": "2.12.3",
+      "version": "2.17.7",
       "overridden": false
     },
     "npm": {
-      "version": "11.12.0",
+      "version": "11.13.0",
       "overridden": false
     },
     "pm2": {
@@ -74,7 +74,7 @@
       "overridden": false
     },
     "vercel": {
-      "version": "50.35.0",
+      "version": "52.0.0",
       "overridden": false
     }
   }

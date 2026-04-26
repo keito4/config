@@ -59,29 +59,29 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 ### 2.3 ユーティリティ
 
-| ツール          | バージョン            | 用途                                        |
-| --------------- | --------------------- | ------------------------------------------- |
-| shellcheck      | apt 管理              | シェルスクリプト検証                        |
-| GitHub CLI (gh) | 2.89.0                | GitHub 操作                                 |
-| Doppler CLI     | 3.75.3                | シークレット管理                            |
-| similarity-ts   | オンデマンド          | コード類似度分析（初回実行時に自動インストール） |
-| eslint          | npm global            | JavaScript リンター                         |
-| Supabase CLI    | pnpm global           | Supabase 操作                               |
-| Vercel CLI      | 50.35.0 (global.json) | Vercel デプロイ                             |
-| n8n             | 2.12.3 (global.json)  | ワークフロー自動化                          |
-| pm2             | 6.0.14 (global.json)  | プロセスマネージャ                          |
-| difit           | 3.1.17 (global.json)  | AI diff レビューツール                      |
-| `@antfu/ni`     | 29.0.0 (global.json)  | パッケージマネージャ抽象化 CLI              |
+| ツール          | バージョン           | 用途                                             |
+| --------------- | -------------------- | ------------------------------------------------ |
+| shellcheck      | apt 管理             | シェルスクリプト検証                             |
+| GitHub CLI (gh) | 2.89.0               | GitHub 操作                                      |
+| Doppler CLI     | 3.75.3               | シークレット管理                                 |
+| similarity-ts   | オンデマンド         | コード類似度分析（初回実行時に自動インストール） |
+| eslint          | npm global           | JavaScript リンター                              |
+| Supabase CLI    | pnpm global          | Supabase 操作                                    |
+| Vercel CLI      | 52.0.0 (global.json) | Vercel デプロイ                                  |
+| n8n             | 2.17.7 (global.json) | ワークフロー自動化                               |
+| pm2             | 6.0.14 (global.json) | プロセスマネージャ                               |
+| difit           | 4.0.4 (global.json)  | AI diff レビューツール                           |
+| `@antfu/ni`     | 30.1.0 (global.json) | パッケージマネージャ抽象化 CLI                   |
 
 ### 2.4 Language Servers（global.json）
 
 | パッケージ                   | バージョン | 対象言語              |
 | ---------------------------- | ---------- | --------------------- |
-| typescript                   | 5.9.3      | TypeScript コンパイラ |
+| typescript                   | 6.0.3      | TypeScript コンパイラ |
 | typescript-language-server   | 5.1.3      | TypeScript LSP        |
 | bash-language-server         | 5.6.0      | Bash LSP              |
 | vscode-langservers-extracted | 4.10.0     | HTML/CSS/JSON LSP     |
-| yaml-language-server         | 1.21.0     | YAML LSP              |
+| yaml-language-server         | 1.22.0     | YAML LSP              |
 
 ### 2.5 MCP / Automation
 
@@ -95,7 +95,7 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | パッケージ                        | バージョン | 用途                   |
 | --------------------------------- | ---------- | ---------------------- |
 | husky                             | 9.1.7      | Git hooks              |
-| `@commitlint/cli`                 | 20.5.0     | コミットメッセージ検証 |
+| `@commitlint/cli`                 | 20.5.2     | コミットメッセージ検証 |
 | `@commitlint/config-conventional` | 20.5.0     | Conventional Commits   |
 
 ## 3. DevContainer Features（config ベースで提供）
