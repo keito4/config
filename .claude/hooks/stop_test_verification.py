@@ -12,7 +12,7 @@ import json
 import subprocess
 import os
 from pathlib import Path
-from common import get_git_root, detect_package_manager
+from common import get_git_root, detect_package_manager, build_run_command
 
 # 無限ループ防止
 if os.environ.get("STOP_HOOK_ACTIVE") == "1":
@@ -78,7 +78,7 @@ if not test_script:
 
 try:
     result = subprocess.run(
-        [PM, "run", test_script],
+        build_run_command(PM, test_script),
         capture_output=True, text=True, timeout=300, cwd=repo_root,
         env={**os.environ, "CI": "true", "STOP_HOOK_ACTIVE": "1"},
     )

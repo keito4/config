@@ -11,9 +11,10 @@ Consolidates common patterns used across hook files:
 import sys
 import json
 import re
+import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 
 def load_hook_input() -> dict:
@@ -128,12 +129,22 @@ def get_changed_files(ref: str = "HEAD", cwd: Optional[str] = None) -> list:
 # Package manager detection
 # ============================================================================
 
-def detect_package_manager(root: Path) -> str:
-    """Detect package manager from lock files."""
+def detect_package_manager(root: Union[Path, str]) -> str:
+    """Detect package manager from lock files. Prefers ni if available."""
+    if shutil.which("nr"):
+        return "ni"
+    root = Path(root)
+    if (root / "bun.lockb").exists() or (root / "bun.lock").exists():
+        return "bun"
     if (root / "pnpm-lock.yaml").exists():
         return "pnpm"
     if (root / "yarn.lock").exists():
         return "yarn"
-    if (root / "bun.lockb").exists() or (root / "bun.lock").exists():
-        return "bun"
     return "npm"
+
+
+def build_run_command(pm: str, script_name: str) -> list:
+    """Build package manager run command for the given script."""
+    if pm == "ni":
+        return ["nr", script_name]
+    return [pm, "run", script_name]

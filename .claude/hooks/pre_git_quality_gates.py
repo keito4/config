@@ -8,12 +8,11 @@ npm / pnpm / yarn / bun / ni に対応。Biome による統合チェックにも
 import sys
 import json
 import shlex
-import shutil
 import subprocess
 import os
 import time
 from pathlib import Path
-from common import load_hook_input, get_command
+from common import load_hook_input, get_command, detect_package_manager, build_run_command
 
 # 設定
 DEFAULT_TIMEOUT = 300  # 5分
@@ -54,27 +53,6 @@ except Exception:
 
 if not repo_root:
     sys.exit(0)
-
-
-def detect_package_manager(root: str) -> str:
-    """パッケージマネージャーを検出。ni が利用可能な場合は優先使用"""
-    # ni (antfu/ni) がインストール済みの場合は優先使用（nr = ni's run command）
-    if shutil.which("nr"):
-        return "ni"
-    if (Path(root) / "bun.lockb").exists() or (Path(root) / "bun.lock").exists():
-        return "bun"
-    if (Path(root) / "pnpm-lock.yaml").exists():
-        return "pnpm"
-    if (Path(root) / "yarn.lock").exists():
-        return "yarn"
-    return "npm"
-
-
-def build_run_command(pm: str, script_name: str) -> list:
-    """パッケージマネージャーに応じたスクリプト実行コマンドを生成"""
-    if pm == "ni":
-        return ["nr", script_name]  # nr = ni run
-    return [pm, "run", script_name]
 
 
 def has_biome(root: str) -> bool:
