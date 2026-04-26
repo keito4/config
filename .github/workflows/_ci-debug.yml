@@ -11,16 +11,10 @@ permissions:
   contents: read
 
 jobs:
-  hello:
-    name: Hello
+  setup-node-ci-composite:
+    name: Setup Node CI Composite
     runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - run: echo hello
-
-  checkout-only:
-    name: Checkout Only
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: ./.github/actions/setup-node-ci
