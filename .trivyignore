@@ -12,7 +12,8 @@
 # Fixed in: 1.19.8, 1.20.3
 # Reason: Transitive dependency via Vercel CLI, esbuild only used at build-time
 # Expected resolution: Wait for Vercel to update esbuild
-# Review date: 2026-03-22
+# Note 2026-04-27: Vercel CLI 52.0.0 still bundles esbuild 0.27.0 with same Go stdlib
+# Review date: 2026-05-26
 CVE-2023-24538
 
 # CVE-2023-24540: golang: html/template: improper handling of JavaScript whitespace
@@ -21,7 +22,8 @@ CVE-2023-24538
 # Fixed in: 1.19.9, 1.20.4
 # Reason: Transitive dependency via Vercel CLI, esbuild only used at build-time
 # Expected resolution: Wait for Vercel to update esbuild
-# Review date: 2026-03-22
+# Note 2026-04-27: Vercel CLI 52.0.0 still bundles esbuild 0.27.0 with same Go stdlib
+# Review date: 2026-05-26
 CVE-2023-24540
 
 # CVE-2024-24790: golang: net/netip: Unexpected behavior from Is methods for IPv4-mapped IPv6 addresses
@@ -30,7 +32,8 @@ CVE-2023-24540
 # Fixed in: 1.21.11, 1.22.4
 # Reason: Transitive dependency via Vercel CLI, esbuild only used at build-time
 # Expected resolution: Wait for Vercel to update esbuild
-# Review date: 2026-03-22
+# Note 2026-04-27: Vercel CLI 52.0.0 still bundles esbuild 0.27.0 with same Go stdlib
+# Review date: 2026-05-26
 CVE-2024-24790
 
 # CVE-2025-68121: golang: crypto/tls: session resumption vulnerability
@@ -40,7 +43,8 @@ CVE-2024-24790
 # Reason: Doppler CLI is built with older Go stdlib, waiting for upstream update
 # Expected resolution: Wait for Doppler to rebuild with patched Go version
 # Tracking: https://github.com/DopplerHQ/cli/issues (monitor for Go version update)
-# Review date: 2026-03-22
+# Note 2026-04-27: Doppler 3.76.0 (latest) still uses old Go stdlib
+# Review date: 2026-05-26
 CVE-2025-68121
 
 # Vercel CLI path-to-regexp vulnerability
@@ -54,7 +58,8 @@ CVE-2025-68121
 # Reason: Transitive dependency via Vercel CLI, cannot override without upstream fix
 # Expected resolution: Wait for Vercel to complete migration to path-to-regexp@6.3.0+
 # Tracking: https://github.com/vercel/vercel/issues
-# Review date: 2026-03-22
+# Note 2026-04-27: Vercel CLI 52.0.0 still depends on @vercel/node@5.7.13 with path-to-regexp@6.1.0
+# Review date: 2026-05-26
 CVE-2024-45296
 
 # CVE-2026-29786: tar: Hardlink Path Traversal via Drive-Relative Linkpath
@@ -62,10 +67,11 @@ CVE-2024-45296
 # Affected: tar@7.5.9 (via semantic-release > @semantic-release/npm > npm)
 # Fixed in: 7.5.10
 # Reason: Bundled dependency in npm package, cannot override
-# npm@11.11.0 (latest) still uses tar@^7.5.9
-# Expected resolution: Wait for npm to update tar dependency
 # Tracking: https://github.com/npm/cli/issues
-# Review date: 2026-04-09
+# Note 2026-04-27: npm 11.13.0 now bundles tar@^7.5.13. Image rebuild via
+#   npm/global.json (npm 11.13.0) should resolve this. Re-verify after next
+#   rebuild-docker-cache run; remove this entry if scan no longer reports.
+# Review date: 2026-05-12
 CVE-2026-29786
 
 # CVE-2026-27903: minimatch: ReDoS via multiple non-adjacent GLOBSTAR segments
@@ -73,10 +79,11 @@ CVE-2026-29786
 # Affected: minimatch@10.2.2 (via semantic-release > @semantic-release/npm > npm)
 # Fixed in: 10.2.3
 # Reason: Bundled dependency in npm package, cannot override
-# npm@11.11.0 (latest) still uses minimatch@10.2.2
-# Expected resolution: Wait for npm to update minimatch dependency
 # Tracking: https://github.com/npm/cli/issues
-# Review date: 2026-04-09
+# Note 2026-04-27: npm 11.13.0 now bundles minimatch@^10.2.5. Image rebuild via
+#   npm/global.json (npm 11.13.0) should resolve this. Re-verify after next
+#   rebuild-docker-cache run; remove this entry if scan no longer reports.
+# Review date: 2026-05-12
 CVE-2026-27903
 
 # CVE-2026-23112: kernel: nvmet-tcp: add bounds checks in nvmet_tcp_build_pdu_iovec
@@ -98,7 +105,8 @@ CVE-2026-23112
 #   cannot upgrade grpc directly — waiting for upstream tool releases
 # Expected resolution: Wait for gh and op to release new builds with grpc >= 1.79.3
 # Tracking: https://github.com/cli/cli/releases (gh), https://github.com/1Password/onepassword-operator/releases (op)
-# Review date: 2026-04-21
+# Note 2026-04-27: gh 2.87.2 still bundles old gRPC; check after gh 2.88+ release
+# Review date: 2026-05-12
 CVE-2026-33186
 
 # CVE-2026-41242: protobufjs: Arbitrary code execution
@@ -108,5 +116,8 @@ CVE-2026-33186
 # Reason: Transitive dependency via @google/gemini-cli; cannot override without upstream update
 # Expected resolution: Wait for @google/gemini-cli to update @opentelemetry/otlp-transformer to protobufjs >= 8.0.1
 # Tracking: https://github.com/google-gemini/gemini-cli/issues
-# Review date: 2026-04-26
+# Note 2026-04-27: gemini-cli 0.39.1 (latest @opentelemetry/otlp-transformer 0.215.0
+#   requires protobufjs ^8.0.1). Image rebuild should resolve this. Re-verify after
+#   next rebuild-docker-cache run; remove this entry if scan no longer reports.
+# Review date: 2026-05-12
 CVE-2026-41242
