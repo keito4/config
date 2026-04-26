@@ -100,3 +100,13 @@ CVE-2026-23112
 # Tracking: https://github.com/cli/cli/releases (gh), https://github.com/1Password/onepassword-operator/releases (op)
 # Review date: 2026-04-21
 CVE-2026-33186
+
+# CVE-2026-41242: protobufjs: Arbitrary code execution
+# Severity: CRITICAL
+# Affected: protobufjs@8.0.0 (via @google/gemini-cli > @opentelemetry/otlp-transformer)
+# Fixed in: 8.0.1, 7.5.5
+# Reason: Transitive dependency via @google/gemini-cli; cannot override without upstream update
+# Expected resolution: Wait for @google/gemini-cli to update @opentelemetry/otlp-transformer to protobufjs >= 8.0.1
+# Tracking: https://github.com/google-gemini/gemini-cli/issues
+# Review date: 2026-04-26
+CVE-2026-41242
