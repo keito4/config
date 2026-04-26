@@ -1,6 +1,6 @@
 # Code Complexity Report
 
-Generated: Fri Apr 17 01:12:24 UTC 2026
+Generated: Fri Apr 25 00:00:00 UTC 2026
 
 ## Summary
 
@@ -217,8 +217,8 @@ Generated: Fri Apr 17 01:12:24 UTC 2026
 
 ### script/update-agents-md.sh
 
-- Complexity: 46
-- Length: 302 lines
+- Complexity: 49
+- Length: 308 lines
 - Nesting: 1 levels
 
 ### script/export.sh
