@@ -1081,7 +1081,7 @@ Releases are automatically created when changes are pushed to the main branch.
 
 #### Compatibility Notes
 
-**Node.js Version**: The repository uses Node.js v22.14.0 in development containers and CI, which is compatible with semantic-release (v25.0.2) requirements (^22.14.0 || >= 24.10.0).
+**Node.js Version**: The repository uses Node.js v24.14.1 in development containers and CI, which is compatible with semantic-release (v25.0.2) requirements (^22.14.0 || >= 24.10.0).
 
 ### AI-Assisted Development Workflows
 

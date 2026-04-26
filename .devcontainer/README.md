@@ -50,7 +50,7 @@ On container startup, the following configurations are automatically applied:
 
 ### Development Tools Included
 
-- **Languages**: Node.js 22.14.0, npm, various language runtimes
+- **Languages**: Node.js 24.14.1, npm, various language runtimes
 - **Version Control**: Git with advanced configuration and hooks
 - **Container Tools**: Docker, docker-compose
 - **Cloud Tools**: AWS CLI, Terraform, kubectl
@@ -59,7 +59,7 @@ On container startup, the following configurations are automatically applied:
 
 ### Known Issues
 
-No known issues at this time. The container uses Node.js v22.14.0, which is compatible with all dependencies including `semantic-release` (v25.0.2).
+No known issues at this time. The container uses Node.js v24.14.1, which is compatible with all dependencies including `semantic-release` (v25.0.2).
 
 ### Claude Code Integration
 
