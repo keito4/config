@@ -11,15 +11,55 @@ permissions:
   contents: read
 
 jobs:
-  paths-filter:
-    name: Paths Filter
+  paths-filter-v3:
+    name: Paths Filter v3
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
+      - uses: dorny/paths-filter@d1c1ffeae1e93e7e5c2dd4a89c08a73e9d44a7eb # v3.0.3
         id: filter
         with:
           filters: |
             code:
               - '**.js'
+
+  endbug-label-sync:
+    name: EndBug Label Sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - run: |
+          echo '- name: test-label
+            color: cccccc' > /tmp/test-labels.yml
+      - uses: EndBug/label-sync@52074158190acb45f3077f9099fea818aa43f97a # v2.3.3
+        with:
+          config-file: /tmp/test-labels.yml
+          dry-run: true
+
+  gitleaks-action:
+    name: Gitleaks Action
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  peter-evans-pr:
+    name: peter-evans Create PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - run: echo "no-op (just want to load the action)"
+      # action that we want to verify loads cleanly even without invoking
+      - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        if: false
