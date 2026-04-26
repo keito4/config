@@ -12,15 +12,29 @@ permissions:
   pull-requests: read
 
 jobs:
-  paths-filter-v3:
-    name: Paths Filter v3
+  paths-filter-with-permissions:
+    name: paths-filter v4 + pull-requests perm
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3.0.3
+      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         id: filter
         with:
           filters: |
             code:
               - '**.js'
+
+  tj-changed-files:
+    name: tj-actions/changed-files
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+      - uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
+        id: changed
+        with:
+          files: |
+            **.js
