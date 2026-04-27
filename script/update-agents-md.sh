@@ -33,7 +33,8 @@ emit() {
 
 detect_pm() {
   local entry
-  for entry in "pnpm-lock.yaml:pnpm" "yarn.lock:yarn" "bun.lockb:bun" "bun.lock:bun"; do
+  # bun > yarn > pnpm > npm (matches original precedence)
+  for entry in "bun.lockb:bun" "bun.lock:bun" "yarn.lock:yarn" "pnpm-lock.yaml:pnpm"; do
     [[ -f "${entry%%:*}" ]] && { echo "${entry##*:}"; return; }
   done
   echo "npm"
@@ -89,6 +90,27 @@ collect_dirs() {
   echo -n "$out"
 }
 
+_extract_desc() {
+  # Extracts description from a Markdown file.
+  # Handles two formats:
+  #   1. YAML frontmatter: --- / description: <value> / ---
+  #   2. Heading paragraph: # Title\n\n<first paragraph>
+  #   3. Plain text: first non-empty line
+  awk '
+    BEGIN { in_fm=0; found_fm=0; past_h=0 }
+    /^---$/ {
+      if (!found_fm) {
+        if (!in_fm) { in_fm=1 } else { in_fm=0; found_fm=1 }
+        next
+      }
+    }
+    in_fm && /^description:/ { sub(/^description:[[:space:]]*/, ""); print; exit }
+    !in_fm && /^#/ { past_h=1; next }
+    !in_fm && (past_h || found_fm) && /^[[:space:]]*$/ { next }
+    !in_fm && NF { print; exit }
+  ' "$1"
+}
+
 collect_commands() {
   local out=""
   table_header out "Command" "Description"
@@ -97,8 +119,55 @@ collect_commands() {
     [[ ! -f "$cmd" ]] && continue
     base=$(basename "$cmd" .md)
     [[ "$base" == "README" ]] && continue
-    desc=$(awk '/^---$/{n++; next} n==1 && /^description:/{sub(/^description: */, ""); print; exit}' "$cmd")
+    desc=$(_extract_desc "$cmd")
     emit out "\`/$base\`" "${desc:-(no description)}"
+  done
+  echo -n "$out"
+}
+
+_truncate_desc() {
+  # Strips HTML/example noise and truncates to first sentence or 100 chars.
+  local raw="$1"
+  # Strip <example>...</example> and anything after <
+  raw="${raw%%<*}"
+  raw="${raw%"${raw##*[! ]}"}" # rtrim
+  # Truncate at first ". " boundary, keeping the period
+  if [[ "$raw" == *". "* ]]; then
+    raw="${raw%%". "*}."
+  fi
+  # Hard cap at 100 chars
+  if [[ ${#raw} -gt 100 ]]; then
+    raw="${raw:0:97}..."
+  fi
+  echo -n "$raw"
+}
+
+collect_agents() {
+  [[ ! -d ".claude/agents" ]] && return 0
+  local out=""
+  table_header out "Agent" "Description"
+  local f base desc
+  for f in .claude/agents/*.md; do
+    [[ ! -f "$f" ]] && continue
+    base=$(basename "$f" .md)
+    [[ "$base" == "README" ]] && continue
+    desc=$(_truncate_desc "$(_extract_desc "$f")")
+    emit out "\`$base\`" "${desc:-(no description)}"
+  done
+  echo -n "$out"
+}
+
+collect_skills() {
+  [[ ! -d ".claude/skills" ]] && return 0
+  local out=""
+  table_header out "Skill" "Description"
+  local f base desc
+  for f in .claude/skills/*.md; do
+    [[ ! -f "$f" ]] && continue
+    base=$(basename "$f" .md)
+    [[ "$base" == "README" ]] && continue
+    desc=$(_truncate_desc "$(_extract_desc "$f")")
+    emit out "\`$base\`" "${desc:-(no description)}"
   done
   echo -n "$out"
 }
@@ -168,6 +237,8 @@ render_template() {
   export NODE_VER PM
   export DIRS=""
   export COMMANDS=""
+  export AGENTS=""
+  export SKILLS=""
   export WORKFLOWS=""
   export QUALITY_GATES=""
   export HOOKS=""
@@ -175,12 +246,14 @@ render_template() {
   export NIX_LINE="$nix_line"
   DIRS=$(collect_dirs)
   COMMANDS=$(collect_commands)
+  AGENTS=$(collect_agents)
+  SKILLS=$(collect_skills)
   WORKFLOWS=$(collect_workflows)
   QUALITY_GATES=$(collect_quality_gates)
   HOOKS=$(collect_hooks)
   EXTRA_LINE=$(collect_extra_tests_line)
   # shellcheck disable=SC2016 # envsubst takes a literal allowlist of variable names
-  envsubst '${NODE_VER} ${PM} ${DIRS} ${COMMANDS} ${WORKFLOWS} ${QUALITY_GATES} ${HOOKS} ${EXTRA_LINE} ${NIX_LINE}' <"$TEMPLATE"
+  envsubst '${NODE_VER} ${PM} ${DIRS} ${COMMANDS} ${AGENTS} ${SKILLS} ${WORKFLOWS} ${QUALITY_GATES} ${HOOKS} ${EXTRA_LINE} ${NIX_LINE}' <"$TEMPLATE"
 }
 
 build_full_content() {

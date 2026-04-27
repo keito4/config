@@ -17,6 +17,14 @@ ${DIRS}
 
 ${COMMANDS}
 
+## Agents
+
+${AGENTS}
+
+## Skills
+
+${SKILLS}
+
 ## CI/CD Workflows
 
 ${WORKFLOWS}
