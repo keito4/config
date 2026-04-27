@@ -4,305 +4,290 @@
 # <!-- BEGIN AUTO-GENERATED --> 〜 <!-- END AUTO-GENERATED --> 間を置換。
 #
 # Usage: bash script/update-agents-md.sh [--check]
-#   --check: 差分があるか確認のみ（変更しない）。差分があれば exit 1。
+#   --check: 差分確認のみ。差分があれば exit 1。
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+# shellcheck source=script/lib/agents-md-data.sh
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/lib/agents-md-data.sh"
+
 AGENTS_MD="AGENTS.md"
+TEMPLATE="$SCRIPT_DIR/lib/agents-md-template.md"
 CHECK_ONLY=false
 [[ "${1:-}" == "--check" ]] && CHECK_ONLY=true
 
-# --- Guard ---
 if [[ ! -f "$AGENTS_MD" ]] || ! grep -q "BEGIN AUTO-GENERATED" "$AGENTS_MD"; then
-  echo "⏭️ スキップ（$AGENTS_MD に AUTO-GENERATED マーカーなし）"
+  echo "skip: $AGENTS_MD missing AUTO-GENERATED markers"
   exit 0
 fi
 
-# --- 1. Tech stack ---
-NODE_VER=$(jq -r '.engines.node // empty' package.json 2>/dev/null)
-PM="npm"
-[[ -f "pnpm-lock.yaml" ]] && PM="pnpm"
-[[ -f "yarn.lock" ]] && PM="yarn"
-{ [[ -f "bun.lockb" ]] || [[ -f "bun.lock" ]]; } && PM="bun"
+emit() {
+  local -n out_ref=$1
+  shift
+  local IFS=$'\x1f'
+  local joined="$*"
+  out_ref+="| ${joined//$'\x1f'/ | } |"$'\n'
+}
 
+detect_pm() {
+  local entry
+  # bun > yarn > pnpm > npm (matches original precedence)
+  for entry in "bun.lockb:bun" "bun.lock:bun" "yarn.lock:yarn" "pnpm-lock.yaml:pnpm"; do
+    [[ -f "${entry%%:*}" ]] && { echo "${entry##*:}"; return; }
+  done
+  echo "npm"
+}
+
+# shellcheck disable=SC2034 # NODE_VER / PM consumed by template via eval
+NODE_VER=$(jq -r '.engines.node // empty' package.json 2>/dev/null)
+# shellcheck disable=SC2034
+PM=$(detect_pm)
 HAS_NIX=false
 [[ -f "nix/flake.nix" ]] && HAS_NIX=true
 
-# --- 2. Collect directories (dot dirs + regular dirs) ---
-collect_dirs() {
-  local dirs=""
-  # Dot directories (filtered)
-  for d in .*/; do
-    case "$d" in
-      ./|../|.git/|.git-*/) continue ;;
-    esac
-    local name="${d%/}"
-    # Sub-categorize known dot dirs
-    case "$name" in
-      .agents)          dirs+="| \`.agents/\`           | AI agent skills and configurations               |"$'\n' ;;
-      .claude)
-        [[ -d ".claude/agents" ]]  && dirs+="| \`.claude/agents/\`    | Claude Code specialized agents                   |"$'\n'
-        dirs+="| \`.claude/commands/\`  | Claude Code slash commands                       |"$'\n'
-        dirs+="| \`.claude/hooks/\`     | Pre/post hook scripts for quality enforcement    |"$'\n'
-        [[ -d ".claude/plugins" ]] && dirs+="| \`.claude/plugins/\`   | Claude Code plugin configuration                 |"$'\n'
-        [[ -d ".claude/rules" ]]   && dirs+="| \`.claude/rules/\`     | Claude Code rules for development standards      |"$'\n'
-        [[ -d ".claude/skills" ]]  && dirs+="| \`.claude/skills/\`    | Claude Code skill definitions                    |"$'\n'
-        ;;
-      .codex)           dirs+="| \`.codex/\`            | Codex AI agent configuration                     |"$'\n' ;;
-      .context)         dirs+="| \`.context/\`          | Shared intermediate artifacts (complexity reports etc.) |"$'\n' ;;
-      .cursor)          dirs+="| \`.cursor/\`           | Cursor editor settings                           |"$'\n' ;;
-      .devcontainer)    dirs+="| \`.devcontainer/\`     | DevContainer configuration and Dockerfile        |"$'\n' ;;
-      .gemini)          dirs+="| \`.gemini/\`           | Gemini AI agent configuration                    |"$'\n' ;;
-      .github)
-        local wf_count
-        wf_count=$(find .github/workflows -maxdepth 1 -name '*.yml' 2>/dev/null | wc -l | tr -d ' ')
-        dirs+="| \`.github/workflows/\` | GitHub Actions CI/CD workflows ($wf_count workflows)    |"$'\n'
-        ;;
-      .husky)           dirs+="| \`.husky/\`            | Git hooks (pre-commit, commit-msg)               |"$'\n' ;;
-      .vscode)          dirs+="| \`.vscode/\`           | VS Code workspace settings                       |"$'\n' ;;
-    esac
-  done
-
-  # Regular directories
-  for d in */; do
-    case "$d" in node_modules/|coverage/|.git/|reports/|result/) continue ;; esac
-    local name="${d%/}"
-    local purpose=""
-    case "$name" in
-      brew)        purpose="Homebrew package management (Linux only)"         ;;
-      credentials) purpose="Credential templates and filtering documentation" ;;
-      docs)        purpose="Documentation and ADRs"                           ;;
-      dot)         purpose="Dotfiles (DevContainer .zshrc, peco)"             ;;
-      eslint)      purpose="ESLint configuration and plugins"                 ;;
-      git)         purpose="Git hooks and configuration"                      ;;
-      next)        purpose="Next.js project templates"                        ;;
-      nix)         purpose="nix-darwin + home-manager (macOS environment)"    ;;
-      npm)         purpose="npm global configuration and library management"  ;;
-      script)      purpose="Utility shell scripts"                            ;;
-      templates)   purpose="Workflow, testing, and dotfile templates"          ;;
-      test)        purpose="Test suites (Jest unit, BATS integration)"        ;;
-      vscode)      purpose="VS Code extensions list"                          ;;
-      *)           purpose="$name"                                            ;;
-    esac
-    dirs+="| \`$name/\` | $purpose |"$'\n'
-  done
-  echo -n "$dirs"
+table_header() {
+  # shellcheck disable=SC2034 # nameref consumed by emit's local -n
+  local -n hdr_ref=$1
+  shift
+  emit hdr_ref "$@"
+  local -i n=$#
+  local args=()
+  while ((n--)); do args+=("---"); done
+  emit hdr_ref "${args[@]}"
 }
 
-# --- 3. Collect commands ---
+collect_dirs() {
+  local out=""
+  table_header out "Directory" "Purpose"
+  local d name purpose sub wf_count
+  for d in .*/; do
+    [[ "$d" == "./" || "$d" == "../" ]] && continue
+    name="${d%/}"
+    [[ "$name" == .git || "$name" == .git-* ]] && continue
+
+    if [[ "$name" == ".claude" ]]; then
+      for sub in "${CLAUDE_SUB_ORDER[@]}"; do
+        [[ -d ".claude/$sub" ]] && emit out "\`.claude/$sub/\`" "${CLAUDE_SUB_PURPOSE[$sub]}"
+      done
+      continue
+    fi
+    if [[ "$name" == ".github" ]]; then
+      wf_count=$(find .github/workflows -maxdepth 1 -name '*.yml' 2>/dev/null | wc -l | tr -d ' ')
+      emit out "\`.github/workflows/\`" "GitHub Actions CI/CD workflows ($wf_count workflows)"
+      continue
+    fi
+    purpose="${DOT_DIR_PURPOSE[$name]:-}"
+    [[ -n "$purpose" ]] && emit out "\`$name/\`" "$purpose"
+  done
+  for d in */; do
+    name="${d%/}"
+    [[ "$REG_DIR_SKIP" == *" $name "* ]] && continue
+    purpose="${REG_DIR_PURPOSE[$name]:-$name}"
+    emit out "\`$name/\`" "$purpose"
+  done
+  echo -n "$out"
+}
+
+_extract_desc() {
+  # Extracts description from a Markdown file.
+  # Handles two formats:
+  #   1. YAML frontmatter: --- / description: <value> / ---
+  #   2. Heading paragraph: # Title\n\n<first paragraph>
+  #   3. Plain text: first non-empty line
+  awk '
+    BEGIN { in_fm=0; found_fm=0; past_h=0 }
+    /^---$/ {
+      if (!found_fm) {
+        if (!in_fm) { in_fm=1 } else { in_fm=0; found_fm=1 }
+        next
+      }
+    }
+    in_fm && /^description:/ { sub(/^description:[[:space:]]*/, ""); print; exit }
+    !in_fm && /^#/ { past_h=1; next }
+    !in_fm && (past_h || found_fm) && /^[[:space:]]*$/ { next }
+    !in_fm && NF { print; exit }
+  ' "$1"
+}
+
 collect_commands() {
-  local cmds=""
+  local out=""
+  table_header out "Command" "Description"
+  local cmd base desc
   for cmd in .claude/commands/*.md; do
     [[ ! -f "$cmd" ]] && continue
-    local base
     base=$(basename "$cmd" .md)
     [[ "$base" == "README" ]] && continue
-    local desc
-    desc=$(awk '/^---$/{n++; next} n==1 && /^description:/{sub(/^description: */, ""); print; exit}' "$cmd")
-    [[ -z "$desc" ]] && desc="(no description)"
-    cmds+="| \`/$base\` | $desc |"$'\n'
+    desc=$(_extract_desc "$cmd")
+    emit out "\`/$base\`" "${desc:-(no description)}"
   done
-  echo -n "$cmds"
+  echo -n "$out"
 }
 
-# --- 4. Collect workflows ---
+_truncate_desc() {
+  # Strips HTML/example noise and truncates to first sentence or 100 chars.
+  local raw="$1"
+  # Strip <example>...</example> and anything after <
+  raw="${raw%%<*}"
+  raw="${raw%"${raw##*[! ]}"}" # rtrim
+  # Truncate at first ". " boundary, keeping the period
+  if [[ "$raw" == *". "* ]]; then
+    raw="${raw%%". "*}."
+  fi
+  # Hard cap at 100 chars
+  if [[ ${#raw} -gt 100 ]]; then
+    raw="${raw:0:97}..."
+  fi
+  echo -n "$raw"
+}
+
+collect_agents() {
+  [[ ! -d ".claude/agents" ]] && return 0
+  local out=""
+  table_header out "Agent" "Description"
+  local f base desc
+  for f in .claude/agents/*.md; do
+    [[ ! -f "$f" ]] && continue
+    base=$(basename "$f" .md)
+    [[ "$base" == "README" ]] && continue
+    desc=$(_truncate_desc "$(_extract_desc "$f")")
+    emit out "\`$base\`" "${desc:-(no description)}"
+  done
+  echo -n "$out"
+}
+
+collect_skills() {
+  [[ ! -d ".claude/skills" ]] && return 0
+  local out=""
+  table_header out "Skill" "Description"
+  local f base desc
+  for f in .claude/skills/*.md; do
+    [[ ! -f "$f" ]] && continue
+    base=$(basename "$f" .md)
+    [[ "$base" == "README" ]] && continue
+    desc=$(_truncate_desc "$(_extract_desc "$f")")
+    emit out "\`$base\`" "${desc:-(no description)}"
+  done
+  echo -n "$out"
+}
+
 collect_workflows() {
-  local wfs=""
+  local out=""
+  table_header out "Workflow" "Purpose"
+  local wf base name
   for wf in .github/workflows/*.yml; do
     [[ ! -f "$wf" ]] && continue
-    local base
     base=$(basename "$wf")
-    local name
     name=$(grep -m1 '^name:' "$wf" | sed 's/^name: *//' | tr -d "'\"")
-    [[ -z "$name" ]] && name="(unnamed)"
-    wfs+="| \`$base\` | $name |"$'\n'
+    emit out "\`$base\`" "${name:-(unnamed)}"
   done
-  echo -n "$wfs"
+  echo -n "$out"
 }
 
-# --- 5. Collect quality gates ---
 collect_quality_gates() {
-  local gates=""
-  local scripts=("format:check" "lint" "test" "shellcheck" "typecheck" "type-check" "tsc")
-  local purposes=("Code formatting validation" "Code quality validation" "Unit test execution" "Shell script validation" "Type checking" "Type checking" "Type checking")
-
-  for i in "${!scripts[@]}"; do
-    local key="${scripts[$i]}"
-    local val
+  local out=""
+  table_header out "Script" "Command" "Purpose"
+  local key val
+  for key in "${QG_ORDER[@]}"; do
     val=$(jq -r --arg k "$key" '.scripts[$k] // empty' package.json 2>/dev/null)
-    if [[ -n "$val" ]]; then
-      gates+="| \`$key\` | \`$val\` | ${purposes[$i]} |"$'\n'
-    fi
+    [[ -n "$val" ]] && emit out "\`$key\`" "\`$val\`" "${QG_PURPOSE[$key]}"
   done
-  echo -n "$gates"
+  echo -n "$out"
 }
 
-# --- 6. Collect extra test scripts ---
-collect_extra_tests() {
-  local extras=""
+collect_extra_tests_line() {
+  local key val parts="" var label
   for key in "test:integration" "test:coverage" "test:all"; do
-    local val
     val=$(jq -r --arg k "$key" '.scripts[$k] // empty' package.json 2>/dev/null)
-    [[ -n "$val" ]] && extras+="$key"$'\n'
+    [[ -z "$val" ]] && continue
+    var="EXTRA_TEST_LABEL_${key//:/_}"
+    label="${!var:-}"
+    parts+=" \`$key\` $label,"
   done
-  echo -n "$extras"
+  [[ -z "$parts" ]] && return 0
+  echo -n "Additional test commands:${parts%,}"
 }
 
-# --- 7. Collect hooks ---
 collect_hooks() {
-  local hooks_out=""
+  local out=""
+  table_header out "Hook" "Trigger" "Purpose"
+  local hook base trigger purpose entry parts
+  declare -A trig pur
+  for entry in "${HOOK_TABLE[@]}"; do
+    IFS='|' read -ra parts <<<"$entry"
+    trig[${parts[0]}]=${parts[1]}
+    pur[${parts[0]}]=${parts[2]}
+  done
   for hook in .claude/hooks/*.py; do
     [[ ! -f "$hook" ]] && continue
-    local base
     base=$(basename "$hook")
-    local trigger="" purpose=""
-
-    # Determine trigger and purpose from filename pattern
-    case "$base" in
-      block_git_no_verify.py)      trigger="Pre git commit/push"; purpose="Block \`--no-verify\` and \`HUSKY=0\`" ;;
-      pre_git_quality_gates.py)    trigger="Pre git commit/push"; purpose="Auto-detect and run quality gates" ;;
-      block_config_edit.py)        trigger="Pre edit";            purpose="Protect configuration files" ;;
-      block_dangerous_commands.py) trigger="Pre Bash";            purpose="Block destructive commands" ;;
-      post_edit_auto_lint.py)      trigger="Post edit";           purpose="Auto-format and lint" ;;
-      post_git_push_ci.py)         trigger="Post git push";       purpose="Monitor CI status" ;;
-      post_pr_ai_review.py)        trigger="Post PR creation";    purpose="Run AI code review" ;;
-      post_pr_ci_watch.py)         trigger="Post PR creation";    purpose="Monitor PR CI status" ;;
-      post_commit_adr_reminder.py) trigger="Post git commit";     purpose="Remind ADR for architectural changes" ;;
-      pre_exit_plan_ai_review.py)  trigger="Pre ExitPlanMode";    purpose="AI review before plan exit" ;;
-      stop_test_verification.py)   trigger="Stop";                purpose="Verify test results on session end" ;;
-      *)
-        # Fallback: infer from prefix
-        case "$base" in
-          block_*) trigger="Pre Bash" ;;
-          pre_*)   trigger="Pre" ;;
-          post_*)  trigger="Post" ;;
-          stop_*)  trigger="Stop" ;;
-          *)       trigger="Unknown" ;;
-        esac
-        purpose="${base%.py}"
-        ;;
-    esac
-
-    hooks_out+="| \`$base\` | $trigger | $purpose |"$'\n'
+    trigger="${trig[$base]:-Unknown}"
+    purpose="${pur[$base]:-${base%.py}}"
+    emit out "\`$base\`" "$trigger" "$purpose"
   done
-  echo -n "$hooks_out"
+  echo -n "$out"
 }
 
-# --- 8. Build auto-generated content ---
-DIRS=$(collect_dirs)
-COMMANDS=$(collect_commands)
-WORKFLOWS=$(collect_workflows)
-QUALITY_GATES=$(collect_quality_gates)
-HOOKS=$(collect_hooks)
+# Build content from template via envsubst.
+# Variables exported below are consumed by envsubst; shellcheck cannot trace them.
+render_template() {
+  local nix_line=""
+  [[ "$HAS_NIX" == "true" ]] && nix_line=$'\n'"- **macOS Environment**: nix-darwin + home-manager (\`nix/flake.nix\`)"
+  export NODE_VER PM
+  export DIRS=""
+  export COMMANDS=""
+  export AGENTS=""
+  export SKILLS=""
+  export WORKFLOWS=""
+  export QUALITY_GATES=""
+  export HOOKS=""
+  export EXTRA_LINE=""
+  export NIX_LINE="$nix_line"
+  DIRS=$(collect_dirs)
+  COMMANDS=$(collect_commands)
+  AGENTS=$(collect_agents)
+  SKILLS=$(collect_skills)
+  WORKFLOWS=$(collect_workflows)
+  QUALITY_GATES=$(collect_quality_gates)
+  HOOKS=$(collect_hooks)
+  EXTRA_LINE=$(collect_extra_tests_line)
+  # shellcheck disable=SC2016 # envsubst takes a literal allowlist of variable names
+  envsubst '${NODE_VER} ${PM} ${DIRS} ${COMMANDS} ${AGENTS} ${SKILLS} ${WORKFLOWS} ${QUALITY_GATES} ${HOOKS} ${EXTRA_LINE} ${NIX_LINE}' <"$TEMPLATE"
+}
 
-# Extra test info (avoid pipe subshell by using process substitution)
-EXTRA_TESTS=$(collect_extra_tests)
-EXTRA_LINE=""
-if [[ -n "$EXTRA_TESTS" ]]; then
-  EXTRA_LINE="Additional test commands:"
-  while IFS= read -r t; do
-    [[ -z "$t" ]] && continue
-    case "$t" in
-      test:integration) EXTRA_LINE+=" \`$t\` (BATS)," ;;
-      test:coverage)    EXTRA_LINE+=" \`$t\` (Jest + coverage)," ;;
-      test:all)         EXTRA_LINE+=" \`$t\` (unit + integration)," ;;
-      *)                EXTRA_LINE+=" \`$t\`," ;;
-    esac
-  done < <(echo "$EXTRA_TESTS")
-  EXTRA_LINE="${EXTRA_LINE%,}"
-fi
+build_full_content() {
+  local head tail body
+  head=$(sed '/<!-- BEGIN AUTO-GENERATED -->/q' "$AGENTS_MD")
+  tail=$(sed -n '/<!-- END AUTO-GENERATED -->/,$p' "$AGENTS_MD")
+  body=$(render_template)
+  printf '%s\n%s\n\n%s' "$head" "$body" "$tail"
+}
 
-# Build the content
-AUTO_CONTENT="<!-- This section is auto-generated by /repo-maintenance. Do not edit manually. -->
-
-## Repository Overview
-
-Development infrastructure template repository providing DevContainer images, CI/CD workflows, Claude Code commands/hooks, and standardized tooling for all repositories.
-
-- **Tech Stack**: Node.js (${NODE_VER:-N/A}), Jest, BATS, ESLint, Prettier
-- **Package Manager**: $PM
-- **Base Image**: \`ghcr.io/keito4/config-base:latest\`
-- **Release**: semantic-release (Conventional Commits)"
-
-if [[ "$HAS_NIX" == "true" ]]; then
-  AUTO_CONTENT+="
-- **macOS Environment**: nix-darwin + home-manager (\`nix/flake.nix\`)"
-fi
-
-AUTO_CONTENT+="
-
-## Project Structure
-
-| Directory | Purpose |
-| --- | --- |
-${DIRS}
-## Available Commands
-
-| Command | Description |
-| --- | --- |
-${COMMANDS}
-## CI/CD Workflows
-
-| Workflow | Purpose |
-| --- | --- |
-${WORKFLOWS}
-## Quality Gates
-
-The following scripts are auto-detected and run before git commit/push:
-
-| Script | Command | Purpose |
-| --- | --- | --- |
-${QUALITY_GATES}
-${EXTRA_LINE}
-
-## Hooks
-
-| Hook | Trigger | Purpose |
-| --- | --- | --- |
-${HOOKS}
-## Development Standards
-
-### Code Quality Requirements
-
-- **Test-Driven Development (TDD)**: Red -> Green -> Refactor methodology with 70%+ line coverage requirement
-- **Static Quality Gates**: Automated linting, formatting, security analysis, and license checking
-- **Git Workflow**: Conventional commits, branch naming conventions, and pull request requirements
-- **Release Types Required for Tooling Changes**: Commits that touch \`.codex/**\`, \`.devcontainer/codex*\`, \`package*.json\`, or \`npm/global.json\` must use release-triggering types (\`feat\` / \`fix\` / \`perf\` / \`revert\` / \`docs\`). commitlint blocks \`chore\` etc. to align with semantic-release."
-
-# --- 9. Replace markers ---
-# Extract HEAD (up to and including BEGIN marker) and TAIL (from END marker)
-HEAD=$(sed '/<!-- BEGIN AUTO-GENERATED -->/q' "$AGENTS_MD")
-TAIL=$(sed -n '/<!-- END AUTO-GENERATED -->/,$p' "$AGENTS_MD")
-
-NEW_CONTENT="${HEAD}
-${AUTO_CONTENT}
-
-${TAIL}"
-
-if [[ "$CHECK_ONLY" == "true" ]]; then
-  # Write to temp file and format for accurate comparison
-  mkdir -p .context
-  TMPFILE=$(mktemp .context/agents-md-check-XXXXXXXXXX)
-  trap 'rm -f "$TMPFILE"' EXIT
-  echo "$NEW_CONTENT" > "$TMPFILE"
+write_target() {
+  local target=$1 content
+  content=$(build_full_content)
+  printf '%s\n' "$content" > "$target"
   if command -v npx >/dev/null 2>&1; then
-    npx prettier --write "$TMPFILE" >/dev/null 2>&1 || true
+    npx prettier --write "$target" >/dev/null 2>&1 || true
   fi
+}
+
+if $CHECK_ONLY; then
+  # Use system tempdir: .context/ is in .prettierignore, which would skip our format step.
+  # Append .md so prettier picks the markdown parser.
+  TMPDIR_BASE=$(mktemp -d -t agents-md-check.XXXXXXXXXX)
+  TMPFILE="$TMPDIR_BASE/AGENTS.md"
+  trap 'rm -rf "$TMPDIR_BASE"' EXIT
+  write_target "$TMPFILE"
   if ! diff -q "$AGENTS_MD" "$TMPFILE" >/dev/null 2>&1; then
-    echo "⚠️ AGENTS.md 自動生成セクションに差分があります"
+    echo "warning: AGENTS.md auto-generated section is out of date"
     diff "$AGENTS_MD" "$TMPFILE" | head -30
     exit 1
-  else
-    echo "✅ AGENTS.md 自動生成セクション: 最新"
-    exit 0
   fi
+  echo "ok: AGENTS.md auto-generated section is up to date"
+  exit 0
 fi
 
-echo "$NEW_CONTENT" > "$AGENTS_MD"
-
-# Run prettier if available
-if command -v npx >/dev/null 2>&1; then
-  npx prettier --write "$AGENTS_MD" >/dev/null 2>&1 || true
-fi
-
-echo "🔧 AGENTS.md 自動生成セクションを更新しました"
+write_target "$AGENTS_MD"
+echo "updated: AGENTS.md auto-generated section"

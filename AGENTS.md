@@ -70,22 +70,22 @@ Development infrastructure template repository providing DevContainer images, CI
 
 | Command                         | Description                                                                               |
 | ------------------------------- | ----------------------------------------------------------------------------------------- |
-| `/branch-cleanup`               | Clean up merged and stale branches both locally and remotely                              |
-| `/changelog-generator`          | Generate CHANGELOG.md from Conventional Commits history                                   |
-| `/code-complexity-check`        | Analyze code complexity and identify refactoring candidates                               |
-| `/codespaces-secrets`           | GitHub Codespaces のシークレットとリポジトリの紐付けを CLI で管理                         |
+| `/branch-cleanup`               | Clean up merged and stale branches both locally and remotely.                             |
+| `/changelog-generator`          | Generate CHANGELOG.md from Conventional Commits history.                                  |
+| `/code-complexity-check`        | Analyze code complexity and identify refactoring candidates.                              |
+| `/codespaces-secrets`           | GitHub Codespaces のシークレットとリポジトリの紐付けを CLI で管理します。                 |
 | `/config-base-sync-check`       | Check current and latest config-base image versions                                       |
 | `/config-base-sync-update`      | Update DevContainer to latest config-base image, sync recommended features, and create PR |
 | `/config-contribution-discover` | Discover useful features in current repository and create issues for config repository    |
-| `/container-health`             | Verify DevContainer environment health and configuration                                  |
-| `/create-codespace`             | GitHub Codespace を CLI から作成                                                          |
+| `/container-health`             | Verify DevContainer environment health and configuration.                                 |
+| `/create-codespace`             | GitHub Codespace を CLI から作成します。                                                  |
 | `/create-pr`                    | Create PR with latest base branch changes merged                                          |
-| `/dependency-health-check`      | Comprehensive dependency health analysis including updates, security, and licensing       |
-| `/devcontainer-checklist`       | DevContainer 再起動後の確認チェックリスト                                                 |
-| `/git-sync`                     | Git Sync Commands                                                                         |
-| `/pre-pr-checklist`             | Automate comprehensive checks before creating a pull request                              |
+| `/dependency-health-check`      | Comprehensive dependency health analysis including updates, security, and licensing.      |
+| `/devcontainer-checklist`       | DevContainerを再起動した後に確認すべき項目をまとめたチェックリストです。                  |
+| `/git-sync`                     | mainブランチに戻って最新版をpullする                                                      |
+| `/pre-pr-checklist`             | Automate comprehensive checks before creating a pull request.                             |
 | `/repo-maintenance`             | Comprehensive repository maintenance - run all health checks and updates                  |
-| `/security-credential-scan`     | Scan repository for hardcoded credentials and sensitive data                              |
+| `/security-credential-scan`     | Scan repository for hardcoded credentials and sensitive data.                             |
 | `/security-review`              | 5観点コードレビュー（Security / Performance / Quality / Accessibility / AI Residuals）    |
 | `/setup-ci`                     | Setup comprehensive CI/CD workflows for your repository                                   |
 | `/setup-doppler`                | Setup Doppler secret management with dev/dev_personal configuration                       |
@@ -95,33 +95,33 @@ Development infrastructure template repository providing DevContainer images, CI
 | `/setup-tests`                  | Setup comprehensive testing infrastructure for Next.js projects                           |
 | `/similarity-analysis`          | Analyze code similarity in the repository to detect duplicate functions and patterns      |
 | `/sync-settings`                | Sync Claude & Codex settings from your-org projects to DevContainer configuration         |
-| `/test-coverage-trend`          | Track and visualize test coverage trends over time                                        |
-| `/update-actions`               | GitHub Actions のバージョンを最新に自動更新                                               |
-| `/update-claude-code`           | Claude Code の最新バージョンに更新（ネイティブインストーラー使用）                        |
+| `/test-coverage-trend`          | Track and visualize test coverage trends over time.                                       |
+| `/update-actions`               | GitHub Actions のバージョンを最新に自動更新します。                                       |
+| `/update-claude-code`           | Claude Code の最新バージョンに更新します（ネイティブインストーラー使用）。                |
 
 ## Agents
 
-| Agent                          | Description                                                     |
-| ------------------------------ | --------------------------------------------------------------- |
-| `act-local-ci-manager`         | Set up and manage local CI pipeline execution using act         |
-| `docs-consistency-checker`     | Review documentation consistency across formats                 |
-| `issue-resolver-code-quality`  | Resolve code quality issues                                     |
-| `issue-resolver-dependencies`  | Resolve dependency update issues                                |
-| `issue-resolver-documentation` | Resolve documentation issues                                    |
-| `issue-resolver-orchestrator`  | Orchestrate issue resolution across specialized agents          |
-| `issue-resolver-security`      | Resolve security issues                                         |
-| `issue-resolver-test-coverage` | Resolve test coverage issues                                    |
-| `playwright-test-generator`    | Generate Playwright E2E tests by observing browser interactions |
-| `playwright-test-healer`       | Debug and fix failing Playwright E2E tests                      |
-| `playwright-test-planner`      | Create comprehensive E2E test plans for web applications        |
+| Agent                          | Description                                                                                                                                   |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `act-local-ci-manager`         | Use this agent when you need to set up or manage local CI pipeline execution using act (GitHub Ac...                                          |
+| `docs-consistency-checker`     | Use this agent when: 1) Reviewing pull requests that modify documentation files (README, ADR, XML...                                          |
+| `issue-resolver-code-quality`  | コード品質に関するIssueを自動的に解決し、PRを作成する。TODO/FIXMEコメントの処理、複雑なコードのリファクタリング、コードスタイルの改善を行う。 |
+| `issue-resolver-dependencies`  | 依存関係に関するIssueを解決し、古いパッケージの更新、脆弱性の修正、不要な依存関係の削除を行う。                                               |
+| `issue-resolver-documentation` | ドキュメントに関するIssueを解決し、README、API文書、コードコメント、アーキテクチャドキュメントを充実させる。                                  |
+| `issue-resolver-orchestrator`  | GitHubのIssueを分析し、適切なIssue Resolverエージェントを選択・実行して、自動的にIssueを解決しPRを作成する統合オーケストレーター。            |
+| `issue-resolver-security`      | セキュリティに関するIssueを解決し、ハードコードされた秘密情報の除去、脆弱性の修正、セキュリティベストプラクティスの実装を行う。               |
+| `issue-resolver-test-coverage` | テストカバレッジに関するIssueを解決し、単体テスト・統合テスト・E2Eテストを追加して70%以上のカバレッジを達成する。                             |
+| `playwright-test-generator`    | Use this agent to automatically generate Playwright E2E tests by observing browser interactions.                                              |
+| `playwright-test-healer`       | Use this agent to debug and fix failing Playwright E2E tests.                                                                                 |
+| `playwright-test-planner`      | Use this agent to create comprehensive E2E test plans for web applications.                                                                   |
 
 ## Skills
 
-| Skill           | Description                                |
-| --------------- | ------------------------------------------ |
-| `ci-check`      | Check CI status for the current branch     |
-| `codex-review`  | Run Codex AI code review on changed files  |
-| `gemini-review` | Run Gemini AI code review on changed files |
+| Skill           | Description                                                                                                                                                       |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci-check`      | PR作成後にCIの結果を確認し、失敗している場合は修正する。PR作成完了後に自動的にこのスキルを適用してCIの状態を監視し、失敗時は修正を行うこと。                      |
+| `codex-review`  | PR作成後にOpenAI Codexによるコードレビューを実行する。Codex CLIがインストール済みの場合、PR作成完了後に自動的にこのスキルを適用してレビューを実行すること。       |
+| `gemini-review` | PR作成後にGoogle Gemini CLIによるコードレビューを実行する。Gemini CLIがインストール済みの場合、PR作成完了後に自動的にこのスキルを適用してレビューを実行すること。 |
 
 ## CI/CD Workflows
 
@@ -176,11 +176,6 @@ Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + cov
 
 ## Development Standards
 
-### Code Quality Requirements
-
-- **Test-Driven Development (TDD)**: Red -> Green -> Refactor methodology with 70%+ line coverage requirement
-- **Static Quality Gates**: Automated linting, formatting, security analysis, and license checking
-- **Git Workflow**: Conventional commits, branch naming conventions, and pull request requirements
-- **Release Types Required for Tooling Changes**: Commits that touch `.codex/**`, `.devcontainer/codex*`, `package*.json`, or `npm/global.json` must use release-triggering types (`feat` / `fix` / `perf` / `revert` / `docs`). commitlint blocks `chore` etc. to align with semantic-release.
+See [.claude/rules/](.claude/rules/) for the canonical development standards (TDD, static quality gates, git workflow, release-triggering commit types).
 
 <!-- END AUTO-GENERATED -->
