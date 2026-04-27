@@ -1,10 +1,7 @@
 1password.op-vscode
 4ops.terraform
-amazonwebservices.codewhisperer-for-command-line-companion
 antfu.unocss
 anthropic.claude-code
-anysphere.cursorpyright
-betajob.modulestf
 bierner.markdown-mermaid
 bradlc.vscode-tailwindcss
 christian-kohler.npm-intellisense
@@ -65,7 +62,6 @@ shan.code-settings-sync
 shd101wyy.markdown-preview-enhanced
 shopify.ruby-lsp
 sianglim.slim
-sryze.uridecode
 steoates.autoimport
 streetsidesoftware.code-spell-checker
 toba.vsfire
