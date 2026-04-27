@@ -150,8 +150,15 @@ if ($SkipExtensions) {
         if ([string]::IsNullOrEmpty($ext) -or $ext.StartsWith('#')) { return }
         if ($DryRun) {
             Write-Step "[dry-run] code --install-extension $ext"
+            return
+        }
+        # `code --install-extension` exits 0 even when the extension is missing or
+        # unavailable on this platform, so inspect the merged stdout/stderr for
+        # well-known failure markers.
+        $output = (& code --install-extension $ext --force 2>&1 | Out-String)
+        if ($output -match 'Failed Installing|not found|not available') {
+            Write-Warn2 "ext failed: $ext"
         } else {
-            & code --install-extension $ext --force | Out-Null
             Write-Ok $ext
         }
     }
