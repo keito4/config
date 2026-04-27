@@ -4,7 +4,7 @@
 # Required Status Check "Quality Gate" を Pass で報告する。
 # CI が実行された場合は ci.yml 側の Quality Gate が優先される。
 #
-name: CI
+name: CI Fallback
 
 on:
   pull_request:
