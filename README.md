@@ -707,6 +707,37 @@ The script performs the following actions:
 
 ⚠️ **Note**: macOS の Zsh/Git 設定は nix home-manager (`nix/home/`) で管理されています。`settings.local.json` 等のローカル専用ファイルは上書きされません。
 
+#### Native Windows (winget)
+
+WSL2 を使う場合は、WSL 内で上記の `script/import.sh` をそのまま実行できます。Windows ホスト側 (Cursor / VS Code / Claude Code on Windows など) もセットアップしたい場合は、以下の PowerShell スクリプトを使います。
+
+```powershell
+# PowerShell 7+ (推奨)
+pwsh -File script/import.ps1
+
+# Windows PowerShell 5.1 でも動作
+powershell -ExecutionPolicy Bypass -File script\import.ps1
+
+# 各ステップを個別に無効化したい場合
+pwsh -File script/import.ps1 -DryRun
+pwsh -File script/import.ps1 -SkipWinget -SkipNpm -SkipExtensions -SkipRepos
+```
+
+The script performs the following actions:
+
+- `brew/Winfile.json` を `winget import` で適用 (git, gh, ghq, Node.js, Go, kubectl, helm, terraform, 1Password CLI, VS Code, Cursor, PowerShell 7, jq, GnuPG など)
+- Git 設定ファイル (`.gitconfig`, `.gitignore`, `.gitattributes`) を `%USERPROFILE%` にコピー
+- Claude / Codex / Cursor / Gemini / MCP の設定を `%USERPROFILE%` 配下にコピー
+- VS Code が導入済みなら `extensions.txt` の拡張機能を一括インストール
+- npm が導入済みなら `npm/global.json` のグローバルパッケージを導入
+- `gh` + `ghq` が揃っていればユーザーリポジトリを `ghq get` で取得
+
+⚠️ **制約事項**:
+
+- ネイティブ Windows では Homebrew / nix-darwin / oh-my-zsh は対象外です。Linux 互換のシェル環境が必要なら WSL2 をご利用ください。
+- `script/import.sh` を Git Bash / MSYS / Cygwin から実行するとエラーで停止します (PowerShell 版に誘導)。
+- 1Password CLI を使ったクレデンシャル展開 (`script/credentials.sh`) は今のところ Windows 非対応です。手動で `~/.devcontainer.env` などを配置してください。
+
 ### Exporting Configuration Settings
 
 Ensure `REPO_PATH` points to the repository and run the `export.sh` script to capture the current machine's configuration:
