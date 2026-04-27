@@ -26,13 +26,13 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 ### 2.1 ランタイム
 
-| ツール   | バージョン            | 用途                       |
-| -------- | --------------------- | -------------------------- |
-| Node.js  | 24.14.1               | JavaScript/TypeScript 実行 |
-| Python 3 | apt 管理              | スクリプト、AI ツール      |
-| pnpm     | 10.33.0               | パッケージマネージャ       |
-| npm      | 11.12.0 (global.json) | パッケージマネージャ       |
-| corepack | 0.34.6 (global.json)  | パッケージマネージャ切替   |
+| ツール   | バージョン      | 用途                       |
+| -------- | --------------- | -------------------------- |
+| Node.js  | 24.14.1         | JavaScript/TypeScript 実行 |
+| Python 3 | apt 管理        | スクリプト、AI ツール      |
+| pnpm     | 10.33.0         | パッケージマネージャ       |
+| npm      | see global.json | パッケージマネージャ       |
+| corepack | see global.json | パッケージマネージャ切替   |
 
 > **Note**: Rust ツールチェインは [ADR #0003](adr/0003-remove-rust-from-base-image.md) によりベースイメージから削除。ビルド時間短縮（約20分削減）のため、`similarity-ts` は `/similarity-analysis` コマンドの初回実行時にオンデマンドインストールされる。
 
@@ -41,9 +41,9 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | ツール                            | バージョン管理            | 用途                |
 | --------------------------------- | ------------------------- | ------------------- |
 | Claude Code                       | native installer (2.1.92) | AI コーディング支援 |
-| Codex (`@openai/codex`)           | 0.116.0 (global.json)     | OpenAI Codex CLI    |
-| Gemini CLI (`@google/gemini-cli`) | 0.34.0 (global.json)      | Google Gemini CLI   |
-| Happy Coder                       | 0.13.0 (global.json)      | AI コーディング     |
+| Codex (`@openai/codex`)           | see global.json           | OpenAI Codex CLI    |
+| Gemini CLI (`@google/gemini-cli`) | see global.json           | Google Gemini CLI   |
+| Happy Coder                       | see global.json           | AI コーディング     |
 | Cursor                            | curl installer            | AI エディタ CLI     |
 
 #### 設定ファイルの場所
@@ -59,44 +59,38 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 ### 2.3 ユーティリティ
 
-| ツール          | バージョン           | 用途                                             |
-| --------------- | -------------------- | ------------------------------------------------ |
-| shellcheck      | apt 管理             | シェルスクリプト検証                             |
-| GitHub CLI (gh) | 2.89.0               | GitHub 操作                                      |
-| Doppler CLI     | 3.75.3               | シークレット管理                                 |
-| similarity-ts   | オンデマンド         | コード類似度分析（初回実行時に自動インストール） |
-| eslint          | npm global           | JavaScript リンター                              |
-| Supabase CLI    | pnpm global          | Supabase 操作                                    |
-| Vercel CLI      | 52.0.0 (global.json) | Vercel デプロイ                                  |
-| n8n             | 2.17.7 (global.json) | ワークフロー自動化                               |
-| pm2             | 6.0.14 (global.json) | プロセスマネージャ                               |
-| difit           | 4.0.4 (global.json)  | AI diff レビューツール                           |
-| `@antfu/ni`     | 30.1.0 (global.json) | パッケージマネージャ抽象化 CLI                   |
+| ツール          | バージョン      | 用途                                             |
+| --------------- | --------------- | ------------------------------------------------ |
+| shellcheck      | apt 管理        | シェルスクリプト検証                             |
+| GitHub CLI (gh) | 2.89.0          | GitHub 操作                                      |
+| Doppler CLI     | 3.75.3          | シークレット管理                                 |
+| similarity-ts   | オンデマンド    | コード類似度分析（初回実行時に自動インストール） |
+| eslint          | npm global      | JavaScript リンター                              |
+| Supabase CLI    | pnpm global     | Supabase 操作                                    |
+| Vercel CLI      | see global.json | Vercel デプロイ                                  |
+| n8n             | see global.json | ワークフロー自動化                               |
+| pm2             | see global.json | プロセスマネージャ                               |
+| difit           | see global.json | AI diff レビューツール                           |
+| `@antfu/ni`     | see global.json | パッケージマネージャ抽象化 CLI                   |
 
-### 2.4 Language Servers（global.json）
+### 2.4 Language Servers（[`npm/global.json`](../npm/global.json) 参照）
 
-| パッケージ                   | バージョン | 対象言語              |
-| ---------------------------- | ---------- | --------------------- |
-| typescript                   | 6.0.3      | TypeScript コンパイラ |
-| typescript-language-server   | 5.1.3      | TypeScript LSP        |
-| bash-language-server         | 5.6.0      | Bash LSP              |
-| vscode-langservers-extracted | 4.10.0     | HTML/CSS/JSON LSP     |
-| yaml-language-server         | 1.22.0     | YAML LSP              |
+- `typescript` — TypeScript コンパイラ
+- `typescript-language-server` — TypeScript LSP
+- `bash-language-server` — Bash LSP
+- `vscode-langservers-extracted` — HTML/CSS/JSON LSP
+- `yaml-language-server` — YAML LSP
 
-### 2.5 MCP / Automation
+### 2.5 MCP / Automation（[`npm/global.json`](../npm/global.json) 参照）
 
-| パッケージ                      | バージョン | 用途             |
-| ------------------------------- | ---------- | ---------------- |
-| mcp-remote                      | 0.1.38     | MCP リモート接続 |
-| `@leonardsellem/n8n-mcp-server` | 0.1.8      | n8n MCP サーバー |
+- `mcp-remote` — MCP リモート接続
+- `@leonardsellem/n8n-mcp-server` — n8n MCP サーバー
 
-### 2.6 Git / CI 関連（Dockerfile 末尾でインストール）
+### 2.6 Git / CI 関連（Dockerfile 末尾でインストール、バージョンは [`package.json`](../package.json) 参照）
 
-| パッケージ                        | バージョン | 用途                   |
-| --------------------------------- | ---------- | ---------------------- |
-| husky                             | 9.1.7      | Git hooks              |
-| `@commitlint/cli`                 | 20.5.2     | コミットメッセージ検証 |
-| `@commitlint/config-conventional` | 20.5.0     | Conventional Commits   |
+- `husky` — Git hooks
+- `@commitlint/cli` — コミットメッセージ検証
+- `@commitlint/config-conventional` — Conventional Commits
 
 ## 3. DevContainer Features（config ベースで提供）
 
