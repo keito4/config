@@ -8,6 +8,7 @@ source "$SCRIPT_DIR/lib/devcontainer.sh"
 source "$SCRIPT_DIR/lib/config.sh"
 
 platform::assert_supported
+platform::assert_not_windows
 
 if [[ "${PLATFORM_IN_DEVCONTAINER}" = true ]]; then
 	export NONINTERACTIVE=1

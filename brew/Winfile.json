@@ -1,0 +1,33 @@
+{
+  "$schema": "https://aka.ms/winget-packages.schema.2.0.json",
+  "CreationDate": "2026-04-27T00:00:00.000-00:00",
+  "Sources": [
+    {
+      "Packages": [
+        { "PackageIdentifier": "Git.Git" },
+        { "PackageIdentifier": "GitHub.cli" },
+        { "PackageIdentifier": "x-motemen.ghq" },
+        { "PackageIdentifier": "Microsoft.PowerShell" },
+        { "PackageIdentifier": "Microsoft.WindowsTerminal" },
+        { "PackageIdentifier": "Microsoft.VisualStudioCode" },
+        { "PackageIdentifier": "Anysphere.Cursor" },
+        { "PackageIdentifier": "OpenJS.NodeJS.LTS" },
+        { "PackageIdentifier": "GoLang.Go" },
+        { "PackageIdentifier": "Hashicorp.Terraform" },
+        { "PackageIdentifier": "Helm.Helm" },
+        { "PackageIdentifier": "Kubernetes.kubectl" },
+        { "PackageIdentifier": "Derailed.k9s" },
+        { "PackageIdentifier": "GnuPG.GnuPG" },
+        { "PackageIdentifier": "AgileBits.1Password.CLI" },
+        { "PackageIdentifier": "jqlang.jq" }
+      ],
+      "SourceDetails": {
+        "Argument": "https://cdn.winget.microsoft.com/cache",
+        "Identifier": "Microsoft.Winget.Source_8wekyb3d8bbwe",
+        "Name": "winget",
+        "Type": "Microsoft.PreIndexed.Package"
+      }
+    }
+  ],
+  "WinGetVersion": "1.6.0"
+}
