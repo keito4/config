@@ -195,7 +195,9 @@ write_target() {
   local target=$1 content
   content=$(build_full_content)
   printf '%s\n' "$content" > "$target"
-  command -v npx >/dev/null 2>&1 && npx prettier --write "$target" >/dev/null 2>&1 || true
+  if command -v npx >/dev/null 2>&1; then
+    npx prettier --write "$target" >/dev/null 2>&1 || true
+  fi
 }
 
 if $CHECK_ONLY; then
