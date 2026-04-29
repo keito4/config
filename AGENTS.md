@@ -136,7 +136,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `docker-image.yml`          | Build and Release DevContainer Image |
 | `label-sync.yml`            | Label Sync                           |
 | `manual-release.yml`        | Manual Release                       |
-| `quality-gate-fallback.yml` | CI                                   |
+| `quality-gate-fallback.yml` | CI Fallback                          |
 | `rebuild-docker-cache.yml`  | Rebuild Docker Cache (Weekly)        |
 | `scheduled-maintenance.yml` | Scheduled Maintenance                |
 | `security.yml`              | Security Scans                       |
