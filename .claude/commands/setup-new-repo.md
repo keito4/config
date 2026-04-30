@@ -280,7 +280,7 @@ cp CONFIG_REPO/.github/workflows/claude-code-review.yml TARGET_DIR/.github/workf
 mkdir -p TARGET_DIR/.github/ISSUE_TEMPLATE
 cp -r CONFIG_REPO/.github/ISSUE_TEMPLATE/* TARGET_DIR/.github/ISSUE_TEMPLATE/
 
-cp CONFIG_REPO/.github/PULL_REQUEST_TEMPLATE.md TARGET_DIR/.github/
+cp CONFIG_REPO/.github/pull_request_template.md TARGET_DIR/.github/
 ```
 
 ### 7.1 Claude Code workflow
@@ -720,7 +720,7 @@ Files Created:
 ✅ .github/workflows/security.yml
 ✅ .github/workflows/claude-code-review.yml
 ✅ .github/ISSUE_TEMPLATE/
-✅ .github/PULL_REQUEST_TEMPLATE.md
+✅ .github/pull_request_template.md
 ✅ .claude/hooks/ (3 ファイル)
 ✅ .claude/rules/ (3 ファイル: code-review-standards, development-standards, git-conventions)
 ✅ .claude/settings.json

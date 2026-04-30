@@ -109,7 +109,7 @@ config/
 ├── .gemini/                        # Gemini CLI 設定
 │   └── settings.json
 ├── .github/                        # GitHub 設定
-│   ├── PULL_REQUEST_TEMPLATE.md
+│   ├── pull_request_template.md
 │   ├── dependabot.yml
 │   ├── labels.yml
 │   ├── slack-ci-failure.json

@@ -303,7 +303,7 @@ bash script/setup-team-protection.sh
 関連ファイル
 
 • `.github/CODEOWNERS`: コードオーナーの定義
-• `.github/PULL_REQUEST_TEMPLATE.md`: PR テンプレート
+• `.github/pull_request_template.md`: PR テンプレート
 • `.github/workflows/ci.yml`: 必須ステータスチェック
 
 ---

@@ -43,9 +43,6 @@ describe('Credential Filtering', () => {
     });
   });
 
-  // .zshrc credential filtering is no longer needed
-  // macOS: .zshrc is managed by nix home-manager (nix/home/zsh.nix)
-
   describe('.claude/settings.json credential filtering', () => {
     const settingsPath = path.join(__dirname, '..', '.claude', 'settings.json');
 
