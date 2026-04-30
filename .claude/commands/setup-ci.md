@@ -692,7 +692,7 @@ mkdir -p .github/workflows
 mkdir -p .github
 ```
 
-`.github/PULL_REQUEST_TEMPLATE.md` を作成：
+`.github/pull_request_template.md` を作成：
 
 ```markdown
 ## Summary
@@ -731,7 +731,7 @@ Files Created/Updated:
 ✅ .github/workflows/ci.yml
 ✅ .github/workflows/security.yml
 ✅ .github/workflows/claude-code-review.yml
-✅ .github/PULL_REQUEST_TEMPLATE.md
+✅ .github/pull_request_template.md
 
 Next Steps:
 1. Review the generated workflow files
