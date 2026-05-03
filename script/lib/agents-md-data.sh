@@ -12,6 +12,7 @@ declare -A DOT_DIR_PURPOSE=(
   [.gemini]="Gemini AI agent configuration"
   [.husky]="Git hooks (pre-commit, commit-msg)"
   [.vscode]="VS Code workspace settings"
+  [.zsh]="Zsh configuration (aliases, completions, functions, prompt)"
 )
 
 declare -A CLAUDE_SUB_PURPOSE=(
