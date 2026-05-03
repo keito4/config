@@ -37,34 +37,35 @@ Development infrastructure template repository providing DevContainer images, CI
 
 ## Project Structure
 
-| Directory            | Purpose                                                 |
-| -------------------- | ------------------------------------------------------- |
-| `.claude/agents/`    | Claude Code specialized agents                          |
-| `.claude/commands/`  | Claude Code slash commands                              |
-| `.claude/hooks/`     | Pre/post hook scripts for quality enforcement           |
-| `.claude/plugins/`   | Claude Code plugin configuration                        |
-| `.claude/rules/`     | Claude Code rules for development standards             |
-| `.claude/skills/`    | Claude Code skill definitions                           |
-| `.codex/`            | Codex AI agent configuration                            |
-| `.context/`          | Shared intermediate artifacts (complexity reports etc.) |
-| `.cursor/`           | Cursor editor settings                                  |
-| `.devcontainer/`     | DevContainer configuration and Dockerfile               |
-| `.gemini/`           | Gemini AI agent configuration                           |
-| `.github/workflows/` | GitHub Actions CI/CD workflows (16 workflows)           |
-| `.husky/`            | Git hooks (pre-commit, commit-msg)                      |
-| `.vscode/`           | VS Code workspace settings                              |
-| `brew/`              | Homebrew package management (Linux only)                |
-| `credentials/`       | Credential templates and filtering documentation        |
-| `docs/`              | Documentation and ADRs                                  |
-| `dot/`               | Dotfiles (DevContainer .zshrc, peco)                    |
-| `eslint/`            | ESLint configuration and plugins                        |
-| `git/`               | Git hooks and configuration                             |
-| `nix/`               | nix-darwin + home-manager (macOS environment)           |
-| `npm/`               | npm global configuration and library management         |
-| `script/`            | Utility shell scripts                                   |
-| `templates/`         | Workflow, testing, and dotfile templates                |
-| `test/`              | Test suites (Jest unit, BATS integration)               |
-| `vscode/`            | VS Code extensions list                                 |
+| Directory            | Purpose                                                     |
+| -------------------- | ----------------------------------------------------------- |
+| `.claude/agents/`    | Claude Code specialized agents                              |
+| `.claude/commands/`  | Claude Code slash commands                                  |
+| `.claude/hooks/`     | Pre/post hook scripts for quality enforcement               |
+| `.claude/plugins/`   | Claude Code plugin configuration                            |
+| `.claude/rules/`     | Claude Code rules for development standards                 |
+| `.claude/skills/`    | Claude Code skill definitions                               |
+| `.codex/`            | Codex AI agent configuration                                |
+| `.context/`          | Shared intermediate artifacts (complexity reports etc.)     |
+| `.cursor/`           | Cursor editor settings                                      |
+| `.devcontainer/`     | DevContainer configuration and Dockerfile                   |
+| `.gemini/`           | Gemini AI agent configuration                               |
+| `.github/workflows/` | GitHub Actions CI/CD workflows (16 workflows)               |
+| `.husky/`            | Git hooks (pre-commit, commit-msg)                          |
+| `.vscode/`           | VS Code workspace settings                                  |
+| `.zsh/`              | Zsh configuration (aliases, completions, functions, prompt) |
+| `brew/`              | Homebrew package management (Linux only)                    |
+| `credentials/`       | Credential templates and filtering documentation            |
+| `docs/`              | Documentation and ADRs                                      |
+| `dot/`               | Dotfiles (DevContainer .zshrc, peco)                        |
+| `eslint/`            | ESLint configuration and plugins                            |
+| `git/`               | Git hooks and configuration                                 |
+| `nix/`               | nix-darwin + home-manager (macOS environment)               |
+| `npm/`               | npm global configuration and library management             |
+| `script/`            | Utility shell scripts                                       |
+| `templates/`         | Workflow, testing, and dotfile templates                    |
+| `test/`              | Test suites (Jest unit, BATS integration)                   |
+| `vscode/`            | VS Code extensions list                                     |
 
 ## Available Commands
 
@@ -159,20 +160,20 @@ Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + cov
 
 ## Hooks
 
-| Hook                          | Trigger             | Purpose                              |
-| ----------------------------- | ------------------- | ------------------------------------ |
-| `block_config_edit.py`        | Pre edit            | Protect configuration files          |
-| `block_dangerous_commands.py` | Pre Bash            | Block destructive commands           |
-| `block_git_no_verify.py`      | Pre git commit/push | Block `--no-verify` and `HUSKY=0`    |
-| `common.py`                   | Unknown             | common                               |
-| `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes |
-| `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint                 |
-| `post_git_push_ci.py`         | Post git push       | Monitor CI status                    |
-| `post_pr_ai_review.py`        | Post PR creation    | Run AI code review                   |
-| `post_pr_ci_watch.py`         | Post PR creation    | Monitor PR CI status                 |
-| `pre_exit_plan_ai_review.py`  | Pre ExitPlanMode    | AI review before plan exit           |
-| `pre_git_quality_gates.py`    | Pre git commit/push | Auto-detect and run quality gates    |
-| `stop_test_verification.py`   | Stop                | Verify test results on session end   |
+| Hook                          | Trigger             | Purpose                                          |
+| ----------------------------- | ------------------- | ------------------------------------------------ |
+| `block_config_edit.py`        | Pre edit            | Protect configuration files                      |
+| `block_dangerous_commands.py` | Pre Bash            | Block destructive commands                       |
+| `block_git_no_verify.py`      | Pre git commit/push | Block `--no-verify` and `HUSKY=0`                |
+| `common.py`                   | —                   | Shared utility library (imported by other hooks) |
+| `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes             |
+| `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint                             |
+| `post_git_push_ci.py`         | Post git push       | Monitor CI status                                |
+| `post_pr_ai_review.py`        | Post PR creation    | Run AI code review                               |
+| `post_pr_ci_watch.py`         | Post PR creation    | Monitor PR CI status                             |
+| `pre_exit_plan_ai_review.py`  | Pre ExitPlanMode    | AI review before plan exit                       |
+| `pre_git_quality_gates.py`    | Pre git commit/push | Auto-detect and run quality gates                |
+| `stop_test_verification.py`   | Stop                | Verify test results on session end               |
 
 ## Development Standards
 
