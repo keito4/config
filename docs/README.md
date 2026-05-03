@@ -31,12 +31,13 @@
 | [using-config-base-image.md](./using-config-base-image.md) | `ghcr.io/keito4/config-base` イメージの使用方法 |
 | [tool-catalog.md](./tool-catalog.md)                       | 環境×ツールのマトリクス一覧                     |
 
-### サービス連携
+### サービス連携・シークレット管理
 
-| ドキュメント                                     | 説明                                                  |
-| ------------------------------------------------ | ----------------------------------------------------- |
-| [mcp-servers-guide.md](./mcp-servers-guide.md)   | MCP サーバー設定ガイド（Linear, Playwright, o3 など） |
-| [sentry-setup-guide.md](./sentry-setup-guide.md) | Sentry セットアップガイド（Next.js 14+ 向け）         |
+| ドキュメント                                           | 説明                                                  |
+| ------------------------------------------------------ | ----------------------------------------------------- |
+| [mcp-servers-guide.md](./mcp-servers-guide.md)         | MCP サーバー設定ガイド（Linear, Playwright, o3 など） |
+| [sentry-setup-guide.md](./sentry-setup-guide.md)       | Sentry セットアップガイド（Next.js 14+ 向け）         |
+| [doppler-setup-guide.md](./doppler-setup-guide.md)     | Doppler シークレット管理ガイド（dev/dev_personal 運用）|
 
 ## クイックスタート
 
@@ -55,6 +56,7 @@
 | `/setup-tests`             | [../templates/testing/README.md](../templates/testing/README.md) |
 | `/config-base-sync-update` | [using-config-base-image.md](./using-config-base-image.md)       |
 | `/repo-maintenance`        | [tool-catalog.md](./tool-catalog.md)                             |
+| `/setup-doppler`           | [doppler-setup-guide.md](./doppler-setup-guide.md)               |
 
 ## ディレクトリ構造
 
@@ -72,6 +74,7 @@ docs/
 ├── using-config-base-image.md  # DevContainer ベースイメージ
 ├── mcp-servers-guide.md        # MCP サーバー設定
 ├── sentry-setup-guide.md       # Sentry セットアップ
+├── doppler-setup-guide.md      # Doppler シークレット管理
 └── tool-catalog.md             # ツールカタログ
 
 templates/

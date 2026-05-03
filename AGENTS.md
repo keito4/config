@@ -159,20 +159,20 @@ Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + cov
 
 ## Hooks
 
-| Hook                          | Trigger             | Purpose                              |
-| ----------------------------- | ------------------- | ------------------------------------ |
-| `block_config_edit.py`        | Pre edit            | Protect configuration files          |
-| `block_dangerous_commands.py` | Pre Bash            | Block destructive commands           |
-| `block_git_no_verify.py`      | Pre git commit/push | Block `--no-verify` and `HUSKY=0`    |
-| `common.py`                   | Unknown             | common                               |
-| `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes |
-| `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint                 |
-| `post_git_push_ci.py`         | Post git push       | Monitor CI status                    |
-| `post_pr_ai_review.py`        | Post PR creation    | Run AI code review                   |
-| `post_pr_ci_watch.py`         | Post PR creation    | Monitor PR CI status                 |
-| `pre_exit_plan_ai_review.py`  | Pre ExitPlanMode    | AI review before plan exit           |
-| `pre_git_quality_gates.py`    | Pre git commit/push | Auto-detect and run quality gates    |
-| `stop_test_verification.py`   | Stop                | Verify test results on session end   |
+| Hook                          | Trigger             | Purpose                                          |
+| ----------------------------- | ------------------- | ------------------------------------------------ |
+| `block_config_edit.py`        | Pre edit            | Protect configuration files                      |
+| `block_dangerous_commands.py` | Pre Bash            | Block destructive commands                       |
+| `block_git_no_verify.py`      | Pre git commit/push | Block `--no-verify` and `HUSKY=0`                |
+| `common.py`                   | —                   | Shared utility library (imported by other hooks) |
+| `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes             |
+| `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint                             |
+| `post_git_push_ci.py`         | Post git push       | Monitor CI status                                |
+| `post_pr_ai_review.py`        | Post PR creation    | Run AI code review                               |
+| `post_pr_ci_watch.py`         | Post PR creation    | Monitor PR CI status                             |
+| `pre_exit_plan_ai_review.py`  | Pre ExitPlanMode    | AI review before plan exit                       |
+| `pre_git_quality_gates.py`    | Pre git commit/push | Auto-detect and run quality gates                |
+| `stop_test_verification.py`   | Stop                | Verify test results on session end               |
 
 ## Development Standards
 
