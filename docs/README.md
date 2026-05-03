@@ -33,11 +33,11 @@
 
 ### サービス連携・シークレット管理
 
-| ドキュメント                                           | 説明                                                  |
-| ------------------------------------------------------ | ----------------------------------------------------- |
-| [mcp-servers-guide.md](./mcp-servers-guide.md)         | MCP サーバー設定ガイド（Linear, Playwright, o3 など） |
-| [sentry-setup-guide.md](./sentry-setup-guide.md)       | Sentry セットアップガイド（Next.js 14+ 向け）         |
-| [doppler-setup-guide.md](./doppler-setup-guide.md)     | Doppler シークレット管理ガイド（dev/dev_personal 運用）|
+| ドキュメント                                       | 説明                                                    |
+| -------------------------------------------------- | ------------------------------------------------------- |
+| [mcp-servers-guide.md](./mcp-servers-guide.md)     | MCP サーバー設定ガイド（Linear, Playwright, o3 など）   |
+| [sentry-setup-guide.md](./sentry-setup-guide.md)   | Sentry セットアップガイド（Next.js 14+ 向け）           |
+| [doppler-setup-guide.md](./doppler-setup-guide.md) | Doppler シークレット管理ガイド（dev/dev_personal 運用） |
 
 ## クイックスタート
 
