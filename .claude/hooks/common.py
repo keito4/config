@@ -110,21 +110,6 @@ def get_git_root() -> Optional[Path]:
         return None
 
 
-def get_changed_files(ref: str = "HEAD", cwd: Optional[str] = None) -> list:
-    """Get list of changed files for given ref."""
-    try:
-        result = subprocess.run(
-            ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", ref],
-            capture_output=True, text=True, timeout=5,
-            cwd=cwd,
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip().split("\n")
-        return []
-    except (subprocess.TimeoutExpired, OSError):
-        return []
-
-
 # ============================================================================
 # Package manager detection
 # ============================================================================
