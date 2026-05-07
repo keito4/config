@@ -1,7 +1,7 @@
 # Dependabot Auto-merge Workflow
 #
 # Dependabot PR を更新種別に応じて自動処理するワークフロー
-# - patch: CI パス後に自動 squash マージ
+# - patch: CI パス後に自動マージ
 # - minor: 自動承認（マージは手動）
 # - major: ラベル付与してレビュー必須
 #
@@ -41,11 +41,11 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # patch: 自動 squash マージ（CI パス後）
+      # patch: 自動マージ（CI パス後）
       - name: Auto-merge patch updates
         if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-patch'
         run: |
-          gh pr merge "$PR_URL" --auto --squash
+          gh pr merge "$PR_URL" --auto --merge
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

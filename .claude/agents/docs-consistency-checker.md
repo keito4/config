@@ -1,7 +1,6 @@
 ---
 name: docs-consistency-checker
 description: Use this agent when: 1) Reviewing pull requests that modify documentation files (README, ADR, XML comments) or public APIs with Swagger/OpenAPI specs, 2) Evaluating PR descriptions that are shorter than 200 characters, 3) Ensuring documentation consistency across different formats and verifying PR descriptions follow the Why/What/How/Risk structure. Examples: <example>Context: User has just created a pull request modifying API endpoints and wants to ensure documentation is consistent. user: "I've updated the user authentication endpoints" assistant: "I'll use the docs-consistency-checker agent to verify all documentation is properly updated and consistent" <commentary>Since the PR involves API changes, the docs-consistency-checker should verify README, ADR, XML comments, and OpenAPI specs are all aligned.</commentary></example> <example>Context: User submitted a PR with a brief description. user: "Fixed login bug" assistant: "The PR description seems brief. Let me use the docs-consistency-checker to evaluate if it meets the Why/What/How/Risk criteria" <commentary>PR description is under 200 characters, triggering the need for documentation review.</commentary></example>
-model: sonnet
 color: cyan
 ---
 

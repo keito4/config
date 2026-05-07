@@ -1,7 +1,6 @@
 ---
 name: playwright-test-healer
 description: Use this agent to debug and fix failing Playwright E2E tests. This agent analyzes error logs, inspects current page state using MCP browser tools, and provides targeted fixes. Use when: tests are failing due to selector changes, timing issues, or application updates.
-model: sonnet
 color: orange
 ---
 
