@@ -119,8 +119,7 @@ config/
 │   ├── actions/
 │   │   └── coverage-comment/       # カバレッジコメント用カスタムアクション
 │   │       ├── README.md
-│   │       ├── action.yml
-│   │       └── example-integration.yml
+│   │       └── action.yml
 │   └── workflows/                  # GitHub Actions ワークフロー
 │       ├── ci.yml                  # CI パイプライン
 │       ├── claude.yml              # Claude Code 統合
