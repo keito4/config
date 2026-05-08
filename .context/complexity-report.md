@@ -1,229 +1,54 @@
 # Code Complexity Report
 
-Generated: Fri Apr 25 00:00:00 UTC 2026
+Generated: Fri May 08 00:00:00 UTC 2026
 
 ## Summary
 
-- Total Files: 36
-- Average Complexity: 19
-- High Complexity: 13
-- Critical Complexity: 12
+- Total Files: 25
+- Average Complexity: 19/20 (Poor)
+- High Complexity (10-20): 13 files
+- Critical Complexity (>20): 12 files
+
+## Changes Since Previous Report (2026-04-25)
+
+| File | Previous | Current | Delta |
+| ---- | -------- | ------- | ----- |
+| script/changelog-generator.sh | 35 | 23 | -12 (improved) |
+| script/update-agents-md.sh | 49 | 51 | +2 (worsened) |
 
 ## File Details
 
-### script/changelog-generator.sh
-
-- Complexity: 35
-- Length: 301 lines
-- Nesting: 1 levels
-
-### script/update-libraries.sh
-
-- Complexity: 10
-- Length: 87 lines
-- Nesting: 1 levels
-
-### script/credentials.sh
-
-- Complexity: 8
-- Length: 122 lines
-- Nesting: 1 levels
-
-### script/check-file-length.sh
-
-- Complexity: 11
-- Length: 65 lines
-- Nesting: 1 levels
-
-### script/update-all.sh
-
-- Complexity: 14
-- Length: 130 lines
-- Nesting: 1 levels
-
-### script/check-image-version.sh
-
-- Complexity: 6
-- Length: 36 lines
-- Nesting: 0 levels
-
-### script/setup-scheduled-agents.sh
-
-- Complexity: 5
-- Length: 156 lines
-- Nesting: 2 levels
-
-### script/setup-file-length-check.sh
-
-- Complexity: 8
-- Length: 88 lines
-- Nesting: 1 levels
-
-### script/setup-team-protection.sh
-
-- Complexity: 40
-- Length: 485 lines
-- Nesting: 3 levels
-
-### script/setup-env.sh
-
-- Complexity: 3
-- Length: 51 lines
-- Nesting: 1 levels
-
-### script/fix-container-plugins.sh
-
-- Complexity: 10
-- Length: 78 lines
-- Nesting: 0 levels
-
-### script/security-credential-scan.sh
-
-- Complexity: 48
-- Length: 389 lines
-- Nesting: 2 levels
-
-### script/pre-pr-checklist.sh
-
-- Complexity: 27
-- Length: 215 lines
-- Nesting: 1 levels
-
-### script/update-claude-code.sh
-
-- Complexity: 10
-- Length: 106 lines
-- Nesting: 1 levels
-
-### script/import.sh
-
-- Complexity: 19
-- Length: 116 lines
-- Nesting: 1 levels
-
-### script/container-health.sh
-
-- Complexity: 57
-- Length: 324 lines
-- Nesting: 1 levels
-
-### script/test-coverage-trend.sh
-
-- Complexity: 22
-- Length: 263 lines
-- Nesting: 2 levels
-
-### script/verify-container-setup.sh
-
-- Complexity: 6
-- Length: 77 lines
-- Nesting: 0 levels
-
-### script/setup-claude-build.sh
-
-- Complexity: 6
-- Length: 59 lines
-- Nesting: 1 levels
-
-### script/install-npm-globals.sh
-
-- Complexity: 8
-- Length: 64 lines
-- Nesting: 0 levels
-
-### script/create-codespace.sh
-
-- Complexity: 12
-- Length: 233 lines
-- Nesting: 1 levels
-
-### script/version.sh
-
-- Complexity: 11
-- Length: 132 lines
-- Nesting: 1 levels
-
-### script/setup-lsp.sh
-
-- Complexity: 9
-- Length: 59 lines
-- Nesting: 1 levels
-
-### script/code-complexity-check.sh
-
-- Complexity: 45
-- Length: 282 lines
-- Nesting: 2 levels
-
-### script/install-skills.sh
-
-- Complexity: 14
-- Length: 114 lines
-- Nesting: 0 levels
-
-### script/brew-deps.sh
-
-- Complexity: 14
-- Length: 208 lines
-- Nesting: 2 levels
-
-### script/codespaces-secrets.sh
-
-- Complexity: 43
-- Length: 421 lines
-- Nesting: 2 levels
-
-### script/update-actions.sh
-
-- Complexity: 35
-- Length: 217 lines
-- Nesting: 1 levels
-
-### script/install-claude-plugins.sh
-
-- Complexity: 19
-- Length: 141 lines
-- Nesting: 0 levels
-
-### script/branch-cleanup.sh
-
-- Complexity: 39
-- Length: 243 lines
-- Nesting: 1 levels
-
-### script/setup-claude.sh
-
-- Complexity: 11
-- Length: 133 lines
-- Nesting: 1 levels
-
-### script/dependency-health-check.sh
-
-- Complexity: 38
-- Length: 188 lines
-- Nesting: 3 levels
-
-### script/setup-mcp.sh
-
-- Complexity: 5
-- Length: 81 lines
-- Nesting: 1 levels
-
-### script/restore-cli-auth.sh
-
-- Complexity: 4
-- Length: 43 lines
-- Nesting: 0 levels
-
-### script/update-agents-md.sh
-
-- Complexity: 49
-- Length: 308 lines
-- Nesting: 1 levels
-
-### script/export.sh
-
-- Complexity: 14
-- Length: 81 lines
-- Nesting: 1 levels
-
+### CRITICAL (>20)
+
+| File | Complexity | Lines | Nesting |
+| ---- | ---------- | ----- | ------- |
+| script/container-health.sh | 57 | 324 | 1 |
+| script/security-credential-scan.sh | 48 | 389 | 2 |
+| script/update-agents-md.sh | 51 | 293 | 3 |
+| script/code-complexity-check.sh | 45 | 282 | 2 |
+| script/codespaces-secrets.sh | 43 | 421 | 2 |
+| script/setup-team-protection.sh | 40 | 485 | 3 |
+| script/branch-cleanup.sh | 39 | 243 | 1 |
+| script/dependency-health-check.sh | 38 | 188 | 3 |
+| script/update-actions.sh | 35 | 217 | 1 |
+| script/pre-pr-checklist.sh | 27 | 215 | 1 |
+| script/changelog-generator.sh | 23 | 182 | 1 |
+| script/test-coverage-trend.sh | 22 | 263 | 2 |
+
+### HIGH (10-20)
+
+| File | Complexity | Lines | Nesting |
+| ---- | ---------- | ----- | ------- |
+| script/install-claude-plugins.sh | 19 | 141 | 0 |
+| script/import.sh | 19 | 117 | 1 |
+| script/update-all.sh | 14 | 130 | 1 |
+| script/install-skills.sh | 14 | 114 | 0 |
+| script/brew-deps.sh | 14 | 208 | 2 |
+| script/export.sh | 14 | 81 | 1 |
+| script/create-codespace.sh | 12 | 233 | 1 |
+| script/check-file-length.sh | 11 | 65 | 1 |
+| script/version.sh | 11 | 132 | 1 |
+| script/setup-claude.sh | 11 | 133 | 1 |
+| script/update-libraries.sh | 10 | 87 | 1 |
+| script/fix-container-plugins.sh | 10 | 78 | 0 |
+| script/update-claude-code.sh | 10 | 106 | 1 |

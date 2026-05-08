@@ -1,9 +1,9 @@
 {
-  "generated": "2026-05-01",
+  "generated": "2026-05-08",
   "tool": "script/code-complexity-check.sh",
   "overall_score": 19,
   "rating": "Poor",
-  "total_files": 36,
+  "total_files": 25,
   "distribution": {
     "low_lt5": 2,
     "medium_5_10": 9,
