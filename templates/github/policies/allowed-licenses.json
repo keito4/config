@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "許可・禁止ライセンスポリシー",
+  "allowed": [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "0BSD",
+    "CC0-1.0",
+    "Unlicense",
+    "CC-BY-3.0",
+    "CC-BY-4.0",
+    "Python-2.0",
+    "BlueOak-1.0.0",
+    "Zlib"
+  ],
+  "blocked": [
+    "GPL-2.0",
+    "GPL-2.0-only",
+    "GPL-2.0-or-later",
+    "GPL-3.0",
+    "GPL-3.0-only",
+    "GPL-3.0-or-later",
+    "AGPL-3.0",
+    "AGPL-3.0-only",
+    "AGPL-3.0-or-later",
+    "LGPL-2.0",
+    "LGPL-2.1",
+    "LGPL-3.0",
+    "SSPL-1.0",
+    "BUSL-1.1"
+  ],
+  "exceptions": [],
+  "notes": {
+    "allowed": "商用利用可能で、ソースコード公開義務のないライセンス",
+    "blocked": "コピーレフト系ライセンス。使用する場合は例外申請が必要",
+    "exception_process": "例外申請は security-team へ Issue で申請。理由・影響範囲・代替調査結果を記載"
+  }
+}
