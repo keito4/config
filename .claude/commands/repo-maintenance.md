@@ -2294,8 +2294,11 @@ fi
 | テンプレート | `.github/workflows/ci.yml`                    | 差分表示 → 確認後に上書き    |
 | テンプレート | `.github/ISSUE_TEMPLATE/*`                    | 欠落ファイルのみ追加         |
 | テンプレート | `.github/pull_request_template.md`            | 欠落時のみ追加               |
+| テンプレート | `.github/policies/*`                          | 欠落ファイルのみ追加         |
 
 `quality-gate-fallback.yml` は `setup-team-protection.sh` がブランチ保護に登録する `Quality Gate` 必須チェックとセットで配布する。ci.yml が paths フィルタ等でスキップされた場合に PR が `Expected — Waiting for status to be reported` のまま blocked にならないよう、Pass を emit する役割を持つ。
+
+`.github/policies/` には複雑度・ライセンス・セキュリティ重大度の判定基準を JSON / Markdown で配置する。CI ワークフローや security.yml から参照することで、判定基準を一元管理できる。テンプレートのソースは `templates/github/policies/`。
 
 **マネージドファイル**: config リポジトリが正規のソースであり、プロジェクト側でカスタマイズしない前提のファイル。
 **テンプレートファイル**: プロジェクト固有のカスタマイズが入る可能性があるため、差分確認を挟む。
@@ -2439,6 +2442,21 @@ if [ -f "$PR_TEMPLATE_SRC" ] && [ ! -f "$PR_TEMPLATE_DST" ]; then
   mkdir -p .github
   cp "$PR_TEMPLATE_SRC" "$PR_TEMPLATE_DST"
   UPDATED+=(".github/pull_request_template.md (新規追加)")
+fi
+
+# Policies: 欠落ファイルのみ追加 (src: templates/github/policies → dst: .github/policies)
+POLICIES_SRC_DIR="$CONFIG_REPO/templates/github/policies"
+POLICIES_DST_DIR="./.github/policies"
+if [ -d "$POLICIES_SRC_DIR" ]; then
+  mkdir -p "$POLICIES_DST_DIR"
+  for src_file in "$POLICIES_SRC_DIR"/*; do
+    [ ! -f "$src_file" ] && continue
+    dst_file="$POLICIES_DST_DIR/$(basename "$src_file")"
+    if [ ! -f "$dst_file" ]; then
+      cp "$src_file" "$dst_file"
+      UPDATED+=(".github/policies/$(basename "$src_file") (新規追加)")
+    fi
+  done
 fi
 ```
 
