@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "コード複雑度の閾値設定",
+  "cyclomatic": {
+    "description": "循環的複雑度（McCabe）",
+    "warning": 10,
+    "error": 20,
+    "notes": "10以下推奨、20超は必ずリファクタリング"
+  },
+  "cognitive": {
+    "description": "認知的複雑度",
+    "warning": 15,
+    "error": 25,
+    "notes": "人間が理解しやすいコードの指標"
+  },
+  "linesPerFunction": {
+    "description": "関数あたりの行数",
+    "warning": 50,
+    "error": 100,
+    "notes": "長い関数は分割を検討"
+  },
+  "parametersPerFunction": {
+    "description": "関数あたりのパラメータ数",
+    "warning": 4,
+    "error": 7,
+    "notes": "多い場合はオブジェクトでまとめる"
+  },
+  "nestingDepth": {
+    "description": "ネストの深さ",
+    "warning": 4,
+    "error": 6,
+    "notes": "早期リターンで浅くする"
+  },
+  "fileLines": {
+    "description": "ファイルあたりの行数",
+    "warning": 300,
+    "error": 500,
+    "notes": "大きいファイルは分割を検討"
+  },
+  "excludePatterns": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/tests/**",
+    "**/*.d.ts",
+    "**/*.config.*"
+  ]
+}
