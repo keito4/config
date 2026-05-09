@@ -2278,24 +2278,30 @@ fi
 
 **同期対象ファイルの分類:**
 
-| カテゴリ     | ファイル                                      | 同期ポリシー                 |
-| ------------ | --------------------------------------------- | ---------------------------- |
-| マネージド   | `.github/workflows/claude.yml`                | 常に config の最新版で上書き |
-| マネージド   | `.github/workflows/claude-code-review.yml`    | 常に config の最新版で上書き |
-| マネージド   | `.github/workflows/quality-gate-fallback.yml` | 常に config の最新版で上書き |
-| マネージド   | `.claude/hooks/block_git_no_verify.py`        | 常に config の最新版で上書き |
-| マネージド   | `.claude/hooks/pre_git_quality_gates.py`      | 常に config の最新版で上書き |
-| マネージド   | `.claude/hooks/post_git_push_ci.py`           | 常に config の最新版で上書き |
-| マネージド   | `.claude/hooks/post_commit_adr_reminder.py`   | 常に config の最新版で上書き |
-| マネージド   | `.claude/rules/development-standards.md`      | 常に config の最新版で上書き |
-| マネージド   | `.claude/rules/git-conventions.md`            | 常に config の最新版で上書き |
-| マネージド   | `.claude/rules/release-types.md`              | 常に config の最新版で上書き |
-| テンプレート | `.github/workflows/security.yml`              | 差分表示 → 確認後に上書き    |
-| テンプレート | `.github/workflows/ci.yml`                    | 差分表示 → 確認後に上書き    |
-| テンプレート | `.github/ISSUE_TEMPLATE/*`                    | 欠落ファイルのみ追加         |
-| テンプレート | `.github/pull_request_template.md`            | 欠落時のみ追加               |
+| カテゴリ     | ファイル                                      | 同期ポリシー                   |
+| ------------ | --------------------------------------------- | ------------------------------ |
+| マネージド   | `.github/workflows/claude.yml`                | 常に config の最新版で上書き   |
+| マネージド   | `.github/workflows/claude-code-review.yml`    | 常に config の最新版で上書き   |
+| マネージド   | `.github/workflows/quality-gate-fallback.yml` | 常に config の最新版で上書き   |
+| マネージド   | `.claude/hooks/block_git_no_verify.py`        | 常に config の最新版で上書き   |
+| マネージド   | `.claude/hooks/pre_git_quality_gates.py`      | 常に config の最新版で上書き   |
+| マネージド   | `.claude/hooks/post_git_push_ci.py`           | 常に config の最新版で上書き   |
+| マネージド   | `.claude/hooks/post_commit_adr_reminder.py`   | 常に config の最新版で上書き   |
+| マネージド   | `.claude/rules/development-standards.md`      | 常に config の最新版で上書き   |
+| マネージド   | `.claude/rules/git-conventions.md`            | 常に config の最新版で上書き   |
+| マネージド   | `.claude/rules/release-types.md`              | 常に config の最新版で上書き   |
+| テンプレート | `.github/workflows/security.yml`              | 差分表示 → 確認後に上書き      |
+| テンプレート | `.github/workflows/ci.yml`                    | 差分表示 → 確認後に上書き      |
+| テンプレート | `.github/ISSUE_TEMPLATE/*`                    | 欠落ファイルのみ追加           |
+| テンプレート | `.github/pull_request_template.md`            | 欠落時のみ追加                 |
+| テンプレート | `vitest.config.ts`                            | 欠落時のみ追加 (Vitest 採用時) |
+| テンプレート | `eslint.config.mjs`                           | 欠落時のみ追加 (flat config)   |
+| テンプレート | `biome.json`                                  | 欠落時のみ追加 (Biome 採用時)  |
+| テンプレート | `commitlint.config.js`                        | 欠落時のみ追加                 |
 
 `quality-gate-fallback.yml` は `setup-team-protection.sh` がブランチ保護に登録する `Quality Gate` 必須チェックとセットで配布する。ci.yml が paths フィルタ等でスキップされた場合に PR が `Expected — Waiting for status to be reported` のまま blocked にならないよう、Pass を emit する役割を持つ。
+
+モダンツール 4 種 (`vitest.config.ts` / `eslint.config.mjs` / `biome.json` / `commitlint.config.js`) は `templates/testing/` `templates/eslint/` `templates/` 配下のテンプレートを欠落時のみ配置する。既存設定がある repo はそのまま尊重される。
 
 **マネージドファイル**: config リポジトリが正規のソースであり、プロジェクト側でカスタマイズしない前提のファイル。
 **テンプレートファイル**: プロジェクト固有のカスタマイズが入る可能性があるため、差分確認を挟む。
@@ -2440,6 +2446,44 @@ if [ -f "$PR_TEMPLATE_SRC" ] && [ ! -f "$PR_TEMPLATE_DST" ]; then
   cp "$PR_TEMPLATE_SRC" "$PR_TEMPLATE_DST"
   UPDATED+=(".github/pull_request_template.md (新規追加)")
 fi
+
+# モダンツール 4 種: 採用判定 + 欠落時のみ配置 (path-mapping)
+# vitest: package.json の devDependencies に vitest があれば配置候補
+# eslint flat config: eslint.config.* が無く、かつ ESLint を使っている場合
+# biome: package.json に @biomejs/biome があれば配置候補
+# commitlint: commit-msg フックを使う or commitlint 依存があれば配置候補
+declare -A MODERN_TOOLS=(
+  ["templates/testing/vitest.config.ts"]="vitest.config.ts"
+  ["templates/eslint/eslint.config.mjs"]="eslint.config.mjs"
+  ["templates/biome.json"]="biome.json"
+  ["templates/commitlint.config.js"]="commitlint.config.js"
+)
+for src_rel in "${!MODERN_TOOLS[@]}"; do
+  dst_rel="${MODERN_TOOLS[$src_rel]}"
+  src_file="$CONFIG_REPO/$src_rel"
+  dst_file="./$dst_rel"
+  [ ! -f "$src_file" ] && continue
+  # 既存の同等ファイルが既にある場合はスキップ (拡張子違いを含む)
+  case "$dst_rel" in
+    vitest.config.ts)
+      ls vitest.config.{ts,js,mjs,cjs} >/dev/null 2>&1 && continue
+      jq -e '.devDependencies.vitest // .dependencies.vitest' package.json >/dev/null 2>&1 || continue
+      ;;
+    eslint.config.mjs)
+      ls eslint.config.{mjs,js,cjs,ts} .eslintrc{.js,.json,.cjs,.yml,.yaml} >/dev/null 2>&1 && continue
+      jq -e '.devDependencies.eslint // .dependencies.eslint' package.json >/dev/null 2>&1 || continue
+      ;;
+    biome.json)
+      ls biome.json{,c} >/dev/null 2>&1 && continue
+      jq -e '.devDependencies["@biomejs/biome"] // .dependencies["@biomejs/biome"]' package.json >/dev/null 2>&1 || continue
+      ;;
+    commitlint.config.js)
+      ls commitlint.config.{js,ts,mjs,cjs} .commitlintrc{,.js,.json,.yml,.yaml} >/dev/null 2>&1 && continue
+      ;;
+  esac
+  cp "$src_file" "$dst_file"
+  UPDATED+=("$dst_rel (新規追加, モダンツールテンプレート)")
+done
 ```
 
 **結果パターン:**
