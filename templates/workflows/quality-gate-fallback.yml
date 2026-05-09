@@ -31,6 +31,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-fallback
@@ -47,26 +48,35 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
-            const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              head_sha: context.sha,
-              per_page: 20,
-            });
+            try {
+              const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head_sha: context.sha,
+                per_page: 20,
+              });
 
-            const ciRun = runs.workflow_runs.find(
-              r => r.name === 'CI' && r.id !== context.runId
-            );
+              const ciRun = runs.workflow_runs.find(
+                r => r.name === 'CI' && r.id !== context.runId
+              );
 
-            if (ciRun && ciRun.status !== 'completed') {
-              core.info(`CI workflow is running (${ciRun.html_url}), this fallback is not needed.`);
+              if (ciRun && ciRun.status !== 'completed') {
+                core.info(`CI workflow is running (${ciRun.html_url}), this fallback is not needed.`);
+                core.setOutput('ci_running', 'true');
+              } else if (ciRun && ciRun.conclusion === 'success') {
+                core.info(`CI workflow already succeeded (${ciRun.html_url}).`);
+                core.setOutput('ci_running', 'true');
+              } else {
+                core.info('CI workflow did not run for this commit. Providing fallback Quality Gate.');
+                core.setOutput('ci_running', 'false');
+              }
+            } catch (err) {
+              // 権限不足 (actions: read 未付与) や一時的な API 障害でクエリ失敗時は
+              // 安全側に倒す。"CI 実行中扱い" にして fallback の Pass emit をスキップし、
+              // 本体の Quality Gate (ci.yml) の結果を待つ。Required check が
+              // 未報告のままになる可能性はあるが、誤った Pass / Fail よりは安全。
+              core.warning(`Could not query workflow runs (${err.status || err.message}). Skipping fallback.`);
               core.setOutput('ci_running', 'true');
-            } else if (ciRun && ciRun.conclusion === 'success') {
-              core.info(`CI workflow already succeeded (${ciRun.html_url}).`);
-              core.setOutput('ci_running', 'true');
-            } else {
-              core.info('CI workflow did not run for this commit. Providing fallback Quality Gate.');
-              core.setOutput('ci_running', 'false');
             }
 
       - name: Pass (CI skipped)
