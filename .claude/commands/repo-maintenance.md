@@ -967,6 +967,42 @@ fi
 - 🔧 scheduled-maintenance.yml を配置しました
 - ⚠️ `CLAUDE_CODE_OAUTH_TOKEN` シークレットの設定が必要です
 
+### 3.5.0.2 Quality Gate Fallback Consistency Check
+
+ブランチ保護で `Quality Gate` を必須チェックに登録している場合、対応する fallback ワークフローが配置されているか確認する。
+
+**背景:**
+`setup-team-protection.sh` はブランチ保護に `Quality Gate` を必須として登録するが、ci.yml が `paths` フィルタでスキップされたり、ci.yml 自体が無い / Dependabot や `claude[bot]` の GITHUB_TOKEN による push でワークフローが発火しなかった場合、`Quality Gate` チェックが報告されず、PR が `Expected — Waiting for status to be reported` のまま blocked になる。
+この状態を 3 時間ごとの n8n `resolveGitConflict` 監視が「CI 失敗」として誤検出し、`@claude PRがbaseにマージする際にCIが落ちています` を誤投稿する原因となっていた。
+
+**確認ロジック:**
+
+```bash
+REQUIRED_CHECKS=""
+if gh api "repos/{owner}/{repo}/branches/main/protection/required_status_checks" >/dev/null 2>&1; then
+  REQUIRED_CHECKS=$(gh api "repos/{owner}/{repo}/branches/main/protection/required_status_checks" \
+    --jq '.contexts // [] | join(",")' 2>/dev/null || echo "")
+fi
+
+NEEDS_FALLBACK=false
+if echo "$REQUIRED_CHECKS" | grep -q "Quality Gate"; then
+  # quality-gate-fallback.yml が無い場合は配置を提案
+  if [ ! -f ".github/workflows/quality-gate-fallback.yml" ]; then
+    NEEDS_FALLBACK=true
+  fi
+fi
+```
+
+**結果パターン:**
+
+| 状態                                  | 対応                                                 |
+| ------------------------------------- | ---------------------------------------------------- |
+| Quality Gate 必須 + fallback 配置済み | ✅ スキップ                                          |
+| Quality Gate 必須 + fallback 未配置   | ⚠️ → full mode で `quality-gate-fallback.yml` を配置 |
+| Quality Gate 非必須                   | ⏭️ スキップ                                          |
+
+`MODE` が `full` かつ未配置の場合は section 3.22 のマネージドファイル同期で自動配置される（`templates/workflows/quality-gate-fallback.yml`）。
+
 ### 3.5.1 CI Workflow Template Sync Check
 
 `templates/workflows/` のテンプレートと `.github/workflows/` の実ファイルを比較し、乖離を検出：
@@ -2242,21 +2278,24 @@ fi
 
 **同期対象ファイルの分類:**
 
-| カテゴリ     | ファイル                                    | 同期ポリシー                 |
-| ------------ | ------------------------------------------- | ---------------------------- |
-| マネージド   | `.github/workflows/claude.yml`              | 常に config の最新版で上書き |
-| マネージド   | `.github/workflows/claude-code-review.yml`  | 常に config の最新版で上書き |
-| マネージド   | `.claude/hooks/block_git_no_verify.py`      | 常に config の最新版で上書き |
-| マネージド   | `.claude/hooks/pre_git_quality_gates.py`    | 常に config の最新版で上書き |
-| マネージド   | `.claude/hooks/post_git_push_ci.py`         | 常に config の最新版で上書き |
-| マネージド   | `.claude/hooks/post_commit_adr_reminder.py` | 常に config の最新版で上書き |
-| マネージド   | `.claude/rules/development-standards.md`    | 常に config の最新版で上書き |
-| マネージド   | `.claude/rules/git-conventions.md`          | 常に config の最新版で上書き |
-| マネージド   | `.claude/rules/release-types.md`            | 常に config の最新版で上書き |
-| テンプレート | `.github/workflows/security.yml`            | 差分表示 → 確認後に上書き    |
-| テンプレート | `.github/workflows/ci.yml`                  | 差分表示 → 確認後に上書き    |
-| テンプレート | `.github/ISSUE_TEMPLATE/*`                  | 欠落ファイルのみ追加         |
-| テンプレート | `.github/pull_request_template.md`          | 欠落時のみ追加               |
+| カテゴリ     | ファイル                                      | 同期ポリシー                 |
+| ------------ | --------------------------------------------- | ---------------------------- |
+| マネージド   | `.github/workflows/claude.yml`                | 常に config の最新版で上書き |
+| マネージド   | `.github/workflows/claude-code-review.yml`    | 常に config の最新版で上書き |
+| マネージド   | `.github/workflows/quality-gate-fallback.yml` | 常に config の最新版で上書き |
+| マネージド   | `.claude/hooks/block_git_no_verify.py`        | 常に config の最新版で上書き |
+| マネージド   | `.claude/hooks/pre_git_quality_gates.py`      | 常に config の最新版で上書き |
+| マネージド   | `.claude/hooks/post_git_push_ci.py`           | 常に config の最新版で上書き |
+| マネージド   | `.claude/hooks/post_commit_adr_reminder.py`   | 常に config の最新版で上書き |
+| マネージド   | `.claude/rules/development-standards.md`      | 常に config の最新版で上書き |
+| マネージド   | `.claude/rules/git-conventions.md`            | 常に config の最新版で上書き |
+| マネージド   | `.claude/rules/release-types.md`              | 常に config の最新版で上書き |
+| テンプレート | `.github/workflows/security.yml`              | 差分表示 → 確認後に上書き    |
+| テンプレート | `.github/workflows/ci.yml`                    | 差分表示 → 確認後に上書き    |
+| テンプレート | `.github/ISSUE_TEMPLATE/*`                    | 欠落ファイルのみ追加         |
+| テンプレート | `.github/pull_request_template.md`            | 欠落時のみ追加               |
+
+`quality-gate-fallback.yml` は `setup-team-protection.sh` がブランチ保護に登録する `Quality Gate` 必須チェックとセットで配布する。ci.yml が paths フィルタ等でスキップされた場合に PR が `Expected — Waiting for status to be reported` のまま blocked にならないよう、Pass を emit する役割を持つ。
 
 **マネージドファイル**: config リポジトリが正規のソースであり、プロジェクト側でカスタマイズしない前提のファイル。
 **テンプレートファイル**: プロジェクト固有のカスタマイズが入る可能性があるため、差分確認を挟む。
@@ -2294,6 +2333,7 @@ fi
 MANAGED_FILES=(
   ".github/workflows/claude.yml"
   ".github/workflows/claude-code-review.yml"
+  ".github/workflows/quality-gate-fallback.yml"
   ".claude/hooks/block_git_no_verify.py"
   ".claude/hooks/pre_git_quality_gates.py"
   ".claude/hooks/post_git_push_ci.py"

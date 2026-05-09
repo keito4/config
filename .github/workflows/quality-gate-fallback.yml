@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-fallback
@@ -28,26 +29,31 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
-            const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              head_sha: context.sha,
-              per_page: 20,
-            });
+            try {
+              const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head_sha: context.sha,
+                per_page: 20,
+              });
 
-            const ciRun = runs.workflow_runs.find(
-              r => r.name === 'CI' && r.id !== context.runId
-            );
+              const ciRun = runs.workflow_runs.find(
+                r => r.name === 'CI' && r.id !== context.runId
+              );
 
-            if (ciRun && ciRun.status !== 'completed') {
-              core.info(`CI workflow is running (${ciRun.html_url}), this fallback is not needed.`);
+              if (ciRun && ciRun.status !== 'completed') {
+                core.info(`CI workflow is running (${ciRun.html_url}), this fallback is not needed.`);
+                core.setOutput('ci_running', 'true');
+              } else if (ciRun && ciRun.conclusion === 'success') {
+                core.info(`CI workflow already succeeded (${ciRun.html_url}).`);
+                core.setOutput('ci_running', 'true');
+              } else {
+                core.info('CI workflow did not run for this commit. Providing fallback Quality Gate.');
+                core.setOutput('ci_running', 'false');
+              }
+            } catch (err) {
+              core.warning(`Could not query workflow runs (${err.status || err.message}). Skipping fallback.`);
               core.setOutput('ci_running', 'true');
-            } else if (ciRun && ciRun.conclusion === 'success') {
-              core.info(`CI workflow already succeeded (${ciRun.html_url}).`);
-              core.setOutput('ci_running', 'true');
-            } else {
-              core.info('CI workflow did not run for this commit. Providing fallback Quality Gate.');
-              core.setOutput('ci_running', 'false');
             }
 
       - name: Pass (CI skipped)
