@@ -114,6 +114,32 @@ bash script/setup-team-protection.sh \
 • Quality Gate（CI ワークフローの全ジョブ結果を集約するゲートジョブ）
 • セキュリティスキャン（オプション）
 
+**重要: Quality Gate fallback ワークフローの依存**
+
+`Quality Gate` を必須チェックとして登録する際は、`.github/workflows/quality-gate-fallback.yml` が配置されている必要があります。
+スクリプト実行時に未配置の場合は警告が出ます。
+
+未配置のまま `Quality Gate` を必須化すると、以下のケースで PR が `Expected — Waiting for status to be reported` のまま blocked になります:
+
+- ci.yml が `paths` フィルタでスキップされた PR
+- ci.yml 自体が無い / 名前が違う
+- `claude[bot]` / `dependabot[bot]` の `GITHUB_TOKEN` による push (GitHub 仕様で workflow 不発火)
+
+対処:
+
+```bash
+# config 管理下のリポジトリの場合 (推奨)
+/repo-maintenance --mode full
+# → section 3.22 のマネージドファイル同期で quality-gate-fallback.yml が配布される
+
+# 手動配置する場合
+curl -fsSL https://raw.githubusercontent.com/keito4/config/main/templates/workflows/quality-gate-fallback.yml \
+  -o .github/workflows/quality-gate-fallback.yml
+
+# Quality Gate を必須にしない場合
+bash script/setup-team-protection.sh --skip-status-checks
+```
+
 **レビュー要件（デフォルト）**
 
 • main: レビュー不要、管理者はルール適用
