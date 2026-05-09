@@ -169,6 +169,46 @@ fi
 info "Setting up team protection for $REPO"
 echo ""
 
+# Quality Gate fallback dependency check
+# "Quality Gate" を required check として登録する際、ci.yml が paths フィルタや
+# GITHUB_TOKEN 制限でスキップされた PR が "Expected — Waiting for status to be reported"
+# のまま blocked にならないよう、quality-gate-fallback.yml が配布されている必要がある。
+check_quality_gate_fallback() {
+  if [[ "$SKIP_STATUS_CHECKS" == "true" ]]; then
+    return 0
+  fi
+
+  local fallback_path=".github/workflows/quality-gate-fallback.yml"
+  if gh api "repos/$REPO/contents/$fallback_path" &>/dev/null; then
+    info "Quality Gate fallback ($fallback_path) is deployed."
+    return 0
+  fi
+
+  warning "Quality Gate fallback ($fallback_path) is NOT deployed in $REPO."
+  echo ""
+  echo "  Required check 'Quality Gate' を追加するとブロック状態を再生する可能性があります:"
+  echo "    - ci.yml が paths フィルタでスキップされた PR"
+  echo "    - claude[bot] / dependabot[bot] の GITHUB_TOKEN による push (GitHub 仕様で workflow 不発火)"
+  echo ""
+  echo "  対処:"
+  echo "    1. config 管理下なら: /repo-maintenance --mode full を実行 (section 3.22 経由で配布)"
+  echo "    2. 手動配置: curl -fsSL https://raw.githubusercontent.com/keito4/config/main/templates/workflows/quality-gate-fallback.yml -o $fallback_path"
+  echo "    3. Quality Gate を必須にしない場合: --skip-status-checks を指定"
+  echo ""
+
+  if [[ "$INTERACTIVE" == "true" && "$DRY_RUN" == "false" ]]; then
+    read -p "Continue without fallback? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      info "Cancelled."
+      exit 0
+    fi
+  fi
+  return 0
+}
+
+check_quality_gate_fallback
+
 # Interactive confirmation
 if [[ "$INTERACTIVE" == "true" ]]; then
   echo "Configuration:"

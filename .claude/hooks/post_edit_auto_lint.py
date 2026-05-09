@@ -90,7 +90,9 @@ elif suffix in PYTHON:
 
 elif suffix in SHELL:
     if shutil.which("shellcheck"):
-        diagnostics = run_capture(["shellcheck", "-f", "gcc", file_str])
+        # -x: source ディレクティブに従って外部ファイルを follow する
+        # (script/lib/output.sh 等を source する場合の SC1091 false positive を抑止)
+        diagnostics = run_capture(["shellcheck", "-x", "-f", "gcc", file_str])
 
 # ── 結果を返す ────────────────────────────────────────────
 # 問題がない場合はスキップ（oxlint の "Found 0 warnings and 0 errors" 等）
