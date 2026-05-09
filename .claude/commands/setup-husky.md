@@ -88,7 +88,15 @@ fi
 ]
 }
 
-.commitlintrc.json（リポジトリルート）
+commitlint.config.js（リポジトリルート、推奨）
+
+`templates/commitlint.config.js` をコピーして使用:
+
+```bash
+cp /path/to/config/templates/commitlint.config.js ./commitlint.config.js
+```
+
+最小構成のみ必要な場合は `.commitlintrc.json` でも可:
 
 {
 "extends": ["@commitlint/config-conventional"]

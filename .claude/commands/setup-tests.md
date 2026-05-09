@@ -179,6 +179,25 @@ npm install -D @stryker-mutator/core @stryker-mutator/jest-runner @stryker-mutat
 - `jest.setup.js` - テスト前セットアップ
 - `jest.polyfills.js` - Web API ポリフィル
 
+### 4.1.b Vitest を選択する場合
+
+Jest の代わりに Vitest を使うプロジェクトでは、`templates/testing/vitest.config.ts` をコピー:
+
+```bash
+cp /path/to/config/templates/testing/vitest.config.ts ./vitest.config.ts
+npm install -D vitest @vitest/coverage-v8 jsdom
+npm install -D @vitejs/plugin-react   # React 使用時
+mkdir -p tests && cat > tests/setup.ts <<'EOF'
+import '@testing-library/jest-dom/vitest';
+EOF
+```
+
+Vitest 採用基準:
+
+- Vite ベースのプロジェクト (高速 HMR / ESM ネイティブ)
+- React 19 / Next.js 15+ で Jest の互換性問題に直面した場合
+- TypeScript first / モダンな ESM プロジェクト
+
 ### 4.2 Standard Level 追加
 
 - `playwright.config.ts` - Playwright E2E 設定
