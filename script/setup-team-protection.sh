@@ -196,7 +196,7 @@ check_quality_gate_fallback() {
   echo "    3. Quality Gate を必須にしない場合: --skip-status-checks を指定"
   echo ""
 
-  if [[ "$INTERACTIVE" == "true" ]]; then
+  if [[ "$INTERACTIVE" == "true" && "$DRY_RUN" == "false" ]]; then
     read -p "Continue without fallback? (y/N) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -204,6 +204,7 @@ check_quality_gate_fallback() {
       exit 0
     fi
   fi
+  return 0
 }
 
 check_quality_gate_fallback
