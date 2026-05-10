@@ -83,10 +83,10 @@ RUN npm install -g pnpm@${PNPM_VERSION}
 USER vscode
 ENV SHELL=/bin/bash
 ENV PNPM_HOME="/home/vscode/.local/share/pnpm"
-ENV PATH="${PNPM_HOME}:${PATH}"
+ENV PATH="${PNPM_HOME}/bin:${PATH}"
 RUN bash -c "pnpm setup" \
  && echo "export PNPM_HOME=\"/home/vscode/.local/share/pnpm\"" >> /home/vscode/.bashrc \
- && echo "export PATH=\"\$PNPM_HOME:\$PATH\"" >> /home/vscode/.bashrc \
+ && echo "export PATH=\"\$PNPM_HOME/bin:\$PATH\"" >> /home/vscode/.bashrc \
  && bash -c "source /home/vscode/.bashrc && pnpm add -g supabase"
 
 USER root
