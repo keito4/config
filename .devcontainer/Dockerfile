@@ -33,7 +33,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-ARG GH_CLI_VERSION=2.91.0
+ARG GH_CLI_VERSION=2.92.0
 
 # Install GitHub CLI (gh)
 # https://cli.github.com/
@@ -77,16 +77,18 @@ RUN NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/
 
 # Install pnpm
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG PNPM_VERSION=10.33.2
+ARG PNPM_VERSION=11.0.9
 RUN npm install -g pnpm@${PNPM_VERSION}
 
 USER vscode
 ENV SHELL=/bin/bash
 ENV PNPM_HOME="/home/vscode/.local/share/pnpm"
-ENV PATH="${PNPM_HOME}:${PATH}"
-RUN mkdir -p "${PNPM_HOME}" \
- && echo "export PNPM_HOME=\"${PNPM_HOME}\"" >> /home/vscode/.bashrc \
- && echo "export PATH=\"\${PNPM_HOME}:\${PATH}\"" >> /home/vscode/.bashrc \
+ENV PATH="${PNPM_HOME}/bin:${PATH}"
+# pnpm v11: global bin dir changed to $PNPM_HOME/bin; create explicitly before setup to avoid ENOENT
+RUN mkdir -p "${PNPM_HOME}/bin" \
+ && pnpm setup \
+ && echo "export PNPM_HOME=\"/home/vscode/.local/share/pnpm\"" >> /home/vscode/.bashrc \
+ && echo "export PATH=\"\$PNPM_HOME/bin:\$PATH\"" >> /home/vscode/.bashrc \
  && pnpm add -g supabase
 
 USER root
@@ -96,7 +98,7 @@ COPY npm/global.json /tmp/npm-global.json
 # Install Claude Code using native installer (npm installation deprecated)
 # Must run as vscode user so claude installs to /home/vscode/.claude/local/bin
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG CLAUDE_CODE_VERSION=2.1.121
+ARG CLAUDE_CODE_VERSION=2.1.137
 USER vscode
 RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
  && echo 'export PATH="$HOME/.local/bin:$HOME/.claude/local/bin:$PATH"' >> /home/vscode/.bashrc
