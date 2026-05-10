@@ -36,7 +36,7 @@ declare -A REG_DIR_PURPOSE=(
   [nix]="nix-darwin + home-manager (macOS environment)"
   [npm]="npm global configuration and library management"
   [script]="Utility shell scripts"
-  [templates]="Workflow, testing, and dotfile templates"
+  [templates]="Workflow, testing, ESLint, Biome, and policy templates"
   [test]="Test suites (Jest unit, BATS integration)"
   [vscode]="VS Code extensions list"
 )
