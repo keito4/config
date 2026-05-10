@@ -196,16 +196,19 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 ### 6.1 テストフレームワーク
 
-| ツール          | バージョン目安 | 用途                       |
-| --------------- | -------------- | -------------------------- |
-| Jest            | 29.x           | Unit / Component テスト    |
-| Playwright      | 1.52.x         | E2E / Visual / A11y テスト |
-| Testing Library | 16.x           | コンポーネントテスト       |
-| fast-check      | 3.x            | Property-based テスト      |
-| Stryker         | 9.x            | Mutation テスト            |
-| axe-core        | 4.x            | アクセシビリティ検証       |
-| k6 / Artillery  | 最新           | 負荷テスト                 |
-| Lighthouse      | 12.x           | Core Web Vitals            |
+| ツール          | バージョン目安 | 用途                                     |
+| --------------- | -------------- | ---------------------------------------- |
+| Jest            | 29.x           | Unit / Component テスト                  |
+| Vitest          | 3.x            | Unit テスト（Vite/Next.js 向け高速代替） |
+| Playwright      | 1.52.x         | E2E / Visual / A11y テスト               |
+| Testing Library | 16.x           | コンポーネントテスト                     |
+| fast-check      | 3.x            | Property-based テスト                    |
+| Stryker         | 9.x            | Mutation テスト                          |
+| axe-core        | 4.x            | アクセシビリティ検証                     |
+| k6 / Artillery  | 最新           | 負荷テスト                               |
+| Lighthouse      | 12.x           | Core Web Vitals                          |
+
+> **Vitest 採用基準**: `package.json` に `devDependencies.vitest` が存在する場合、`/repo-maintenance` が `templates/testing/vitest.config.ts` を自動適用。jsdom + v8 coverage + 70% threshold 設定済み。
 
 ### 6.2 テストレベル
 

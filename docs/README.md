@@ -78,11 +78,31 @@ docs/
 └── tool-catalog.md             # ツールカタログ
 
 templates/
+├── biome.json                   # Biome 統合フォーマッタ+リンタ設定
+├── commitlint.config.js         # Conventional Commits (日本語緩和)
+├── editorconfig                 # エディタ間スタイル統一
+├── eslint/
+│   └── eslint.config.mjs       # ESLint flat config (TypeScript + 複雑度)
+├── github/
+│   ├── policies/               # ポリシー設定テンプレート
+│   │   ├── complexity-thresholds.json  # 複雑度閾値
+│   │   ├── allowed-licenses.json       # ライセンス許可/禁止リスト
+│   │   └── severity-definitions.md     # セキュリティ SLA 定義
+│   ├── dependabot.yml          # Dependabot 設定
+│   ├── labels.yml              # ラベル定義
+│   ├── pull_request_template.md
+│   └── SECURITY.md
 ├── testing/                     # テスト設定テンプレート
 │   ├── README.md               # テストテンプレートガイド（21種類）
 │   ├── jest.config.js          # Jest 基本設定
+│   ├── vitest.config.ts        # Vitest 設定 (jsdom + v8 coverage)
 │   ├── playwright.config.ts    # Playwright E2E 設定
 │   └── examples/               # 各テスト種別のサンプルコード
+└── workflows/                   # GitHub Actions ワークフローテンプレート
+    ├── quality-gate-fallback.yml # CI パス保証 (fallback)
+    ├── claude.yml               # Claude Code 連携
+    ├── dependabot-auto-merge.yml
+    └── ...
 ```
 
 ## 関連リソース

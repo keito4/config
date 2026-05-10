@@ -14,6 +14,7 @@
 | `terraform-drift.yml`       | Terraform プロジェクト          | Terraform ファイルが存在する場合  |
 | `e2e-playwright.yml`        | Playwright E2E テスト           | test:e2e スクリプトが存在する場合 |
 | `claude.yml`                | Claude Code 連携                | 常に推奨                          |
+| `quality-gate-fallback.yml` | CI パス保証（fallback）         | setup-team-protection 導入済み    |
 
 ### pre-commit（`pre-commit-config-*.yaml`）
 
@@ -36,6 +37,16 @@
 | `SECURITY.md`              | セキュリティポリシー                             | 中     |
 | `CONTRIBUTING.md`          | コントリビューションガイド                       | 低     |
 
+#### ポリシー設定（`github/policies/`）
+
+| テンプレート                 | 内容                                                             | 優先度 |
+| ---------------------------- | ---------------------------------------------------------------- | ------ |
+| `complexity-thresholds.json` | McCabe / 認知的複雑度・関数行数・ネスト深さ・ファイル行数の閾値  | 中     |
+| `allowed-licenses.json`      | 許可ライセンス・禁止ライセンス・例外パッケージリスト             | 中     |
+| `severity-definitions.md`    | セキュリティ SLA (Critical 24h / High 7d / Medium 30d / Low 90d) | 中     |
+
+> **Note**: `repo-maintenance --mode full` で欠落時のみ追加（既存ファイルは上書きしない）。
+
 ### コードスタイル（Prettier / lint-staged）
 
 | テンプレート                      | いつ使う                                             |
@@ -47,6 +58,21 @@
 | `lintstagedrc-biome.json`         | **Biome**: check + format on staged files            |
 | `lintstagedrc-prettier-only.json` | **Prettier のみ**: format on staged files            |
 
+### ESLint（`eslint/`）
+
+| テンプレート        | いつ使う                                                                       |
+| ------------------- | ------------------------------------------------------------------------------ |
+| `eslint.config.mjs` | **ESLint flat config**: TypeScript ESLint v8+ 対応、Next.js / 複雑度ルール付き |
+
+> `devDependencies.eslint` が存在し、既存 `.eslintrc*` / `eslint.config.*` が不在の場合に `repo-maintenance` が自動適用。
+
+### Biome / commitlint
+
+| テンプレート           | いつ使う                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| `biome.json`           | **Biome 採用プロジェクト**: `@biomejs/biome` を使う場合                              |
+| `commitlint.config.js` | **Conventional Commits**: `setup-husky` とセット運用。husky 未設定の場合も単独利用可 |
+
 ### Git Hooks（`husky/`）
 
 | テンプレート | 内容                                                |
@@ -55,12 +81,20 @@
 | `commit-msg` | commitlint（Conventional Commits）                  |
 | `pre-push`   | typecheck + lint + test（スクリプト存在時のみ実行） |
 
+### テスト設定（`testing/`）
+
+| テンプレート       | 対象                                                             |
+| ------------------ | ---------------------------------------------------------------- |
+| `testing/`         | Next.js テスト基盤（5レベル、21種類）                            |
+| `vitest.config.ts` | **Vitest 採用プロジェクト**: jsdom + v8 coverage + 70% threshold |
+
+> `devDependencies.vitest` が存在する場合に `repo-maintenance` が自動適用。
+
 ### その他
 
-| テンプレート   | 対象                                  |
-| -------------- | ------------------------------------- |
-| `editorconfig` | エディタ間のスタイル統一              |
-| `testing/`     | Next.js テスト基盤（5レベル、21種類） |
+| テンプレート   | 対象                     |
+| -------------- | ------------------------ |
+| `editorconfig` | エディタ間のスタイル統一 |
 
 ## 使い方
 
