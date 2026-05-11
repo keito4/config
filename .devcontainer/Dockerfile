@@ -112,9 +112,11 @@ RUN CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@ope
  && GEMINI_CLI_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@google/gemini-cli'].version") \
  && HAPPY_CODER_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['happy-coder'].version") \
  && DIFIT_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['difit'].version") \
+ && TYPESCRIPT_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript'].version") \
+ && TS_LS_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript-language-server'].version") \
  && npm install -g eslint \
-    typescript \
-    typescript-language-server \
+    typescript@${TYPESCRIPT_VERSION} \
+    typescript-language-server@${TS_LS_VERSION} \
     @openai/codex@${CODEX_VERSION} \
     vercel@${VERCEL_VERSION} \
     @google/gemini-cli@${GEMINI_CLI_VERSION} \
