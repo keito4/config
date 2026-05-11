@@ -30,7 +30,7 @@ fi
 
 # インストールするパッケージリスト（Node.js feature でリセットされるもの）
 PACKAGES=(
-    "happy-coder"
+    "happy"
     "@openai/codex"
     "@google/gemini-cli"
     "vercel"

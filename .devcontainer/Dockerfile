@@ -109,7 +109,7 @@ USER root
 RUN CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@openai/codex'].version") \
  && VERCEL_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['vercel'].version") \
  && GEMINI_CLI_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@google/gemini-cli'].version") \
- && HAPPY_CODER_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['happy-coder'].version") \
+ && HAPPY_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['happy'].version") \
  && DIFIT_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['difit'].version") \
  && npm install -g eslint \
     typescript \
@@ -117,7 +117,7 @@ RUN CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@ope
     @openai/codex@${CODEX_VERSION} \
     vercel@${VERCEL_VERSION} \
     @google/gemini-cli@${GEMINI_CLI_VERSION} \
-    happy-coder@${HAPPY_CODER_VERSION} \
+    happy@${HAPPY_VERSION} \
     difit@${DIFIT_VERSION}
 
 USER vscode
