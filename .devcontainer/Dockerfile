@@ -114,7 +114,7 @@ RUN CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@ope
  && DIFIT_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['difit'].version") \
  && TYPESCRIPT_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript'].version") \
  && TS_LS_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript-language-server'].version") \
- && npm install -g eslint \
+ && npm install -g --legacy-peer-deps eslint \
     typescript@${TYPESCRIPT_VERSION} \
     typescript-language-server@${TS_LS_VERSION} \
     @openai/codex@${CODEX_VERSION} \
