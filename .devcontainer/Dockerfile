@@ -85,8 +85,9 @@ ENV SHELL=/bin/bash
 ENV PNPM_HOME="/home/vscode/.local/share/pnpm"
 ENV PATH="${PNPM_HOME}/bin:${PATH}"
 # pnpm v11: global bin dir changed to $PNPM_HOME/bin; create explicitly before setup to avoid ENOENT
+# pnpm setup is skipped: PNPM_HOME/PATH are already set via ENV, and pnpm v11 setup fails with
+# EACCES when run as vscode user (tries to write to root-owned /usr/local/bin/package.json)
 RUN mkdir -p "${PNPM_HOME}/bin" \
- && pnpm setup \
  && echo "export PNPM_HOME=\"/home/vscode/.local/share/pnpm\"" >> /home/vscode/.bashrc \
  && echo "export PATH=\"\$PNPM_HOME/bin:\$PATH\"" >> /home/vscode/.bashrc \
  && pnpm add -g supabase
