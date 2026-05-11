@@ -106,3 +106,25 @@
 - name: 'infrastructure'
   color: '5319e7'
   description: 'インフラ関連'
+
+# ── Release ───────────────────────────────────────
+- name: 'released'
+  color: 'ededed'
+  description: 'リリース済み'
+
+# ── Size ──────────────────────────────────────────
+- name: 'size/S'
+  color: '2cbe4e'
+  description: 'PR サイズ Small'
+
+- name: 'size/M'
+  color: 'fbca04'
+  description: 'PR サイズ Medium'
+
+- name: 'size/L'
+  color: 'e99695'
+  description: 'PR サイズ Large'
+
+- name: 'size/XL'
+  color: 'd93f0b'
+  description: 'PR サイズ XLarge'
