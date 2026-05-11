@@ -2,7 +2,7 @@
 #
 # Dependabot PR を更新種別に応じて自動処理するワークフロー
 # - patch: CI パス後に自動マージ
-# - minor: CI パス後に自動マージ
+# - minor: 自動承認（マージは手動）
 # - major: ラベル付与してレビュー必須
 #
 # 使い方:
@@ -50,11 +50,11 @@ jobs:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # minor: CI パス後に自動マージ
-      - name: Auto-merge minor updates
+      # minor: 自動承認（マージは手動で判断）
+      - name: Auto-approve minor updates
         if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-minor'
         run: |
-          gh pr merge "$PR_URL" --auto --merge
+          gh pr review "$PR_URL" --approve --body "Auto-approved: minor version update"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
