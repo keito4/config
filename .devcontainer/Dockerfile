@@ -84,9 +84,10 @@ USER vscode
 ENV SHELL=/bin/bash
 ENV PNPM_HOME="/home/vscode/.local/share/pnpm"
 ENV PATH="${PNPM_HOME}/bin:${PATH}"
-# pnpm v11: global bin dir changed to $PNPM_HOME/bin; create explicitly before setup to avoid ENOENT
+# pnpm v11: global bin dir changed to $PNPM_HOME/bin; create explicitly to avoid ENOENT
+# pnpm setup is intentionally omitted: it tries to write /usr/local/bin/package.json which
+# requires root permissions and fails with EACCES when run as vscode user
 RUN mkdir -p "${PNPM_HOME}/bin" \
- && pnpm setup \
  && echo "export PNPM_HOME=\"/home/vscode/.local/share/pnpm\"" >> /home/vscode/.bashrc \
  && echo "export PATH=\"\$PNPM_HOME/bin:\$PATH\"" >> /home/vscode/.bashrc \
  && pnpm add -g supabase
