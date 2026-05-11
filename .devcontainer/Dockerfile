@@ -84,9 +84,9 @@ USER vscode
 ENV SHELL=/bin/bash
 ENV PNPM_HOME="/home/vscode/.local/share/pnpm"
 ENV PATH="${PNPM_HOME}/bin:${PATH}"
-# pnpm v11: global bin dir changed to $PNPM_HOME/bin; create explicitly before setup to avoid ENOENT
-# pnpm setup is skipped: PNPM_HOME/PATH are already set via ENV, and pnpm v11 setup fails with
-# EACCES when run as vscode user (tries to write to root-owned /usr/local/bin/package.json)
+# pnpm v11: global bin dir changed to $PNPM_HOME/bin; create explicitly to avoid ENOENT
+# pnpm setup is intentionally omitted: it tries to write /usr/local/bin/package.json which
+# requires root permissions and fails with EACCES when run as vscode user
 RUN mkdir -p "${PNPM_HOME}/bin" \
  && echo "export PNPM_HOME=\"/home/vscode/.local/share/pnpm\"" >> /home/vscode/.bashrc \
  && echo "export PATH=\"\$PNPM_HOME/bin:\$PATH\"" >> /home/vscode/.bashrc \
@@ -99,7 +99,7 @@ COPY npm/global.json /tmp/npm-global.json
 # Install Claude Code using native installer (npm installation deprecated)
 # Must run as vscode user so claude installs to /home/vscode/.claude/local/bin
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG CLAUDE_CODE_VERSION=2.1.137
+ARG CLAUDE_CODE_VERSION=2.1.138
 USER vscode
 RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
  && echo 'export PATH="$HOME/.local/bin:$HOME/.claude/local/bin:$PATH"' >> /home/vscode/.bashrc
