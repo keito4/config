@@ -107,20 +107,25 @@ ENV PATH="/home/vscode/.local/bin:/home/vscode/.claude/local/bin:${PATH}"
 USER root
 
 # Install other global npm packages
-RUN CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@openai/codex'].version") \
+# All versions are pinned from npm/global.json for reproducibility.
+# --legacy-peer-deps is needed because typescript-language-server@5.x declares
+# a peer dep of typescript@^5.x which conflicts with typescript@6.x.
+# See: docs/adr/0004-npm-legacy-peer-deps-for-typescript6.md
+RUN TS_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript'].version") \
+ && TSS_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript-language-server'].version") \
+ && CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@openai/codex'].version") \
  && VERCEL_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['vercel'].version") \
  && GEMINI_CLI_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@google/gemini-cli'].version") \
- && HAPPY_CODER_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['happy-coder'].version") \
+ && HAPPY_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['happy'].version") \
  && DIFIT_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['difit'].version") \
- && TYPESCRIPT_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript'].version") \
- && TS_LS_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript-language-server'].version") \
- && npm install -g --legacy-peer-deps eslint \
-    typescript@${TYPESCRIPT_VERSION} \
-    typescript-language-server@${TS_LS_VERSION} \
+ && npm install -g --legacy-peer-deps \
+    eslint \
+    typescript@${TS_VERSION} \
+    typescript-language-server@${TSS_VERSION} \
     @openai/codex@${CODEX_VERSION} \
     vercel@${VERCEL_VERSION} \
     @google/gemini-cli@${GEMINI_CLI_VERSION} \
-    happy-coder@${HAPPY_CODER_VERSION} \
+    happy@${HAPPY_VERSION} \
     difit@${DIFIT_VERSION}
 
 USER vscode
