@@ -110,6 +110,7 @@ USER root
 # All versions are pinned from npm/global.json for reproducibility.
 # --legacy-peer-deps is needed because typescript-language-server@5.x declares
 # a peer dep of typescript@^5.x which conflicts with typescript@6.x.
+# See: docs/adr/0004-npm-legacy-peer-deps-for-typescript6.md
 RUN TS_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript'].version") \
  && TSS_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['typescript-language-server'].version") \
  && CODEX_VERSION=$(node -pe "require('/tmp/npm-global.json').dependencies['@openai/codex'].version") \
