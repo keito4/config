@@ -51,13 +51,6 @@ if [[ -f "$GLOBAL_FILE" ]] && command -v jq >/dev/null 2>&1; then
 
   while IFS= read -r pkg; do
     current_version=$(jq -r ".dependencies[\"$pkg\"].version" "$GLOBAL_FILE")
-    overridden=$(jq -r ".dependencies[\"$pkg\"].overridden // false" "$GLOBAL_FILE")
-
-    if [[ "$overridden" == "true" ]]; then
-      log_warn "Skipping overridden global package $pkg@$current_version"
-      continue
-    fi
-
     latest_version=$(npm view "$pkg" version 2>/dev/null || echo "$current_version")
 
     if [[ "$current_version" != "$latest_version" ]]; then
