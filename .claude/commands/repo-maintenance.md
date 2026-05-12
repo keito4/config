@@ -110,6 +110,9 @@ npm/global.json の Claude Code バージョンを確認：
 npm view @anthropic-ai/claude-code version
 ```
 
+Global CLI manifest の更新では、`npm/global.json` の `overridden: true` を必ず尊重する。
+壊れた latest npm package（例: `workspace:*` を含む package）が Docker build や postCreate install を壊さないよう、`script/update-libraries.sh` は overridden package を更新しない。
+
 結果:
 
 - ✅ 最新バージョン
