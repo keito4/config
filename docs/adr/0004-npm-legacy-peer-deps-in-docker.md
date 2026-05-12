@@ -11,6 +11,7 @@ Accepted
 2026-05-08 に TypeScript 6.0 がリリースされ、`npm/global.json` の自動更新により `typescript@6.0.3` が採用された。しかし `typescript-language-server@5.2.0` の peer dependency が `typescript: ">=4.4.0 <6.0.0"` に相当する制約を持つため、npm 7+ のデフォルト動作（peer dep conflict で ERESOLVE エラー）により Docker build が失敗するようになった。
 
 失敗の特徴：
+
 - npm install が約 2.9 秒で終了（パッケージダウンロード前に解決フェーズで失敗）
 - exit code: 1
 
