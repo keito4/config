@@ -116,10 +116,6 @@ config/
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.yml
 │   │   └── feature_request.yml
-│   ├── actions/
-│   │   └── coverage-comment/       # カバレッジコメント用カスタムアクション
-│   │       ├── README.md
-│   │       └── action.yml
 │   └── workflows/                  # GitHub Actions ワークフロー
 │       ├── ci.yml                  # CI パイプライン
 │       ├── claude.yml              # Claude Code 統合

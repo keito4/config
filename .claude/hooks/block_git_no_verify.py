@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import sys
-import json
 import shlex
 from common import load_hook_input, get_command
 

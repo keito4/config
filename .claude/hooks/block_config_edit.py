@@ -9,7 +9,7 @@
   - 「コードを修正せよ、リンター設定を変更するな」
 """
 import sys
-import json
+from pathlib import PurePosixPath
 from common import load_hook_input
 
 data = load_hook_input()
@@ -72,7 +72,6 @@ PROTECTED_BASENAMES = {
 # 汎用的すぎるためデフォルトでは保護しない
 
 # ── パス判定 ───────────────────────────────────────────────
-from pathlib import PurePosixPath
 
 basename = PurePosixPath(file_path).name
 

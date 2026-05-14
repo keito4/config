@@ -8,10 +8,10 @@ Accepted
 
 `dependabot-auto-merge.yml` ワークフローでは、依存関係の更新種別に応じて以下の処理を行っていた：
 
-| 種別  | 旧動作                                  |
-| ----- | --------------------------------------- |
-| patch | CI 通過後に自動マージ                   |
-| minor | `gh pr review --approve` で自動承認     |
+| 種別  | 旧動作                                        |
+| ----- | --------------------------------------------- |
+| patch | CI 通過後に自動マージ                         |
+| minor | `gh pr review --approve` で自動承認           |
 | major | `needs-review` / `breaking-change` ラベル付与 |
 
 minor の「自動承認」は `GITHUB_TOKEN` を使った `gh pr review --approve` で実装していたが、

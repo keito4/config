@@ -6,7 +6,6 @@ dangerous patterns even when wrapped in bash -c, python3 -c, zsh -c, etc.
 Works alongside the deny list which only matches command prefixes.
 """
 import sys
-import json
 import re
 from common import load_hook_input, get_command
 
