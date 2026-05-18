@@ -178,7 +178,8 @@ config/
 │       └── utilities
 ├── brew/                           # Homebrew 設定（Linux 用）
 │   ├── LinuxBrewfile
-│   └── LinuxBrewfile.lock.json
+│   ├── LinuxBrewfile.lock.json
+│   └── Winfile.json                # Windows 用パッケージ定義（winget）
 ├── nix/                            # Nix 環境管理（macOS）
 │   ├── flake.nix                   # nix-darwin + home-manager flake
 │   ├── flake.lock
@@ -207,7 +208,9 @@ config/
 │   │   ├── README.md
 │   │   ├── 0001-devcontainer-base-image.md
 │   │   ├── 0002-auto-version-updates.md
-│   │   └── 0003-remove-rust-from-base-image.md
+│   │   ├── 0003-remove-rust-from-base-image.md
+│   │   ├── 0004-dependabot-minor-auto-merge.md
+│   │   └── 0005-npm-legacy-peer-deps-for-typescript6.md
 │   └── setup/                      # プロジェクト種別セットアップガイド
 │       ├── README.md
 │       ├── desktop-extension-ts.md
@@ -246,6 +249,7 @@ config/
 │   ├── dependency-health-check.sh
 │   ├── export.sh
 │   ├── fix-container-plugins.sh
+│   ├── import.ps1                  # Windows 用インポートスクリプト（PowerShell）
 │   ├── import.sh
 │   ├── install-claude-plugins.sh
 │   ├── install-npm-globals.sh
@@ -272,6 +276,8 @@ config/
 │   ├── credentials/
 │   │   └── providers/op.sh
 │   └── lib/                        # 共通ライブラリ
+│       ├── agents-md-data.sh       # AGENTS.md 生成用データ
+│       ├── agents-md-template.md   # AGENTS.md 生成用テンプレート
 │       ├── brew_categories.py
 │       ├── claude_plugins.sh
 │       ├── config.sh
@@ -290,10 +296,14 @@ config/
 │   │   ├── labels.yml
 │   │   ├── pull_request_template.md
 │   │   ├── renovate.json
-│   │   └── ISSUE_TEMPLATE/
-│   │       ├── bug_report.yml
-│   │       ├── config.yml
-│   │       └── feature_request.yml
+│   │   ├── ISSUE_TEMPLATE/
+│   │   │   ├── bug_report.yml
+│   │   │   ├── config.yml
+│   │   │   └── feature_request.yml
+│   │   └── policies/               # ポリシー設定
+│   │       ├── allowed-licenses.json
+│   │       ├── complexity-thresholds.json
+│   │       └── severity-definitions.md
 │   ├── husky/                      # Git フックテンプレート
 │   │   ├── commit-msg              # commitlint（Conventional Commits）
 │   │   ├── pre-commit              # lint-staged + ファイル長チェック
@@ -317,6 +327,7 @@ config/
 │   │   ├── jest.setup.js
 │   │   ├── playwright.config.ts
 │   │   ├── playwright.regression.config.ts
+│   │   ├── vitest.config.ts
 │   │   └── examples/              # テスト実装例（21種）
 │   │       ├── a11y.spec.ts
 │   │       ├── api-route.test.ts
@@ -354,8 +365,7 @@ config/
 │   ├── credential-filtering.test.js
 │   ├── eslint-config.test.js
 │   ├── jest-config.test.js
-│   ├── python/
-│   │   └── test_hooks.py
+│   ├── policy-templates.test.js
 │   ├── integration/                # 統合テスト（BATS）
 │   │   ├── core-scripts.bats
 │   │   ├── coverage-report-workflow.bats
@@ -406,7 +416,7 @@ config/
 └── .trivyignore
 ```
 
-**ファイル総数**: 360 ファイル（Git 管理対象）
+**ファイル総数**: 367 ファイル（Git 管理対象）
 
 各ディレクトリの概要：
 
@@ -426,7 +436,7 @@ config/
 - **`npm/`**: npm グローバルパッケージ定義
 - **`script/`**: インポート/エクスポート、セットアップ、更新等のユーティリティスクリプト
 - **`templates/`**: GitHub, テスト, ワークフローの再利用可能テンプレート
-- **`test/`**: Jest 単体テスト、BATS 統合テスト、Python フックテスト
+- **`test/`**: Jest 単体テスト、BATS 統合テスト
 - **`vscode/`**: VS Code 拡張機能リストと設定
 
 ## Security
