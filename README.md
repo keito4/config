@@ -130,9 +130,8 @@ config/
 │       ├── rebuild-docker-cache.yml # Docker キャッシュ再構築
 │       ├── scheduled-maintenance.yml # 定期メンテナンス
 │       ├── security.yml            # セキュリティスキャン
-│       ├── update-claude-plugins.yml # Claude プラグイン更新
-│       ├── update-dev-tools.yml    # 開発ツール更新
-│       ├── update-libraries.yml    # ライブラリ自動更新
+│       ├── update-dev-tools.yml    # 開発ツール更新（Dockerfile ARG）
+│       ├── update-libraries.yml    # npm/global.json 自動更新
 │       └── templates/              # 再利用可能ワークフローテンプレート
 │           ├── README.md
 │           ├── monorepo-release.yml
@@ -763,10 +762,10 @@ The script performs the following actions:
 
 #### Update All Libraries
 
-- Run `npm run update:libs` (wrapper for `script/update-libraries.sh`) to refresh npm devDependencies together with Codex/Claude Code CLI definitions captured in `npm/global.json`.
-- The script performs `npm-check-updates`, `npm install`, and re-synchronizes global CLI versions via `npm view <package> version` before running lint/tests to verify the updated toolchain.
-- Packages that currently require newer Node.js releases (`semantic-release`, `@semantic-release/github`) are excluded by default. Override the exclusion list with `UPDATE_LIBS_REJECT="pkg1,pkg2" npm run update:libs` when you are ready to bump them.
-- `.github/workflows/update-libraries.yml` executes the same script weekly and opens a PR whenever it produces changes, ensuring Codex/Claude Code tooling stays current without manual effort.
+- Run `npm run update:libs` (wrapper for `script/update-libraries.sh`) to refresh global CLI definitions in `npm/global.json`.
+- The script synchronizes versions via `npm view <package> version` for each entry in `npm/global.json`. Entries with `overridden: true` are intentionally pinned and skipped.
+- npm devDependencies (`package.json`) are managed by Dependabot, not this script. See [ADR 0006](docs/adr/0006-consolidate-version-updates.md). To bump them locally, run `npx npm-check-updates -u && npm install`.
+- `.github/workflows/update-libraries.yml` executes the same script weekly and opens a PR whenever `npm/global.json` changes.
 
 #### Update Claude Code Only
 
@@ -990,7 +989,7 @@ See [templates/testing/README.md](templates/testing/README.md) for detailed docu
 - **CI Pipeline** (`.github/workflows/ci.yml`): Automated testing, linting, and quality checks (uses Node.js 22)
 - **Claude Code Integration** (`.github/workflows/claude.yml`): AI-assisted code review and issue management
 - **Docker Image Build** (`.github/workflows/docker-image.yml`): Containerized build and deployment pipeline
-- **Library Auto-Update** (`.github/workflows/update-libraries.yml`): Scheduled Codex/Claude tooling refresh that raises a PR when `npm run update:libs` produces changes
+- **Library Auto-Update** (`.github/workflows/update-libraries.yml`): Scheduled `npm/global.json` refresh that raises a PR when global CLI versions change (npm devDependencies are handled by Dependabot — see [ADR 0006](docs/adr/0006-consolidate-version-updates.md))
 
 #### Local GitHub Actions Testing with act
 
