@@ -2,8 +2,8 @@ name: Update Development Tools
 
 on:
   schedule:
-    # 毎日 UTC 5:00（JST 14:00）に実行
-    - cron: '0 5 * * *'
+    # 毎週月曜 UTC 5:00（JST 14:00）に実行
+    - cron: '0 5 * * 1'
   workflow_dispatch:
 
 concurrency:
@@ -45,10 +45,10 @@ jobs:
           DOPPLER_LATEST=$(curl -s https://api.github.com/repos/DopplerHQ/cli/releases/latest | jq -r '.tag_name' | sed 's/^v//')
           echo "doppler=$DOPPLER_LATEST" >> $GITHUB_OUTPUT
 
-          # 1Password CLI - releases page
-          OP_LATEST=$(curl -s https://app-updates.agilebits.com/check/1/0/CLI2/en/0/N -H "User-Agent: Mozilla/5.0" | jq -r '.version // empty' || curl -s https://api.github.com/repos/1Password/connect/releases/latest | jq -r '.tag_name' | sed 's/^v//' || echo "")
+          # 1Password CLI - agilebits update endpoint (the CLI is closed-source; no public GitHub releases)
+          OP_LATEST=$(curl -fsS -H "User-Agent: Mozilla/5.0" https://app-updates.agilebits.com/check/1/0/CLI2/en/0/N | jq -r '.version // empty' || echo "")
           if [ -z "$OP_LATEST" ]; then
-            # Fallback: use current version if can't fetch
+            # Fallback: keep current version if fetch failed
             OP_LATEST="${{ steps.current.outputs.op_cli }}"
           fi
           echo "op_cli=$OP_LATEST" >> $GITHUB_OUTPUT
