@@ -50,9 +50,20 @@ jobs:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # minor: 自動承認（マージは手動で判断）
+      # minor: ラベル付与（手動マージ）+ 自動承認試行
+      # GITHUB_TOKEN は既定で PR 承認不可のため continue-on-error: true で失敗しても CI をブロックしない
+      # リポジトリ設定「Allow GitHub Actions to create and approve pull requests」を有効にすると承認も動作する
+      - name: Label minor updates
+        if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: |
+          gh pr edit "$PR_URL" --add-label "dependabot-minor"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Auto-approve minor updates
         if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        continue-on-error: true
         run: |
           gh pr review "$PR_URL" --approve --body "Auto-approved: minor version update"
         env:
