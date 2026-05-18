@@ -41,11 +41,12 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # patch: 自動マージ（CI パス後）
+      # patch: 自動承認 + 自動マージ（CI パス後）
       - name: Auto-merge patch updates
         if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-patch'
         run: |
-          gh pr merge "$PR_URL" --auto --merge
+          gh pr review "$PR_URL" --approve --body "Auto-approved: patch version update"
+          gh pr merge "$PR_URL" --auto --merge || echo "::notice::Auto-merge is not enabled in repository settings. Please enable it in Settings > General to allow automatic merging after CI passes."
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
