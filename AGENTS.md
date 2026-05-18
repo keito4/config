@@ -126,23 +126,23 @@ Development infrastructure template repository providing DevContainer images, CI
 
 ## CI/CD Workflows
 
-| Workflow                    | Purpose                                      |
-| --------------------------- | -------------------------------------------- |
-| `ci.yml`                    | CI                                           |
-| `claude-code-review.yml`    | Claude Code Review                           |
-| `claude.yml`                | Claude Code                                  |
-| `container-security.yml`    | Container Security Scan                      |
-| `coverage-report.yml`       | Coverage Report                              |
-| `dependabot-auto-merge.yml` | Dependabot Auto-merge                        |
-| `docker-image.yml`          | Build and Release DevContainer Image         |
-| `label-sync.yml`            | Label Sync                                   |
-| `manual-release.yml`        | Manual Release                               |
-| `quality-gate-fallback.yml` | CI Fallback                                  |
-| `rebuild-docker-cache.yml`  | Rebuild Docker Cache (Weekly)                |
-| `scheduled-maintenance.yml` | Scheduled Maintenance                        |
-| `security.yml`              | Security Scans                               |
-| `update-dev-tools.yml`      | Update Development Tools                     |
-| `update-libraries.yml`      | Auto Update Libraries (npm/global.json only) |
+| Workflow                    | Purpose                              |
+| --------------------------- | ------------------------------------ |
+| `ci.yml`                    | CI                                   |
+| `claude-code-review.yml`    | Claude Code Review                   |
+| `claude.yml`                | Claude Code                          |
+| `container-security.yml`    | Container Security Scan              |
+| `coverage-report.yml`       | Coverage Report                      |
+| `dependabot-auto-merge.yml` | Dependabot Auto-merge                |
+| `docker-image.yml`          | Build and Release DevContainer Image |
+| `label-sync.yml`            | Label Sync                           |
+| `manual-release.yml`        | Manual Release                       |
+| `quality-gate-fallback.yml` | CI Fallback                          |
+| `rebuild-docker-cache.yml`  | Rebuild Docker Cache (Weekly)        |
+| `scheduled-maintenance.yml` | Scheduled Maintenance                |
+| `security.yml`              | Security Scans                       |
+| `update-dev-tools.yml`      | Update Development Tools             |
+| `update-libraries.yml`      | Auto Update Libraries                |
 
 ## Quality Gates
 
