@@ -4,10 +4,14 @@
 
 ## ADR 一覧
 
-| ADR                                     | タイトル                             | Status   |
-| --------------------------------------- | ------------------------------------ | -------- |
-| [0001](0001-devcontainer-base-image.md) | DevContainer Base Image Architecture | Accepted |
-| [0002](0002-auto-version-updates.md)    | Automated Version Updates Strategy   | Accepted |
+| ADR                                                  | タイトル                              | Status             |
+| ---------------------------------------------------- | ------------------------------------- | ------------------ |
+| [0001](0001-devcontainer-base-image.md)              | DevContainer Base Image Architecture  | Accepted           |
+| [0002](0002-auto-version-updates.md)                 | Automated Version Updates Strategy    | Superseded by 0006 |
+| [0003](0003-remove-rust-from-base-image.md)          | Remove Rust from base image           | Accepted           |
+| [0004](0004-dependabot-minor-auto-merge.md)          | Dependabot minor auto-merge           | Accepted           |
+| [0005](0005-npm-legacy-peer-deps-for-typescript6.md) | npm legacy-peer-deps for TypeScript 6 | Accepted           |
+| [0006](0006-consolidate-version-updates.md)          | バージョン更新の Dependabot 一本化    | Accepted           |
 
 ## ADR テンプレート
 

@@ -4,16 +4,16 @@ This directory contains utility scripts for managing configuration, credentials,
 
 ## Quick Reference
 
-| Script                      | Purpose                                               | Used By                |
-| --------------------------- | ----------------------------------------------------- | ---------------------- |
-| `setup-claude.sh`           | Claude Code CLI setup                                 | Makefile, DevContainer |
-| `credentials.sh`            | 1Password credential management                       | Makefile               |
-| `update-libraries.sh`       | Library updates for Codex/Claude                      | package.json           |
-| `version.sh`                | Semantic versioning                                   | Makefile               |
-| `check-image-version.sh`    | Show DevContainer image version                       | Manual                 |
-| `.shellcheck-exclude`       | ShellCheck 除外パターン定義                           | npm run shellcheck     |
-| `setup-scheduled-agents.sh` | Claude Code スケジュール済みエージェント セットアップ | Manual                 |
-| `update-agents-md.sh`       | AGENTS.md 自動生成セクション更新                      | repo-maintenance       |
+| Script                      | Purpose                                                  | Used By                |
+| --------------------------- | -------------------------------------------------------- | ---------------------- |
+| `setup-claude.sh`           | Claude Code CLI setup                                    | Makefile, DevContainer |
+| `credentials.sh`            | 1Password credential management                          | Makefile               |
+| `update-libraries.sh`       | Refresh `npm/global.json` (Dependabot owns package.json) | package.json           |
+| `version.sh`                | Semantic versioning                                      | Makefile               |
+| `check-image-version.sh`    | Show DevContainer image version                          | Manual                 |
+| `.shellcheck-exclude`       | ShellCheck 除外パターン定義                              | npm run shellcheck     |
+| `setup-scheduled-agents.sh` | Claude Code スケジュール済みエージェント セットアップ    | Manual                 |
+| `update-agents-md.sh`       | AGENTS.md 自動生成セクション更新                         | repo-maintenance       |
 
 ## Configuration Management
 
@@ -210,7 +210,7 @@ Semantic versioning helper for DevContainer releases.
 
 ### update-libraries.sh
 
-Automated library updates for Codex/Claude Code tooling.
+Refreshes `npm/global.json` to the latest published versions via `npm view`. npm devDependencies (`package.json`) are managed by Dependabot — see [ADR 0006](../docs/adr/0006-consolidate-version-updates.md). Entries with `overridden: true` are pinned and skipped.
 
 **Usage**: `npm run update:libs`
 
