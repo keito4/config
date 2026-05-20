@@ -169,7 +169,8 @@ COPY --chown=root:root templates/ /usr/local/share/config-templates/
 RUN chmod +x /usr/local/bin/setup-claude.sh /tmp/setup-claude-build.sh /tmp/install-skills.sh /usr/local/script/*.sh
 
 # Install skills from skills.txt using npx skills add
-# Skills are installed to ~/.agents/skills/ with symlinks in ~/.claude/skills/
+# Skills are installed to ~/.agents/skills/ for all agents (Claude Code, Codex, Cursor, Gemini CLI)
+# Custom skills from .claude/skills/*.md are also synced to ~/.agents/skills/
 USER vscode
 RUN env HOME=/home/vscode /tmp/install-skills.sh /home/vscode/.claude/skills/skills.txt || ( \
         echo "[WARN] スキルのインストールに失敗しました" && \
