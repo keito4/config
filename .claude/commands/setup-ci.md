@@ -334,7 +334,7 @@ jobs:
 
             if [ -z "$QUALITY_GATE" ]; then
               if [ $ELAPSED_TIME -ge 120 ]; then
-                echo "ci_passed=true" >> $GITHUB_OUTPUT
+                echo "ci_passed=true" >> "$GITHUB_OUTPUT"
                 echo "✅ CI workflow skipped by path filters"
                 exit 0
               fi
@@ -355,17 +355,17 @@ jobs:
             fi
 
             if [ "$QUALITY_GATE_CONCLUSION" != "success" ]; then
-              echo "ci_passed=false" >> $GITHUB_OUTPUT
+              echo "ci_passed=false" >> "$GITHUB_OUTPUT"
               echo "❌ Quality Gate failed with conclusion: $QUALITY_GATE_CONCLUSION"
               exit 0
             fi
 
-            echo "ci_passed=true" >> $GITHUB_OUTPUT
+            echo "ci_passed=true" >> "$GITHUB_OUTPUT"
             echo "✅ All CI checks passed"
             exit 0
           done
 
-          echo "ci_passed=false" >> $GITHUB_OUTPUT
+          echo "ci_passed=false" >> "$GITHUB_OUTPUT"
           echo "⏱️ Timeout: CI did not complete within ${MAX_WAIT_TIME}s"
           exit 0
 

@@ -41,12 +41,28 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # patch: 自動承認 + 自動マージ（CI パス後）
+      # patch: 自動マージ（CI パス後）
+      # Repo Settings > Pull Requests > Allow auto-merge が無効な環境では
+      # gh pr merge --auto が enablePullRequestAutoMerge エラーで落ちるため、
+      # 既知エラーだけ自動承認へフォールバックしてワークフロー自体は green を維持する。
       - name: Auto-merge patch updates
         if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-patch'
         run: |
-          gh pr review "$PR_URL" --approve --body "Auto-approved: patch version update"
-          gh pr merge "$PR_URL" --auto --merge || echo "::notice::Auto-merge is not enabled in repository settings. Please enable it in Settings > General to allow automatic merging after CI passes."
+          set +e
+          MERGE_OUTPUT=$(gh pr merge "$PR_URL" --auto --merge 2>&1)
+          MERGE_EXIT=$?
+          set -e
+
+          if [ "$MERGE_EXIT" -ne 0 ]; then
+            if echo "$MERGE_OUTPUT" | grep -q "enablePullRequestAutoMerge"; then
+              echo "::warning::Repo auto-merge is disabled. Falling back to auto-approve. Enable it at Settings > Pull Requests."
+              gh pr review "$PR_URL" --approve --body "Auto-approved: patch version update (auto-merge unavailable; merge manually)" \
+                || echo "::warning::Auto-approve fallback failed. Merge manually after CI passes."
+            else
+              echo "$MERGE_OUTPUT" >&2
+              exit "$MERGE_EXIT"
+            fi
+          fi
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
