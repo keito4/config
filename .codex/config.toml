@@ -1,10 +1,11 @@
-model = "gpt-5.2-codex"
 sandbox_mode = "workspace-write"
+model = "gpt-5.5"
+model_reasoning_effort = "xhigh"
+web_search = "live"
 [sandbox_workspace_write]
 network_access = true
 [features]
 rmcp_client = true
-web_search_request = true
 
 [mcp_servers.aws-docs]
 command = "uvx"
@@ -25,23 +26,36 @@ args = ["-y", "next-devtools-mcp@latest"]
 command = "npx"
 args = ["@playwright/mcp@latest"]
 
+[mcp_servers.o3]
+command = "npx"
+args = ["o3-search-mcp"]
+
+[mcp_servers.o3.env]
+OPENAI_API_KEY = "${OPENAI_API_KEY}"
+REASONING_EFFORT = "medium"
+SEARCH_CONTEXT_SIZE = "medium"
+
 [mcp_servers.supabase]
 url = "https://mcp.supabase.com/mcp"
-
-[mcp_servers.supabase.http_headers]
-Authorization = "Bearer ${SUPABASE_MCP_TOKEN}"
+bearer_token_env_var = "SUPABASE_ACCESS_TOKEN"
 
 [mcp_servers.vercel]
 url = "https://mcp.vercel.com"
+bearer_token_env_var = "VERCEL_TOKEN"
 
-[mcp_servers.vercel.http_headers]
-Authorization = "Bearer ${VERCEL_MCP_TOKEN}"
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
 
-[mcp_servers.github]
-url = "https://api.githubcopilot.com/mcp/"
+[mcp_servers.linear]
+url = "https://mcp.linear.app/mcp"
 
-[mcp_servers.github.http_headers]
-Authorization = "Bearer ${GITHUB_COPILOT_MCP_TOKEN}"
+[mcp_servers.doppler]
+command = "npx"
+args = ["-y", "@dopplerhq/mcp-server", "--read-only"]
+
+[mcp_servers.doppler.env]
+npm_config_cache = "/private/tmp/codex-npm-cache"
 
 [notice]
 hide_gpt5_1_migration_prompt = true
@@ -49,3 +63,30 @@ hide_gpt5_1_migration_prompt = true
 
 [notice.model_migrations]
 "gpt-5.1-codex-max" = "gpt-5.2-codex"
+
+[plugins."google-calendar@openai-curated"]
+enabled = true
+
+[plugins."gmail@openai-curated"]
+enabled = true
+
+[plugins."vercel@openai-curated"]
+enabled = true
+
+[plugins."github@openai-curated"]
+enabled = true
+
+[plugins."google-drive@openai-curated"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true

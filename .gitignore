@@ -71,6 +71,7 @@ report.log
 .claude/skills/vercel-*
 .claude/skills/web-design-*
 .codex/skills/
+.codex/prompts/
 .cursor/skills/
 .github/skills/
 
