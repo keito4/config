@@ -178,7 +178,6 @@ config/
 │       └── utilities
 ├── brew/                           # Homebrew 設定（Linux 用）
 │   ├── LinuxBrewfile
-│   ├── LinuxBrewfile.lock.json
 │   └── Winfile.json                # Windows 用パッケージ定義（winget）
 ├── nix/                            # Nix 環境管理（macOS）
 │   ├── flake.nix                   # nix-darwin + home-manager flake

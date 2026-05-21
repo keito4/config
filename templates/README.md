@@ -73,14 +73,6 @@
 | `biome.json`           | **Biome 採用プロジェクト**: `@biomejs/biome` を使う場合                              |
 | `commitlint.config.js` | **Conventional Commits**: `setup-husky` とセット運用。husky 未設定の場合も単独利用可 |
 
-### Git Hooks（`husky/`）
-
-| テンプレート | 内容                                                |
-| ------------ | --------------------------------------------------- |
-| `pre-commit` | lint-staged + ファイル長チェック                    |
-| `commit-msg` | commitlint（Conventional Commits）                  |
-| `pre-push`   | typecheck + lint + test（スクリプト存在時のみ実行） |
-
 ### テスト設定（`testing/`）
 
 | テンプレート       | 対象                                                             |
