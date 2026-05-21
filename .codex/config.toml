@@ -2,6 +2,7 @@ sandbox_mode = "workspace-write"
 model = "gpt-5.5"
 model_reasoning_effort = "xhigh"
 web_search = "live"
+suppress_unstable_features_warning = true
 [sandbox_workspace_write]
 network_access = true
 [features]
@@ -17,6 +18,7 @@ url = "https://knowledge-mcp.global.api.aws"
 [mcp_servers.chrome-devtools]
 command = "npx"
 args = ["chrome-devtools-mcp@latest"]
+startup_timeout_sec = 90
 
 [mcp_servers.next-devtools]
 command = "npx"
@@ -46,13 +48,17 @@ bearer_token_env_var = "VERCEL_TOKEN"
 [mcp_servers.context7]
 command = "npx"
 args = ["-y", "@upstash/context7-mcp"]
+startup_timeout_sec = 90
 
 [mcp_servers.linear]
 url = "https://mcp.linear.app/mcp"
+bearer_token_env_var = "LINEAR_API_KEY"
 
 [mcp_servers.doppler]
 command = "npx"
 args = ["-y", "@dopplerhq/mcp-server", "--read-only"]
+startup_timeout_sec = 90
+env_vars = ["DOPPLER_TOKEN"]
 
 [mcp_servers.doppler.env]
 npm_config_cache = "/private/tmp/codex-npm-cache"
