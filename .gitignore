@@ -80,3 +80,6 @@ report.log
 
 # Nix build output
 result
+
+# Homebrew lock file (generated, not needed in version control)
+brew/LinuxBrewfile.lock.json
