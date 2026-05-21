@@ -6,7 +6,6 @@ ExitPlanMode前にプランをAIでレビューするPreToolUseフック
 いずれかのAIが「plan needs revision」と判定した場合はブロックして修正を促します。
 """
 import sys
-import json
 import subprocess
 import shutil
 import os

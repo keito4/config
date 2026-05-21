@@ -93,12 +93,6 @@ describe('Commitlint Configuration', () => {
       expect(result[0]).toBe(true);
     });
 
-    test('should allow docs type when .devcontainer/codex-config.json is modified', () => {
-      execSync.mockReturnValue('.devcontainer/codex-config.json\n');
-      const result = releaseTypeRule({ type: 'docs' });
-      expect(result[0]).toBe(true);
-    });
-
     test('should handle multiple sensitive files', () => {
       execSync.mockReturnValue('package.json\nnpm/global.json\n.codex/prompts/test.md\n');
       const result = releaseTypeRule({ type: 'build' });
@@ -157,12 +151,6 @@ describe('Commitlint Configuration', () => {
 
     test('should match .devcontainer/Dockerfile exactly', () => {
       execSync.mockReturnValue('.devcontainer/Dockerfile\n');
-      const result = releaseTypeRule({ type: 'chore' });
-      expect(result[0]).toBe(false);
-    });
-
-    test('should match .devcontainer/codex-config.json exactly', () => {
-      execSync.mockReturnValue('.devcontainer/codex-config.json\n');
       const result = releaseTypeRule({ type: 'chore' });
       expect(result[0]).toBe(false);
     });

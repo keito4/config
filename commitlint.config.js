@@ -6,7 +6,6 @@ const releaseSensitivePatterns = [
   /^package-lock\.json$/,
   /^npm\/global\.json$/,
   /^\.devcontainer\/Dockerfile$/,
-  /^\.devcontainer\/codex-config\.json$/,
   /^\.codex\//,
 ];
 
