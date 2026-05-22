@@ -1,14 +1,7 @@
 PRE=$(dirname $(realpath $0))
 
-if [ -f $PRE/.env ]; then
-  source $PRE/.env
-else
-  echo 'No .env file found' 1>&2
-fi
-
-if [ -f $PRE/.env.secret ]; then
-  source $PRE/.env.secret
-else
-  echo 'No .env.secret file found' 1>&2
-fi
-
+# Source optional env files quietly. .env / .env.secret are user-local and
+# gitignored — their absence is the normal case, not a condition worth warning
+# about on every shell startup.
+[ -f "$PRE/.env" ] && source "$PRE/.env"
+[ -f "$PRE/.env.secret" ] && source "$PRE/.env.secret"
