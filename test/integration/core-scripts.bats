@@ -61,6 +61,18 @@ load ../test_helper/test_helper
     [ -x "$REPO_ROOT/script/setup-team-protection.sh" ]
 }
 
+@test "setup-team-protection.sh defines include_existing_environment_branches function" {
+    grep -q "include_existing_environment_branches()" "$REPO_ROOT/script/setup-team-protection.sh"
+}
+
+@test "setup-team-protection.sh initializes BRANCHES_EXPLICIT to false" {
+    grep -q "BRANCHES_EXPLICIT=false" "$REPO_ROOT/script/setup-team-protection.sh"
+}
+
+@test "setup-team-protection.sh sets BRANCHES_EXPLICIT=true when --branches is given" {
+    grep -q "BRANCHES_EXPLICIT=true" "$REPO_ROOT/script/setup-team-protection.sh"
+}
+
 @test "check-file-length.sh exists and is executable" {
     assert_file_exists "$REPO_ROOT/script/check-file-length.sh"
     [ -x "$REPO_ROOT/script/check-file-length.sh" ]
