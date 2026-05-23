@@ -14,7 +14,8 @@
 #   --dry-run             Show what would be done without making changes
 #   --reviewers N         Number of required reviewers (default: 1)
 #   --enforce-admins      Apply protection rules to administrators
-#   --branches B1,B2      Comma-separated list of branches to protect (default: main)
+#   --branches B1,B2      Comma-separated list of branches to protect
+#                         (default: main plus existing pre-production/production)
 #   --skip-status-checks  Skip required status checks configuration
 #   --create-branches     Create branches if they don't exist
 #   --merge-method METHOD Merge method: squash, merge, rebase, all, none (default: squash)
@@ -41,6 +42,7 @@ source "$SCRIPT_DIR/lib/output.sh"
 REVIEWERS=1
 ENFORCE_ADMINS=false
 BRANCHES="main"
+BRANCHES_EXPLICIT=false
 INTERACTIVE=false
 DRY_RUN=false
 SKIP_STATUS_CHECKS=false
@@ -71,6 +73,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --branches)
       BRANCHES="$2"
+      BRANCHES_EXPLICIT=true
       shift 2
       ;;
     --skip-status-checks)
@@ -150,6 +153,29 @@ if [[ "$PERMISSIONS" != "true" ]]; then
   echo "Branch protection requires repository admin permissions."
   exit 1
 fi
+
+# Include existing environment branches by default. Explicit --branches keeps
+# exact caller intent and skips this auto-detection.
+include_existing_environment_branches() {
+  if [[ "$BRANCHES_EXPLICIT" == "true" ]]; then
+    return 0
+  fi
+
+  local branch
+  for branch in pre-production production; do
+    if gh api "repos/$REPO/branches/$branch" &>/dev/null; then
+      case ",$BRANCHES," in
+        *",$branch,"*) ;;
+        *)
+          BRANCHES="$BRANCHES,$branch"
+          info "Detected existing environment branch: $branch (will protect)"
+          ;;
+      esac
+    fi
+  done
+}
+
+include_existing_environment_branches
 
 # Validate protection level
 case "$PROTECTION_LEVEL" in

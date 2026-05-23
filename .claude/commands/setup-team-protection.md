@@ -48,6 +48,8 @@
 bash script/setup-team-protection.sh
 ```
 
+`pre-production` / `production` ブランチが既に存在する場合は、デフォルトで `main` と一緒に保護対象へ含めます。
+
 **別のリポジトリに対して実行**
 
 ```bash
@@ -89,6 +91,13 @@ main ブランチ:
 ```bash
 # enforce_admins=false, reviewers=0, code_owner_reviews=false
 bash script/setup-team-protection.sh --branches main
+```
+
+既存の pre-production / production ブランチを含むデフォルト:
+
+```bash
+# main + 存在する pre-production / production を保護
+bash script/setup-team-protection.sh
 ```
 
 pre-production / production ブランチ:

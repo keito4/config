@@ -374,11 +374,11 @@ GitHub リポジトリの保護ルールを確認・設定：
 - 必須ステータスチェックの設定（`Quality Gate` ジョブ）
 - レビュー要件の設定
 - Dependabot、脆弱性アラートの有効化
-- Next.js プロジェクトの場合、`pre-production` / `production` ブランチの保護確認
+- Next.js プロジェクト、または既存の `pre-production` / `production` ブランチの保護確認
 
 これは `/setup-team-protection` コマンドと同等の処理を実行します。
 
-**フレームワーク検出による保護ブランチの自動判定:**
+**フレームワーク/既存ブランチ検出による保護ブランチの自動判定:**
 
 ```bash
 # Next.js プロジェクトかどうかを検出
@@ -389,13 +389,23 @@ if [ -f "package.json" ]; then
   fi
 fi
 
-# Next.js の場合は pre-production / production も保護対象
+PROTECT_BRANCHES="main"
+PROTECTION_LEVEL="standard"
+
+# 既存の環境ブランチは、Next.js 以外でも保護対象に含める
+EXISTING_ENV_BRANCHES=""
+for branch in pre-production production; do
+  if gh api "repos/$REPO/branches/$branch" &>/dev/null; then
+    EXISTING_ENV_BRANCHES="${EXISTING_ENV_BRANCHES:+$EXISTING_ENV_BRANCHES,}$branch"
+  fi
+done
+
+# Next.js の場合は pre-production / production を作成・保護対象に含める
 if [ "$IS_NEXTJS" = true ]; then
   PROTECT_BRANCHES="main,pre-production,production"
   PROTECTION_LEVEL="strict"
-else
-  PROTECT_BRANCHES="main"
-  PROTECTION_LEVEL="standard"
+elif [ -n "$EXISTING_ENV_BRANCHES" ]; then
+  PROTECT_BRANCHES="main,$EXISTING_ENV_BRANCHES"
 fi
 ```
 
@@ -403,7 +413,7 @@ fi
 
 - ✅ 保護ルール設定済み
 - ⚠️ 未設定の保護ルールあり（詳細をリスト）
-- ⚠️ Next.js プロジェクト: `pre-production` / `production` ブランチ未保護 → strict レベルで保護を提案
+- ⚠️ `pre-production` / `production` ブランチ未保護 → 保護を提案
 - 🔧 設定を適用
 
 ### 3.2 Husky Setup Check
