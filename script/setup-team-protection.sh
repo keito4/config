@@ -97,7 +97,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --help)
-      grep '^#' "$0" | grep -v '#!/usr/bin/env' | sed 's/^# //; s/^#//'
+      awk 'NR==1{next} /^[^#]/{exit} {sub(/^# ?/,""); print}' "$0"
       exit 0
       ;;
     *)
