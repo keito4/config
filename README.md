@@ -209,7 +209,8 @@ config/
 │   │   ├── 0002-auto-version-updates.md
 │   │   ├── 0003-remove-rust-from-base-image.md
 │   │   ├── 0004-dependabot-minor-auto-merge.md
-│   │   └── 0005-npm-legacy-peer-deps-for-typescript6.md
+│   │   ├── 0005-npm-legacy-peer-deps-for-typescript6.md
+│   │   └── 0006-consolidate-version-updates.md
 │   └── setup/                      # プロジェクト種別セットアップガイド
 │       ├── README.md
 │       ├── desktop-extension-ts.md
@@ -415,7 +416,7 @@ config/
 └── .trivyignore
 ```
 
-**ファイル総数**: 367 ファイル（Git 管理対象）
+**ファイル総数**: 364 ファイル（Git 管理対象）
 
 各ディレクトリの概要：
 
