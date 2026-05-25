@@ -67,19 +67,9 @@ jobs:
             actions: read
             checks: read
 
-          # Settings for allowed tools and permissions
-          settings: |
-            {
-              "permissions": {
-                "allowedTools": [
-                  "Bash(gh:*)",
-                  "Bash(npm:*)",
-                  "Bash(pnpm:*)",
-                  "Bash(npx:*)"
-                ]
-              }
-            }
-
           # System prompt to automatically create PRs when working on Issues
           claude_args: |
+            --allowedTools "Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr status:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*)"
             --system-prompt "When working on GitHub Issues (not PRs), after completing all code changes and pushing to a branch, you MUST create a Pull Request by running 'gh pr create' command. Do not just provide a link - actually execute the gh pr create command to create the PR automatically."
+        env:
+          GH_TOKEN: ${{ github.token }}

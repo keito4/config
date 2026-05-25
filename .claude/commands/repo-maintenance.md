@@ -938,6 +938,19 @@ TEMPLATE_RAW_URL="https://raw.githubusercontent.com/keito4/config/main/templates
 
 if [ -f "$SCHED_MAINT" ]; then
   echo "scheduled-maintenance.yml: 存在"
+
+  SCHED_CONTENT=$(cat "$SCHED_MAINT")
+  if echo "$SCHED_CONTENT" | grep -q -- "--create-pr"; then
+    if ! echo "$SCHED_CONTENT" | grep -q -- "--allowedTools"; then
+      echo "scheduled-maintenance.yml: claude_args --allowedTools 未設定（PR作成コマンドが許可されない可能性）"
+    fi
+    if ! echo "$SCHED_CONTENT" | grep -q "Bash(gh pr create:\*)"; then
+      echo "scheduled-maintenance.yml: Bash(gh pr create:*) 未許可（--create-pr が PR を作成できない）"
+    fi
+    if ! echo "$SCHED_CONTENT" | grep -q 'GH_TOKEN: ${{ github.token }}'; then
+      echo "scheduled-maintenance.yml: GH_TOKEN 未設定（gh CLI が認証できない可能性）"
+    fi
+  fi
 else
   echo "scheduled-maintenance.yml: 未配置"
 fi
@@ -945,11 +958,12 @@ fi
 
 **結果パターン:**
 
-| 状態                                  | 対応                                    |
-| ------------------------------------- | --------------------------------------- |
-| ワークフロー存在 + テンプレートと一致 | ✅ スキップ                             |
-| ワークフロー存在 + テンプレートと乖離 | ⚠️ テンプレートとの差分を表示           |
-| ワークフロー未配置                    | ⚠️ → full mode でテンプレートからコピー |
+| 状態                                  | 対応                                                 |
+| ------------------------------------- | ---------------------------------------------------- |
+| ワークフロー存在 + テンプレートと一致 | ✅ スキップ                                          |
+| ワークフロー存在 + テンプレートと乖離 | ⚠️ テンプレートとの差分を表示                        |
+| PR作成許可またはGH_TOKEN不足          | ⚠️ `claude_args --allowedTools` と `GH_TOKEN` を更新 |
+| ワークフロー未配置                    | ⚠️ → full mode でテンプレートからコピー              |
 
 **MODE が `full` かつ未配置の場合:**
 
@@ -1192,14 +1206,17 @@ done
 
 **チェック項目:**
 
-| #   | チェック                                       | 推奨値                                   | コスト影響                     |
-| --- | ---------------------------------------------- | ---------------------------------------- | ------------------------------ |
-| 1   | `claude.yml` の `cancel-in-progress`           | `true`                                   | 重複実行防止（**最大の効果**） |
-| 2   | `claude.yml` の issues トリガー                | `[opened]` のみ                          | `assigned` での不要起動防止    |
-| 3   | `claude.yml` の bot 除外                       | `github-actions[bot]`, `dependabot[bot]` | bot連鎖防止                    |
-| 4   | `claude.yml` の timeout                        | `20` 分以下                              | 長時間実行抑制                 |
-| 5   | `claude-code-review.yml` の `synchronize` 除外 | `[opened, ready_for_review, reopened]`   | push毎のレビュー実行防止       |
-| 6   | Copilot code review との重複                   | どちらか1つに統一                        | AIレビュー重複防止             |
+| #   | チェック                                       | 推奨値                                                                    | コスト影響                     |
+| --- | ---------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------ |
+| 1   | `claude.yml` の `cancel-in-progress`           | `true`                                                                    | 重複実行防止（**最大の効果**） |
+| 2   | `claude.yml` の issues トリガー                | `[opened]` のみ                                                           | `assigned` での不要起動防止    |
+| 3   | `claude.yml` の bot 除外                       | `github-actions[bot]`, `dependabot[bot]`                                  | bot連鎖防止                    |
+| 4   | `claude.yml` の timeout                        | `20` 分以下                                                               | 長時間実行抑制                 |
+| 5   | `claude-code-review.yml` の `synchronize` 除外 | `[opened, ready_for_review, reopened]`                                    | push毎のレビュー実行防止       |
+| 6   | Copilot code review との重複                   | どちらか1つに統一                                                         | AIレビュー重複防止             |
+| 7   | Issue対応用 `gh pr create` の許可              | `claude_args --allowedTools` に `Bash(gh pr create:*)`                    | Issue対応後のPR自動作成        |
+| 8   | `gh` CLI 認証用 token                          | Claude action step の `env.GH_TOKEN: ${{ github.token }}`                 | `gh pr create` の認証失敗防止  |
+| 9   | 旧形式の tool 設定                             | `settings.permissions.allowedTools` ではなく `claude_args --allowedTools` | Claude SDK への反映漏れ防止    |
 
 ```bash
 # claude.yml のチェック
@@ -1225,6 +1242,23 @@ if [ -f ".github/workflows/claude.yml" ]; then
   TIMEOUT=$(echo "$CLAUDE_YML" | grep "timeout-minutes:" | head -1 | grep -o '[0-9]*')
   if [ -n "$TIMEOUT" ] && [ "$TIMEOUT" -gt 20 ]; then
     ISSUES+=("claude.yml: timeout が ${TIMEOUT}分（推奨: 20分以下）")
+  fi
+
+  if echo "$CLAUDE_YML" | grep -q "gh pr create"; then
+    if ! echo "$CLAUDE_YML" | grep -q -- "--allowedTools"; then
+      ISSUES+=("claude.yml: claude_args --allowedTools 未設定（gh pr create が Claude SDK の allowedTools に入らない可能性）")
+    fi
+    if ! echo "$CLAUDE_YML" | grep -q "Bash(gh pr create:\*)"; then
+      ISSUES+=("claude.yml: Bash(gh pr create:*) 未許可（Issue対応後にPRを自動作成できない）")
+    fi
+    if ! echo "$CLAUDE_YML" | grep -q 'GH_TOKEN: ${{ github.token }}'; then
+      ISSUES+=("claude.yml: Claude action step に GH_TOKEN が未設定（gh CLI が認証できない可能性）")
+    fi
+  fi
+
+  if echo "$CLAUDE_YML" | grep -q "settings:" && \
+     echo "$CLAUDE_YML" | grep -q '"allowedTools"'; then
+    ISSUES+=("claude.yml: settings.permissions.allowedTools を使用中（claude_args --allowedTools へ移行推奨）")
   fi
 fi
 
