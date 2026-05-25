@@ -352,13 +352,29 @@ Cleans up merged and stale git branches.
 
 Configures GitHub branch protection rules for team development.
 
+**Auto-detection**: When run without `--branches`, the script automatically includes existing `pre-production` and `production` branches alongside `main`. Passing `--branches` explicitly disables this auto-detection.
+
+**Branch-type defaults** (when `--uniform` is NOT set):
+
+| Branch                      | enforce_admins | required_reviews | code_owner_reviews |
+| --------------------------- | -------------- | ---------------- | ------------------ |
+| main                        | false          | 0                | false              |
+| pre-production / production | false          | 1                | true               |
+
 **Usage**:
 
 ```bash
-./script/setup-team-protection.sh                    # Current repo
-./script/setup-team-protection.sh owner/repo         # Specific repo
-./script/setup-team-protection.sh --interactive      # Interactive mode
-./script/setup-team-protection.sh --dry-run          # Preview changes
+./script/setup-team-protection.sh                         # Current repo (auto-detects env branches)
+./script/setup-team-protection.sh owner/repo              # Specific repo
+./script/setup-team-protection.sh --interactive           # Interactive mode with confirmations
+./script/setup-team-protection.sh --dry-run               # Preview changes without applying
+./script/setup-team-protection.sh --reviewers 2           # Require 2 approving reviewers
+./script/setup-team-protection.sh --enforce-admins        # Apply rules to administrators too
+./script/setup-team-protection.sh --branches main,pre-production,production --create-branches
+./script/setup-team-protection.sh --protection-level strict  # 2 reviewers, linear history, signed commits
+./script/setup-team-protection.sh --merge-method squash   # squash | merge | rebase | all | none
+./script/setup-team-protection.sh --uniform               # Identical settings for all branches
+./script/setup-team-protection.sh --skip-status-checks    # Skip Quality Gate required check
 ```
 
 **Claude command**: `/setup-team-protection`
