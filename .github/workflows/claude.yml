@@ -29,9 +29,15 @@ concurrency:
 
 jobs:
   claude:
-    # Bot 全般を除外（sender.type で判定するため、Bot 名のハードコードが不要）
+    # Bot 全般を除外し、信頼済み Association のみ許可
+    # OWNER / MEMBER / COLLABORATOR: リポジトリ管理者・チームメンバー・招待コラボレーター
     if: |
       github.event.sender.type != 'Bot' &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+        github.event.comment.author_association ||
+        github.event.review.author_association ||
+        github.event.issue.author_association
+      ) &&
       (
         (github.event_name == 'issue_comment' && contains(github.event.comment.body || '', '@claude') &&
           !(github.event.issue.pull_request && github.event.issue.pull_request.url && github.event.issue.draft == true)) ||
@@ -61,7 +67,6 @@ jobs:
         uses: anthropics/claude-code-action@787c5a0ce96a9a6cfb050ea0c8f4c05f2447c251 # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ github.token }}
 
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
@@ -70,7 +75,7 @@ jobs:
 
           # System prompt to automatically create PRs when working on Issues
           claude_args: |
-            --allowedTools "Bash(npm:*),Bash(pnpm:*),Bash(npx:*)"
+            --allowedTools "Bash(git:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr status:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*)"
             --system-prompt "When working on GitHub Issues (not PRs), after completing all code changes, commit and push the changes to the Claude branch. Do not run 'gh pr create'; this workflow creates the pull request from the branch after Claude finishes."
 
       - name: Create pull request from Claude branch
@@ -81,7 +86,7 @@ jobs:
             (github.event_name == 'issue_comment' && !github.event.issue.pull_request)
           )
         env:
-          GH_TOKEN: ${{ steps.claude.outputs.github_token || github.token }}
+          GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || github.token }}
           CLAUDE_BRANCH: ${{ steps.claude.outputs.branch_name }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
@@ -90,6 +95,11 @@ jobs:
           if [ -z "$CLAUDE_BRANCH" ]; then
             echo "Claude did not create a branch. Skipping PR creation."
             exit 0
+          fi
+
+          if ! git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH" >/dev/null; then
+            echo "Claude branch $CLAUDE_BRANCH was not pushed."
+            exit 1
           fi
 
           EXISTING_PR=$(gh pr list --head "$CLAUDE_BRANCH" --state open --json number --jq '.[0].number // empty')

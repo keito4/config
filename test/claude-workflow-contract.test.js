@@ -17,10 +17,17 @@ describe('Claude workflow contracts', () => {
   test.each(issueWorkflows)('%s creates PRs in a post-Claude Actions step', (workflowPath) => {
     const workflow = readWorkflow(workflowPath);
 
+    expect(workflow).toContain("github.event.sender.type != 'Bot'");
+    expect(workflow).toContain('author_association');
+    expect(workflow).toContain('OWNER","MEMBER","COLLABORATOR');
     expect(workflow).toContain('name: Create pull request from Claude branch');
-    expect(workflow).toContain('GH_TOKEN: ${{ steps.claude.outputs.github_token || github.token }}');
+    expect(workflow).toContain('GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || github.token }}');
     expect(workflow).toContain('gh pr create');
+    expect(workflow).toContain('git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH"');
+    expect(workflow).toContain('Claude branch $CLAUDE_BRANCH was not pushed.');
+    expect(workflow).not.toContain('Claude branch $CLAUDE_BRANCH was not pushed. Skipping PR creation.');
     expect(workflow).not.toMatch(/Bash\(gh pr create:\*\)/);
+    expect(workflow).not.toContain('github_token: ${{ github.token }}');
     expect(workflow).not.toContain('"allowedTools"');
   });
 
@@ -28,10 +35,25 @@ describe('Claude workflow contracts', () => {
     const workflow = readWorkflow(workflowPath);
 
     expect(workflow).toContain('name: Create maintenance pull request');
-    expect(workflow).toContain('GH_TOKEN: ${{ steps.maintenance.outputs.github_token || github.token }}');
+    expect(workflow).toContain('CLAUDE_BRANCH: maintenance/${{ github.run_id }}-${{ github.run_attempt }}');
+    expect(workflow).toContain('name: Validate maintenance token');
+    expect(workflow.indexOf('name: Validate maintenance token')).toBeLessThan(
+      workflow.indexOf('name: Checkout repository'),
+    );
+    expect(workflow).toContain('token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}');
+    expect(workflow).toContain('github_token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}');
+    expect(workflow).toContain('name: Prepare maintenance branch');
+    expect(workflow).toContain('git checkout -b "$CLAUDE_BRANCH"');
+    expect(workflow).toContain('Use branch `${{ env.CLAUDE_BRANCH }}`');
+    expect(workflow).toContain('GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}');
+    expect(workflow).toContain('if: env.CLAUDE_BRANCH !=');
     expect(workflow).toContain('gh pr create');
+    expect(workflow).toContain('git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH"');
+    expect(workflow).not.toContain('steps.maintenance.outputs.branch_name');
     expect(workflow).not.toMatch(/Bash\(gh pr create:\*\)/);
-    expect(workflow).not.toContain('--create-pr');
+    expect(workflow).toContain('Bash(gh api:*)');
+    expect(workflow).toContain("/repo-maintenance --mode ${{ inputs.mode || 'full' }} --create-pr");
+    expect(workflow).not.toContain('github_token: ${{ github.token }}');
     expect(workflow).not.toContain('"allowedTools"');
   });
 
@@ -43,13 +65,15 @@ describe('Claude workflow contracts', () => {
     expect(workflow).not.toContain('QUALITY_GATE_CONCLUSION=');
   });
 
-  test('Claude Code Review skips Anthropic action when its workflow changes', () => {
+  test('Claude Code Review skips Anthropic action when its review gate changes', () => {
     const workflow = readWorkflow('.github/workflows/claude-code-review.yml');
 
-    expect(workflow).toContain('review_workflow_changed: ${{ steps.workflow-change.outputs.review_workflow_changed }}');
+    expect(workflow).toContain('review_gate_changed: ${{ steps.gate-change.outputs.review_gate_changed }}');
     expect(workflow).toContain('gh pr diff "$PR_NUMBER" --repo "$REPO" --name-only');
     expect(workflow).toContain('grep -Fxq ".github/workflows/claude-code-review.yml"');
-    expect(workflow).toContain("needs.check-ci-status.outputs.review_workflow_changed != 'true'");
+    expect(workflow).toContain('grep -Fxq "script/wait-ci-checks.sh"');
+    expect(workflow).toContain("if: steps.gate-change.outputs.review_gate_changed != 'true'");
+    expect(workflow).toContain("needs.check-ci-status.outputs.review_gate_changed != 'true'");
   });
 
   test('repo-maintenance reports downstream sync when managed files change', () => {
@@ -57,5 +81,7 @@ describe('Claude workflow contracts', () => {
 
     expect(command).toContain('Downstream sync required');
     expect(command).toContain('Repositories using config-base should run /repo-maintenance or receive a sync PR.');
+    expect(command).toContain('"script/wait-ci-checks.sh"');
+    expect(command).toContain('git checkout "$CLAUDE_BRANCH" 2>/dev/null || git checkout -b "$CLAUDE_BRANCH"');
   });
 });

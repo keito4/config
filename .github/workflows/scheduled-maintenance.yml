@@ -26,25 +26,44 @@ jobs:
   maintenance:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      CLAUDE_BRANCH: maintenance/${{ github.run_id }}-${{ github.run_attempt }}
     permissions:
       contents: write
       pull-requests: write
       issues: write
       id-token: write
     steps:
+      - name: Validate maintenance token
+        env:
+          CLAUDE_PR_GITHUB_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}
+        run: |
+          if [ -z "$CLAUDE_PR_GITHUB_TOKEN" ]; then
+            echo "CLAUDE_PR_GITHUB_TOKEN is required for scheduled maintenance because it may update workflow files."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 1
+          token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}
+
+      - name: Prepare maintenance branch
+        run: git checkout -b "$CLAUDE_BRANCH"
 
       - name: Run scheduled maintenance
         id: maintenance
         uses: anthropics/claude-code-action@787c5a0ce96a9a6cfb050ea0c8f4c05f2447c251 # v1
+        env:
+          CLAUDE_BRANCH: ${{ env.CLAUDE_BRANCH }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ github.token }}
+          github_token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}
           prompt: |
-            /repo-maintenance --mode ${{ inputs.mode || 'full' }}
+            /repo-maintenance --mode ${{ inputs.mode || 'full' }} --create-pr
+
+            Use branch `${{ env.CLAUDE_BRANCH }}` for maintenance commits and pushes.
 
             After completing maintenance, summarize:
             - What was checked
@@ -56,18 +75,22 @@ jobs:
 
             If no updates are needed, do NOT create an issue.
           claude_args: |
-            --allowedTools "Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(node:*),Bash(git:*),Bash(curl:*),Bash(jq:*)"
+            --allowedTools "Bash(gh api:*),Bash(gh repo view:*),Bash(gh issue create:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr checks:*),Bash(gh run view:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(node:*),Bash(git:*),Bash(curl:*),Bash(jq:*)"
 
       - name: Create maintenance pull request
-        if: steps.maintenance.outputs.branch_name != ''
+        if: env.CLAUDE_BRANCH != ''
         env:
-          GH_TOKEN: ${{ steps.maintenance.outputs.github_token || github.token }}
-          CLAUDE_BRANCH: ${{ steps.maintenance.outputs.branch_name }}
+          GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           MODE: ${{ inputs.mode || 'full' }}
         run: |
           if [ -z "$CLAUDE_BRANCH" ]; then
             echo "Claude did not create a branch. Skipping PR creation."
+            exit 0
+          fi
+
+          if ! git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH" >/dev/null; then
+            echo "Claude branch $CLAUDE_BRANCH was not pushed. Skipping PR creation."
             exit 0
           fi
 

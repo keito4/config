@@ -20,7 +20,7 @@ jobs:
     continue-on-error: true # ワークフローファイル変更時の初回PR用
     outputs:
       ci_passed: ${{ steps.check.outputs.ci_passed }}
-      review_workflow_changed: ${{ steps.workflow-change.outputs.review_workflow_changed }}
+      review_gate_changed: ${{ steps.gate-change.outputs.review_gate_changed }}
     permissions:
       contents: read
       pull-requests: read
@@ -31,8 +31,8 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Detect Claude Code Review workflow changes
-        id: workflow-change
+      - name: Detect Claude Code Review gate changes
+        id: gate-change
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -40,16 +40,18 @@ jobs:
         run: |
           CHANGED_FILES="$(gh pr diff "$PR_NUMBER" --repo "$REPO" --name-only)"
 
-          if printf '%s\n' "$CHANGED_FILES" | grep -Fxq ".github/workflows/claude-code-review.yml"; then
-            echo "review_workflow_changed=true" >> "$GITHUB_OUTPUT"
-            echo "Claude Code Review workflow changed; skipping the Anthropic action for this PR."
+          if printf '%s\n' "$CHANGED_FILES" | grep -Fxq ".github/workflows/claude-code-review.yml" ||
+             printf '%s\n' "$CHANGED_FILES" | grep -Fxq "script/wait-ci-checks.sh"; then
+            echo "review_gate_changed=true" >> "$GITHUB_OUTPUT"
+            echo "Claude Code Review gate changed; skipping the Anthropic action for this PR."
             exit 0
           fi
 
-          echo "review_workflow_changed=false" >> "$GITHUB_OUTPUT"
+          echo "review_gate_changed=false" >> "$GITHUB_OUTPUT"
 
       - name: Wait for CI and check status
         id: check
+        if: steps.gate-change.outputs.review_gate_changed != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -62,7 +64,7 @@ jobs:
 
   claude-review:
     # CIが成功した場合のみ実行（Draft PR、Dependabotはスキップ）
-    if: github.event.pull_request.draft == false && needs.check-ci-status.outputs.ci_passed == 'true' && needs.check-ci-status.outputs.review_workflow_changed != 'true' && github.event.sender.type != 'Bot'
+    if: github.event.pull_request.draft == false && needs.check-ci-status.outputs.ci_passed == 'true' && needs.check-ci-status.outputs.review_gate_changed != 'true' && github.event.sender.type != 'Bot'
     needs: [check-ci-status]
     runs-on: ubuntu-latest
     timeout-minutes: 20
