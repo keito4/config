@@ -25,6 +25,11 @@ jobs:
       pull-requests: read
       checks: read
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 1
+
       - name: Wait for CI and check status
         id: check
         env:
@@ -34,82 +39,8 @@ jobs:
           REPO="${{ github.repository }}"
           HEAD_SHA="${{ github.event.pull_request.head.sha }}"
 
-          echo "Waiting for CI to complete for PR #$PR_NUMBER (SHA: $HEAD_SHA)"
-
-          # ポーリング設定
-          MAX_WAIT_TIME=900  # 15分（秒）
-          POLL_INTERVAL=30   # 30秒
-          ELAPSED_TIME=0
-
-          while [ $ELAPSED_TIME -lt $MAX_WAIT_TIME ]; do
-            echo "⏱️  Elapsed time: ${ELAPSED_TIME}s / ${MAX_WAIT_TIME}s"
-
-            # Check Runsを取得（CI workflowのみ）
-            CHECK_RUNS=$(gh api repos/$REPO/commits/$HEAD_SHA/check-runs \
-              --jq '.check_runs[] | select(.name != "check-ci-status" and .name != "claude-review") | {name, status, conclusion}')
-
-            echo "Check Runs:"
-            echo "$CHECK_RUNS" | jq -r '"\(.name): \(.status) - \(.conclusion)"'
-
-            # 必須チェック: Quality Gate
-            QUALITY_GATE=$(echo "$CHECK_RUNS" | jq -r 'select(.name == "Quality Gate")')
-
-            if [ -z "$QUALITY_GATE" ]; then
-              # Quality Gateが2分経っても出現しない場合、CIがpath filtersでスキップされた可能性を確認
-              if [ $ELAPSED_TIME -ge 120 ]; then
-                DETECT_CHANGES=$(echo "$CHECK_RUNS" | jq -r 'select(.name == "Detect Changes")')
-                if [ -z "$DETECT_CHANGES" ]; then
-                  echo "ci_passed=true" >> "$GITHUB_OUTPUT"
-                  echo "✅ CI workflow skipped by path filters (no code changes detected)"
-                  echo "Claude Code Review will proceed without waiting for CI."
-                  exit 0
-                fi
-              fi
-              echo "⏳ Quality Gate check has not started yet, waiting..."
-              sleep $POLL_INTERVAL
-              ELAPSED_TIME=$((ELAPSED_TIME + POLL_INTERVAL))
-              continue
-            fi
-
-            if echo "$QUALITY_GATE" | jq -e 'select(.status != "completed")' >/dev/null; then
-              echo "⏳ Quality Gate is still running, waiting..."
-              echo "$QUALITY_GATE" | jq -r '"\(.name): \(.status) - \(.conclusion)"'
-              sleep $POLL_INTERVAL
-              ELAPSED_TIME=$((ELAPSED_TIME + POLL_INTERVAL))
-              continue
-            fi
-
-            # Quality Gate完了 - 結果を確認
-            if echo "$QUALITY_GATE" | jq -e 'select(.conclusion != "success")' >/dev/null; then
-              echo "ci_passed=false" >> "$GITHUB_OUTPUT"
-              echo "❌ Quality Gate failed:"
-              echo "$QUALITY_GATE" | jq -r 'select(.conclusion != "success") | "\(.name): \(.conclusion)"'
-              echo "Claude Code Review will be skipped."
-              exit 0
-            fi
-
-            # すべての実行されたチェック（skippedでないもの）を確認
-            FAILED_CHECKS=$(echo "$CHECK_RUNS" | jq -r 'select(.status == "completed" and .conclusion != "success" and .conclusion != "skipped" and .conclusion != "neutral")')
-
-            if [ -n "$FAILED_CHECKS" ]; then
-              echo "ci_passed=false" >> "$GITHUB_OUTPUT"
-              echo "❌ Some CI checks failed:"
-              echo "$FAILED_CHECKS" | jq -r '"\(.name): \(.conclusion)"'
-              echo "Claude Code Review will be skipped."
-              exit 0
-            fi
-
-            # すべてのチェックが成功
-            echo "ci_passed=true" >> "$GITHUB_OUTPUT"
-            echo "✅ All CI checks passed"
-            exit 0
-          done
-
-          # タイムアウト
-          echo "ci_passed=false" >> "$GITHUB_OUTPUT"
-          echo "⏱️ Timeout: CI did not complete within ${MAX_WAIT_TIME}s"
-          echo "Claude Code Review will be skipped."
-          exit 0
+          echo "Waiting for CI to complete for PR #$PR_NUMBER"
+          script/wait-ci-checks.sh "$REPO" "$HEAD_SHA"
 
   claude-review:
     # CIが成功した場合のみ実行（Draft PR、Dependabotはスキップ）

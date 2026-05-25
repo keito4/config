@@ -82,13 +82,50 @@ jobs:
         uses: anthropics/claude-code-action@6e2bd52842c65e914eba5c8badd17560bd26b5de # v1.0.89
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
 
           additional_permissions: |
             actions: read
             checks: read
 
           claude_args: |
-            --allowedTools "Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr status:*),Bash(git:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*)"
-            --system-prompt "When working on GitHub Issues (not PRs), after completing all code changes and pushing to a branch, you MUST create a Pull Request by running 'gh pr create' command. Do not just provide a link - actually execute the gh pr create command to create the PR automatically."
+            --allowedTools "Bash(git:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*)"
+            --system-prompt "When working on GitHub Issues (not PRs), after completing all code changes, commit and push the changes to the Claude branch. Do not run 'gh pr create'; this workflow creates the pull request from the branch after Claude finishes."
+
+      - name: Create pull request from Claude branch
+        if: >-
+          steps.claude.outputs.branch_name != '' &&
+          (
+            github.event_name == 'issues' ||
+            (github.event_name == 'issue_comment' && !github.event.issue.pull_request)
+          )
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.claude.outputs.github_token || github.token }}
+          CLAUDE_BRANCH: ${{ steps.claude.outputs.branch_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
+          if [ -z "$CLAUDE_BRANCH" ]; then
+            echo "Claude did not create a branch. Skipping PR creation."
+            exit 0
+          fi
+
+          EXISTING_PR=$(gh pr list --head "$CLAUDE_BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING_PR" ]; then
+            echo "PR #$EXISTING_PR already exists for $CLAUDE_BRANCH."
+            exit 0
+          fi
+
+          TITLE="$ISSUE_TITLE"
+          if [ -z "$TITLE" ]; then
+            TITLE="Claude changes for issue #$ISSUE_NUMBER"
+          fi
+
+          BODY=$(printf "Closes #%s\n\nCreated automatically from Claude Code branch \`%s\`." "$ISSUE_NUMBER" "$CLAUDE_BRANCH")
+
+          gh pr create \
+            --head "$CLAUDE_BRANCH" \
+            --base "$DEFAULT_BRANCH" \
+            --title "$TITLE" \
+            --body "$BODY"

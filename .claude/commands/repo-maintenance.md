@@ -941,15 +941,16 @@ if [ -f "$SCHED_MAINT" ]; then
 
   SCHED_CONTENT=$(cat "$SCHED_MAINT")
   if echo "$SCHED_CONTENT" | grep -q -- "--create-pr"; then
-    if ! echo "$SCHED_CONTENT" | grep -q -- "--allowedTools"; then
-      echo "scheduled-maintenance.yml: claude_args --allowedTools 未設定（PR作成コマンドが許可されない可能性）"
-    fi
-    if ! echo "$SCHED_CONTENT" | grep -q "Bash(gh pr create:\*)"; then
-      echo "scheduled-maintenance.yml: Bash(gh pr create:*) 未許可（--create-pr が PR を作成できない）"
-    fi
-    if ! echo "$SCHED_CONTENT" | grep -q 'GH_TOKEN: ${{ github.token }}'; then
-      echo "scheduled-maintenance.yml: GH_TOKEN 未設定（gh CLI が認証できない可能性）"
-    fi
+    echo "scheduled-maintenance.yml: prompt に --create-pr が残っています（PR作成は post-Claude step に分離推奨）"
+  fi
+  if ! echo "$SCHED_CONTENT" | grep -q "Create maintenance pull request"; then
+    echo "scheduled-maintenance.yml: maintenance PR 作成 step が未設定"
+  fi
+  if ! echo "$SCHED_CONTENT" | grep -Fq 'GH_TOKEN: ${{ steps.maintenance.outputs.github_token || github.token }}'; then
+    echo "scheduled-maintenance.yml: PR作成 step の GH_TOKEN が Claude action output 由来ではありません"
+  fi
+  if echo "$SCHED_CONTENT" | grep -q "Bash(gh pr create:\*)"; then
+    echo "scheduled-maintenance.yml: Claude allowedTools に Bash(gh pr create:*) が残っています"
   fi
 else
   echo "scheduled-maintenance.yml: 未配置"
@@ -958,12 +959,12 @@ fi
 
 **結果パターン:**
 
-| 状態                                  | 対応                                                 |
-| ------------------------------------- | ---------------------------------------------------- |
-| ワークフロー存在 + テンプレートと一致 | ✅ スキップ                                          |
-| ワークフロー存在 + テンプレートと乖離 | ⚠️ テンプレートとの差分を表示                        |
-| PR作成許可またはGH_TOKEN不足          | ⚠️ `claude_args --allowedTools` と `GH_TOKEN` を更新 |
-| ワークフロー未配置                    | ⚠️ → full mode でテンプレートからコピー              |
+| 状態                                  | 対応                                                      |
+| ------------------------------------- | --------------------------------------------------------- |
+| ワークフロー存在 + テンプレートと一致 | ✅ スキップ                                               |
+| ワークフロー存在 + テンプレートと乖離 | ⚠️ テンプレートとの差分を表示                             |
+| PR作成 step または token 分離不足     | ⚠️ post-Claude PR 作成 step と action output token に更新 |
+| ワークフロー未配置                    | ⚠️ → full mode でテンプレートからコピー                   |
 
 **MODE が `full` かつ未配置の場合:**
 
@@ -1207,16 +1208,17 @@ done
 **チェック項目:**
 
 | #   | チェック                                       | 推奨値                                                                    | コスト影響                     |
-| --- | ---------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------ |
+| --- | ---------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------ | ---------------- | ------------------------------- |
 | 1   | `claude.yml` の `cancel-in-progress`           | `true`                                                                    | 重複実行防止（**最大の効果**） |
 | 2   | `claude.yml` の issues トリガー                | `[opened]` のみ                                                           | `assigned` での不要起動防止    |
 | 3   | `claude.yml` の bot 除外                       | `github-actions[bot]`, `dependabot[bot]`                                  | bot連鎖防止                    |
 | 4   | `claude.yml` の timeout                        | `20` 分以下                                                               | 長時間実行抑制                 |
 | 5   | `claude-code-review.yml` の `synchronize` 除外 | `[opened, ready_for_review, reopened]`                                    | push毎のレビュー実行防止       |
 | 6   | Copilot code review との重複                   | どちらか1つに統一                                                         | AIレビュー重複防止             |
-| 7   | Issue対応用 `gh pr create` の許可              | `claude_args --allowedTools` に `Bash(gh pr create:*)`                    | Issue対応後のPR自動作成        |
-| 8   | `gh` CLI 認証用 token                          | Claude action step の `env.GH_TOKEN: ${{ github.token }}`                 | `gh pr create` の認証失敗防止  |
-| 9   | 旧形式の tool 設定                             | `settings.permissions.allowedTools` ではなく `claude_args --allowedTools` | Claude SDK への反映漏れ防止    |
+| 7   | Issue対応用 PR 作成 step                       | `Create pull request from Claude branch`                                  | Issue対応後のPR自動作成        |
+| 8   | `gh` CLI 認証用 token                          | PR作成 step の `GH_TOKEN: ${{ steps.claude.outputs.github_token           |                                | github.token }}` | Claude Bash への token 露出低減 |
+| 9   | Claude 側の PR 作成 tool                       | `Bash(gh pr create:*)` を許可しない                                       | token 露出範囲の縮小           |
+| 10  | 旧形式の tool 設定                             | `settings.permissions.allowedTools` ではなく `claude_args --allowedTools` | Claude SDK への反映漏れ防止    |
 
 ```bash
 # claude.yml のチェック
@@ -1245,14 +1247,14 @@ if [ -f ".github/workflows/claude.yml" ]; then
   fi
 
   if echo "$CLAUDE_YML" | grep -q "gh pr create"; then
-    if ! echo "$CLAUDE_YML" | grep -q -- "--allowedTools"; then
-      ISSUES+=("claude.yml: claude_args --allowedTools 未設定（gh pr create が Claude SDK の allowedTools に入らない可能性）")
+    if ! echo "$CLAUDE_YML" | grep -q "Create pull request from Claude branch"; then
+      ISSUES+=("claude.yml: Issue対応後のPR作成 step が未設定")
     fi
-    if ! echo "$CLAUDE_YML" | grep -q "Bash(gh pr create:\*)"; then
-      ISSUES+=("claude.yml: Bash(gh pr create:*) 未許可（Issue対応後にPRを自動作成できない）")
+    if ! echo "$CLAUDE_YML" | grep -Fq 'GH_TOKEN: ${{ steps.claude.outputs.github_token || github.token }}'; then
+      ISSUES+=("claude.yml: PR作成 step の GH_TOKEN が Claude action output 由来ではありません")
     fi
-    if ! echo "$CLAUDE_YML" | grep -q 'GH_TOKEN: ${{ github.token }}'; then
-      ISSUES+=("claude.yml: Claude action step に GH_TOKEN が未設定（gh CLI が認証できない可能性）")
+    if echo "$CLAUDE_YML" | grep -q "Bash(gh pr create:\*)"; then
+      ISSUES+=("claude.yml: Claude allowedTools に Bash(gh pr create:*) が残っています（post-Claude step に分離推奨）")
     fi
   fi
 
@@ -2423,6 +2425,18 @@ for file in "${MANAGED_FILES[@]}"; do
     SKIPPED+=("$file (最新)")
   fi
 done
+
+if [ "${#UPDATED[@]}" -gt 0 ] && git remote get-url origin 2>/dev/null | grep -q "keito4/config"; then
+  echo "🔁 Downstream sync required"
+  echo "Managed config files changed. Repositories using config-base should run /repo-maintenance or receive a sync PR."
+  echo ""
+  echo "Suggested check:"
+  echo "  for repo in ~/develop/github.com/*/*; do"
+  echo "    [ -f \"\$repo/.devcontainer/devcontainer.json\" ] || continue"
+  echo "    grep -q 'config-base' \"\$repo/.devcontainer/devcontainer.json\" || continue"
+  echo "    echo \"- \$repo\""
+  echo "  done"
+fi
 ```
 
 **テンプレートファイルの同期ロジック:**

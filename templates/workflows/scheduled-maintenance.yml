@@ -42,19 +42,48 @@ jobs:
         uses: anthropics/claude-code-action@b47fd721da662d48c5680e154ad16a73ed74d2e0 # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
           prompt: |
-            /repo-maintenance --mode ${{ inputs.mode || 'full' }} --create-pr
+            /repo-maintenance --mode ${{ inputs.mode || 'full' }}
 
-            After completing maintenance, create a summary issue comment or issue with:
+            After completing maintenance, summarize:
             - What was checked
-            - What was updated (with PR links if any)
+            - What was updated
             - What needs manual attention
+
+            If changes were committed and pushed, do NOT create a pull request yourself.
+            This workflow creates the pull request from the Claude branch after Claude finishes.
 
             If no updates are needed, do NOT create an issue.
           claude_args: |
-            --allowedTools "Bash(gh api:*),Bash(gh issue create:*),Bash(gh issue list:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(node:*),Bash(git:*),Bash(curl:*),Bash(jq:*)"
+            --allowedTools "Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(node:*),Bash(git:*),Bash(curl:*),Bash(jq:*)"
+
+      - name: Create maintenance pull request
+        if: steps.maintenance.outputs.branch_name != ''
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.maintenance.outputs.github_token || github.token }}
+          CLAUDE_BRANCH: ${{ steps.maintenance.outputs.branch_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          MODE: ${{ inputs.mode || 'full' }}
+        run: |
+          if [ -z "$CLAUDE_BRANCH" ]; then
+            echo "Claude did not create a branch. Skipping PR creation."
+            exit 0
+          fi
+
+          EXISTING_PR=$(gh pr list --head "$CLAUDE_BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING_PR" ]; then
+            echo "PR #$EXISTING_PR already exists for $CLAUDE_BRANCH."
+            exit 0
+          fi
+
+          BODY=$(printf "Automated scheduled maintenance run.\n\nMode: %s\nBranch: \`%s\`" "$MODE" "$CLAUDE_BRANCH")
+
+          gh pr create \
+            --head "$CLAUDE_BRANCH" \
+            --base "$DEFAULT_BRANCH" \
+            --title "chore: scheduled maintenance" \
+            --body "$BODY"
 
       - name: Post failure issue
         if: failure()

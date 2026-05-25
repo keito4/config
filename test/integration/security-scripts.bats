@@ -80,3 +80,23 @@ load ../test_helper/test_helper
     run "$REPO_ROOT/script/security-credential-scan.sh" --path "$temp_dir" --strict
     assert_failure
 }
+
+@test "security-credential-scan.sh ignores Nix flake.lock rev hashes" {
+    mkdir -p "$TEST_TEMP_DIR/nix"
+    cat > "$TEST_TEMP_DIR/nix/flake.lock" <<'JSON'
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "rev": "0123456789abcdef0123456789abcdef01234567",
+        "narHash": "sha256-0123456789abcdef0123456789abcdef0123456789abc="
+      }
+    }
+  }
+}
+JSON
+
+    run "$REPO_ROOT/script/security-credential-scan.sh" --path "$TEST_TEMP_DIR" --strict
+    assert_success
+    assert_output --partial "No credentials found"
+}
