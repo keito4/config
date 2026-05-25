@@ -43,6 +43,15 @@ describe('Claude workflow contracts', () => {
     expect(workflow).not.toContain('QUALITY_GATE_CONCLUSION=');
   });
 
+  test('Claude Code Review skips Anthropic action when its workflow changes', () => {
+    const workflow = readWorkflow('.github/workflows/claude-code-review.yml');
+
+    expect(workflow).toContain('review_workflow_changed: ${{ steps.workflow-change.outputs.review_workflow_changed }}');
+    expect(workflow).toContain('gh pr diff "$PR_NUMBER" --repo "$REPO" --name-only');
+    expect(workflow).toContain('grep -Fxq ".github/workflows/claude-code-review.yml"');
+    expect(workflow).toContain("needs.check-ci-status.outputs.review_workflow_changed != 'true'");
+  });
+
   test('repo-maintenance reports downstream sync when managed files change', () => {
     const command = readWorkflow('.claude/commands/repo-maintenance.md');
 
