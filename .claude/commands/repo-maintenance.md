@@ -940,16 +940,26 @@ if [ -f "$SCHED_MAINT" ]; then
   echo "scheduled-maintenance.yml: 存在"
 
   SCHED_CONTENT=$(cat "$SCHED_MAINT")
-  if echo "$SCHED_CONTENT" | grep -q -- "--create-pr"; then
-    if ! echo "$SCHED_CONTENT" | grep -q -- "--allowedTools"; then
-      echo "scheduled-maintenance.yml: claude_args --allowedTools 未設定（PR作成コマンドが許可されない可能性）"
-    fi
-    if ! echo "$SCHED_CONTENT" | grep -q "Bash(gh pr create:\*)"; then
-      echo "scheduled-maintenance.yml: Bash(gh pr create:*) 未許可（--create-pr が PR を作成できない）"
-    fi
-    if ! echo "$SCHED_CONTENT" | grep -q 'GH_TOKEN: ${{ github.token }}'; then
-      echo "scheduled-maintenance.yml: GH_TOKEN 未設定（gh CLI が認証できない可能性）"
-    fi
+  if ! echo "$SCHED_CONTENT" | grep -q -- "--create-pr"; then
+    echo "scheduled-maintenance.yml: prompt に --create-pr がありません（branch/commit/push 作成に必要）"
+  fi
+  if ! echo "$SCHED_CONTENT" | grep -q "Create maintenance pull request"; then
+    echo "scheduled-maintenance.yml: maintenance PR 作成 step が未設定"
+  fi
+  if ! echo "$SCHED_CONTENT" | grep -Fq 'CLAUDE_BRANCH: maintenance/${{ github.run_id }}-${{ github.run_attempt }}'; then
+    echo "scheduled-maintenance.yml: agent mode 用の CLAUDE_BRANCH が未設定です"
+  fi
+  if ! echo "$SCHED_CONTENT" | grep -q "Prepare maintenance branch"; then
+    echo "scheduled-maintenance.yml: Claude action 実行前の maintenance branch checkout が未設定です"
+  fi
+  if ! echo "$SCHED_CONTENT" | grep -Fq 'github_token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}'; then
+    echo "scheduled-maintenance.yml: workflow 更新可能な CLAUDE_PR_GITHUB_TOKEN が Claude action に渡されていません"
+  fi
+  if ! echo "$SCHED_CONTENT" | grep -Fq 'GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}'; then
+    echo "scheduled-maintenance.yml: PR作成 step の GH_TOKEN が CLAUDE_PR_GITHUB_TOKEN ではありません"
+  fi
+  if echo "$SCHED_CONTENT" | grep -q "Bash(gh pr create:\*)"; then
+    echo "scheduled-maintenance.yml: Claude allowedTools に Bash(gh pr create:*) が残っています"
   fi
 else
   echo "scheduled-maintenance.yml: 未配置"
@@ -958,12 +968,12 @@ fi
 
 **結果パターン:**
 
-| 状態                                  | 対応                                                 |
-| ------------------------------------- | ---------------------------------------------------- |
-| ワークフロー存在 + テンプレートと一致 | ✅ スキップ                                          |
-| ワークフロー存在 + テンプレートと乖離 | ⚠️ テンプレートとの差分を表示                        |
-| PR作成許可またはGH_TOKEN不足          | ⚠️ `claude_args --allowedTools` と `GH_TOKEN` を更新 |
-| ワークフロー未配置                    | ⚠️ → full mode でテンプレートからコピー              |
+| 状態                                  | 対応                                                           |
+| ------------------------------------- | -------------------------------------------------------------- |
+| ワークフロー存在 + テンプレートと一致 | ✅ スキップ                                                    |
+| ワークフロー存在 + テンプレートと乖離 | ⚠️ テンプレートとの差分を表示                                  |
+| PR作成 step または token 分離不足     | ⚠️ post-Claude PR 作成 step と `CLAUDE_PR_GITHUB_TOKEN` に更新 |
+| ワークフロー未配置                    | ⚠️ → full mode でテンプレートからコピー                        |
 
 **MODE が `full` かつ未配置の場合:**
 
@@ -983,13 +993,14 @@ fi
 **前提条件:**
 
 - `CLAUDE_CODE_OAUTH_TOKEN` シークレットがリポジトリに設定されていること
+- scheduled maintenance で workflow file を更新する場合は `CLAUDE_PR_GITHUB_TOKEN` シークレットが設定されていること
 - シークレット未設定の場合は設定手順を案内
 
 **結果:**
 
 - ✅ scheduled-maintenance.yml 設定済み
 - 🔧 scheduled-maintenance.yml を配置しました
-- ⚠️ `CLAUDE_CODE_OAUTH_TOKEN` シークレットの設定が必要です
+- ⚠️ `CLAUDE_CODE_OAUTH_TOKEN` / `CLAUDE_PR_GITHUB_TOKEN` シークレットの設定が必要です
 
 ### 3.5.0.2 Quality Gate Fallback Consistency Check
 
@@ -1206,17 +1217,19 @@ done
 
 **チェック項目:**
 
-| #   | チェック                                       | 推奨値                                                                    | コスト影響                     |
-| --- | ---------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------ |
-| 1   | `claude.yml` の `cancel-in-progress`           | `true`                                                                    | 重複実行防止（**最大の効果**） |
-| 2   | `claude.yml` の issues トリガー                | `[opened]` のみ                                                           | `assigned` での不要起動防止    |
-| 3   | `claude.yml` の bot 除外                       | `github-actions[bot]`, `dependabot[bot]`                                  | bot連鎖防止                    |
-| 4   | `claude.yml` の timeout                        | `20` 分以下                                                               | 長時間実行抑制                 |
-| 5   | `claude-code-review.yml` の `synchronize` 除外 | `[opened, ready_for_review, reopened]`                                    | push毎のレビュー実行防止       |
-| 6   | Copilot code review との重複                   | どちらか1つに統一                                                         | AIレビュー重複防止             |
-| 7   | Issue対応用 `gh pr create` の許可              | `claude_args --allowedTools` に `Bash(gh pr create:*)`                    | Issue対応後のPR自動作成        |
-| 8   | `gh` CLI 認証用 token                          | Claude action step の `env.GH_TOKEN: ${{ github.token }}`                 | `gh pr create` の認証失敗防止  |
-| 9   | 旧形式の tool 設定                             | `settings.permissions.allowedTools` ではなく `claude_args --allowedTools` | Claude SDK への反映漏れ防止    |
+| #   | チェック                                       | 推奨値                                                                    | コスト影響                      |
+| --- | ---------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------- |
+| 1   | `claude.yml` の `cancel-in-progress`           | `true`                                                                    | 重複実行防止（**最大の効果**）  |
+| 2   | `claude.yml` の issues トリガー                | `[opened]` のみ                                                           | `assigned` での不要起動防止     |
+| 3   | `claude.yml` の bot / author 制限              | `sender.type != 'Bot'` + OWNER / MEMBER / COLLABORATOR                    | bot連鎖防止・権限面の縮小       |
+| 4   | `claude.yml` の timeout                        | `20` 分以下                                                               | 長時間実行抑制                  |
+| 5   | `claude-code-review.yml` の `synchronize` 除外 | `[opened, ready_for_review, reopened]`                                    | push毎のレビュー実行防止        |
+| 6   | Copilot code review との重複                   | どちらか1つに統一                                                         | AIレビュー重複防止              |
+| 7   | Issue対応用 PR 作成 step                       | `Create pull request from Claude branch`                                  | Issue対応後のPR自動作成         |
+| 8   | `gh` CLI 認証用 token                          | Issue workflow は secret fallback / scheduled は専用 secret               | Claude Bash への token 露出低減 |
+| 9   | Claude 側の PR 作成 tool                       | `Bash(gh pr create:*)` を許可しない                                       | token 露出範囲の縮小            |
+| 10  | scheduled maintenance branch                   | `CLAUDE_BRANCH` を事前固定                                                | agent mode の PR 作成漏れ防止   |
+| 11  | 旧形式の tool 設定                             | `settings.permissions.allowedTools` ではなく `claude_args --allowedTools` | Claude SDK への反映漏れ防止     |
 
 ```bash
 # claude.yml のチェック
@@ -1231,8 +1244,13 @@ if [ -f ".github/workflows/claude.yml" ]; then
     ISSUES+=("claude.yml: issues トリガーに assigned が含まれている（推奨: opened のみ）")
   fi
 
-  if ! echo "$CLAUDE_YML" | grep -q "github-actions\[bot\]"; then
-    ISSUES+=("claude.yml: bot ユーザー除外が未設定")
+  if ! echo "$CLAUDE_YML" | grep -q "github.event.sender.type != 'Bot'"; then
+    ISSUES+=("claude.yml: sender.type による bot 除外が未設定")
+  fi
+
+  if ! echo "$CLAUDE_YML" | grep -q "author_association" || \
+     ! echo "$CLAUDE_YML" | grep -q 'OWNER","MEMBER","COLLABORATOR'; then
+    ISSUES+=("claude.yml: author_association による信頼済みユーザー制限が未設定")
   fi
 
   if ! echo "$CLAUDE_YML" | grep -q "draft"; then
@@ -1245,14 +1263,14 @@ if [ -f ".github/workflows/claude.yml" ]; then
   fi
 
   if echo "$CLAUDE_YML" | grep -q "gh pr create"; then
-    if ! echo "$CLAUDE_YML" | grep -q -- "--allowedTools"; then
-      ISSUES+=("claude.yml: claude_args --allowedTools 未設定（gh pr create が Claude SDK の allowedTools に入らない可能性）")
+    if ! echo "$CLAUDE_YML" | grep -q "Create pull request from Claude branch"; then
+      ISSUES+=("claude.yml: Issue対応後のPR作成 step が未設定")
     fi
-    if ! echo "$CLAUDE_YML" | grep -q "Bash(gh pr create:\*)"; then
-      ISSUES+=("claude.yml: Bash(gh pr create:*) 未許可（Issue対応後にPRを自動作成できない）")
+    if ! echo "$CLAUDE_YML" | grep -Fq 'GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || github.token }}'; then
+      ISSUES+=("claude.yml: PR作成 step の GH_TOKEN が専用 secret / workflow token の fallback ではありません")
     fi
-    if ! echo "$CLAUDE_YML" | grep -q 'GH_TOKEN: ${{ github.token }}'; then
-      ISSUES+=("claude.yml: Claude action step に GH_TOKEN が未設定（gh CLI が認証できない可能性）")
+    if echo "$CLAUDE_YML" | grep -q "Bash(gh pr create:\*)"; then
+      ISSUES+=("claude.yml: Claude allowedTools に Bash(gh pr create:*) が残っています（post-Claude step に分離推奨）")
     fi
   fi
 
@@ -2322,27 +2340,28 @@ fi
 
 **同期対象ファイルの分類:**
 
-| カテゴリ     | ファイル                                      | 同期ポリシー                   |
-| ------------ | --------------------------------------------- | ------------------------------ |
-| マネージド   | `.github/workflows/claude.yml`                | 常に config の最新版で上書き   |
-| マネージド   | `.github/workflows/claude-code-review.yml`    | 常に config の最新版で上書き   |
-| マネージド   | `.github/workflows/quality-gate-fallback.yml` | 常に config の最新版で上書き   |
-| マネージド   | `.claude/hooks/block_git_no_verify.py`        | 常に config の最新版で上書き   |
-| マネージド   | `.claude/hooks/pre_git_quality_gates.py`      | 常に config の最新版で上書き   |
-| マネージド   | `.claude/hooks/post_git_push_ci.py`           | 常に config の最新版で上書き   |
-| マネージド   | `.claude/hooks/post_commit_adr_reminder.py`   | 常に config の最新版で上書き   |
-| マネージド   | `.claude/rules/development-standards.md`      | 常に config の最新版で上書き   |
-| マネージド   | `.claude/rules/git-conventions.md`            | 常に config の最新版で上書き   |
-| マネージド   | `.claude/rules/release-types.md`              | 常に config の最新版で上書き   |
-| テンプレート | `.github/workflows/security.yml`              | 差分表示 → 確認後に上書き      |
-| テンプレート | `.github/workflows/ci.yml`                    | 差分表示 → 確認後に上書き      |
-| テンプレート | `.github/ISSUE_TEMPLATE/*`                    | 欠落ファイルのみ追加           |
-| テンプレート | `.github/pull_request_template.md`            | 欠落時のみ追加                 |
-| テンプレート | `.github/policies/*`                          | 欠落ファイルのみ追加           |
-| テンプレート | `vitest.config.ts`                            | 欠落時のみ追加 (Vitest 採用時) |
-| テンプレート | `eslint.config.mjs`                           | 欠落時のみ追加 (flat config)   |
-| テンプレート | `biome.json`                                  | 欠落時のみ追加 (Biome 採用時)  |
-| テンプレート | `commitlint.config.js`                        | 欠落時のみ追加                 |
+| カテゴリ     | ファイル                                      | 同期ポリシー                    |
+| ------------ | --------------------------------------------- | ------------------------------- |
+| マネージド   | `.github/workflows/claude.yml`                | 常に config の最新版で上書き    |
+| マネージド   | `.github/workflows/claude-code-review.yml`    | 常に config の最新版で上書き    |
+| マネージド   | `.github/workflows/quality-gate-fallback.yml` | 常に config の最新版で上書き    |
+| マネージド   | `script/wait-ci-checks.sh`                    | Claude review workflow とセット |
+| マネージド   | `.claude/hooks/block_git_no_verify.py`        | 常に config の最新版で上書き    |
+| マネージド   | `.claude/hooks/pre_git_quality_gates.py`      | 常に config の最新版で上書き    |
+| マネージド   | `.claude/hooks/post_git_push_ci.py`           | 常に config の最新版で上書き    |
+| マネージド   | `.claude/hooks/post_commit_adr_reminder.py`   | 常に config の最新版で上書き    |
+| マネージド   | `.claude/rules/development-standards.md`      | 常に config の最新版で上書き    |
+| マネージド   | `.claude/rules/git-conventions.md`            | 常に config の最新版で上書き    |
+| マネージド   | `.claude/rules/release-types.md`              | 常に config の最新版で上書き    |
+| テンプレート | `.github/workflows/security.yml`              | 差分表示 → 確認後に上書き       |
+| テンプレート | `.github/workflows/ci.yml`                    | 差分表示 → 確認後に上書き       |
+| テンプレート | `.github/ISSUE_TEMPLATE/*`                    | 欠落ファイルのみ追加            |
+| テンプレート | `.github/pull_request_template.md`            | 欠落時のみ追加                  |
+| テンプレート | `.github/policies/*`                          | 欠落ファイルのみ追加            |
+| テンプレート | `vitest.config.ts`                            | 欠落時のみ追加 (Vitest 採用時)  |
+| テンプレート | `eslint.config.mjs`                           | 欠落時のみ追加 (flat config)    |
+| テンプレート | `biome.json`                                  | 欠落時のみ追加 (Biome 採用時)   |
+| テンプレート | `commitlint.config.js`                        | 欠落時のみ追加                  |
 
 `quality-gate-fallback.yml` は `setup-team-protection.sh` がブランチ保護に登録する `Quality Gate` 必須チェックとセットで配布する。ci.yml が paths フィルタ等でスキップされた場合に PR が `Expected — Waiting for status to be reported` のまま blocked にならないよう、Pass を emit する役割を持つ。
 
@@ -2387,6 +2406,7 @@ MANAGED_FILES=(
   ".github/workflows/claude.yml"
   ".github/workflows/claude-code-review.yml"
   ".github/workflows/quality-gate-fallback.yml"
+  "script/wait-ci-checks.sh"
   ".claude/hooks/block_git_no_verify.py"
   ".claude/hooks/pre_git_quality_gates.py"
   ".claude/hooks/post_git_push_ci.py"
@@ -2423,6 +2443,18 @@ for file in "${MANAGED_FILES[@]}"; do
     SKIPPED+=("$file (最新)")
   fi
 done
+
+if [ "${#UPDATED[@]}" -gt 0 ] && git remote get-url origin 2>/dev/null | grep -q "keito4/config"; then
+  echo "🔁 Downstream sync required"
+  echo "Managed config files changed. Repositories using config-base should run /repo-maintenance or receive a sync PR."
+  echo ""
+  echo "Suggested check:"
+  echo "  for repo in ~/develop/github.com/*/*; do"
+  echo "    [ -f \"\$repo/.devcontainer/devcontainer.json\" ] || continue"
+  echo "    grep -q 'config-base' \"\$repo/.devcontainer/devcontainer.json\" || continue"
+  echo "    echo \"- \$repo\""
+  echo "  done"
+fi
 ```
 
 **テンプレートファイルの同期ロジック:**
@@ -2971,7 +3003,8 @@ git status --porcelain
 ### 7.2 Create Branch
 
 ```bash
-git checkout -b maintenance/$(date +%Y%m%d)
+CLAUDE_BRANCH="${CLAUDE_BRANCH:-maintenance/$(date +%Y%m%d)}"
+git checkout "$CLAUDE_BRANCH" 2>/dev/null || git checkout -b "$CLAUDE_BRANCH"
 ```
 
 ### 7.3 Commit Changes
@@ -2992,46 +3025,13 @@ git commit -m "chore: repository maintenance $(date +%Y-%m-%d)
 Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
 
-### 7.4 Push and Create PR
+### 7.4 Push Branch
 
 ```bash
-git push -u origin maintenance/$(date +%Y%m%d)
-
-gh pr create \
-  --base main \
-  --title "chore: Repository maintenance $(date +%Y-%m-%d)" \
-  --body "$(cat <<'EOF'
-## Summary
-
-Automated repository maintenance performed on $(date +%Y-%m-%d).
-
-## Changes
-
-### Environment
-- [List changes]
-
-### Setup
-- [List changes]
-
-### Cleanup
-- [List changes]
-
-### Discovery
-- [List changes]
-
-## Health Score
-- Before: X/100
-- After: Y/100
-
-## Checklist
-- [ ] CI passes
-- [ ] No breaking changes
-- [ ] Review action items
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
+git push -u origin "$CLAUDE_BRANCH"
 ```
+
+scheduled maintenance から実行されている場合、PR作成は workflow の post-Claude step が `CLAUDE_BRANCH` と `CLAUDE_PR_GITHUB_TOKEN` を使って行う。Claude は `gh pr create` を実行しない。
 
 ## Step 7.5: CI Monitoring (Automatic)
 

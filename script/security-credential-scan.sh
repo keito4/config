@@ -162,6 +162,23 @@ CRITICAL_COUNT=0
 WARNING_COUNT=0
 FINDINGS=()
 
+is_known_false_positive() {
+  local pattern_name="$1"
+  local file="$2"
+  local line_content="$3"
+
+  case "$file" in
+    */flake.lock|flake.lock)
+      if [[ "$pattern_name" == "AWS Secret" ]] && \
+         [[ "$line_content" =~ \"(rev|narHash)\"[[:space:]]*: ]]; then
+        return 0
+      fi
+      ;;
+  esac
+
+  return 1
+}
+
 # Scan for patterns
 for pattern_name in "${!PATTERNS[@]}"; do
   pattern="${PATTERNS[$pattern_name]}"
@@ -176,6 +193,10 @@ for pattern_name in "${!PATTERNS[@]}"; do
 
     # Skip gitignored files
     if git check-ignore -q "$file" 2>/dev/null; then
+      continue
+    fi
+
+    if is_known_false_positive "$pattern_name" "$file" "$line_content"; then
       continue
     fi
 
