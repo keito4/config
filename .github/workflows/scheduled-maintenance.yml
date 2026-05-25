@@ -51,21 +51,10 @@ jobs:
             - What needs manual attention
 
             If no updates are needed, do NOT create an issue.
-          settings: |
-            {
-              "permissions": {
-                "allowedTools": [
-                  "Bash(gh:*)",
-                  "Bash(npm:*)",
-                  "Bash(pnpm:*)",
-                  "Bash(npx:*)",
-                  "Bash(node:*)",
-                  "Bash(git:*)",
-                  "Bash(curl:*)",
-                  "Bash(jq:*)"
-                ]
-              }
-            }
+          claude_args: |
+            --allowedTools "Bash(gh api:*),Bash(gh issue create:*),Bash(gh issue list:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(node:*),Bash(git:*),Bash(curl:*),Bash(jq:*)"
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Post failure issue
         if: failure()

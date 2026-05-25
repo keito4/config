@@ -71,20 +71,19 @@ jobs:
               continue
             fi
 
-            QUALITY_GATE_STATUS=$(echo "$QUALITY_GATE" | jq -r '.status')
-            QUALITY_GATE_CONCLUSION=$(echo "$QUALITY_GATE" | jq -r '.conclusion')
-
-            if [ "$QUALITY_GATE_STATUS" != "completed" ]; then
-              echo "⏳ Quality Gate is still running: $QUALITY_GATE_STATUS, waiting..."
+            if echo "$QUALITY_GATE" | jq -e 'select(.status != "completed")' >/dev/null; then
+              echo "⏳ Quality Gate is still running, waiting..."
+              echo "$QUALITY_GATE" | jq -r '"\(.name): \(.status) - \(.conclusion)"'
               sleep $POLL_INTERVAL
               ELAPSED_TIME=$((ELAPSED_TIME + POLL_INTERVAL))
               continue
             fi
 
             # Quality Gate完了 - 結果を確認
-            if [ "$QUALITY_GATE_CONCLUSION" != "success" ]; then
+            if echo "$QUALITY_GATE" | jq -e 'select(.conclusion != "success")' >/dev/null; then
               echo "ci_passed=false" >> "$GITHUB_OUTPUT"
-              echo "❌ Quality Gate failed with conclusion: $QUALITY_GATE_CONCLUSION"
+              echo "❌ Quality Gate failed:"
+              echo "$QUALITY_GATE" | jq -r 'select(.conclusion != "success") | "\(.name): \(.conclusion)"'
               echo "Claude Code Review will be skipped."
               exit 0
             fi
