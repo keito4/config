@@ -67,18 +67,6 @@ Manage GitHub Codespaces secrets across multiple repositories.
 
 **Claude command**: `/codespaces-secrets`
 
-### setup-env.sh
-
-Sets up environment variables for DevContainer from credential files.
-
-**Usage**: `./script/setup-env.sh`
-
-### setup-mcp.sh
-
-Sets up MCP (Model Context Protocol) configuration for Claude Code.
-
-**Usage**: `./script/setup-mcp.sh`
-
 ## Claude Code Development
 
 ### setup-claude.sh

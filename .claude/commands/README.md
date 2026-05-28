@@ -578,8 +578,6 @@ npm run update:all -- --skip-libs --skip-claude # Actions のみ
 | --------------------------- | ------------------------- | --------------------------------------- |
 | `setup-claude.sh`           | DevContainer postCreate   | Claude Code CLI の初期設定              |
 | `setup-claude-build.sh`     | DevContainer Dockerfile   | ビルド時の Claude Code セットアップ     |
-| `setup-env.sh`              | DevContainer postCreate   | 環境変数のセットアップ                  |
-| `setup-mcp.sh`              | DevContainer postCreate   | MCP 設定のセットアップ                  |
 | `setup-lsp.sh`              | DevContainer postCreate   | LSP サーバーのセットアップ              |
 | `install-npm-globals.sh`    | DevContainer postCreate   | グローバル npm パッケージのインストール |
 | `install-skills.sh`         | DevContainer postStart    | Claude スキルのインストール             |
