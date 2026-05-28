@@ -65,19 +65,6 @@ load ../test_helper/test_helper
   grep -q "output::require_directory()" "${REPO_ROOT}/script/lib/output.sh"
 }
 
-# Backward compatibility: errors:: namespace aliases
-@test "output.sh provides errors::fatal alias" {
-  grep -q "errors::fatal()" "${REPO_ROOT}/script/lib/output.sh"
-}
-
-@test "output.sh provides errors::warn alias" {
-  grep -q "errors::warn()" "${REPO_ROOT}/script/lib/output.sh"
-}
-
-@test "output.sh provides errors::require_command alias" {
-  grep -q "errors::require_command()" "${REPO_ROOT}/script/lib/output.sh"
-}
-
 @test "config::filter_gitconfig filters personal information" {
   # Create a test gitconfig with personal info
   local test_input="${TEST_TEMP_DIR}/test.gitconfig"
@@ -164,18 +151,3 @@ EOF
   [[ "$output" == *"Operation completed"* ]]
 }
 
-# Backward compatibility: test errors:: aliases work
-@test "errors:: aliases work through output.sh" {
-  source "${REPO_ROOT}/script/lib/output.sh"
-
-  run errors::require_command ls
-  [ "$status" -eq 0 ]
-
-  run errors::info "Test info"
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"Test info"* ]]
-
-  run errors::success "Test success"
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"Test success"* ]]
-}

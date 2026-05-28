@@ -33,20 +33,13 @@ credentials/
 3. **環境変数を自動セットアップ**
 
    ```bash
-   bash script/setup-env.sh
+   bash script/credentials.sh fetch
+   cp credentials/devcontainer.env ~/.devcontainer.env && chmod 600 ~/.devcontainer.env
    ```
 
    このスクリプトは以下を自動生成します：
-   - `~/.devcontainer.env` - DevContainer 環境変数
+   - `credentials/devcontainer.env` - DevContainer 環境変数
    - `credentials/mcp.env` - MCP 設定用環境変数
-
-4. **MCP 設定を生成**
-
-   ```bash
-   bash script/setup-mcp.sh
-   ```
-
-   `.mcp.json` が自動生成されます。
 
 ## サポートされているMCPサーバー
 
@@ -199,29 +192,15 @@ cp credentials/templates/devcontainer.env.template ~/.devcontainer.env
 **解決策**:
 
 1. スクリプトの実行権限確認: `ls -l script/setup-*.sh`
-2. 手動実行でデバッグ: `bash -x script/setup-env.sh`
+2. 手動実行でデバッグ: `bash -x script/credentials.sh fetch`
 
-### .mcp.json が生成されない
+### MCP設定を変更したい
 
-**症状**: `envsubst: command not found`
-
-**解決策**:
-
-1. `envsubst` インストール:
-   ```bash
-   brew install gettext
-   brew link --force gettext
-   ```
-2. `credentials/mcp.env` が正しく生成されているか確認:
-   ```bash
-   cat credentials/mcp.env
-   ```
+`.mcp.json` はリポジトリに直接コミットされています。変更が必要な場合はリポジトリの `.mcp.json` を直接編集してください。
 
 ## 関連ファイル
 
-- `.mcp.json.template`: MCP 設定テンプレート（環境変数参照）
-- `script/setup-env.sh`: 環境変数自動セットアップスクリプト
-- `script/setup-mcp.sh`: MCP 設定自動生成スクリプト
+- `script/credentials.sh`: クレデンシャル取得スクリプト
 - `.zsh/configs/pre/.env.secret.template`: シェル環境変数トークンのテンプレート
 - `.claude/settings.local.json.template`: Claude Code ローカル設定のテンプレート
 - `script/export.sh`: 設定エクスポートスクリプト（フィルタリング機能含む）

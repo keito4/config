@@ -350,8 +350,8 @@ cat .claude-plugin/plugin.json | jq '.lspServers | keys'
 
 ```bash
 # 環境変数を再生成
-bash script/setup-env.sh
-bash script/setup-mcp.sh
+bash script/credentials.sh fetch
+cp credentials/devcontainer.env ~/.devcontainer.env && chmod 600 ~/.devcontainer.env
 
 # DevContainerを完全に再ビルド
 # VS Code: "Dev Containers: Rebuild Container"

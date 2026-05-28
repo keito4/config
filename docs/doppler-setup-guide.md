@@ -181,7 +181,7 @@ export DOPPLER_TOKEN=dp.pt.xxxxx
 
 ## 既存の 1Password 管理からの移行
 
-このリポジトリでは `script/setup-env.sh` + 1Password CLI でシークレットを管理しているが、
+このリポジトリでは `script/credentials.sh` + 1Password CLI でシークレットを管理しているが、
 プロジェクトごとに Doppler に移行する場合の手順：
 
 1. 1Password のシークレットを Doppler の `dev` config にインポート
