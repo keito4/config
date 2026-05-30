@@ -1,12 +1,24 @@
+'use strict';
+
 const fs = require('fs');
 const path = require('path');
 
 const repoPath = path.resolve(__dirname, '..');
 
+/**
+ * Read a workflow file from the repository.
+ * @param {string} relativePath - Relative path from the repository root.
+ * @returns {string} The workflow file content.
+ */
 function readWorkflow(relativePath) {
   return fs.readFileSync(path.join(repoPath, relativePath), 'utf8');
 }
 
+/**
+ * Check if a workflow file exists in the repository.
+ * @param {string} relativePath - Relative path from the repository root.
+ * @returns {boolean} True if the file exists.
+ */
 function workflowExists(relativePath) {
   return fs.existsSync(path.join(repoPath, relativePath));
 }
