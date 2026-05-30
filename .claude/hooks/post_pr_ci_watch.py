@@ -72,8 +72,6 @@ def get_pr_checks(pr_number: str, timeout_seconds: int = 600):
                 return "no_checks", []
 
             # チェック状態を集計
-            pending = [c for c in checks if c.get("state") == "PENDING"]
-            in_progress = [c for c in checks if c.get("state") == "IN_PROGRESS"]
             completed = [c for c in checks if c.get("state") == "SUCCESS" or c.get("state") == "FAILURE" or c.get("state") == "SKIPPED"]
             failed = [c for c in checks if c.get("conclusion") == "FAILURE" or c.get("state") == "FAILURE"]
 
