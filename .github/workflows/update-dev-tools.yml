@@ -10,14 +10,15 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
   check-updates:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       has_updates: ${{ steps.compare.outputs.has_updates }}
       updates_summary: ${{ steps.compare.outputs.summary }}
