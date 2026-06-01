@@ -63,6 +63,7 @@ claude --help
 - `plugin-dev` - プラグイン開発ツール
 - `typescript-lsp` - TypeScript 言語サーバー
 - `code-review` - コードレビュー支援
+- `sentry` - Sentry 連携・エラー監視
 
 **ワークフロープラグイン (`claude-code-workflows`)**:
 
