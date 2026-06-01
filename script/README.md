@@ -254,6 +254,7 @@ Displays the config-base DevContainer image version.
 ### install-npm-globals.sh
 
 Installs global npm packages defined in `npm/global.json`.
+Uses npm's legacy peer dependency resolver for global CLI packages to match DevContainer builds.
 
 **Used by**: DevContainer postCreateCommand
 
