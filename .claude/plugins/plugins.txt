@@ -15,6 +15,9 @@ typescript-lsp@claude-plugins-official
 # Code Review
 code-review@claude-plugins-official
 
+# Monitoring
+sentry@claude-plugins-official
+
 # === Workflow Plugins (claude-code-workflows) ===
 code-refactoring@claude-code-workflows
 kubernetes-operations@claude-code-workflows

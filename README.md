@@ -1078,7 +1078,7 @@ The repository includes a complete DevContainer setup (`.devcontainer/`) that pr
 
 **Pre-installed Plugins** (defined in `.claude/plugins/plugins.txt`):
 
-- Official plugins: `commit-commands`, `hookify`, `plugin-dev`, `typescript-lsp`, `code-review`
+- Official plugins: `commit-commands`, `hookify`, `plugin-dev`, `typescript-lsp`, `code-review`, `sentry`
 - Workflow plugins: `code-refactoring`, `kubernetes-operations`, `javascript-typescript`, `backend-development`, `full-stack-orchestration`, `database-design`, `database-migrations`
 - Supabase plugins: `postgres-best-practices`
 - Vercel plugins: `agent-browser`
