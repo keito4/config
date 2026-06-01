@@ -4,7 +4,6 @@
 # shellcheck disable=SC2034 # all variables are sourced and consumed externally
 
 declare -A DOT_DIR_PURPOSE=(
-  [.agents]="AI agent skills and configurations"
   [.codex]="Codex AI agent configuration"
   [.context]="Shared intermediate artifacts (complexity reports etc.)"
   [.cursor]="Cursor editor settings"
@@ -32,7 +31,6 @@ declare -A REG_DIR_PURPOSE=(
   [dot]="Dotfiles (DevContainer .zshrc, peco)"
   [eslint]="ESLint configuration and plugins"
   [git]="Git hooks and configuration"
-  [next]="Next.js project templates"
   [nix]="nix-darwin + home-manager (macOS environment)"
   [npm]="npm global configuration and library management"
   [script]="Utility shell scripts"

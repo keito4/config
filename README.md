@@ -259,10 +259,8 @@ config/
 │   ├── security-credential-scan.sh
 │   ├── setup-claude-build.sh
 │   ├── setup-claude.sh
-│   ├── setup-env.sh
 │   ├── setup-file-length-check.sh
 │   ├── setup-lsp.sh
-│   ├── setup-mcp.sh
 │   ├── setup-scheduled-agents.sh  # Scheduled remote agents セットアップ
 │   ├── setup-team-protection.sh
 │   ├── update-agents-md.sh         # AGENTS.md 自動生成セクション更新
@@ -481,15 +479,17 @@ git config --global user.signingkey ~/.ssh/id_ed25519.pub
    For multiple 1Password accounts:
 
    ```bash
-   OP_ACCOUNT=my.1password.com bash script/setup-env.sh
-   bash script/setup-mcp.sh
+   OP_ACCOUNT=my.1password.com bash script/credentials.sh fetch
+   cp credentials/devcontainer.env ~/.devcontainer.env
+   chmod 600 ~/.devcontainer.env
    ```
 
    For single account:
 
    ```bash
-   bash script/setup-env.sh
-   bash script/setup-mcp.sh
+   bash script/credentials.sh fetch
+   cp credentials/devcontainer.env ~/.devcontainer.env
+   chmod 600 ~/.devcontainer.env
    ```
 
    This creates `~/.devcontainer.env` which is **required** for DevContainer startup.
@@ -511,9 +511,9 @@ git config --global user.signingkey ~/.ssh/id_ed25519.pub
 
 The automated setup creates:
 
-- `~/.devcontainer.env` - DevContainer environment variables (600 permissions)
+- `credentials/devcontainer.env` - DevContainer environment variables (600 permissions)
 - `credentials/mcp.env` - MCP environment variables (600 permissions)
-- `.mcp.json` - MCP configuration file (600 permissions)
+- `~/.devcontainer.env` - Installed from `credentials/devcontainer.env` (must be copied manually)
 
 All generated files are automatically excluded from Git via `.gitignore`.
 
@@ -816,19 +816,18 @@ Use the automated setup scripts to generate environment files from 1Password:
 
 ```bash
 # For multiple 1Password accounts
-OP_ACCOUNT=my.1password.com bash script/setup-env.sh
-bash script/setup-mcp.sh
+OP_ACCOUNT=my.1password.com bash script/credentials.sh fetch
+cp credentials/devcontainer.env ~/.devcontainer.env && chmod 600 ~/.devcontainer.env
 
 # For single account
-bash script/setup-env.sh
-bash script/setup-mcp.sh
+bash script/credentials.sh fetch
+cp credentials/devcontainer.env ~/.devcontainer.env && chmod 600 ~/.devcontainer.env
 ```
 
 This automatically creates:
 
-- `~/.devcontainer.env` - DevContainer environment variables
+- `credentials/devcontainer.env` - DevContainer environment variables
 - `credentials/mcp.env` - MCP environment variables
-- `.mcp.json` - MCP configuration file
 
 All files are set with 600 permissions and excluded from Git.
 
@@ -852,7 +851,7 @@ If you need to customize `.mcp.json`:
 chmod 600 .mcp.json
 ```
 
-#### When to Run Setup Scripts
+#### When to Regenerate Credentials
 
 The environment variable setup is required at specific times:
 
@@ -861,42 +860,32 @@ The environment variable setup is required at specific times:
 Before using DevContainer for the first time, run on your **host machine**:
 
 ```bash
-OP_ACCOUNT=my.1password.com bash script/setup-env.sh
+OP_ACCOUNT=my.1password.com bash script/credentials.sh fetch
+cp credentials/devcontainer.env ~/.devcontainer.env && chmod 600 ~/.devcontainer.env
 ```
 
-This creates `~/.devcontainer.env` which is required for DevContainer startup via `runArgs`.
+This creates `~/.devcontainer.env` which is required for DevContainer startup.
 
-**2. DevContainer Startup (Automatic)**
+**2. Credential Updates (Manual)**
 
-When DevContainer starts, `postCreateCommand` automatically runs:
-
-- `setup-env.sh` - Regenerates environment files inside container
-- `setup-mcp.sh` - Generates `.mcp.json` from template
-
-**3. Credential Updates (Manual)**
-
-Re-run setup scripts when:
+Re-run when:
 
 - API keys are rotated in 1Password
 - New credentials are added to templates
 - Environment variables need to be refreshed
 
 ```bash
-# On host machine
-OP_ACCOUNT=my.1password.com bash script/setup-env.sh
-
-# Inside DevContainer (or rebuild container)
-bash script/setup-env.sh
-bash script/setup-mcp.sh
+bash script/credentials.sh fetch
+cp credentials/devcontainer.env ~/.devcontainer.env && chmod 600 ~/.devcontainer.env
 ```
 
-**4. Template Updates (Manual)**
+**3. Template Updates (Manual)**
 
 After modifying `credentials/templates/*.env.template`, regenerate:
 
 ```bash
-bash script/setup-env.sh
-bash script/setup-mcp.sh
+bash script/credentials.sh fetch
+cp credentials/devcontainer.env ~/.devcontainer.env && chmod 600 ~/.devcontainer.env
 ```
 
 #### How It Works
@@ -930,15 +919,16 @@ make version-dry-run
 #### Credential Management
 
 ```bash
-# Automated setup (recommended)
-bash script/setup-env.sh    # Generate environment variables from 1Password
-bash script/setup-mcp.sh    # Generate MCP configuration
+# Fetch credentials from 1Password
+bash script/credentials.sh fetch
 
 # For multiple 1Password accounts
-OP_ACCOUNT=my.1password.com bash script/setup-env.sh
+OP_ACCOUNT=my.1password.com bash script/credentials.sh fetch
 
-# Legacy method
-make credentials            # Fetch credentials from 1Password
+# Install DevContainer environment file
+cp credentials/devcontainer.env ~/.devcontainer.env && chmod 600 ~/.devcontainer.env
+
+# Other credential management
 make clean-credentials      # Clean up credential files
 make list-credentials       # List available credential templates
 ```
@@ -1088,7 +1078,7 @@ The repository includes a complete DevContainer setup (`.devcontainer/`) that pr
 
 **Pre-installed Plugins** (defined in `.claude/plugins/plugins.txt`):
 
-- Official plugins: `commit-commands`, `hookify`, `plugin-dev`, `typescript-lsp`, `code-review`
+- Official plugins: `commit-commands`, `hookify`, `plugin-dev`, `typescript-lsp`, `code-review`, `sentry`
 - Workflow plugins: `code-refactoring`, `kubernetes-operations`, `javascript-typescript`, `backend-development`, `full-stack-orchestration`, `database-design`, `database-migrations`
 - Supabase plugins: `postgres-best-practices`
 - Vercel plugins: `agent-browser`

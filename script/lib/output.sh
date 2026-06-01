@@ -115,15 +115,6 @@ log_info() { output::info "$@"; }
 log_success() { output::success "$@"; }
 log_warn() { output::warning "$@"; }
 
-# errors:: namespace aliases (migrated from errors.sh)
-errors::fatal() { output::fatal "$@"; }
-errors::warn() { output::warning "$@"; }
-errors::info() { output::info "$@"; }
-errors::success() { output::success "$@"; }
-errors::require_command() { output::require_command "$@"; }
-errors::require_file() { output::require_file "$@"; }
-errors::require_directory() { output::require_directory "$@"; }
-
 # Bash-compatible short aliases
 info() { output::info "$@"; }
 success() { output::success "$@"; }

@@ -294,6 +294,46 @@
     "hookify@claude-code-plugins": true,
     "security-guidance@claude-code-plugins": true,
     "nextjs-vercel-pro@claude-code-templates": true,
-    "supabase-toolkit@claude-code-templates": true
+    "supabase-toolkit@claude-code-templates": true,
+    "commit-commands@claude-plugins-official": true,
+    "hookify@claude-plugins-official": true,
+    "plugin-dev@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "sentry@claude-plugins-official": true,
+    "postgres-best-practices@supabase-agent-skills": true,
+    "agent-browser@agent-browser": true,
+    "context7@intellectronica-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/anthropics/claude-plugins-official.git"
+      }
+    },
+    "agent-browser": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/vercel-labs/agent-browser.git"
+      }
+    },
+    "claude-code-workflows": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/wshobson/agents.git"
+      }
+    },
+    "intellectronica-skills": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/intellectronica/agent-skills.git"
+      }
+    },
+    "supabase-agent-skills": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/supabase/agent-skills.git"
+      }
+    }
   }
 }

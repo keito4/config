@@ -31,11 +31,6 @@ load ../test_helper/test_helper
     [ -x "$REPO_ROOT/script/pre-pr-checklist.sh" ]
 }
 
-@test "setup-mcp.sh exists and is executable" {
-    assert_file_exists "$REPO_ROOT/script/setup-mcp.sh"
-    [ -x "$REPO_ROOT/script/setup-mcp.sh" ]
-}
-
 @test "setup-lsp.sh exists and is executable" {
     assert_file_exists "$REPO_ROOT/script/setup-lsp.sh"
     [ -x "$REPO_ROOT/script/setup-lsp.sh" ]
@@ -81,11 +76,6 @@ load ../test_helper/test_helper
 @test "create-codespace.sh exists and is executable" {
     assert_file_exists "$REPO_ROOT/script/create-codespace.sh"
     [ -x "$REPO_ROOT/script/create-codespace.sh" ]
-}
-
-@test "setup-env.sh exists and is executable" {
-    assert_file_exists "$REPO_ROOT/script/setup-env.sh"
-    [ -x "$REPO_ROOT/script/setup-env.sh" ]
 }
 
 @test "setup-file-length-check.sh exists and is executable" {
