@@ -33,7 +33,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-ARG GH_CLI_VERSION=2.92.0
+ARG GH_CLI_VERSION=2.93.0
 
 # Install GitHub CLI (gh)
 # https://cli.github.com/
@@ -68,7 +68,7 @@ RUN OP_VERSION="${OP_CLI_VERSION}" \
 
 # Install Node.js
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG NODE_VERSION=24.15.0
+ARG NODE_VERSION=24.16.0
 RUN NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/arm64/arm64/') \
  && wget -q https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
  && tar -xJf node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz -C /usr/local --strip-components=1 \
@@ -77,7 +77,7 @@ RUN NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/
 
 # Install pnpm
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG PNPM_VERSION=11.1.2
+ARG PNPM_VERSION=11.5.0
 RUN npm install -g pnpm@${PNPM_VERSION}
 
 USER vscode
@@ -99,7 +99,7 @@ COPY npm/global.json /tmp/npm-global.json
 # Install Claude Code using native installer (npm installation deprecated)
 # Must run as vscode user so claude installs to /home/vscode/.claude/local/bin
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG CLAUDE_CODE_VERSION=2.1.143
+ARG CLAUDE_CODE_VERSION=2.1.159
 USER vscode
 RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
  && echo 'export PATH="$HOME/.local/bin:$HOME/.claude/local/bin:$PATH"' >> /home/vscode/.bashrc
