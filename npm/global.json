@@ -2,11 +2,11 @@
   "name": "lib",
   "dependencies": {
     "@commitlint/cli": {
-      "version": "21.0.0",
+      "version": "21.0.2",
       "overridden": false
     },
     "@commitlint/config-conventional": {
-      "version": "21.0.0",
+      "version": "21.0.2",
       "overridden": false
     },
     "@leonardsellem/n8n-mcp-server": {
@@ -14,11 +14,11 @@
       "overridden": false
     },
     "@openai/codex": {
-      "version": "0.130.0",
+      "version": "0.135.0",
       "overridden": false
     },
     "@google/gemini-cli": {
-      "version": "0.41.2",
+      "version": "0.44.1",
       "overridden": false
     },
     "happy": {
@@ -34,7 +34,7 @@
       "overridden": false
     },
     "typescript-language-server": {
-      "version": "5.2.0",
+      "version": "5.3.0",
       "overridden": false
     },
     "vscode-langservers-extracted": {
@@ -46,7 +46,7 @@
       "overridden": false
     },
     "corepack": {
-      "version": "0.34.7",
+      "version": "0.35.0",
       "overridden": false
     },
     "@antfu/ni": {
@@ -54,7 +54,7 @@
       "overridden": false
     },
     "difit": {
-      "version": "4.0.7",
+      "version": "5.0.1",
       "overridden": false
     },
     "mcp-remote": {
@@ -62,11 +62,11 @@
       "overridden": false
     },
     "n8n": {
-      "version": "2.19.5",
+      "version": "2.22.5",
       "overridden": false
     },
     "npm": {
-      "version": "11.14.1",
+      "version": "11.16.0",
       "overridden": false
     },
     "pm2": {
@@ -74,7 +74,7 @@
       "overridden": false
     },
     "vercel": {
-      "version": "53.3.2",
+      "version": "54.6.1",
       "overridden": false
     }
   }
