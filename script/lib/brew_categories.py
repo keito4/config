@@ -5,6 +5,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 
 def parse_args() -> argparse.Namespace:
@@ -25,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_manifest(path: Path) -> dict:
+def load_manifest(path: Path) -> dict[str, Any]:
     try:
         with path.open() as fh:
             return json.load(fh)
@@ -33,7 +34,7 @@ def load_manifest(path: Path) -> dict:
         raise SystemExit(f"Manifest not found: {path}") from exc
 
 
-def matches(match_spec: dict, item: str) -> bool:
+def matches(match_spec: dict[str, Any], item: str) -> bool:
     if any(item == exact for exact in match_spec.get("exact", [])):
         return True
     if any(item.startswith(prefix) for prefix in match_spec.get("prefix", [])):
@@ -44,9 +45,12 @@ def matches(match_spec: dict, item: str) -> bool:
     return False
 
 
-def categorize(items, categories):
-    assigned = set()
-    sections = []
+def categorize(
+    items: list[str],
+    categories: list[dict[str, Any]],
+) -> tuple[list[tuple[str, list[str]]], list[str]]:
+    assigned: set[str] = set()
+    sections: list[tuple[str, list[str]]] = []
     for category in categories:
         match_spec = category.get("match", {})
         matched = [item for item in items if item not in assigned and matches(match_spec, item)]
@@ -57,7 +61,11 @@ def categorize(items, categories):
     return sections, remaining
 
 
-def emit_human(sections, remaining, show_uncategorized: bool):
+def emit_human(
+    sections: list[tuple[str, list[str]]],
+    remaining: list[str],
+    show_uncategorized: bool,
+) -> None:
     for title, rows in sections:
         print(f"=== {title} ===")
         print("\n".join(rows) if rows else "")
@@ -67,7 +75,11 @@ def emit_human(sections, remaining, show_uncategorized: bool):
         print("\n".join(remaining) if remaining else "")
 
 
-def emit_brew(sections, remaining, item_type):
+def emit_brew(
+    sections: list[tuple[str, list[str]]],
+    remaining: list[str],
+    item_type: str,
+) -> None:
     keyword = "brew" if item_type == "formulae" else "cask"
     for title, rows in sections:
         if not rows:
@@ -83,7 +95,7 @@ def emit_brew(sections, remaining, item_type):
         print()
 
 
-def main():
+def main() -> None:
     args = parse_args()
     manifest = load_manifest(Path(args.manifest))
     items = [line.strip() for line in sys.stdin if line.strip()]

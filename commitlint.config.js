@@ -9,6 +9,9 @@ const releaseSensitivePatterns = [
   /^\.codex\//,
 ];
 
+/**
+ * @returns {string[]} List of staged file paths
+ */
 const getStagedFiles = () => {
   try {
     return execSync('git diff --cached --name-only', { encoding: 'utf8' }).split('\n').filter(Boolean);
@@ -17,6 +20,10 @@ const getStagedFiles = () => {
   }
 };
 
+/**
+ * @param {{ type: string | null | undefined }} parsed - Parsed commit message object
+ * @returns {[true] | [false, string]} Validation result: [true] on pass, [false, message] on fail
+ */
 const releaseTypeRule = (parsed) => {
   const files = getStagedFiles();
   const touched = files.filter((file) => releaseSensitivePatterns.some((pattern) => pattern.test(file)));
