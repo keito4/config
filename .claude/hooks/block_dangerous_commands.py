@@ -21,9 +21,12 @@ normalized = " ".join(cmd.split()).lower()
 # ── Dangerous patterns (regex) ──────────────────────────────────
 DANGEROUS_PATTERNS = [
     # === Git destructive operations ===
-    (r"git\s+push\s+.*--force", "git push --force (force push)"),
-    (r"git\s+push\s+.*-f\b", "git push -f (force push)"),
-    (r"git\s+push\s+.*--force-with-lease", "git push --force-with-lease"),
+    # Bound the wildcard to the push invocation's own args: [^|&;<>]* stops at a
+    # pipe/redirect/separator so a later `-f` in a chained command or a flattened
+    # heredoc body (newlines collapse to spaces) cannot trigger a false positive.
+    (r"git\s+push\s+[^|&;<>]*--force", "git push --force (force push)"),
+    (r"git\s+push\s+[^|&;<>]*-f\b", "git push -f (force push)"),
+    (r"git\s+push\s+[^|&;<>]*--force-with-lease", "git push --force-with-lease"),
     (r"git\s+push\s+\S+\s+\+", "git push origin +branch (force push)"),
     (r"git\s+clean\s+.*-f", "git clean -f (delete untracked files)"),
     (r"git\s+reflog\s+expire", "git reflog expire (destroy recovery data)"),

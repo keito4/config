@@ -106,11 +106,17 @@ describe('Claude Code Hooks integrity', () => {
     });
 
     test('should block git force push (--force)', () => {
-      expect(content).toContain('git\\s+push\\s+.*--force');
+      expect(content).toContain('git\\s+push\\s+[^|&;<>]*--force');
     });
 
     test('should block git force push (-f)', () => {
-      expect(content).toContain('git\\s+push\\s+.*-f\\b');
+      expect(content).toContain('git\\s+push\\s+[^|&;<>]*-f\\b');
+    });
+
+    test('should bound force-push wildcard to avoid chained-command false positives', () => {
+      // [^|&;<>]* stops at a pipe/redirect/separator so a later -f in a chained
+      // command or flattened heredoc body does not trigger a false positive.
+      expect(content).not.toContain('git\\s+push\\s+.*-f\\b');
     });
 
     test('should block git reset --hard', () => {
