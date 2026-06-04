@@ -95,6 +95,13 @@ describe('Claude Code command-safety hooks', () => {
       expect(content).not.toContain('\\s+.*');
     });
 
+    test('should strip quoted string content to prevent quoted-separator bypass (Codex P1)', () => {
+      // Without this, --name 'a;b' would have ';' treated as a real boundary,
+      // allowing docker run --name 'a;b' --privileged ubuntu to bypass the check.
+      expect(content).toContain("re.sub(r\"'[^']*'\"");
+      expect(content).toContain('re.sub(r\'"[^"]*"\'');
+    });
+
     test('should exit 2 when dangerous command detected', () => {
       expect(content).toContain('sys.exit(2)');
     });

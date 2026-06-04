@@ -18,6 +18,13 @@ if not cmd.strip():
 # Normalize: collapse whitespace, lowercase for pattern matching
 normalized = " ".join(cmd.split()).lower()
 
+# Strip single- and double-quoted string content so that shell separators
+# inside argument values (e.g. --name 'a;b') are not treated as real command
+# boundaries by [^|&;<>]* patterns. This prevents the quoted-separator bypass
+# identified in Codex P1 review (PR #795).
+normalized = re.sub(r"'[^']*'", " ", normalized)
+normalized = re.sub(r'"[^"]*"', " ", normalized)
+
 # ── Dangerous patterns (regex) ──────────────────────────────────
 DANGEROUS_PATTERNS = [
     # === Git destructive operations ===
