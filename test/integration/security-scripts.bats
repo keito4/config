@@ -145,6 +145,60 @@ JSON
     assert_output --partial "No credentials found"
 }
 
+@test "security-credential-scan.sh ignores Git SHA-1 hex strings (AWS Secret FP)" {
+    # 40-char hex strings (Git commit SHAs, Flutter .metadata revisions, act
+    # event fixture IDs) used to match the generic AWS Secret pattern. Real
+    # AWS secrets use base64 with high probability of '/' or '+'.
+    mkdir -p "$TEST_TEMP_DIR/.github/events"
+    cat > "$TEST_TEMP_DIR/.github/events/push.json" <<'JSON'
+{
+  "before": "0000000000000000000000000000000000000000",
+  "after": "1234567890abcdef1234567890abcdef12345678",
+  "head_commit": {
+    "id": "abcdef0123456789abcdef0123456789abcdef01",
+    "tree_id": "fedcba9876543210fedcba9876543210fedcba98"
+  }
+}
+JSON
+    cat > "$TEST_TEMP_DIR/.metadata" <<'YAML'
+version:
+  revision: "67323de285b00232883f53b84095eb72be97d35c"
+  channel: "stable"
+YAML
+
+    run "$REPO_ROOT/script/security-credential-scan.sh" --path "$TEST_TEMP_DIR" --strict
+    assert_success
+    assert_output --partial "No credentials found"
+}
+
+@test "security-credential-scan.sh ignores generic UUIDs without Azure context (SP FP)" {
+    # Azure Service Principal regex is a plain UUID-v4 match. Notion DB IDs,
+    # test fixture UUIDs, default placeholders are all UUIDs but not Azure SPs.
+    mkdir -p "$TEST_TEMP_DIR/src"
+    cat > "$TEST_TEMP_DIR/src/fixtures.js" <<'JS'
+const DEFAULT_ORG_UUID = '00000000-0000-0000-0000-000000000001';
+const NOTION_DB = 'c355f6ea-c556-4999-9494-deadbeefcafe';
+const TEST_USER = '61f39a54-882f-4211-862f-aabbccddeeff';
+JS
+
+    run "$REPO_ROOT/script/security-credential-scan.sh" --path "$TEST_TEMP_DIR" --strict
+    assert_success
+    assert_output --partial "No credentials found"
+}
+
+@test "security-credential-scan.sh still flags Azure SP UUIDs when Azure context is present" {
+    # If the same UUID appears next to an Azure identifier, it IS a real Azure
+    # Service Principal credential — must still fire.
+    mkdir -p "$TEST_TEMP_DIR/src"
+    cat > "$TEST_TEMP_DIR/src/config.js" <<'JS'
+const AZURE_CLIENT_ID = 'c355f6ea-c556-4999-9494-deadbeefcafe';
+JS
+
+    run "$REPO_ROOT/script/security-credential-scan.sh" --path "$TEST_TEMP_DIR"
+    assert_success
+    assert_output --partial "Azure Service Principal"
+}
+
 @test "security-credential-scan.sh ignores Nix flake.lock rev hashes" {
     mkdir -p "$TEST_TEMP_DIR/nix"
     cat > "$TEST_TEMP_DIR/nix/flake.lock" <<'JSON'
