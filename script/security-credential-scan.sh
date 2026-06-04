@@ -77,7 +77,8 @@ fi
 # Patterns to detect
 declare -A PATTERNS
 # Cloud Provider Keys
-PATTERNS["AWS Access Key"]="AKIA[0-9A-Z]{16}"
+# AKIA = long-lived access key, ASIA = STS temporary credentials (both worth flagging)
+PATTERNS["AWS Access Key"]="(AKIA|ASIA)[0-9A-Z]{16}"
 PATTERNS["AWS Secret"]="['\"][A-Za-z0-9/+=]{40}['\"]"
 PATTERNS["Google API Key"]="AIza[0-9A-Za-z\\-_]{35}"
 PATTERNS["Azure Service Principal"]="['\"][a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}['\"]"
@@ -176,7 +177,42 @@ is_known_false_positive() {
       ;;
   esac
 
+  # Public Supabase local-dev JWT (issuer "supabase-demo", base64 marker below).
+  # Shipped in every `supabase start` stack — public by design, not a real secret.
+  if [[ "$line_content" == *"eyJpc3MiOiJzdXBhYmFzZS1kZW1v"* ]]; then
+    return 0
+  fi
+
   return 1
+}
+
+# Record a finding: assign severity, mask secret material, append to FINDINGS.
+# Mutates the global CRITICAL_COUNT / WARNING_COUNT / FINDINGS.
+record_finding() {
+  local pattern_name="$1" file="$2" line_num="$3" line_content="$4"
+  local severity="WARNING"
+
+  if [[ "$pattern_name" == *"AWS"* ]] || \
+     [[ "$pattern_name" == *"GitHub Token"* ]] || \
+     [[ "$pattern_name" == *"Private Key"* ]] || \
+     [[ "$pattern_name" == *"OpenAI"* ]] || \
+     [[ "$pattern_name" == *"Anthropic"* ]] || \
+     [[ "$pattern_name" == *"Stripe"* ]] || \
+     [[ "$pattern_name" == *"Supabase"* ]] || \
+     [[ "$pattern_name" == *"Slack Token"* ]] || \
+     [[ "$pattern_name" == *"Database URL"* ]]; then
+    severity="CRITICAL"
+    CRITICAL_COUNT=$((CRITICAL_COUNT + 1))
+  else
+    WARNING_COUNT=$((WARNING_COUNT + 1))
+  fi
+
+  # Mask sensitive part
+  local masked
+  # shellcheck disable=SC2001
+  masked=$(echo "$line_content" | sed 's/[A-Za-z0-9]\{10,\}/************/g')
+
+  FINDINGS+=("$severity|$pattern_name|$file:$line_num|$masked")
 }
 
 # Scan for patterns
@@ -200,30 +236,34 @@ for pattern_name in "${!PATTERNS[@]}"; do
       continue
     fi
 
-    # Determine severity
-    SEVERITY="WARNING"
-    # Critical patterns: cloud credentials, API keys that provide full access
-    if [[ "$pattern_name" == *"AWS"* ]] || \
-       [[ "$pattern_name" == *"GitHub Token"* ]] || \
-       [[ "$pattern_name" == *"Private Key"* ]] || \
-       [[ "$pattern_name" == *"OpenAI"* ]] || \
-       [[ "$pattern_name" == *"Anthropic"* ]] || \
-       [[ "$pattern_name" == *"Stripe"* ]] || \
-       [[ "$pattern_name" == *"Supabase"* ]] || \
-       [[ "$pattern_name" == *"Slack Token"* ]] || \
-       [[ "$pattern_name" == *"Database URL"* ]]; then
-      SEVERITY="CRITICAL"
-      CRITICAL_COUNT=$((CRITICAL_COUNT + 1))
-    else
-      WARNING_COUNT=$((WARNING_COUNT + 1))
-    fi
-
-    # Mask sensitive part
-    # shellcheck disable=SC2001
-    MASKED=$(echo "$line_content" | sed 's/[A-Za-z0-9]\{10,\}/************/g')
-
-    FINDINGS+=("$SEVERITY|$pattern_name|$file:$line_num|$MASKED")
+    record_finding "$pattern_name" "$file" "$line_num" "$line_content"
   done < <(grep -rn -E $GREP_EXCLUDE "$pattern" "$SCAN_PATH" 2>/dev/null || true)
+done
+
+# Focused scan: .claude/settings*.json are excluded from the broad scan above
+# (EXCLUDE_DIRS contains ".claude"), but they are exactly where approved
+# `export SECRET=...` permission rules accumulate real credentials. Scan them
+# explicitly — even when gitignored, since the secret still sits on disk and
+# tracked variants (e.g. a committed settings.local.json) leak into history.
+for claude_settings in \
+  "$SCAN_PATH/.claude/settings.json" \
+  "$SCAN_PATH/.claude/settings.local.json"; do
+  [ -f "$claude_settings" ] || continue
+
+  if [ -n "$IGNORE_PATTERN" ] && [[ "$claude_settings" =~ $IGNORE_PATTERN ]]; then
+    continue
+  fi
+
+  for pattern_name in "${!PATTERNS[@]}"; do
+    pattern="${PATTERNS[$pattern_name]}"
+    while IFS=: read -r line_num line_content; do
+      [ -z "$line_num" ] && continue
+      if is_known_false_positive "$pattern_name" "$claude_settings" "$line_content"; then
+        continue
+      fi
+      record_finding "$pattern_name" "$claude_settings" "$line_num" "$line_content"
+    done < <(grep -n -E "$pattern" "$claude_settings" 2>/dev/null || true)
+  done
 done
 
 # Count files scanned
@@ -251,12 +291,16 @@ EOF
       echo ","
     fi
     first=false
+    # Escape backslashes and double-quotes so masked content stays valid JSON
+    # (settings.json findings are quote-heavy).
+    content_json=${content//\\/\\\\}
+    content_json=${content_json//\"/\\\"}
     cat <<EOF
     {
       "severity": "$severity",
       "type": "$type",
       "location": "$location",
-      "masked_content": "$content"
+      "masked_content": "$content_json"
     }
 EOF
   done

@@ -10,6 +10,7 @@ describe('Claude Code Hooks integrity', () => {
     'common.py',
     'block_config_edit.py',
     'block_dangerous_commands.py',
+    'block_inline_secrets.py',
     'block_git_no_verify.py',
     'post_commit_adr_reminder.py',
     'post_edit_auto_lint.py',
@@ -175,6 +176,55 @@ describe('Claude Code Hooks integrity', () => {
 
     test('should normalize command for matching (lowercase)', () => {
       expect(content).toContain('.lower()');
+    });
+  });
+
+  describe('block_inline_secrets.py — inline credential protection', () => {
+    let content;
+
+    beforeAll(() => {
+      content = fs.readFileSync(path.join(hooksDir, 'block_inline_secrets.py'), 'utf8');
+    });
+
+    test('should have shebang line', () => {
+      expect(content.startsWith('#!/usr/bin/env python3')).toBe(true);
+    });
+
+    test('should define SECRET_PATTERNS list', () => {
+      expect(content).toContain('SECRET_PATTERNS');
+    });
+
+    test('should detect AWS access key ids (AKIA/ASIA)', () => {
+      expect(content).toContain('(AKIA|ASIA)[0-9A-Z]{16}');
+    });
+
+    test('should detect GitHub personal access tokens', () => {
+      expect(content).toContain('ghp_');
+    });
+
+    test('should detect Anthropic API keys', () => {
+      expect(content).toContain('sk-ant-');
+    });
+
+    test('should detect private key blocks', () => {
+      expect(content).toContain('PRIVATE KEY');
+    });
+
+    test('should whitelist the public Supabase demo JWT', () => {
+      expect(content).toContain('SUPABASE_DEMO_MARKER');
+    });
+
+    test('should exit 2 when an inline secret is detected', () => {
+      expect(content).toContain('sys.exit(2)');
+    });
+
+    test('should exit 0 for commands without inline secrets', () => {
+      expect(content).toContain('sys.exit(0)');
+    });
+
+    test('should reuse get_command from common', () => {
+      expect(content).toContain('from common import');
+      expect(content).toContain('get_command');
     });
   });
 

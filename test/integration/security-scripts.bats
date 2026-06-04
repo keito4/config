@@ -81,6 +81,70 @@ load ../test_helper/test_helper
     assert_failure
 }
 
+@test "security-credential-scan.sh detects AWS temporary (ASIA) keys" {
+    temp_dir=$(mktemp -d)
+    trap "rm -rf $temp_dir" EXIT
+
+    # STS temporary credentials use the ASIA prefix
+    echo 'const key = "ASIAIOSFODNN7EXAMPLE";' > "$temp_dir/test.js"
+
+    run "$REPO_ROOT/script/security-credential-scan.sh" --path "$temp_dir"
+    assert_success
+    assert_output --partial "AWS Access Key"
+}
+
+@test "security-credential-scan.sh scans .claude/settings.local.json for inline secrets" {
+    mkdir -p "$TEST_TEMP_DIR/.claude"
+    cat > "$TEST_TEMP_DIR/.claude/settings.local.json" <<'JSON'
+{
+  "permissions": {
+    "allow": [
+      "Bash(export AWS_ACCESS_KEY_ID=\"ASIAIOSFODNN7EXAMPLE\")"
+    ]
+  }
+}
+JSON
+
+    run "$REPO_ROOT/script/security-credential-scan.sh" --path "$TEST_TEMP_DIR" --strict
+    assert_failure
+    assert_output --partial "AWS Access Key"
+}
+
+@test "security-credential-scan.sh emits valid JSON for quote-heavy .claude settings" {
+    mkdir -p "$TEST_TEMP_DIR/.claude"
+    cat > "$TEST_TEMP_DIR/.claude/settings.local.json" <<'JSON'
+{
+  "permissions": {
+    "allow": [
+      "Bash(export AWS_ACCESS_KEY_ID=\"ASIAIOSFODNN7EXAMPLE\")"
+    ]
+  }
+}
+JSON
+
+    run "$REPO_ROOT/script/security-credential-scan.sh" --path "$TEST_TEMP_DIR" --json
+    assert_success
+    # Output must parse as JSON despite escaped quotes in the finding
+    echo "$output" | jq -e '.critical_count >= 1' >/dev/null
+}
+
+@test "security-credential-scan.sh ignores public Supabase local-dev demo key" {
+    mkdir -p "$TEST_TEMP_DIR/.claude"
+    cat > "$TEST_TEMP_DIR/.claude/settings.local.json" <<'JSON'
+{
+  "permissions": {
+    "allow": [
+      "Bash(SUPABASE_SERVICE_ROLE_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSJ9.demo\" supabase status)"
+    ]
+  }
+}
+JSON
+
+    run "$REPO_ROOT/script/security-credential-scan.sh" --path "$TEST_TEMP_DIR" --strict
+    assert_success
+    assert_output --partial "No credentials found"
+}
+
 @test "security-credential-scan.sh ignores Nix flake.lock rev hashes" {
     mkdir -p "$TEST_TEMP_DIR/nix"
     cat > "$TEST_TEMP_DIR/nix/flake.lock" <<'JSON'

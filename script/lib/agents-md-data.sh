@@ -62,6 +62,7 @@ HOOK_TABLE=(
   "pre_git_quality_gates.py|Pre git commit/push|Auto-detect and run quality gates"
   "block_config_edit.py|Pre edit|Protect configuration files"
   "block_dangerous_commands.py|Pre Bash|Block destructive commands"
+  "block_inline_secrets.py|Pre Bash|Block commands embedding literal credentials"
   "common.py|—|Shared utility library (imported by other hooks)"
   "post_edit_auto_lint.py|Post edit|Auto-format and lint"
   "post_git_push_ci.py|Post git push|Monitor CI status"
