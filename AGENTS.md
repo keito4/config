@@ -60,6 +60,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `dot/`               | Dotfiles (DevContainer .zshrc, peco)                        |
 | `eslint/`            | ESLint configuration and plugins                            |
 | `git/`               | Git hooks and configuration                                 |
+| `next/`              | next                                                        |
 | `nix/`               | nix-darwin + home-manager (macOS environment)               |
 | `npm/`               | npm global configuration and library management             |
 | `script/`            | Utility shell scripts                                       |
@@ -164,6 +165,7 @@ Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + cov
 | `block_config_edit.py`        | Pre edit            | Protect configuration files                      |
 | `block_dangerous_commands.py` | Pre Bash            | Block destructive commands                       |
 | `block_git_no_verify.py`      | Pre git commit/push | Block `--no-verify` and `HUSKY=0`                |
+| `block_inline_secrets.py`     | Pre Bash            | Block commands embedding literal credentials     |
 | `common.py`                   | —                   | Shared utility library (imported by other hooks) |
 | `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes             |
 | `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint                             |
