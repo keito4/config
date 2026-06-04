@@ -42,6 +42,9 @@ SECRET_PATTERNS = [
     (r"xox[baprs]-[A-Za-z0-9-]{10,}", "Slack token"),
     (r"[sr]k_(live|test)_[A-Za-z0-9]{24,}", "Stripe key"),
     (r"lin_api_[A-Za-z0-9]{43}", "Linear API key"),
+    (r"AIza[0-9A-Za-z_-]{35}", "Google API key"),
+    (r"glpat-[A-Za-z0-9_-]{20}", "GitLab personal access token"),
+    (r"dp\.(pt|st|sa|ct|scim|audit)\.[A-Za-z0-9]{40,}", "Doppler token"),
     (r"-----BEGIN[A-Z ]*PRIVATE KEY-----", "private key"),
 ]
 

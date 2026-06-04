@@ -106,6 +106,8 @@ PATTERNS["Supabase Key"]="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.[a-zA-Z0-9_-]+\
 # Note: Vercel Token pattern removed (too broad, causes false positives)
 PATTERNS["Linear API Key"]="lin_api_[a-zA-Z0-9]{43}"
 PATTERNS["Sentry DSN"]="https://[a-f0-9]{32}@[a-z0-9]+\\.ingest\\.sentry\\.io/[0-9]+"
+PATTERNS["GitLab PAT"]="glpat-[a-zA-Z0-9_-]{20}"
+PATTERNS["Doppler Token"]="dp\\.(pt|st|sa|ct|scim|audit)\\.[a-zA-Z0-9]{40,}"
 
 # Generic Patterns
 PATTERNS["Private Key"]="-----BEGIN.*PRIVATE KEY-----"
@@ -222,6 +224,8 @@ record_finding() {
      [[ "$pattern_name" == *"Stripe"* ]] || \
      [[ "$pattern_name" == *"Supabase"* ]] || \
      [[ "$pattern_name" == *"Slack Token"* ]] || \
+     [[ "$pattern_name" == *"GitLab"* ]] || \
+     [[ "$pattern_name" == *"Doppler"* ]] || \
      [[ "$pattern_name" == *"Database URL"* ]]; then
     severity="CRITICAL"
     CRITICAL_COUNT=$((CRITICAL_COUNT + 1))
