@@ -24,6 +24,12 @@
 | `pre-commit-config-terraform.yaml` | **Terraform プロジェクト**: base + terraform fmt/validate/tflint             |
 | `pre-commit-config-full.yaml`      | **IaC + ドキュメント管理**: terraform + shellcheck + markdownlint + yamllint |
 
+### Husky フック（`husky/`）
+
+| テンプレート     | いつ使う                                                                                 |
+| ---------------- | ---------------------------------------------------------------------------------------- |
+| `husky/pre-push` | **全プロジェクト**: typecheck / build / test:ci / npm audit を push 前に実行（自動検出） |
+
 ### GitHub 設定（`github/`）
 
 | テンプレート               | 対象                                             | 優先度 |

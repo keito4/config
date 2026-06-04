@@ -1,0 +1,55 @@
+#!/usr/bin/env sh
+set -e
+
+# Pre-push: heavy checks that should pass before code leaves the laptop.
+# Light/fast checks (format, lint, staged-file checks) belong in pre-commit.
+#
+# Auto-detects available npm scripts so the same template works across repos.
+# Override the detected commands by exporting before push, e.g.:
+#   SKIP_TYPECHECK=1 git push
+#   SKIP_BUILD=1 git push
+
+run_if_script() {
+  script_name="$1"
+  flag_var="$2"
+
+  if [ -n "$(eval echo \$"$flag_var")" ]; then
+    echo "[pre-push] $flag_var is set, skipping $script_name"
+    return 0
+  fi
+
+  if node -e "process.exit(require('./package.json').scripts?.['$script_name'] ? 0 : 1)" 2>/dev/null; then
+    echo "[pre-push] Running $script_name..."
+    npm run "$script_name"
+  fi
+}
+
+if [ ! -f package.json ]; then
+  echo "[pre-push] No package.json at repo root; skipping npm-based checks."
+  exit 0
+fi
+
+# Type checking (TS projects)
+run_if_script typecheck   SKIP_TYPECHECK
+run_if_script type-check  SKIP_TYPECHECK
+
+# Build verification
+run_if_script build       SKIP_BUILD
+
+# Full test suite (pre-commit may only run staged/unit tests)
+run_if_script test:ci     SKIP_TEST
+run_if_script test:all    SKIP_TEST
+
+# Dependency audit (non-blocking by default; set AUDIT_BLOCK=1 to enforce)
+if [ -z "$SKIP_AUDIT" ]; then
+  echo "[pre-push] Running npm audit (high+)..."
+  if ! npm audit --audit-level=high --omit=dev; then
+    if [ -n "$AUDIT_BLOCK" ]; then
+      echo "[pre-push] npm audit failed and AUDIT_BLOCK is set."
+      exit 1
+    fi
+    echo "[pre-push] npm audit reported issues (non-blocking; set AUDIT_BLOCK=1 to enforce)."
+  fi
+fi
+
+echo "[pre-push] All checks passed."
