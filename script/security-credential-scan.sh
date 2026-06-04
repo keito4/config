@@ -183,6 +183,28 @@ is_known_false_positive() {
     return 0
   fi
 
+  # AWS Secret regex is the generic 40-char [A-Za-z0-9/+=] match. Pure SHA-1 hex
+  # (40 lowercase-hex chars) appears constantly as Git revisions, tree_ids and
+  # commit IDs in act event fixtures, Flutter .metadata, lockfiles, etc.
+  # Real AWS secrets are base64 over 64 chars; the probability of all 40 chars
+  # landing in [0-9a-f] is ~10^-24, so this exclusion is safe.
+  if [[ "$pattern_name" == "AWS Secret" ]] && \
+     [[ "$line_content" =~ \"([0-9a-f]{40})\" ]]; then
+    return 0
+  fi
+
+  # Azure Service Principal regex is a plain UUID-v4 match. Without an adjacent
+  # Azure identifier (client_id, tenant_id, AZURE_*, MSAL, service principal,
+  # AAD) the match is overwhelmingly a generic UUID — Notion DB IDs, test
+  # fixtures, default placeholders, primary keys. Filter when no Azure context
+  # appears on the same line.
+  if [[ "$pattern_name" == "Azure Service Principal" ]]; then
+    local lc_line="${line_content,,}"
+    if ! [[ "$lc_line" =~ (azure|tenant|client[_-]?id|service[_-]?principal|aad|msal) ]]; then
+      return 0
+    fi
+  fi
+
   return 1
 }
 
