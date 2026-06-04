@@ -127,7 +127,7 @@ Checks staged TS/JS files for excessive line counts.
 
 **Configuration**: Create `.filelengthignore` (same syntax as `.gitignore`) to exclude files.
 
-**Template**: `.filelengthignore.template`
+**Template**: `.devcontainer/templates/.filelengthignore.template`
 
 ### .shellcheck-exclude
 

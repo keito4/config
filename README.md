@@ -400,7 +400,6 @@ config/
 ├── .dockerignore
 ├── .editorconfig
 ├── .env.example
-├── .filelengthignore.template
 ├── .gitattributes
 ├── .gitignore
 ├── .gitleaks.toml
