@@ -135,6 +135,18 @@ describe('Claude Code command-safety hooks', () => {
       expect(content).toContain('sk-ant-');
     });
 
+    test('should detect Google API keys', () => {
+      expect(content).toContain('AIza');
+    });
+
+    test('should detect GitLab personal access tokens', () => {
+      expect(content).toContain('glpat-');
+    });
+
+    test('should detect Doppler tokens', () => {
+      expect(content).toContain('Doppler token');
+    });
+
     test('should detect private key blocks', () => {
       expect(content).toContain('PRIVATE KEY');
     });
