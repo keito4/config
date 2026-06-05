@@ -199,6 +199,30 @@ JS
     assert_output --partial "Azure Service Principal"
 }
 
+@test "security-credential-scan.sh detects GitLab and Doppler tokens" {
+    mkdir -p "$TEST_TEMP_DIR/.claude"
+    # Build tokens at runtime so no literal secret pattern lives in the source
+    # (GitHub push protection blocks pushes that contain valid token shapes).
+    gl="glpat-$(printf 'x%.0s' $(seq 20))"
+    dp="dp.pt.$(printf 'x%.0s' $(seq 40))"
+    cat > "$TEST_TEMP_DIR/.claude/settings.local.json" <<JSON
+{
+  "permissions": {
+    "allow": [
+      "Bash(export GITLAB_TOKEN=\"$gl\")",
+      "Bash(export DOPPLER_TOKEN=\"$dp\")"
+    ]
+  }
+}
+JSON
+
+    run "$REPO_ROOT/script/security-credential-scan.sh" --path "$TEST_TEMP_DIR" --json
+    assert_success
+    echo "$output" | jq -e '.critical_count >= 2' >/dev/null
+    assert_output --partial "GitLab PAT"
+    assert_output --partial "Doppler Token"
+}
+
 @test "security-credential-scan.sh ignores Nix flake.lock rev hashes" {
     mkdir -p "$TEST_TEMP_DIR/nix"
     cat > "$TEST_TEMP_DIR/nix/flake.lock" <<'JSON'
