@@ -165,8 +165,8 @@ describe('eslint.config.mjs — root ESLint configuration', () => {
     });
 
     test('both files should use the same cyclomatic complexity limit (15)', () => {
-      const rootMatch = content.match(/complexity:.*?\n.*?max:\s*(\d+)/s);
-      const templateMatch = template.match(/complexity:.*?\n.*?max:\s*(\d+)/s);
+      const rootMatch = content.match(/complexity:\s*\[.*?max:\s*(\d+)/s);
+      const templateMatch = template.match(/complexity:\s*\[.*?max:\s*(\d+)/s);
       expect(rootMatch).not.toBeNull();
       expect(templateMatch).not.toBeNull();
       expect(rootMatch[1]).toBe(templateMatch[1]);

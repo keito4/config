@@ -264,7 +264,7 @@ describe('Post-tool hooks — content and structure', () => {
     });
 
     test('should skip gracefully when neither AI tool is installed', () => {
-      expect(content).toContain('has_codex and not has_gemini');
+      expect(content).toContain('not has_codex and not has_gemini');
     });
 
     test('should define run_codex_review function', () => {
