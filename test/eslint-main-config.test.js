@@ -127,9 +127,12 @@ describe('eslint.config.mjs — root ESLint configuration', () => {
 
     test('should use warn severity for complexity rules (Phase 1 strategy)', () => {
       // All complexity rules should use 'warn' not 'error'
-      const warnMatches = content.match(/'warn'/g);
-      expect(warnMatches).not.toBeNull();
-      expect(warnMatches.length).toBeGreaterThanOrEqual(5);
+      expect(content).toMatch(/complexity:\s*\[\s*'warn'/);
+      expect(content).toMatch(/'max-lines-per-function':\s*\[\s*'warn'/);
+      expect(content).toMatch(/'max-lines':\s*\[\s*'warn'/);
+      expect(content).toMatch(/'max-depth':\s*\[\s*'warn'/);
+      expect(content).toMatch(/'max-params':\s*\[\s*'warn'/);
+      expect(content).toMatch(/'max-nested-callbacks':\s*\[\s*'warn'/);
     });
   });
 
@@ -152,7 +155,7 @@ describe('eslint.config.mjs — root ESLint configuration', () => {
 
     test('should relax max-nested-callbacks limit for test files', () => {
       // Test files need more nesting for describe/test/beforeAll etc.
-      expect(content).toContain("'max-nested-callbacks': ['warn', 5]");
+      expect(content).toMatch(/(['"])max-nested-callbacks\1:\s*\[\s*(['"])warn\2,\s*5\s*\]/);
     });
   });
 
