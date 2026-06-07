@@ -56,6 +56,21 @@ if [[ ! -f "$PLUGINS_FILE" ]]; then
     exit 0
 fi
 
+# トークン文字列を credentials JSON に書き出すヘルパー関数
+# セキュリティ: コマンドライン引数にトークンを渡すと ps aux に露出するため
+#              環境変数経由で渡し、プロセスリストへの漏洩を防ぐ
+_write_credentials_json() {
+    local token="$1"
+    local dest="$2"
+    _CREDS_TOKEN="$token" _CREDS_PATH="$dest" python3 -c "
+import json, os
+token = os.environ['_CREDS_TOKEN']
+creds = {'claudeAiOauth': {'accessToken': token, 'expiresAt': 9999999999999}}
+with open(os.environ['_CREDS_PATH'], 'w') as f:
+    json.dump(creds, f, indent=2)
+"
+}
+
 # --- 認証情報の設定 ---
 mkdir -p "$CLAUDE_DIR"
 
@@ -68,33 +83,15 @@ if [[ -n "$CREDENTIALS_SECRET" ]]; then
     else
         # プレーンテキスト（トークン文字列）: JSON に変換
         log_info "トークン文字列を credentials JSON に変換中..."
-        python3 -c "
-import json, sys
-token = sys.argv[1]
-creds = {'claudeAiOauth': {'accessToken': token, 'expiresAt': 9999999999999}}
-with open(sys.argv[2], 'w') as f:
-    json.dump(creds, f, indent=2)
-" "$SECRET_CONTENT" "${CLAUDE_DIR}/.credentials.json"
+        _write_credentials_json "$SECRET_CONTENT" "${CLAUDE_DIR}/.credentials.json"
     fi
     chmod 600 "${CLAUDE_DIR}/.credentials.json"
 elif [[ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]]; then
     log_info "CLAUDE_CODE_OAUTH_TOKEN から認証情報を作成中..."
-    python3 -c "
-import json, sys
-token = sys.argv[1]
-creds = {'claudeAiOauth': {'accessToken': token, 'expiresAt': 9999999999999}}
-with open(sys.argv[2], 'w') as f:
-    json.dump(creds, f, indent=2)
-" "$CLAUDE_CODE_OAUTH_TOKEN" "${CLAUDE_DIR}/.credentials.json"
+    _write_credentials_json "$CLAUDE_CODE_OAUTH_TOKEN" "${CLAUDE_DIR}/.credentials.json"
 elif [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
     log_info "ANTHROPIC_API_KEY から認証情報を作成中..."
-    python3 -c "
-import json, sys
-token = sys.argv[1]
-creds = {'claudeAiOauth': {'accessToken': token, 'expiresAt': 9999999999999}}
-with open(sys.argv[2], 'w') as f:
-    json.dump(creds, f, indent=2)
-" "$ANTHROPIC_API_KEY" "${CLAUDE_DIR}/.credentials.json"
+    _write_credentials_json "$ANTHROPIC_API_KEY" "${CLAUDE_DIR}/.credentials.json"
 else
     log_warn "認証情報が見つかりません"
     echo "  - BuildKit secret: $CREDENTIALS_SECRET"
