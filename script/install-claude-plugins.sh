@@ -57,18 +57,21 @@ if [[ ! -f "$PLUGINS_FILE" ]]; then
 fi
 
 # トークン文字列を credentials JSON に書き出すヘルパー関数
-# セキュリティ: コマンドライン引数にトークンを渡すと ps aux に露出するため
-#              環境変数経由で渡し、プロセスリストへの漏洩を防ぐ
+# セキュリティ: コマンドライン引数・環境変数経由はプロセスリスト/environ から
+#              露出するため、stdin 経由でトークンを渡す。
+#              また os.open で O_CREAT 時に 0600 を指定し umask に依存しない。
 _write_credentials_json() {
     local token="$1"
     local dest="$2"
-    _CREDS_TOKEN="$token" _CREDS_PATH="$dest" python3 -c "
-import json, os
-token = os.environ['_CREDS_TOKEN']
-creds = {'claudeAiOauth': {'accessToken': token, 'expiresAt': 9999999999999}}
-with open(os.environ['_CREDS_PATH'], 'w') as f:
+    printf '%s' "$token" | python3 -c '
+import json, os, sys
+token = sys.stdin.read()
+dest = sys.argv[1]
+creds = {"claudeAiOauth": {"accessToken": token, "expiresAt": 9999999999999}}
+fd = os.open(dest, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+with os.fdopen(fd, "w") as f:
     json.dump(creds, f, indent=2)
-"
+' "$dest"
 }
 
 # --- 認証情報の設定 ---
