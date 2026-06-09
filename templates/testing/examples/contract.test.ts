@@ -99,6 +99,7 @@ function validateSchema(data: unknown, schema: Record<string, unknown>): boolean
 
   if (schema.type === 'array') {
     if (!Array.isArray(data)) return false;
+    if (!schema.items) return true;
 
     const itemSchema = schema.items as Record<string, unknown>;
     return data.every((item) => validateSchema(item, itemSchema));

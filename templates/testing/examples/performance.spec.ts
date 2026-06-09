@@ -14,24 +14,13 @@
 
 import { test, expect } from '@playwright/test';
 
-// Lighthouse の型定義
-interface LighthouseResult {
-  lhr: {
-    categories: {
-      performance: { score: number };
-      accessibility: { score: number };
-      'best-practices': { score: number };
-      seo: { score: number };
-    };
-    audits: {
-      'first-contentful-paint': { numericValue: number };
-      'largest-contentful-paint': { numericValue: number };
-      'cumulative-layout-shift': { numericValue: number };
-      'total-blocking-time': { numericValue: number };
-      'speed-index': { numericValue: number };
-      interactive: { numericValue: number };
-    };
-  };
+// ホームページのパフォーマンスメトリクス型定義
+interface HomePageMetrics {
+  domContentLoaded: number;
+  load: number;
+  ttfb: number;
+  fcp: number | null;
+  domElements: number;
 }
 
 // Core Web Vitals のしきい値
@@ -56,7 +45,7 @@ test.describe('Performance Tests', () => {
       await page.goto('/');
 
       // Performance API を使用してメトリクスを取得
-      const metrics = await page.evaluate(() => {
+      const metrics = await page.evaluate((): Promise<HomePageMetrics> => {
         return new Promise((resolve) => {
           // ページ読み込み完了を待機
           if (document.readyState === 'complete') {
@@ -90,8 +79,10 @@ test.describe('Performance Tests', () => {
       console.log('Performance Metrics:', metrics);
 
       // アサーション
-      expect((metrics as Record<string, number>).fcp).toBeLessThan(THRESHOLDS.fcp);
-      expect((metrics as Record<string, number>).load).toBeLessThan(5000);
+      if (metrics.fcp !== null) {
+        expect(metrics.fcp).toBeLessThan(THRESHOLDS.fcp);
+      }
+      expect(metrics.load).toBeLessThan(5000);
     });
 
     test('ダッシュボードのパフォーマンス', async ({ page }) => {

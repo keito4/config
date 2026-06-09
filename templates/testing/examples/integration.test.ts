@@ -90,6 +90,10 @@ describe('User Flow Integration', () => {
 
       const tempUserId = tempUser.user?.id;
 
+      if (!tempUserId) {
+        throw new Error('テスト用ユーザーの作成に失敗しました');
+      }
+
       // 関連データを作成
       await supabase.from('profiles').insert({
         user_id: tempUserId,
@@ -97,7 +101,7 @@ describe('User Flow Integration', () => {
       });
 
       // ユーザーを削除
-      await supabase.auth.admin.deleteUser(tempUserId!);
+      await supabase.auth.admin.deleteUser(tempUserId);
 
       // プロファイルも削除されていることを確認
       const { data: profile } = await supabase.from('profiles').select('*').eq('user_id', tempUserId).single();
