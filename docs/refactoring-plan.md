@@ -2,6 +2,19 @@
 
 作成日: 2026-06-11 / 対象: keito4/config リポジトリ全体
 
+## トラッキング Issue
+
+| フェーズ                                          | Issue                                               |
+| ------------------------------------------------- | --------------------------------------------------- |
+| フェーズ 0: 安全網とベースライン                  | [#812](https://github.com/keito4/config/issues/812) |
+| フェーズ 1: 死蔵物の削除                          | [#813](https://github.com/keito4/config/issues/813) |
+| フェーズ 2: ドキュメント SSoT 化                  | [#814](https://github.com/keito4/config/issues/814) |
+| フェーズ 3: テンプレートと実体の分離・同期        | [#815](https://github.com/keito4/config/issues/815) |
+| フェーズ 4: CI/CD ワークフローの統合              | [#816](https://github.com/keito4/config/issues/816) |
+| フェーズ 5: スクリプト・フック・コマンドの DRY 化 | [#817](https://github.com/keito4/config/issues/817) |
+| フェーズ 6: テスト品質の立て直し                  | [#818](https://github.com/keito4/config/issues/818) |
+| フェーズ 7: 環境設定の整理                        | [#819](https://github.com/keito4/config/issues/819) |
+
 ## 背景
 
 本リポジトリは開発インフラのテンプレートリポジトリとして長年運用され、git 管理下に約 375 ファイル・複数の AI エージェント設定・15 のワークフロー・69 のテンプレートを抱える。4 領域（`.claude/` エコシステム、`script/` とビルドツール、`.github/` とテンプレート、ドキュメント/テスト/環境設定）の実態調査により、以下の無駄が定量的に確認された。
