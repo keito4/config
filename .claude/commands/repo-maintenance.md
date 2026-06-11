@@ -283,7 +283,7 @@ GitHub はフル SHA 固定を immutable な使い方として推奨しており
 
 | #   | チェック                       | 推奨値                                     | リスク                         |
 | --- | ------------------------------ | ------------------------------------------ | ------------------------------ |
-| 1   | 3rd-party actions の SHA 固定  | フルSHA（40文字）で参照                    | タグ改ざんによるコード注入     |
+| 1   | 全 actions の SHA 固定         | フルSHA（40文字）で参照                    | タグ改ざんによるコード注入     |
 | 2   | `GITHUB_TOKEN` の権限制限      | workflow/job レベルで `permissions` を明示 | 過剰権限によるトークン悪用     |
 | 3   | 許可 actions の制限            | Repository Settings で制限                 | 任意の actions 実行リスク      |
 | 4   | `pull_request_target` の安全性 | 未使用 or secrets 非参照                   | Fork PR 経由のシークレット漏洩 |
@@ -298,15 +298,19 @@ for workflow in .github/workflows/*.yml; do
   BASENAME=$(basename "$workflow")
   CONTENT=$(cat "$workflow")
 
-  # 1. 3rd-party actions の SHA 固定チェック
-  # actions/ と github/ org 以外の actions を検出
-  THIRD_PARTY=$(echo "$CONTENT" | grep -oE "uses: [^/]+/[^@]+@[^ ]+" | \
-    grep -vE "^uses: (actions|github)/" | \
-    grep -vE "@[0-9a-f]{40}")
-  if [ -n "$THIRD_PARTY" ]; then
+  # 1. actions の SHA 固定チェック（全 actions 対象）
+  # first-party（actions/, github/）もタグ参照のままの repo が多数あったため全件検出する。
+  # 3rd-party は critical、first-party は warning として区別する
+  UNPINNED=$(echo "$CONTENT" | grep -oE "uses: [^/]+/[^@]+@[^ ]+" | \
+    grep -vE "@[0-9a-f]{40}" | grep -v "uses: \./")
+  if [ -n "$UNPINNED" ]; then
     while IFS= read -r line; do
-      ISSUES+=("$BASENAME: SHA未固定の3rd-party action: $line")
-    done <<< "$THIRD_PARTY"
+      if echo "$line" | grep -qE "^uses: (actions|github)/"; then
+        ISSUES+=("$BASENAME: SHA未固定の first-party action (warning): $line")
+      else
+        ISSUES+=("$BASENAME: SHA未固定の 3rd-party action (critical): $line")
+      fi
+    done <<< "$UNPINNED"
   fi
 
   # 2. GITHUB_TOKEN 権限チェック（top-level permissions の有無）
@@ -412,9 +416,38 @@ elif [ -n "$EXISTING_ENV_BRANCHES" ]; then
 fi
 ```
 
+**保護設定の実態検証（レビュー × 必須チェックの「両輪」確認）:**
+
+最も頻出する設定不備は「レビュー必須 or 必須ステータスチェックの**片方しか**設定されていない」パターン。
+チェック欠落なら CI 赤のままマージ可能、レビュー欠落ならレビューなしマージが可能になる。
+/setup-team-protection の実行有無に関わらず、現在の実態を API で直接検証する：
+
+```bash
+PROTECTION=$(gh api "repos/$REPO/branches/main/protection" 2>/dev/null)
+
+REVIEWS=$(echo "$PROTECTION" | jq -r '.required_pull_request_reviews.required_approving_review_count // 0')
+CHECKS=$(echo "$PROTECTION" | jq -r '.required_status_checks.contexts // [] | length')
+ENFORCE_ADMINS=$(echo "$PROTECTION" | jq -r '.enforce_admins.enabled // false')
+
+[ "$REVIEWS" -lt 1 ] && ISSUES+=("main: レビュー必須が未設定（0名）→ レビューなしでマージ可能")
+[ "$CHECKS" -lt 1 ] && ISSUES+=("main: 必須ステータスチェックが未設定 → CI 赤のままマージ可能")
+[ "$ENFORCE_ADMINS" != "true" ] && ISSUES+=("main: enforce_admins 無効 → 管理者は保護をバイパス可能")
+
+# マージ済みブランチの自動削除（無効だとリモートブランチが累積する）
+DELETE_ON_MERGE=$(gh api "repos/$REPO" --jq '.delete_branch_on_merge' 2>/dev/null)
+[ "$DELETE_ON_MERGE" != "true" ] && \
+  ISSUES+=("repo: delete_branch_on_merge 無効 → マージ済みブランチが累積")
+```
+
+**MODE が `full` の場合の修正:**
+
+- レビュー / 必須チェックの欠落 → `/setup-team-protection` で両方を設定（必須チェックは `Quality Gate` を登録し、3.5.0.2 の fallback とセットで配布）
+- `delete_branch_on_merge` → `gh api -X PATCH "repos/$REPO" -F delete_branch_on_merge=true` で自動修正
+
 結果:
 
-- ✅ 保護ルール設定済み
+- ✅ 保護ルール設定済み（レビュー + 必須チェックの両輪）
+- ⚠️ 片輪のみ設定（欠落側を明示: レビュー 0 名 / 必須チェックなし）
 - ⚠️ 未設定の保護ルールあり（詳細をリスト）
 - ⚠️ `pre-production` / `production` ブランチ未保護 → 保護を提案
 - 🔧 設定を適用
@@ -1158,6 +1191,57 @@ grep -rn 'keito4/config' templates/ | grep -v 'README\|\.md' || echo "OK: no har
 - ⚠️ 修正が必要なテンプレートあり
 
 このチェックは情報提供のみで、自動修正は行わない。
+
+### 3.5.4 CI Blocking Gate Check
+
+品質チェックが「CI に存在し、かつ blocking である」ことを確認：
+
+**背景:**
+ローカルフック（husky / lint-staged）は `--no-verify` や別環境からの push で素通りできるため、
+CI 側に同じゲートがなければ品質保証にならない。実際に多くのリポジトリで以下の 2 パターンが発生していた：
+
+1. lint / typecheck がローカルフックのみで CI に存在しない
+2. CI には存在するが `continue-on-error: true` で実質非ブロッキング（型エラーを数十件容認していた例あり）
+
+**確認ロジック:**
+
+```bash
+# 1. package.json の品質スクリプトが CI から参照されているか
+for script_name in lint typecheck type-check format:check test; do
+  jq -e --arg s "$script_name" '.scripts[$s]' package.json >/dev/null 2>&1 || continue
+  if ! grep -rqE "run (-w [^ ]+ )?$script_name\b|npx $script_name\b" .github/workflows/*.yml 2>/dev/null; then
+    ISSUES+=("品質スクリプト '$script_name' が CI のどのワークフローからも実行されていない（ローカルフックのみ）")
+  fi
+done
+
+# 2. 品質ジョブの continue-on-error 検出
+for workflow in .github/workflows/*.yml; do
+  [ ! -f "$workflow" ] && continue
+  grep -q "continue-on-error: true" "$workflow" || continue
+  # lint/typecheck/test/coverage/audit を含むジョブ・ステップ近傍での使用を警告
+  if grep -B5 "continue-on-error: true" "$workflow" | grep -qiE "(lint|typecheck|type-check|format|test|coverage)"; then
+    ISSUES+=("$(basename "$workflow"): 品質チェックに continue-on-error: true（実質非ブロッキング）")
+  fi
+done
+```
+
+**結果パターン:**
+
+| 状態                                 | 対応                                                        |
+| ------------------------------------ | ----------------------------------------------------------- |
+| 全品質スクリプトが CI で blocking    | ✅ スキップ                                                 |
+| CI 未参照の品質スクリプトあり        | ⚠️ → full mode で ci.yml への追加を提案（テンプレート参照） |
+| continue-on-error の品質チェックあり | ⚠️ → 解除可否を確認（段階導入中なら解除計画の Issue 化）    |
+
+**Note**: npm audit 等のセキュリティ advisory は意図的に non-blocking とする運用もあるため、
+`continue-on-error` の検出は機械的に修正せず、意図を確認したうえで解除 or 理由のコメント追記を提案する。
+
+**結果:**
+
+- ✅ CI Blocking Gates: 全品質チェックが CI で blocking
+- ⚠️ CI 未参照の品質スクリプト: X 件（リスト表示）
+- ⚠️ 非ブロッキングの品質チェック: X 件（リスト表示）
+- ⏭️ スキップ（`package.json` なし）
 
 ### 3.6 GitHub Actions Cost Optimization Check
 
@@ -2086,10 +2170,40 @@ fi
 echo "🔧 SECURITY.md を追加しました"
 ```
 
+**内容の実態整合チェック:**
+
+SECURITY.md が存在する場合、プレースホルダーの残存と「記載と実態の乖離」を検証する。
+「secret scanning 有効」と記載しながら実際の GitHub 設定は無効、というドキュメントと実態の乖離は
+誤った安心感を生むため、ファイルの存在チェックだけでは不十分：
+
+```bash
+if [ "$HAS_SECURITY" = "true" ]; then
+  SEC_FILE=$([ -f "SECURITY.md" ] && echo "SECURITY.md" || echo ".github/SECURITY.md")
+
+  # 1. プレースホルダー / TODO の残存
+  if grep -qE "TODO|FIXME|security@example\.com|\[INSERT|<!-- 要記入" "$SEC_FILE"; then
+    ISSUES+=("SECURITY.md: TODO / プレースホルダーが残存（連絡先・対応バージョンを実値に更新）")
+  fi
+
+  # 2. 記載と GitHub 設定の乖離（secret scanning / push protection）
+  if grep -qiE "secret scanning|push protection" "$SEC_FILE"; then
+    SS=$(gh api "repos/$REPO" --jq '.security_and_analysis.secret_scanning.status' 2>/dev/null)
+    PP=$(gh api "repos/$REPO" --jq '.security_and_analysis.secret_scanning_push_protection.status' 2>/dev/null)
+    if [ "$SS" != "enabled" ] || [ "$PP" != "enabled" ]; then
+      ISSUES+=("SECURITY.md: secret scanning / push protection 有効と記載されているが実設定は無効（記載と実態の乖離）")
+    fi
+  fi
+fi
+```
+
+**MODE が `full` かつ乖離がある場合:** 3.19 の Push Protection 有効化で実態側を直すか、
+記述を実態に合わせて修正するかを確認して適用する。
+
 **結果:**
 
-- ✅ SECURITY.md 設定済み
+- ✅ SECURITY.md 設定済み（内容も実態と整合）
 - 🔧 SECURITY.md を追加しました
+- ⚠️ SECURITY.md: プレースホルダー残存 / 記載と実態の乖離あり
 
 ### 3.17 package.json scripts 標準チェック
 
@@ -2133,6 +2247,43 @@ check_script "typecheck"   "typecheck" "type-check" "tsc"
 - ✅ 必須スクリプト: すべて定義済み
 - ⚠️ 未定義スクリプト: X 件（リスト表示）
 - ⏭️ スキップ（`package.json` なし）
+
+### 3.18 CONTRIBUTING.md チェック
+
+コントリビューションガイドが設定されているか確認：
+
+**背景:**
+`.claude/rules/` や AGENTS.md で AI エージェント向けのルールが整備されていても、
+人間の新規参加者向けのオンボーディング導線（環境構築、SDK バージョン、レビュー手順）が
+CONTRIBUTING.md として存在しないリポジトリが大半だった。ルールの二重管理を避けるため、
+CONTRIBUTING.md は手順と導線に絞り、規約の詳細は `.claude/rules/` へのリンクで参照する。
+
+**確認ロジック:**
+
+```bash
+HAS_CONTRIBUTING=false
+[ -f "CONTRIBUTING.md" ] || [ -f ".github/CONTRIBUTING.md" ] || [ -f "docs/CONTRIBUTING.md" ] && HAS_CONTRIBUTING=true
+```
+
+**MODE が `full` かつ未設定の場合:**
+
+```bash
+TEMPLATE_SRC="/usr/local/share/config-templates/github/CONTRIBUTING.md"
+TEMPLATE_RAW_URL="https://raw.githubusercontent.com/keito4/config/main/templates/github/CONTRIBUTING.md"
+
+if [ -f "$TEMPLATE_SRC" ]; then
+  cp "$TEMPLATE_SRC" CONTRIBUTING.md
+else
+  curl -fsSL "$TEMPLATE_RAW_URL" -o CONTRIBUTING.md
+fi
+echo "🔧 CONTRIBUTING.md を追加しました"
+echo "   リポジトリ固有のセットアップ手順（SDK バージョン、ローカル DB、署名証明書等）を追記してください"
+```
+
+**結果:**
+
+- ✅ CONTRIBUTING.md 設定済み
+- 🔧 CONTRIBUTING.md を追加しました（固有手順の追記を促す）
 
 ### 3.19 Push Protection Check
 
@@ -2599,6 +2750,55 @@ done
 - ⚠️ Config Template Sync: X 件の差分あり（テンプレートファイルの確認待ち）
 - ⏭️ スキップ（config リポジトリ自身）
 
+### 3.23 Coverage Threshold Policy Check（ラチェット方式）
+
+テストカバレッジ閾値が「実測値に追従し、劣化だけを防ぐ」設定になっているか確認：
+
+**背景:**
+リポジトリ間でカバレッジ閾値が 0%〜98% までばらつき、以下のアンチパターンが頻出した：
+
+- 閾値 0% や未設定（テストはあるのにゲートが実質存在しない）
+- 組織基準 70% から大きく乖離した低閾値のまま、引き上げ計画もない
+- 実測がはるかに高いのに閾値が低いまま放置（劣化を検知できない）
+
+推奨は**ラチェット方式**: 閾値を現在の実測値の直下（実測 -1〜2pt）に設定して劣化を即検知し、
+実測が上がったら閾値も追従して引き上げる。70% への到達は閾値の一括引き上げではなく、
+ラチェットの継続運用と引き上げ計画の Issue 化で実現する。
+
+**確認ロジック:**
+
+```bash
+# vitest.config / jest.config から lines 閾値を抽出（設定形式が複雑な場合は Read で確認）
+THRESHOLD=$(grep -hoE "lines['\"]?[[:space:]]*:[[:space:]]*[0-9.]+" \
+  vitest.config.* jest.config.* 2>/dev/null | head -1 | grep -oE "[0-9.]+$")
+
+# 実測値（カバレッジレポートが存在する場合）
+ACTUAL=$(jq -r '.total.lines.pct // empty' coverage/coverage-summary.json 2>/dev/null)
+
+if [ -z "$THRESHOLD" ]; then
+  ISSUES+=("coverage 閾値が未設定（テストがあるのにゲートがない）")
+elif [ "${THRESHOLD%%.*}" -eq 0 ]; then
+  ISSUES+=("coverage 閾値が 0%（ゲート実質無効）→ 実測値直下へのラチェット設定を推奨")
+elif [ -n "$ACTUAL" ] && [ "$(echo "$ACTUAL - $THRESHOLD > 10" | bc 2>/dev/null)" = "1" ]; then
+  ISSUES+=("coverage 実測 ${ACTUAL}% に対し閾値 ${THRESHOLD}%（乖離 10pt 超）→ ラチェット引き上げを推奨")
+elif [ "${THRESHOLD%%.*}" -lt 70 ]; then
+  echo "📝 coverage 閾値 ${THRESHOLD}% は組織基準 70% 未満（ラチェット運用中なら OK、引き上げ計画の Issue 化を推奨）"
+fi
+```
+
+**MODE が `full` の場合:**
+
+- 実測値が取得できる場合、閾値を「実測値 -1〜2pt」へ引き上げる設定変更を提案・適用
+- 閾値 0% / 未設定の場合、まず `npm run test:coverage` で実測を取得してからラチェット初期値を設定
+- 70% 未満のままのリポジトリには引き上げ計画（四半期ごとに +N%）の Issue 作成を提案
+
+**結果:**
+
+- ✅ Coverage Policy: 閾値が実測に追従（ラチェット良好）
+- 🔧 閾値を実測値直下に引き上げました（X% → Y%）
+- ⚠️ 閾値 0% / 未設定 / 実測と 10pt 超乖離（詳細を表示）
+- ⏭️ スキップ（テスト未導入 / `package.json` なし）
+
 ## Step 4: Cleanup Category
 
 ### 4.1 Branch Cleanup
@@ -2632,6 +2832,115 @@ Git リポジトリのクリーンアップ：
 git gc --auto
 git prune
 ```
+
+### 4.3 Tracked Artifacts / Root Clutter Check
+
+生成物・大容量ファイルの誤コミットと、ルート直下の散乱を確認：
+
+**背景:**
+`coverage/` やデモ動画（数百 MB）が git 追跡されたままの repo、ルート直下に
+スクリーンショット・pptx/xlsx 等の業務ファイルが散乱している repo が複数見つかった。
+追跡された生成物は clone を重くし、ルートのクラッターは導線を悪化させる。
+
+**確認ロジック:**
+
+```bash
+# 1. 追跡されている生成物・バイナリ
+TRACKED_ARTIFACTS=$(git ls-files | grep -E "^(coverage|dist|build|out|\.next)/|\.(mp4|mov|pptx|xlsx|docx|zip|dmg|msi|exe|log)$" | head -20)
+[ -n "$TRACKED_ARTIFACTS" ] && ISSUES+=("生成物 / バイナリが git 追跡されている: $(echo "$TRACKED_ARTIFACTS" | wc -l | tr -d ' ') 件")
+
+# 2. 大容量の追跡ファイル（5MB 超）
+git ls-files -z | xargs -0 du -k 2>/dev/null | awk '$1 > 5120 {print $2 " (" $1 "KB)"}' | head -10
+
+# 3. ルート直下の未追跡クラッター（画像・Office ファイル）
+ls -1 *.png *.jpg *.pptx *.xlsx *.docx 2>/dev/null | grep -v -E "^(logo|icon)" | head -10
+```
+
+**MODE が `full` の場合:**
+
+- 追跡生成物: `.gitignore` 追加 + `git rm --cached` を提案（履歴サイズが問題なら filter-repo を別途案内）
+- ルートのクラッター: `docs/` への移動またはリポジトリ外（Drive 等）への退避を提案
+
+**結果:**
+
+- ✅ Tracked Artifacts: クリーン
+- ⚠️ 追跡された生成物 / 大容量ファイル: X 件（リスト表示）
+- 📝 ルート直下のクラッター: X 件（移動先を提案）
+
+### 4.4 Submodule Health Check
+
+git submodule の参照状態を確認（`.gitmodules` が存在する場合のみ）：
+
+**背景:**
+submodule が未マージの作業ブランチの commit を指したまま放置され、本番が参照する
+API 仕様等が main に存在しないコードに固定されていた repo が見つかった。
+また親リポジトリのピン先が upstream から大きく遅れるケースも多い。
+
+**確認ロジック:**
+
+```bash
+if [ ! -f ".gitmodules" ]; then
+  echo "⏭️ スキップ（submodule なし）"
+else
+  git submodule foreach --quiet '
+    SHA=$(git rev-parse HEAD)
+    DEFAULT=$(git remote show origin 2>/dev/null | sed -n "s/.*HEAD branch: //p")
+    git fetch origin "$DEFAULT" --quiet 2>/dev/null
+    if git merge-base --is-ancestor "$SHA" "origin/$DEFAULT" 2>/dev/null; then
+      BEHIND=$(git rev-list --count HEAD.."origin/$DEFAULT" 2>/dev/null || echo "?")
+      echo "✅ $name: ピン先は origin/$DEFAULT 上（$BEHIND コミット遅れ）"
+    else
+      echo "⚠️ $name: ピン先 $SHA がデフォルトブランチに含まれない（未マージブランチ参照の可能性）"
+    fi
+  '
+fi
+```
+
+**MODE が `full` の場合:**
+
+- 未マージブランチ参照 → 意図を確認のうえ、デフォルトブランチの commit への付け替えを提案
+- 大幅な遅れ（目安: 30 コミット超） → submodule 更新 PR の作成を提案
+
+**結果:**
+
+- ✅ Submodules: 全ピン先がデフォルトブランチ上
+- ⚠️ 未マージブランチを参照する submodule: X 件
+- 📝 ピン先が大きく遅れている submodule: X 件
+- ⏭️ スキップ（submodule なし）
+
+### 4.5 Stale PR / 未マージセキュリティ修正チェック
+
+放置された PR とセキュリティ修正の未マージを検出：
+
+**背景:**
+リリース安全性に関わる修正 PR が 2 週間以上放置されたり、セキュリティ依存更新ブランチが
+未マージのまま下流が脆弱なバージョンを参照し続けていた repo が見つかった。
+ブランチ保護や CI を整備しても、修正がマージされなければ意味がない。
+
+**確認ロジック:**
+
+```bash
+# 1. 14 日以上更新のない open PR
+gh pr list --state open --json number,title,updatedAt,isDraft \
+  --jq '.[] | select((.updatedAt | fromdateiso8601) < (now - 14*86400)) |
+        "#\(.number) \(.title) (\(.updatedAt))\(if .isDraft then " [draft]" else "" end)"'
+
+# 2. main に未マージの security / fix 系ブランチ
+git fetch --prune --quiet 2>/dev/null
+git branch -r --no-merged origin/main 2>/dev/null | \
+  grep -iE "(security|vuln|cve|dependabot)" | head -5
+```
+
+**MODE が `full` の場合:**
+
+- stale PR ごとに「マージ可能なら CI 確認のうえマージ提案 / 不要ならクローズ提案 / 検討中なら draft 化」を提示
+- security 系の未マージブランチは内容（diff）を確認し、優先マージの PR 作成を提案
+
+**結果:**
+
+- ✅ Stale PRs: なし
+- ⚠️ 14 日以上更新のない PR: X 件（リスト表示）
+- ⚠️ 未マージの security 系ブランチ: X 件（優先対応を提案）
 
 ## Step 5: Discovery Category (full mode only)
 
@@ -2919,7 +3228,7 @@ fi
     └── Repo Settings: ✅ (or ⚠️ Default write / all actions allowed)
 
 ## Setup (2/4)
-├── Team Protection: ✅ Branch protection enabled
+├── Team Protection: ✅ Reviews + Required checks (or ⚠️ 片輪のみ: reviews=0 / checks なし)
 ├── Husky: ✅ Git hooks configured\n├── hooksPath: ✅ Valid (.husky) (or 🔧 Fixed / ❌ Manual required)\n├── Husky v8→v9: ✅ v9スタイル済み (or 🔧 移行しました / ✅ スキップ)
 ├── check-file-length: ✅ Configured in pre-commit (or 🔧 Added / ⏭️ Skipped)
 ├── Renovate/Dependabot: ✅ Auto-update configured (or 🔧 renovate.json generated / ⏭️ Skipped)
@@ -2929,7 +3238,8 @@ fi
 ├── PR Template: ✅ Configured (or 🔧 Added)
 ├── Issue Template: ✅ Configured (or 🔧 Added)
 ├── CODEOWNERS: ✅ Configured (or ⚠️ Not configured)
-├── SECURITY.md: ✅ Configured (or 🔧 Added)
+├── SECURITY.md: ✅ Configured & consistent (or 🔧 Added / ⚠️ 記載と実態の乖離)
+├── CONTRIBUTING.md: ✅ Configured (or 🔧 Added)
 ├── commitlint: ✅ Configured with commit-msg hook (or ⚠️ Hook missing / ⚠️ Not configured)
 ├── .editorconfig: ✅ Configured (or 🔧 Generated)
 ├── scripts: ✅ All standard scripts defined (or ⚠️ Missing: test, lint)
@@ -2940,6 +3250,8 @@ fi
 ├── CI/CD: ✅ Standard level configured
 ├── CI Template Sync: ✅ All templates match (or ⚠️ N files diverged)
 ├── CI Consistency: ✅ Node.js/Actions versions consistent (or ⚠️ mismatches found)
+├── CI Blocking Gates: ✅ All quality checks blocking (or ⚠️ X local-only / non-blocking)
+├── Coverage Policy: ✅ Ratchet on actuals (or ⚠️ 0% threshold / 10pt+ gap)
 ├── Actions Cost: ✅ Optimized (or ⚠️ X issues found)
 │   ├── Artifact Retention: ✅ (or ⚠️ 90-day default detected)
 │   ├── Unused Workflows: ✅ (or ⚠️ X stale workflows)
@@ -2952,7 +3264,10 @@ fi
 
 ## Cleanup (3/4)
 ├── Branches: 🗑️ 8 merged branches can be deleted
-└── Git GC: ✅ Repository optimized
+├── Git GC: ✅ Repository optimized
+├── Tracked Artifacts: ✅ Clean (or ⚠️ X generated/large files tracked)
+├── Submodules: ✅ Pinned to default branch (or ⚠️ unmerged-branch pin / ⏭️ None)
+└── Stale PRs: ✅ None (or ⚠️ X PRs >14d / security branches unmerged)
 
 ## Discovery (4/4)
 ├── New Features: 🆕 2 new commands available
@@ -3169,12 +3484,18 @@ Run this command regularly to maintain repository health:
 | Setup       | (PR Template check)             | PR テンプレート設定                |
 | Setup       | (Issue Template check)          | Issue テンプレート設定             |
 | Setup       | (CODEOWNERS check)              | コードオーナー設定                 |
-| Setup       | (SECURITY.md check)             | セキュリティポリシー設定           |
+| Setup       | (SECURITY.md check)             | セキュリティポリシー設定＋実態整合 |
+| Setup       | (CONTRIBUTING.md check)         | コントリビューションガイド設定     |
+| Setup       | (CI Blocking Gate check)        | 品質チェックの CI 存在・blocking   |
+| Setup       | (Coverage Threshold Policy)     | カバレッジ閾値ラチェット検証       |
 | Setup       | (scripts standard check)        | package.json scripts 標準確認      |
 | Setup       | (Push Protection check)         | Secret scanning push 防止          |
 | Setup       | (Dependency Review check)       | PR 依存関係脆弱性チェック          |
 | Setup       | (Deploy Env Protection check)   | デプロイ環境保護ルール             |
 | Cleanup     | `/branch-cleanup`               | ブランチクリーンアップ             |
+| Cleanup     | (Tracked Artifacts check)       | 生成物・大容量ファイル誤コミット   |
+| Cleanup     | (Submodule Health check)        | submodule ピン先の健全性           |
+| Cleanup     | (Stale PR check)                | 放置 PR・未マージ security 修正    |
 | Discovery   | `/config-contribution-discover` | 新機能発見                         |
 | Discovery   | (Package Audit + ni support)    | 推奨パッケージ監査                 |
 | Discovery   | (Provenance / SBOM Audit)       | ビルド出所証明・SBOM 監査          |
