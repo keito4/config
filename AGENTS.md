@@ -60,7 +60,6 @@ Development infrastructure template repository providing DevContainer images, CI
 | `dot/`               | Dotfiles (DevContainer .zshrc, peco)                        |
 | `eslint/`            | ESLint configuration and plugins                            |
 | `git/`               | Git hooks and configuration                                 |
-| `next/`              | next                                                        |
 | `nix/`               | nix-darwin + home-manager (macOS environment)               |
 | `npm/`               | npm global configuration and library management             |
 | `script/`            | Utility shell scripts                                       |
