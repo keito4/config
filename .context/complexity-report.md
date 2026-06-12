@@ -1,6 +1,6 @@
 # Code Complexity Report
 
-Generated: Thu Jun 05 00:00:00 UTC 2026
+Generated: Thu Jun 12 00:00:00 UTC 2026
 
 ## Summary
 
@@ -9,13 +9,17 @@ Generated: Thu Jun 05 00:00:00 UTC 2026
 - High Complexity (10-20): 12 files
 - Critical Complexity (>20): 13 files
 
-## Changes Since Previous Report (2026-05-22)
+## Changes Since Previous Report (2026-06-05)
 
-| File | Previous | Current | Delta |
-| ---- | -------- | ------- | ----- |
-| script/security-credential-scan.sh | 48 | 65 | +17 (worsened) ⚠️ Issue #798 |
-| script/setup-team-protection.sh | 45 | 48 | +3 (worsened) ⚠️ Issue #762 |
-| script/wait-ci-checks.sh | N/A | 12 | NEW |
+変化なし（全ファイルの複雑度は前回と同一）
+
+## Changes Since 2026-05-22 (tracked issues)
+
+| File | Previous | Current | Delta | Issue |
+| ---- | -------- | ------- | ----- | ----- |
+| script/security-credential-scan.sh | 48 | 65 | +17 (worsened) ⚠️ | #798 |
+| script/setup-team-protection.sh | 45 | 48 | +3 (worsened) ⚠️ | #762 |
+| script/wait-ci-checks.sh | N/A | 12 | NEW | — |
 
 ## File Details
 
