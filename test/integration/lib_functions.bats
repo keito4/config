@@ -151,3 +151,110 @@ EOF
   [[ "$output" == *"Operation completed"* ]]
 }
 
+# ============================================================================
+# platform.sh runtime behaviour tests
+# ============================================================================
+
+@test "platform.sh script exists and is executable" {
+  local script="${REPO_ROOT}/script/lib/platform.sh"
+  assert_file_exists "$script"
+  [ -x "$script" ]
+}
+
+@test "platform::detect_os returns a recognised OS name" {
+  # Each @test runs in a subshell so PLATFORM_LIB_SOURCED is unset
+  source "${REPO_ROOT}/script/lib/platform.sh"
+
+  local result
+  result="$(platform::detect_os)"
+  [[ "$result" == "linux" || "$result" == "darwin" || "$result" == "windows" || "$result" == "unknown" ]]
+}
+
+@test "platform::detect_os returns linux or darwin in CI" {
+  source "${REPO_ROOT}/script/lib/platform.sh"
+
+  local result
+  result="$(platform::detect_os)"
+  # GitHub Actions and DevContainers always run on linux or darwin
+  [[ "$result" == "linux" || "$result" == "darwin" ]]
+}
+
+@test "PLATFORM_OS is set after sourcing platform.sh" {
+  source "${REPO_ROOT}/script/lib/platform.sh"
+
+  [ -n "$PLATFORM_OS" ]
+}
+
+@test "platform::is_supported returns true when OS is linux or darwin" {
+  source "${REPO_ROOT}/script/lib/platform.sh"
+
+  # CI / DevContainer always runs on a supported OS
+  platform::is_supported
+}
+
+@test "platform::is_linux and platform::is_darwin are mutually exclusive" {
+  source "${REPO_ROOT}/script/lib/platform.sh"
+
+  # At most one of them should be true
+  local is_linux=0
+  local is_darwin=0
+  platform::is_linux && is_linux=1 || true
+  platform::is_darwin && is_darwin=1 || true
+
+  [ $(( is_linux + is_darwin )) -le 1 ]
+}
+
+@test "platform::is_linux returns true on Linux" {
+  source "${REPO_ROOT}/script/lib/platform.sh"
+
+  if [[ "$(uname -s)" == "Linux" ]]; then
+    platform::is_linux
+  else
+    skip "Not running on Linux"
+  fi
+}
+
+@test "platform::is_darwin returns true on macOS" {
+  source "${REPO_ROOT}/script/lib/platform.sh"
+
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    platform::is_darwin
+  else
+    skip "Not running on macOS"
+  fi
+}
+
+@test "platform::is_devcontainer is callable without error" {
+  source "${REPO_ROOT}/script/lib/platform.sh"
+
+  # The function reads env vars; just check it exits cleanly
+  run platform::is_devcontainer
+  # Exit code 0 (in devcontainer) or 1 (not in devcontainer) are both valid
+  [ "$status" -eq 0 ] || [ "$status" -eq 1 ]
+}
+
+@test "platform::is_windows returns false on Linux/macOS" {
+  source "${REPO_ROOT}/script/lib/platform.sh"
+
+  if [[ "$(uname -s)" == "Linux" || "$(uname -s)" == "Darwin" ]]; then
+    ! platform::is_windows
+  else
+    skip "Not running on Linux or macOS"
+  fi
+}
+
+@test "platform::run_task is a no-op for an undefined task" {
+  source "${REPO_ROOT}/script/lib/platform.sh"
+
+  # run_task should exit 0 even when the task function does not exist
+  run platform::run_task "__nonexistent_task__"
+  [ "$status" -eq 0 ]
+}
+
+@test "platform::assert_supported passes on supported OS" {
+  source "${REPO_ROOT}/script/lib/platform.sh"
+
+  run platform::assert_supported
+  [ "$status" -eq 0 ]
+}
+
