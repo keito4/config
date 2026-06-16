@@ -1194,6 +1194,7 @@ for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
   ON_BLOCK=$(awk '
     /^on:/ { in_on=1; print; next }
     /^"on":/ { in_on=1; print; next }
+    /^\047on\047:/ { in_on=1; print; next }
     in_on && /^[A-Za-z0-9_-]+:/ { exit }
     in_on { print }
   ' "$workflow")
@@ -1202,9 +1203,11 @@ for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
   if printf '%s\n' "$ON_BLOCK" | awk '
     /^  (push|pull_request):/ { found=1 }
     /^  - (push|pull_request)$/ { found=1 }
-    /^on:/ || /^"on":/ {
+    /^on:/ || /^"on":/ || /^\047on\047:/ {
       line=$0
-      sub(/^"?on"?: */, "", line)
+      sub(/^on: */, "", line)
+      sub(/^"on": */, "", line)
+      sub(/^\047on\047: */, "", line)
       gsub(/[][",]/, "", line)
       count=split(line, events, /[, ]+/)
       for (i=1; i<=count; i++) {

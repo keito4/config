@@ -138,6 +138,7 @@ describe('Claude workflow contracts', () => {
     expect(command).toContain('ON_BLOCK=$(awk');
     expect(command).toContain('/^on:/');
     expect(command).toContain('/^"on":/');
+    expect(command).toContain('/^\\047on\\047:/');
     expect(command).toContain('events[i] == "pull_request"');
     expect(command).toContain('GENERATE_SUMMARY_JOB=$(awk');
     expect(command).toContain('/^  generate-summary:/');
@@ -248,5 +249,22 @@ jobs:
     });
 
     expect(output).toContain('required.yml: Required Workflow 候補ですが push / pull_request');
+  });
+
+  test('repo-maintenance accepts single-quoted on key', () => {
+    const output = runRequiredWorkflowScript({
+      'required.yml': `
+name: Required Workflow
+'on': [push]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+`,
+    });
+
+    expect(output.trim()).toBe('');
   });
 });
