@@ -9,6 +9,7 @@ import json
 import subprocess
 import re
 import time
+from typing import Optional
 from common import (load_hook_input, parse_tool_context, is_bash_command,
                     print_header, print_footer, print_status)
 
@@ -58,7 +59,7 @@ if not is_success:
 print_header("🚀 Push完了。GitHub Actions CIを確認中...")
 
 
-def get_current_branch() -> str | None:
+def get_current_branch() -> Optional[str]:
     """現在のブランチ名を取得"""
     try:
         result = subprocess.run(
@@ -72,7 +73,7 @@ def get_current_branch() -> str | None:
         return None
 
 
-def get_latest_run() -> dict | None:
+def get_latest_run() -> Optional[dict]:
     """最新のworkflow runを取得"""
     try:
         branch = get_current_branch()

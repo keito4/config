@@ -12,6 +12,7 @@ import subprocess
 import os
 import time
 from pathlib import Path
+from typing import Optional
 from common import load_hook_input, get_command, detect_package_manager, build_run_command
 
 # 設定
@@ -164,7 +165,7 @@ def run_with_retry(
     Returns:
         tuple[bool, dict]: (success, result)
     """
-    last_result: dict | None = None
+    last_result: Optional[dict] = None
 
     for attempt in range(max_retries + 1):
         try:
