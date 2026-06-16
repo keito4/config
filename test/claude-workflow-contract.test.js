@@ -185,6 +185,35 @@ jobs:
     expect(output).toContain('security-summary.yml: Slack 通知付き generate-summary は job-level if');
   });
 
+  test('repo-maintenance continues after unnamed unrelated workflow files', () => {
+    const output = runRequiredWorkflowScript({
+      'aaa.yml': `
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo unrelated
+`,
+      'security-summary.yml': `
+name: Security Summary
+on:
+  workflow_dispatch:
+
+jobs:
+  generate-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo summary
+`,
+    });
+
+    expect(output).toContain('security-summary.yml: Required Workflow 候補ですが push / pull_request');
+    expect(output).toContain('security-summary.yml: Slack 通知付き generate-summary は job-level if');
+  });
+
   test('repo-maintenance only treats push and pull_request under on as triggers', () => {
     const output = runRequiredWorkflowScript({
       'required.yml': `
