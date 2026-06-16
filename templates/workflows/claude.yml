@@ -10,7 +10,7 @@
 #   リポジトリ Secret に CLAUDE_CODE_OAUTH_TOKEN を設定
 #
 # カスタマイズ:
-#   - timeout-minutes: タイムアウト（デフォルト: 20分）
+#   - timeout-minutes: タイムアウト（デフォルト: 30分）
 #   - allowed_tools: Claude に許可するツール
 #   - claude_args: 追加の system prompt 等
 #
@@ -63,7 +63,7 @@ jobs:
         (github.event_name == 'issues' && (contains(github.event.issue.body || '', '@claude') || contains(github.event.issue.title || '', '@claude')))
       )
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     permissions:
       contents: write
       pull-requests: write
