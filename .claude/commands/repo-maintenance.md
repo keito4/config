@@ -1179,7 +1179,7 @@ for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
   [ ! -f "$workflow" ] && continue
   BASENAME=$(basename "$workflow")
   CONTENT=$(cat "$workflow")
-  NAME=$(grep -m1 '^name:' "$workflow" | sed 's/^name: *//' | tr -d "'\"")
+  NAME=$(grep -m1 '^name:' "$workflow" | sed 's/^name: *//' | tr -d "'\"" || true)
 
   REQUIRED_HINT=false
   case "$BASENAME:$NAME" in
