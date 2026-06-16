@@ -1,10 +1,51 @@
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 const repoPath = path.resolve(__dirname, '..');
 
 function readWorkflow(relativePath) {
   return fs.readFileSync(path.join(repoPath, relativePath), 'utf8');
+}
+
+function extractRequiredWorkflowScript(command) {
+  const sectionStart = command.indexOf('### 3.5.2.1 Required Workflow Trigger Compatibility Check');
+  expect(sectionStart).toBeGreaterThanOrEqual(0);
+
+  const bashStart = command.indexOf('```bash', sectionStart);
+  expect(bashStart).toBeGreaterThanOrEqual(0);
+
+  const codeStart = bashStart + '```bash\n'.length;
+  const codeEnd = command.indexOf('```', codeStart);
+  expect(codeEnd).toBeGreaterThan(codeStart);
+
+  return command.slice(codeStart, codeEnd);
+}
+
+function runRequiredWorkflowScript(workflows) {
+  const contextDir = path.join(repoPath, '.context');
+  fs.mkdirSync(contextDir, { recursive: true });
+  const tempRoot = fs.mkdtempSync(path.join(contextDir, 'required-workflow-test-'));
+
+  try {
+    const workflowsDir = path.join(tempRoot, '.github', 'workflows');
+    fs.mkdirSync(workflowsDir, { recursive: true });
+    for (const [filename, content] of Object.entries(workflows)) {
+      fs.writeFileSync(path.join(workflowsDir, filename), content);
+    }
+
+    const command = readWorkflow('.claude/commands/repo-maintenance.md');
+    const script = `
+set -euo pipefail
+ISSUES=()
+${extractRequiredWorkflowScript(command)}
+printf '%s\\n' "\${ISSUES[@]}"
+`;
+
+    return execFileSync('bash', ['-c', script], { cwd: tempRoot, encoding: 'utf8' });
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
 }
 
 describe('Claude workflow contracts', () => {
@@ -90,11 +131,84 @@ describe('Claude workflow contracts', () => {
 
     expect(command).toContain('Required Workflow Trigger Compatibility Check');
     expect(command).toContain('security-summary.yml');
+    expect(command).toContain('security-summary.yaml');
+    expect(command).toContain('.github/workflows/*.yaml');
     expect(command).toContain('jobs=[]');
     expect(command).toContain("github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'");
+    expect(command).toContain('ON_BLOCK=$(awk');
+    expect(command).toContain('/^on:/');
     expect(command).toContain('GENERATE_SUMMARY_JOB=$(awk');
     expect(command).toContain('/^  generate-summary:/');
     expect(command).toContain('/^  [A-Za-z0-9_-]+:/');
     expect(command).toContain("^    if: *github.event_name == 'schedule'");
+  });
+
+  test('repo-maintenance flags .yaml required workflows without push or pull_request', () => {
+    const output = runRequiredWorkflowScript({
+      'security-summary.yaml': `
+name: Security Summary
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  generate-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm audit --audit-level=high
+`,
+    });
+
+    expect(output).toContain('security-summary.yaml: Required Workflow 候補ですが push / pull_request');
+    expect(output).toContain('security-summary.yaml: Slack 通知付き generate-summary は job-level if');
+  });
+
+  test('repo-maintenance only treats push and pull_request under on as triggers', () => {
+    const output = runRequiredWorkflowScript({
+      'required.yml': `
+name: Required Workflow
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+`,
+    });
+
+    expect(output).toContain('required.yml: Required Workflow 候補ですが push / pull_request');
+  });
+
+  test('repo-maintenance accepts guarded security summary required workflow', () => {
+    const output = runRequiredWorkflowScript({
+      'security-summary.yml': `
+name: Security Summary
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm audit --audit-level=high
+  generate-summary:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo summary
+`,
+    });
+
+    expect(output.trim()).toBe('');
   });
 });

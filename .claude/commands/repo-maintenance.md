@@ -1175,7 +1175,7 @@ job-level `if:` で `schedule` / `workflow_dispatch` に限定する。
 **確認ロジック:**
 
 ```bash
-for workflow in .github/workflows/*.yml; do
+for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
   [ ! -f "$workflow" ] && continue
   BASENAME=$(basename "$workflow")
   CONTENT=$(cat "$workflow")
@@ -1191,14 +1191,21 @@ for workflow in .github/workflows/*.yml; do
 
   [ "$REQUIRED_HINT" = true ] || continue
 
+  ON_BLOCK=$(awk '
+    /^on:/ { in_on=1; print; next }
+    in_on && /^[A-Za-z0-9_-]+:/ { exit }
+    in_on { print }
+  ' "$workflow")
+
   HAS_PUSH_OR_PR=false
-  echo "$CONTENT" | grep -qE '^  (push|pull_request):' && HAS_PUSH_OR_PR=true
+  printf '%s\n' "$ON_BLOCK" | grep -qE '^(on: *(\[.*(push|pull_request).*\]|(push|pull_request))|  (push|pull_request):)' && HAS_PUSH_OR_PR=true
 
   if [ "$HAS_PUSH_OR_PR" = false ]; then
     ISSUES+=("$BASENAME: Required Workflow 候補ですが push / pull_request トリガーがありません。必須チェック化すると jobs=[] で失敗します")
   fi
 
-  if [ "$BASENAME" = "security-summary.yml" ]; then
+  case "$BASENAME" in
+    security-summary.yml|security-summary.yaml)
     GENERATE_SUMMARY_JOB=$(awk '
       /^  generate-summary:/ { in_job=1; print; next }
       in_job && /^  [A-Za-z0-9_-]+:/ { exit }
@@ -1210,7 +1217,8 @@ for workflow in .github/workflows/*.yml; do
     elif ! printf '%s\n' "$GENERATE_SUMMARY_JOB" | grep -qE "^    if: *github.event_name == 'schedule' \\|\\| github.event_name == 'workflow_dispatch'$"; then
       ISSUES+=("$BASENAME: Slack 通知付き generate-summary は job-level if で schedule / workflow_dispatch に限定してください")
     fi
-  fi
+    ;;
+  esac
 done
 ```
 
