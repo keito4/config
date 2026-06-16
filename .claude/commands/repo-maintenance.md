@@ -1161,6 +1161,77 @@ grep -rh 'runs-on:' .github/workflows/*.yml \
 
 不一致ごとに修正を提案し、承認後に自動修正を実行。
 
+### 3.5.2.1 Required Workflow Trigger Compatibility Check
+
+Organization / repository rulesets で Required Workflow に登録される可能性があるワークフローが、
+`schedule` / `workflow_dispatch` のみで定義されていないか確認する。
+
+**背景:**
+Required Workflow は push / PR の必須チェックとして評価される。ワークフロー側に `push` または
+`pull_request` トリガーがない場合、GitHub は required check を作るが実行対象 job がなく、
+`jobs=[]` の失敗として扱われることがある。定期通知などの重い処理は workflow trigger ではなく
+job-level `if:` で `schedule` / `workflow_dispatch` に限定する。
+
+**確認ロジック:**
+
+```bash
+for workflow in .github/workflows/*.yml; do
+  [ ! -f "$workflow" ] && continue
+  BASENAME=$(basename "$workflow")
+  CONTENT=$(cat "$workflow")
+  NAME=$(grep -m1 '^name:' "$workflow" | sed 's/^name: *//' | tr -d "'\"")
+
+  REQUIRED_HINT=false
+  case "$BASENAME:$NAME" in
+    *security-summary*|*Security\ Summary*|*Required\ Workflow*) REQUIRED_HINT=true ;;
+  esac
+  if echo "$CONTENT" | grep -qE "name: Dependency Audit|npm audit --audit-level"; then
+    REQUIRED_HINT=true
+  fi
+
+  [ "$REQUIRED_HINT" = true ] || continue
+
+  HAS_PUSH_OR_PR=false
+  echo "$CONTENT" | grep -qE '^  (push|pull_request):' && HAS_PUSH_OR_PR=true
+
+  if [ "$HAS_PUSH_OR_PR" = false ]; then
+    ISSUES+=("$BASENAME: Required Workflow 候補ですが push / pull_request トリガーがありません。必須チェック化すると jobs=[] で失敗します")
+  fi
+
+  if [ "$BASENAME" = "security-summary.yml" ]; then
+    if ! echo "$CONTENT" | grep -q "github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"; then
+      ISSUES+=("$BASENAME: Slack 通知付き generate-summary は job-level if で schedule / workflow_dispatch に限定してください")
+    fi
+  fi
+done
+```
+
+**推奨修正（`security-summary.yml` の場合）:**
+
+```yaml
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  generate-summary:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+```
+
+`dependency-audit` のような軽量な必須チェック用 job は push / PR でも実行し、Slack 通知や週次サマリーだけを
+job-level `if:` で止める。
+
+**結果:**
+
+- ✅ Required Workflow 候補のトリガー互換性: 問題なし
+- ⚠️ push / pull_request がない Required Workflow 候補あり
+- ⚠️ `security-summary.yml` の通知 job に event guard がない
+
 ### 3.5.3 CI Template Deployment Check (他リポジトリ展開)
 
 config リポジトリのテンプレートが他リポジトリに展開可能か確認：

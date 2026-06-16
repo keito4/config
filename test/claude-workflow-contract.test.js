@@ -84,4 +84,13 @@ describe('Claude workflow contracts', () => {
     expect(command).toContain('"script/wait-ci-checks.sh"');
     expect(command).toContain('git checkout "$CLAUDE_BRANCH" 2>/dev/null || git checkout -b "$CLAUDE_BRANCH"');
   });
+
+  test('repo-maintenance detects required workflow trigger incompatibility', () => {
+    const command = readWorkflow('.claude/commands/repo-maintenance.md');
+
+    expect(command).toContain('Required Workflow Trigger Compatibility Check');
+    expect(command).toContain('security-summary.yml');
+    expect(command).toContain('jobs=[]');
+    expect(command).toContain("github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'");
+  });
 });
