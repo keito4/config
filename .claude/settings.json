@@ -173,7 +173,11 @@
       "Bash(supabase db branch delete)",
       "Bash(supabase db branch delete:*)",
       "Read(./.env)",
-      "Read(./.env.*)",
+      "Read(./.env.local)",
+      "Read(./.env.development*)",
+      "Read(./.env.production*)",
+      "Read(./.env.staging*)",
+      "Read(./.env.test*)",
       "Read(**/*.pem)",
       "Read(**/*.key)"
     ],
