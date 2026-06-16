@@ -127,8 +127,8 @@ describe('Template workflow contracts', () => {
       expect(workflow).toContain('timeout-minutes:');
     });
 
-    test('should skip non-Dependabot PRs', () => {
-      expect(workflow).toContain("github.actor != 'dependabot[bot]'");
+    test('should only run auto-merge job for Dependabot PRs', () => {
+      expect(workflow).toContain("if: github.actor == 'dependabot[bot]'");
     });
 
     test('should fetch Dependabot metadata to determine update type', () => {
