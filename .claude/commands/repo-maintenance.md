@@ -1199,7 +1199,15 @@ for workflow in .github/workflows/*.yml; do
   fi
 
   if [ "$BASENAME" = "security-summary.yml" ]; then
-    if ! echo "$CONTENT" | grep -q "github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"; then
+    GENERATE_SUMMARY_JOB=$(awk '
+      /^  generate-summary:/ { in_job=1; print; next }
+      in_job && /^  [A-Za-z0-9_-]+:/ { exit }
+      in_job { print }
+    ' "$workflow")
+
+    if [ -z "$GENERATE_SUMMARY_JOB" ]; then
+      ISSUES+=("$BASENAME: Slack 通知付き generate-summary job が見つかりません")
+    elif ! printf '%s\n' "$GENERATE_SUMMARY_JOB" | grep -qE "^    if: *github.event_name == 'schedule' \\|\\| github.event_name == 'workflow_dispatch'$"; then
       ISSUES+=("$BASENAME: Slack 通知付き generate-summary は job-level if で schedule / workflow_dispatch に限定してください")
     fi
   fi

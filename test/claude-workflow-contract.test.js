@@ -92,5 +92,9 @@ describe('Claude workflow contracts', () => {
     expect(command).toContain('security-summary.yml');
     expect(command).toContain('jobs=[]');
     expect(command).toContain("github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'");
+    expect(command).toContain('GENERATE_SUMMARY_JOB=$(awk');
+    expect(command).toContain('/^  generate-summary:/');
+    expect(command).toContain('/^  [A-Za-z0-9_-]+:/');
+    expect(command).toContain("^    if: *github.event_name == 'schedule'");
   });
 });
