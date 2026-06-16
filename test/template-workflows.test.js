@@ -169,6 +169,43 @@ describe('Template workflow contracts', () => {
     });
   });
 
+  describe('dependabot-auto-merge.yml (template and actual — security-critical properties)', () => {
+    const workflowPaths = [
+      'templates/workflows/dependabot-auto-merge.yml',
+      '.github/workflows/dependabot-auto-merge.yml',
+    ];
+
+    test.each(workflowPaths)(
+      '%s: should gate the entire job on dependabot actor before write tokens are issued',
+      (wfPath) => {
+        // Job-level if guard prevents write-scoped GITHUB_TOKEN from being issued to non-Dependabot actors
+        const workflow = readWorkflow(wfPath);
+        expect(workflow).toContain("if: github.actor == 'dependabot[bot]'");
+      },
+    );
+
+    test.each(workflowPaths)('%s: should restrict write permissions to job scope, not workflow scope', (wfPath) => {
+      const workflow = readWorkflow(wfPath);
+      // Workflow-level: read-only fallback
+      expect(workflow).toContain('contents: read');
+      // Job-level: elevated only after actor is verified
+      expect(workflow).toContain('contents: write');
+      expect(workflow).toContain('pull-requests: write');
+    });
+
+    test.each(workflowPaths)('%s: should handle all semver update types', (wfPath) => {
+      const workflow = readWorkflow(wfPath);
+      expect(workflow).toContain('version-update:semver-patch');
+      expect(workflow).toContain('version-update:semver-minor');
+      expect(workflow).toContain('version-update:semver-major');
+    });
+
+    test.each(workflowPaths)('%s: should not auto-merge major updates', (wfPath) => {
+      const workflow = readWorkflow(wfPath);
+      expect(workflow).not.toMatch(/semver-major[\s\S]{0,300}gh pr merge/);
+    });
+  });
+
   describe('quality-gate-fallback.yml (template and actual)', () => {
     const workflowPaths = [
       'templates/workflows/quality-gate-fallback.yml',
