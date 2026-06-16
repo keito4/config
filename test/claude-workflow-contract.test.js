@@ -137,6 +137,7 @@ describe('Claude workflow contracts', () => {
     expect(command).toContain("github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'");
     expect(command).toContain('ON_BLOCK=$(awk');
     expect(command).toContain('/^on:/');
+    expect(command).toContain('/^"on":/');
     expect(command).toContain('GENERATE_SUMMARY_JOB=$(awk');
     expect(command).toContain('/^  generate-summary:/');
     expect(command).toContain('/^  [A-Za-z0-9_-]+:/');
@@ -206,6 +207,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo summary
+`,
+    });
+
+    expect(output.trim()).toBe('');
+  });
+
+  test('repo-maintenance accepts block sequence event syntax', () => {
+    const output = runRequiredWorkflowScript({
+      'required.yml': `
+name: Required Workflow
+on:
+  - push
+  - pull_request
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
 `,
     });
 

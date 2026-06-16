@@ -1193,12 +1193,13 @@ for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
 
   ON_BLOCK=$(awk '
     /^on:/ { in_on=1; print; next }
+    /^"on":/ { in_on=1; print; next }
     in_on && /^[A-Za-z0-9_-]+:/ { exit }
     in_on { print }
   ' "$workflow")
 
   HAS_PUSH_OR_PR=false
-  printf '%s\n' "$ON_BLOCK" | grep -qE '^(on: *(\[.*(push|pull_request).*\]|(push|pull_request))|  (push|pull_request):)' && HAS_PUSH_OR_PR=true
+  printf '%s\n' "$ON_BLOCK" | grep -qE '^(on: *(\[.*(push|pull_request).*\]|(push|pull_request))|"on": *(\[.*(push|pull_request).*\]|(push|pull_request))|  (push|pull_request):|  - (push|pull_request)$)' && HAS_PUSH_OR_PR=true
 
   if [ "$HAS_PUSH_OR_PR" = false ]; then
     ISSUES+=("$BASENAME: Required Workflow 候補ですが push / pull_request トリガーがありません。必須チェック化すると jobs=[] で失敗します")
