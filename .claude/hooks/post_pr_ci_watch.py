@@ -38,7 +38,7 @@ pr_url, _, _, pr_number = pr_info
 print_header(f"🔄 PR作成完了。CIステータスを監視中...\n📎 PR: {pr_url}")
 
 
-def get_pr_checks(pr_number: str, timeout_seconds: int = 600):
+def get_pr_checks(pr_number: str, timeout_seconds: int = 600) -> tuple[str, list]:
     """PRのCIチェック状態を監視（最大10分）"""
     start_time = time.time()
     check_interval = 15  # 15秒ごとにチェック

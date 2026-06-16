@@ -126,7 +126,7 @@ describe('Configuration Validation', () => {
       scripts.forEach((script) => {
         const scriptPath = path.join(scriptDir, script);
         const stats = fs.statSync(scriptPath);
-        expect(stats.mode & parseInt('111', 8)).toBeTruthy(); // Check if executable
+        expect(stats.mode & 0o111).toBeTruthy(); // Check if executable
       });
     });
   });
@@ -162,7 +162,7 @@ describe('Configuration Validation', () => {
           const stats = fs.statSync(filePath);
           // Check that sensitive files are not world-readable (skip if directory)
           if (stats.isFile()) {
-            expect(stats.mode & parseInt('004', 8)).toBe(0);
+            expect(stats.mode & 0o004).toBe(0);
           }
         }
       });

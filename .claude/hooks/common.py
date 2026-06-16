@@ -22,11 +22,11 @@ def load_hook_input() -> dict:
     return json.load(sys.stdin)
 
 
-def parse_tool_context(data: dict) -> tuple:
+def parse_tool_context(data: dict) -> tuple[str, dict, dict]:
     """Extract standard tool context fields.
 
     Returns:
-        tuple: (tool_name, tool_input, tool_response)
+        tuple[str, dict, dict]: (tool_name, tool_input, tool_response)
     """
     tool_name = data.get("tool_name", "")
     tool_input = data.get("tool_input", {}) or {}
