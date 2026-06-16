@@ -138,6 +138,7 @@ describe('Claude workflow contracts', () => {
     expect(command).toContain('ON_BLOCK=$(awk');
     expect(command).toContain('/^on:/');
     expect(command).toContain('/^"on":/');
+    expect(command).toContain('events[i] == "pull_request"');
     expect(command).toContain('GENERATE_SUMMARY_JOB=$(awk');
     expect(command).toContain('/^  generate-summary:/');
     expect(command).toContain('/^  [A-Za-z0-9_-]+:/');
@@ -230,5 +231,22 @@ jobs:
     });
 
     expect(output.trim()).toBe('');
+  });
+
+  test('repo-maintenance does not treat pull_request_target as pull_request', () => {
+    const output = runRequiredWorkflowScript({
+      'required.yml': `
+name: Required Workflow
+on: [pull_request_target, pull_request_review]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+`,
+    });
+
+    expect(output).toContain('required.yml: Required Workflow 候補ですが push / pull_request');
   });
 });

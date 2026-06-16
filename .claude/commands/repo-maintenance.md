@@ -1199,7 +1199,22 @@ for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
   ' "$workflow")
 
   HAS_PUSH_OR_PR=false
-  printf '%s\n' "$ON_BLOCK" | grep -qE '^(on: *(\[.*(push|pull_request).*\]|(push|pull_request))|"on": *(\[.*(push|pull_request).*\]|(push|pull_request))|  (push|pull_request):|  - (push|pull_request)$)' && HAS_PUSH_OR_PR=true
+  if printf '%s\n' "$ON_BLOCK" | awk '
+    /^  (push|pull_request):/ { found=1 }
+    /^  - (push|pull_request)$/ { found=1 }
+    /^on:/ || /^"on":/ {
+      line=$0
+      sub(/^"?on"?: */, "", line)
+      gsub(/[][",]/, "", line)
+      count=split(line, events, /[, ]+/)
+      for (i=1; i<=count; i++) {
+        if (events[i] == "push" || events[i] == "pull_request") found=1
+      }
+    }
+    END { exit found ? 0 : 1 }
+  '; then
+    HAS_PUSH_OR_PR=true
+  fi
 
   if [ "$HAS_PUSH_OR_PR" = false ]; then
     ISSUES+=("$BASENAME: Required Workflow 候補ですが push / pull_request トリガーがありません。必須チェック化すると jobs=[] で失敗します")
