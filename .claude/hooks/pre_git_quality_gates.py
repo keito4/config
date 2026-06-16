@@ -71,7 +71,7 @@ def has_biome(root: str) -> bool:
     return False
 
 
-def detect_linter_conflicts(root: str) -> list:
+def detect_linter_conflicts(root: str) -> list[dict]:
     """Biome と他の lint/format ツールの競合を検出"""
     conflicts = []
     pkg_path = Path(root) / "package.json"
@@ -115,7 +115,7 @@ def detect_linter_conflicts(root: str) -> list:
     return conflicts
 
 
-def get_package_scripts(root: str) -> dict:
+def get_package_scripts(root: str) -> dict[str, str]:
     """package.json の scripts を取得"""
     pkg_path = Path(root) / "package.json"
     if not pkg_path.exists():
@@ -158,13 +158,13 @@ def run_with_retry(
     cwd: str,
     timeout: int = DEFAULT_TIMEOUT,
     max_retries: int = MAX_RETRIES,
-) -> tuple:
+) -> tuple[bool, dict]:
     """リトライ付きコマンド実行
 
     Returns:
-        tuple: (success: bool, result: dict)
+        tuple[bool, dict]: (success, result)
     """
-    last_result = None
+    last_result: dict | None = None
 
     for attempt in range(max_retries + 1):
         try:

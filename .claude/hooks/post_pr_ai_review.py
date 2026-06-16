@@ -183,7 +183,7 @@ def run_gemini_review():
     return None
 
 
-def post_pr_comment(pr_url: str, comment_body: str):
+def post_pr_comment(pr_url: str, comment_body: str) -> bool:
     """PRにコメントを投稿"""
     try:
         result = subprocess.run(
