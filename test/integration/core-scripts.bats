@@ -11,6 +11,11 @@ load ../test_helper/test_helper
     [ -x "$REPO_ROOT/script/branch-cleanup.sh" ]
 }
 
+@test "audit-references.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/audit-references.sh"
+    [ -x "$REPO_ROOT/script/audit-references.sh" ]
+}
+
 @test "check-image-version.sh exists and is executable" {
     assert_file_exists "$REPO_ROOT/script/check-image-version.sh"
     [ -x "$REPO_ROOT/script/check-image-version.sh" ]
