@@ -39,8 +39,7 @@ jobs:
         github.event.issue.author_association
       ) &&
       (
-        (github.event_name == 'issue_comment' && contains(github.event.comment.body || '', '@claude') &&
-          !(github.event.issue.pull_request && github.event.issue.pull_request.url && github.event.issue.draft == true)) ||
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body || '', '@claude')) ||
         (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body || '', '@claude') &&
           github.event.pull_request.draft == false) ||
         (github.event_name == 'pull_request_review' && contains(github.event.review.body || '', '@claude') &&
@@ -57,13 +56,32 @@ jobs:
       actions: read # Required for Claude to read CI results on PRs
       checks: read
     steps:
+      - name: Check PR draft state
+        id: pr_draft
+        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          script: |
+            const { data: pull } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            core.setOutput('is_draft', pull.draft ? 'true' : 'false');
+
+      - name: Skip draft PR
+        if: steps.pr_draft.outputs.is_draft == 'true'
+        run: echo "Skipping Claude Code for draft PR."
+
       - name: Checkout repository
+        if: steps.pr_draft.outputs.is_draft != 'true'
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 1
 
       - name: Run Claude Code
         id: claude
+        if: steps.pr_draft.outputs.is_draft != 'true'
         uses: anthropics/claude-code-action@d5726de019ec4498aa667642bc3a80fca83aa102 # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

@@ -36,7 +36,12 @@ load ../test_helper/test_helper
   grep -Fq "'**.yml'" "$workflow"
   grep -Fq "'**.yaml'" "$workflow"
   grep -Fq "'.github/actionlint.yaml'" "$workflow"
+  grep -Fq "'templates/workflows/**'" "$workflow"
+  grep -Fq "'templates/github/labels.yml'" "$workflow"
   grep -Fq "workflows:" "$workflow"
+  grep -Fq "needs.changes.outputs.workflows == 'true'" "$workflow"
+  grep -Fq "actionlint_flags:" "$workflow"
+  grep -Fq "templates/workflows/*.yml" "$workflow"
 }
 
 @test "CI workflow uses secure practices" {
