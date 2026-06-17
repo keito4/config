@@ -2,13 +2,25 @@
 
 load ../test_helper/test_helper
 
+assert_tsv_row() {
+  local expected="$1"$'\t'"$2"$'\t'"$3"
+  local line
+
+  while IFS= read -r line; do
+    [ "$line" = "$expected" ] && return 0
+  done <<< "$output"
+
+  echo "missing TSV row: $expected" >&2
+  return 1
+}
+
 @test "audit-references reports references as TSV with required categories" {
   run "$REPO_ROOT/script/audit-references.sh" --format tsv
   assert_success
 
-  printf '%s\n' "$output" | grep -Fq $'test\tscript/check-image-version.sh\ttest/integration/core-scripts.bats'
-  printf '%s\n' "$output" | grep -Fq $'test\ttemplates/workflows/claude-health-check.yml\ttest/template-workflows.test.js'
-  printf '%s\n' "$output" | grep -Fq $'docs\tscript/check-image-version.sh\tscript/README.md'
+  assert_tsv_row test script/check-image-version.sh test/integration/core-scripts.bats
+  assert_tsv_row test templates/workflows/claude-health-check.yml test/template-workflows.test.js
+  assert_tsv_row docs script/check-image-version.sh script/README.md
 }
 
 @test "audit-references markdown includes zero code/test summary" {
