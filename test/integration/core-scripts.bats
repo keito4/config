@@ -56,16 +56,28 @@ load ../test_helper/test_helper
     [ -x "$REPO_ROOT/script/setup-team-protection.sh" ]
 }
 
+@test "setup-team-protection.sh delegates to setup team protection library" {
+    grep -q 'source "$SCRIPT_DIR/lib/setup_team_protection.sh"' "$REPO_ROOT/script/setup-team-protection.sh"
+    grep -q 'setup_team_protection_main "$@"' "$REPO_ROOT/script/setup-team-protection.sh"
+    grep -q "setup_team_protection_main()" "$REPO_ROOT/script/lib/setup_team_protection.sh"
+}
+
 @test "setup-team-protection.sh defines include_existing_environment_branches function" {
-    grep -q "include_existing_environment_branches()" "$REPO_ROOT/script/setup-team-protection.sh"
+    grep -q "include_existing_environment_branches()" "$REPO_ROOT/script/lib/setup_team_protection.sh"
 }
 
 @test "setup-team-protection.sh initializes BRANCHES_EXPLICIT to false" {
-    grep -q "BRANCHES_EXPLICIT=false" "$REPO_ROOT/script/setup-team-protection.sh"
+    grep -q "BRANCHES_EXPLICIT=false" "$REPO_ROOT/script/lib/setup_team_protection.sh"
 }
 
 @test "setup-team-protection.sh sets BRANCHES_EXPLICIT=true when --branches is given" {
-    grep -q "BRANCHES_EXPLICIT=true" "$REPO_ROOT/script/setup-team-protection.sh"
+    grep -q "BRANCHES_EXPLICIT=true" "$REPO_ROOT/script/lib/setup_team_protection.sh"
+}
+
+@test "setup-team-protection.sh stays below critical complexity threshold" {
+    run "$REPO_ROOT/script/code-complexity-check.sh" --files "$REPO_ROOT/script/setup-team-protection.sh" --json
+    assert_success
+    printf '%s\n' "$output" | grep -q '"critical_complexity_count": 0'
 }
 
 @test "check-file-length.sh exists and is executable" {
