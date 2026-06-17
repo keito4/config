@@ -72,6 +72,18 @@ describe('Claude workflow contracts', () => {
     expect(workflow).not.toContain('"allowedTools"');
   });
 
+  test.each(issueWorkflows)('%s skips draft PR issue comments through the Pulls API', (workflowPath) => {
+    const workflow = readWorkflow(workflowPath);
+
+    expect(workflow).not.toContain('github.event.issue.draft');
+    expect(workflow).toContain('name: Check PR draft state');
+    expect(workflow).toContain('github.rest.pulls.get');
+    expect(workflow).toContain('pull_number: context.issue.number');
+    expect(workflow).toContain("core.setOutput('is_draft', pull.draft ? 'true' : 'false')");
+    expect(workflow).toContain("if: steps.pr_draft.outputs.is_draft != 'true'");
+    expect(workflow).toContain('name: Skip draft PR');
+  });
+
   test.each(maintenanceWorkflows)('%s creates maintenance PRs in a post-Claude Actions step', (workflowPath) => {
     const workflow = readWorkflow(workflowPath);
 

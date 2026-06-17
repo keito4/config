@@ -30,11 +30,12 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'スキャン対象の環境（空の場合は全環境）'
+        description: 'スキャン対象の環境'
         required: false
         type: choice
+        default: all
         options:
-          - ''
+          - all
           - dev
           - staging
           - production
@@ -86,13 +87,6 @@ jobs:
           - environment: production
             tf_directory: terraform/environments/production
 
-    # --- 環境フィルタ ---
-    # 手動実行で特定環境が指定された場合、その環境のみ実行する
-    if: >-
-      github.event_name == 'schedule' ||
-      github.event.inputs.environment == '' ||
-      github.event.inputs.environment == matrix.environment
-
     # TODO: GitHub Environments を使用する場合はコメントを外す
     # environment: ${{ matrix.environment }}
 
@@ -103,15 +97,35 @@ jobs:
 
     steps:
       # -----------------------------------------------------------------
+      # 対象環境の判定
+      # -----------------------------------------------------------------
+      - name: Select environment
+        id: selected
+        run: |
+          TARGET="${{ github.event.inputs.environment }}"
+          if [ -z "$TARGET" ]; then
+            TARGET="all"
+          fi
+
+          if [ "$TARGET" = "all" ] || [ "$TARGET" = "${{ matrix.environment }}" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping ${{ matrix.environment }} because target is ${TARGET}."
+          fi
+
+      # -----------------------------------------------------------------
       # リポジトリのチェックアウト
       # -----------------------------------------------------------------
       - name: Checkout repository
+        if: steps.selected.outputs.run == 'true'
         uses: actions/checkout@v6
 
       # -----------------------------------------------------------------
       # Terraform セットアップ
       # -----------------------------------------------------------------
       - name: Setup Terraform
+        if: steps.selected.outputs.run == 'true'
         uses: hashicorp/setup-terraform@v4
         with:
           # TODO: プロジェクトで使用する Terraform バージョンを指定する
@@ -151,6 +165,7 @@ jobs:
       # -----------------------------------------------------------------
       - name: Terraform Init
         id: init
+        if: steps.selected.outputs.run == 'true'
         working-directory: ${{ matrix.tf_directory }}
         run: terraform init -input=false -no-color
 
@@ -163,6 +178,7 @@ jobs:
       #   2 = 差分あり（ドリフト検出）
       - name: Terraform Plan (Drift Detection)
         id: plan
+        if: steps.selected.outputs.run == 'true'
         working-directory: ${{ matrix.tf_directory }}
         run: |
           set +e
@@ -364,7 +380,7 @@ jobs:
       # Terraform plan エラー時の Slack 通知
       # -----------------------------------------------------------------
       - name: Notify Slack on error
-        if: failure()
+        if: steps.selected.outputs.run == 'true' && failure()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |

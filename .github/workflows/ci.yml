@@ -82,6 +82,9 @@ jobs:
             workflows:
               - '.github/workflows/**'
               - '.github/actionlint.yaml'
+              - '.github/labels.yml'
+              - 'templates/workflows/**'
+              - 'templates/github/labels.yml'
             dependencies:
               - 'package.json'
               - 'package-lock.json'
@@ -91,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: changes
-    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.scripts == 'true' || needs.changes.outputs.dependencies == 'true'
+    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.scripts == 'true' || needs.changes.outputs.dependencies == 'true' || needs.changes.outputs.workflows == 'true'
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
@@ -114,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: changes
-    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.dependencies == 'true'
+    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.dependencies == 'true' || needs.changes.outputs.workflows == 'true'
     permissions:
       contents: read
       actions: write
@@ -161,7 +164,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: changes
-    if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.dependencies == 'true'
+    if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.dependencies == 'true' || needs.changes.outputs.workflows == 'true'
     permissions:
       contents: read
       actions: write
@@ -200,6 +203,10 @@ jobs:
         with:
           reporter: github-pr-review
           fail_on_error: true
+          actionlint_flags: >-
+            .github/workflows/*.y*ml
+            .github/workflows/templates/*.y*ml
+            templates/workflows/*.y*ml
 
   pr-size-check:
     name: PR Size Check
