@@ -220,7 +220,7 @@ mkdir -p TARGET_DIR/.vscode
 ### 6.1 Commitlint設定
 
 ```bash
-cp CONFIG_REPO/git/commitlint.config.js TARGET_DIR/
+cp CONFIG_REPO/templates/commitlint.config.js TARGET_DIR/commitlint.config.js
 ```
 
 ### 6.2 .gitignore作成

@@ -93,8 +93,8 @@ create_schedule_if_not_exists "ドキュメント鮮度チェック" \
   --cron "0 1 15 * *" \
   --repo "$REPO" \
   --prompt "ドキュメントの鮮度を確認してください。
-1. README.md の内容が実際のプロジェクト構造・コマンドと一致しているか確認
-2. CLAUDE.md のコマンド一覧・ワークフロー一覧が最新か確認
+1. README.md が手書きカタログではなく AGENTS.md の自動生成セクションへ誘導しているか確認
+2. AGENTS.md のコマンド一覧・ワークフロー一覧が最新か確認
 3. docs/adr/ のADRが実装と乖離していないか確認
 4. 古くなっている箇所があれば修正PRを作成（ブランチ名: docs/update-stale-docs）
 5. 軽微な場合はGitHub Issueのみ作成（ラベル: documentation）"

@@ -346,13 +346,8 @@ npm install -D husky @commitlint/cli @commitlint/config-conventional lint-staged
 
 **commitlint.config.js**:
 
-```js
-module.exports = {
-  extends: ['@commitlint/config-conventional'],
-  rules: {
-    'body-max-line-length': [2, 'always', 120],
-  },
-};
+```bash
+cp /path/to/config/templates/commitlint.config.js ./commitlint.config.js
 ```
 
 **lint-staged.config.js**:

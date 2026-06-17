@@ -17,6 +17,7 @@
 | [setup/mobile-flutter.md](./setup/mobile-flutter.md)             | Flutter モバイルアプリ                       |
 | [setup/mobile-android.md](./setup/mobile-android.md)             | Android ネイティブアプリ                     |
 | [setup/desktop-extension-ts.md](./setup/desktop-extension-ts.md) | デスクトップ拡張（TypeScript）               |
+| [setup/windows.md](./setup/windows.md)                           | Windows ネイティブセットアップ               |
 
 ### テストテンプレート
 
@@ -49,65 +50,17 @@
 
 ### Claude Code コマンドとの連携
 
-| コマンド                   | 関連ドキュメント                                                 |
-| -------------------------- | ---------------------------------------------------------------- |
-| `/setup-new-repo`          | [setup/README.md](./setup/README.md)                             |
-| `/setup-ci`                | [setup/README.md](./setup/README.md)                             |
-| `/setup-tests`             | [../templates/testing/README.md](../templates/testing/README.md) |
-| `/config-base-sync-update` | [using-config-base-image.md](./using-config-base-image.md)       |
-| `/repo-maintenance`        | [tool-catalog.md](./tool-catalog.md)                             |
-| `/setup-doppler`           | [doppler-setup-guide.md](./doppler-setup-guide.md)               |
+コマンド一覧は [AGENTS.md](../AGENTS.md) の自動生成セクションを参照してください。
+各コマンドの作成規約は [.claude/commands/README.md](../.claude/commands/README.md) にあります。
 
-## ディレクトリ構造
+### 構成情報
 
-```
-docs/
-├── README.md                    # このファイル（ドキュメント索引）
-├── setup/                       # プロジェクト種別セットアップガイド
-│   ├── README.md               # 共通品質ゲート・パターン
-│   ├── web-app-nextjs.md       # Next.js
-│   ├── spa-react-vite.md       # React + Vite
-│   ├── npm-library-cli.md      # npm ライブラリ
-│   ├── mobile-flutter.md       # Flutter
-│   ├── mobile-android.md       # Android
-│   └── desktop-extension-ts.md # デスクトップ拡張
-├── using-config-base-image.md  # DevContainer ベースイメージ
-├── mcp-servers-guide.md        # MCP サーバー設定
-├── sentry-setup-guide.md       # Sentry セットアップ
-├── doppler-setup-guide.md      # Doppler シークレット管理
-└── tool-catalog.md             # ツールカタログ
-
-templates/
-├── biome.json                   # Biome 統合フォーマッタ+リンタ設定
-├── commitlint.config.js         # Conventional Commits (日本語緩和)
-├── editorconfig                 # エディタ間スタイル統一
-├── eslint/
-│   └── eslint.config.mjs       # ESLint flat config (TypeScript + 複雑度)
-├── github/
-│   ├── policies/               # ポリシー設定テンプレート
-│   │   ├── complexity-thresholds.json  # 複雑度閾値
-│   │   ├── allowed-licenses.json       # ライセンス許可/禁止リスト
-│   │   └── severity-definitions.md     # セキュリティ SLA 定義
-│   ├── dependabot.yml          # Dependabot 設定
-│   ├── labels.yml              # ラベル定義
-│   ├── pull_request_template.md
-│   └── SECURITY.md
-├── testing/                     # テスト設定テンプレート
-│   ├── README.md               # テストテンプレートガイド（21種類）
-│   ├── jest.config.js          # Jest 基本設定
-│   ├── vitest.config.ts        # Vitest 設定 (jsdom + v8 coverage)
-│   ├── playwright.config.ts    # Playwright E2E 設定
-│   └── examples/               # 各テスト種別のサンプルコード
-└── workflows/                   # GitHub Actions ワークフローテンプレート
-    ├── quality-gate-fallback.yml # CI パス保証 (fallback)
-    ├── claude.yml               # Claude Code 連携
-    ├── dependabot-auto-merge.yml
-    └── ...
-```
+リポジトリ全体のディレクトリ一覧は [AGENTS.md](../AGENTS.md) の自動生成セクションを参照してください。
+テンプレート配下は [templates/README.md](../templates/README.md)、setup 配下は [setup/README.md](./setup/README.md) が索引です。
 
 ## 関連リソース
 
 - [AGENTS.md](../AGENTS.md) - AI エージェント向け開発ガイドライン
-- [.claude/commands/README.md](../.claude/commands/README.md) - Claude Code コマンド一覧
+- [.claude/commands/README.md](../.claude/commands/README.md) - Claude Code コマンド作成規約
 - [credentials/README.md](../credentials/README.md) - 認証情報管理ガイド
 - [script/README.md](../script/README.md) - スクリプト一覧
