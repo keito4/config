@@ -13,7 +13,8 @@ Audits tracked files under script/ and templates/ and reports references from:
 - docs
 
 The scanner matches both the repository-relative path and basename so it can
-find references such as "script/foo.sh" and "foo.sh".
+find references such as "script/foo.sh" and "foo.sh". It uses rg when available
+and falls back to grep in minimal CI environments.
 USAGE
 }
 
@@ -93,6 +94,19 @@ emit_markdown_list() {
   fi
 }
 
+find_reference_sources() {
+  local target="$1"
+  local basename_target="$2"
+  shift 2
+
+  if command -v rg >/dev/null 2>&1; then
+    rg -l --fixed-strings -e "$target" -e "$basename_target" -- "$@" 2>/dev/null || true
+    return
+  fi
+
+  grep -IlF -e "$target" -e "$basename_target" -- "$@" 2>/dev/null || true
+}
+
 if [ "$FORMAT" = "markdown" ]; then
   cat <<'HEADER'
 # Reference Inventory
@@ -105,13 +119,16 @@ else
 fi
 
 ZERO_CODE_TEST=()
+SOURCES=()
+while IFS= read -r source; do
+  SOURCES+=("$source")
+done < <(tracked_files)
 
 while IFS= read -r target; do
   basename_target=$(basename "$target")
   code_refs=""
   test_refs=""
   docs_refs=""
-  mapfile -t sources < <(tracked_files)
 
   while IFS= read -r source; do
     [ "$source" != "$target" ] || continue
@@ -131,7 +148,7 @@ while IFS= read -r target; do
     if [ "$FORMAT" = "tsv" ]; then
       emit_tsv_row "$category" "$target" "$source"
     fi
-  done < <(rg -l --fixed-strings -e "$target" -e "$basename_target" -- "${sources[@]}" 2>/dev/null || true)
+  done < <(find_reference_sources "$target" "$basename_target" "${SOURCES[@]}")
 
   if [ -z "$code_refs$test_refs" ]; then
     ZERO_CODE_TEST+=("$target")
