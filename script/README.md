@@ -23,11 +23,15 @@ Exports configuration settings (Zsh dotfiles, etc.) to the home directory.
 
 **Usage**: `./script/export.sh`
 
+**Check mode**: `./script/export.sh --check`
+
 ### import.sh
 
 Imports configuration settings from the home directory back to the repository.
 
 **Usage**: `./script/import.sh`
+
+**Check mode**: `./script/import.sh --check`
 
 ## Credential Management
 
