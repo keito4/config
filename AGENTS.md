@@ -109,7 +109,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `issue-resolver-code-quality`  | コード品質に関するIssueを自動的に解決し、PRを作成する。TODO/FIXMEコメントの処理、複雑なコードのリファクタリング、コードスタイルの改善を行う。 |
 | `issue-resolver-dependencies`  | 依存関係に関するIssueを解決し、古いパッケージの更新、脆弱性の修正、不要な依存関係の削除を行う。                                               |
 | `issue-resolver-documentation` | ドキュメントに関するIssueを解決し、README、API文書、コードコメント、アーキテクチャドキュメントを充実させる。                                  |
-| `issue-resolver-orchestrator`  | GitHubのIssueを分析し、適切なIssue Resolverエージェントを選択・実行して、自動的にIssueを解決しPRを作成する統合オーケストレーター。            |
+| `issue-resolver-orchestrator`  | Use this agent when you need to triage open GitHub issues, classify them by category, route them ...                                          |
 | `issue-resolver-security`      | セキュリティに関するIssueを解決し、ハードコードされた秘密情報の除去、脆弱性の修正、セキュリティベストプラクティスの実装を行う。               |
 | `issue-resolver-test-coverage` | テストカバレッジに関するIssueを解決し、単体テスト・統合テスト・E2Eテストを追加して70%以上のカバレッジを達成する。                             |
 | `playwright-test-generator`    | Use this agent to automatically generate Playwright E2E tests by observing browser interactions.                                              |

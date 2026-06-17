@@ -1,3 +1,9 @@
+---
+name: issue-resolver-orchestrator
+description: Use this agent when you need to triage open GitHub issues, classify them by category, route them to the issue-resolver-* agents, and create follow-up pull requests for safe issue resolution. Use when the user asks to process the issue backlog, resolve multiple issues in order, or run the issue resolver workflow.
+color: indigo
+---
+
 # Issue Resolver: Orchestrator Agent
 
 ## 目的
