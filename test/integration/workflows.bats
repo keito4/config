@@ -42,6 +42,9 @@ load ../test_helper/test_helper
   grep -Fq "needs.changes.outputs.workflows == 'true'" "$workflow"
   grep -Fq "actionlint_flags:" "$workflow"
   grep -Fq "templates/workflows/*.y*ml" "$workflow"
+  grep -Fq "Workflow Template Sync" "$workflow"
+  grep -Fq "npm run workflow:sync:check" "$workflow"
+  grep -Fq "WORKFLOW_TEMPLATE_SYNC_RESULT" "$workflow"
 }
 
 @test "CI workflow uses secure practices" {

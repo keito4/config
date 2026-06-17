@@ -1,5 +1,7 @@
 # Stale Issue/PR 管理ワークフロー
 #
+# Reference-only template; this repository does not install it under .github/workflows/.
+#
 # 長期間アクティビティのない Issue / PR にラベルを付与し、
 # さらに放置された場合は自動クローズする
 #

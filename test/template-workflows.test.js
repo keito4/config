@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 const repoPath = path.resolve(__dirname, '..');
 
@@ -24,6 +25,15 @@ function workflowExists(relativePath) {
 }
 
 describe('Template workflow contracts', () => {
+  test('managed workflow templates are synchronized with actual workflows', () => {
+    const output = execFileSync('node', ['script/check-workflow-template-sync.js'], {
+      cwd: repoPath,
+      encoding: 'utf8',
+    });
+
+    expect(output).toContain('workflow templates are synchronized');
+  });
+
   describe('claude-health-check.yml', () => {
     const workflowPath = 'templates/workflows/claude-health-check.yml';
     let workflow;

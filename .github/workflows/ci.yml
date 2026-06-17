@@ -85,6 +85,7 @@ jobs:
               - '.github/labels.yml'
               - 'templates/workflows/**'
               - 'templates/github/labels.yml'
+              - 'script/check-workflow-template-sync.js'
             dependencies:
               - 'package.json'
               - 'package-lock.json'
@@ -205,8 +206,21 @@ jobs:
           fail_on_error: true
           actionlint_flags: >-
             .github/workflows/*.y*ml
-            .github/workflows/templates/*.y*ml
             templates/workflows/*.y*ml
+
+  workflow-template-sync:
+    name: Workflow Template Sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true' || needs.changes.outputs.scripts == 'true'
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - uses: ./.github/actions/setup-node-ci
+
+      - name: Check workflow templates match actual workflows
+        run: npm run workflow:sync:check
 
   pr-size-check:
     name: PR Size Check
@@ -295,7 +309,7 @@ jobs:
     name: Quality Gate
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [changes, lint, test, integration-test, actionlint]
+    needs: [changes, lint, test, integration-test, actionlint, workflow-template-sync]
     if: always()
     steps:
       - name: Check job results
@@ -304,6 +318,7 @@ jobs:
           TEST_RESULT: ${{ needs.test.result }}
           INTEGRATION_RESULT: ${{ needs.integration-test.result }}
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
+          WORKFLOW_TEMPLATE_SYNC_RESULT: ${{ needs.workflow-template-sync.result }}
         run: |
           echo "## Quality Gate Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -313,6 +328,7 @@ jobs:
           echo "| Unit Tests | $TEST_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| Integration Tests | $INTEGRATION_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| Workflow Lint | $ACTIONLINT_RESULT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Workflow Template Sync | $WORKFLOW_TEMPLATE_SYNC_RESULT |" >> $GITHUB_STEP_SUMMARY
 
       - name: Verify all checks passed
         env:
@@ -320,6 +336,7 @@ jobs:
           TEST_RESULT: ${{ needs.test.result }}
           INTEGRATION_RESULT: ${{ needs.integration-test.result }}
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
+          WORKFLOW_TEMPLATE_SYNC_RESULT: ${{ needs.workflow-template-sync.result }}
         run: |
           # skipped は成功扱い（該当ファイルの変更がない場合）
           function check_result() {
@@ -342,6 +359,10 @@ jobs:
           fi
           if ! check_result "$ACTIONLINT_RESULT"; then
             echo "::error::Workflow Lint failed"
+            FAILED=true
+          fi
+          if ! check_result "$WORKFLOW_TEMPLATE_SYNC_RESULT"; then
+            echo "::error::Workflow Template Sync failed"
             FAILED=true
           fi
 
