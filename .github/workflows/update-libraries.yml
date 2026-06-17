@@ -10,8 +10,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 # npm devDependencies, GitHub Actions, and Docker base images are owned by Dependabot
 # (.github/dependabot.yml). This workflow only refreshes npm/global.json, which Dependabot
@@ -21,6 +20,9 @@ jobs:
   update:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
