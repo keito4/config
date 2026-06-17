@@ -2079,16 +2079,29 @@ DEPENDABOT_AUTOMERGE_ISSUES=()
 
 if [ "$HAS_DEPENDABOT_AUTOMERGE" = true ]; then
   DEPENDABOT_WF=$(cat .github/workflows/dependabot-auto-merge.yml)
+  TOP_LEVEL_PERMISSIONS=$(echo "$DEPENDABOT_WF" | awk '
+    /^permissions:/ { in_permissions=1; next }
+    /^[^[:space:]]/ { in_permissions=0 }
+    in_permissions { print }
+  ')
+  DEPENDABOT_JOB_BLOCK=$(echo "$DEPENDABOT_WF" | awk '
+    /^  dependabot-auto:/ { in_job=1; print; next }
+    /^  [A-Za-z0-9_-]+:/ && in_job { exit }
+    in_job { print }
+  ')
 
-  if ! echo "$DEPENDABOT_WF" | grep -Fq "if: github.actor == 'dependabot[bot]'"; then
+  if ! echo "$DEPENDABOT_JOB_BLOCK" | grep -Fq "if: github.actor == 'dependabot[bot]'"; then
     DEPENDABOT_AUTOMERGE_ISSUES+=("job-level actor gate が未設定（Dependabot 確認前に write token が発行される）")
   fi
-  if ! echo "$DEPENDABOT_WF" | grep -q "contents: read"; then
+  if ! echo "$TOP_LEVEL_PERMISSIONS" | grep -q "contents: read"; then
     DEPENDABOT_AUTOMERGE_ISSUES+=("workflow-level permissions が read-only ではない")
   fi
-  if ! echo "$DEPENDABOT_WF" | grep -q "contents: write" || \
-     ! echo "$DEPENDABOT_WF" | grep -q "issues: write" || \
-     ! echo "$DEPENDABOT_WF" | grep -q "pull-requests: write"; then
+  if echo "$TOP_LEVEL_PERMISSIONS" | grep -Eq "(contents|issues|pull-requests): write"; then
+    DEPENDABOT_AUTOMERGE_ISSUES+=("workflow-level permissions に write 権限が残っている")
+  fi
+  if ! echo "$DEPENDABOT_JOB_BLOCK" | grep -q "contents: write" || \
+     ! echo "$DEPENDABOT_JOB_BLOCK" | grep -q "issues: write" || \
+     ! echo "$DEPENDABOT_JOB_BLOCK" | grep -q "pull-requests: write"; then
     DEPENDABOT_AUTOMERGE_ISSUES+=("job-level permissions に contents/issues/pull-requests write が揃っていない")
   fi
   if ! echo "$DEPENDABOT_WF" | grep -Fq 'gh label create "dependabot-minor"' || \
@@ -2476,14 +2489,14 @@ if [ -f "package.json" ]; then
     fi
   fi
 
-  # lockfile-only の dry-run で solver 互換性を見る。ログは .context に残す。
+  # lockfile solver 互換性を見る。ログは .context に残す。
   mkdir -p .context
   if [ -f "package-lock.json" ]; then
     if ! npm install --package-lock-only --dry-run --ignore-scripts >.context/npm-peer-compat.log 2>&1; then
       PEER_ISSUES+=("npm lockfile solver が失敗（.context/npm-peer-compat.log を確認）")
     fi
   elif [ -f "pnpm-lock.yaml" ] && command -v pnpm >/dev/null 2>&1; then
-    if ! pnpm install --lockfile-only --ignore-scripts >.context/pnpm-peer-compat.log 2>&1; then
+    if ! pnpm install --lockfile-only --frozen-lockfile --ignore-scripts >.context/pnpm-peer-compat.log 2>&1; then
       PEER_ISSUES+=("pnpm lockfile solver が失敗（.context/pnpm-peer-compat.log を確認）")
     fi
   fi
@@ -2496,7 +2509,7 @@ fi
 | ----------------------- | ------------------------------------------------------------------ |
 | peer 問題なし           | ✅ Dependency Peer Compatibility: OK                               |
 | peer / invalid 問題あり | ⚠️ 依存更新 PR の互換性問題として分類（workflow 設定不備ではない） |
-| `node_modules` 未導入   | 📝 lockfile solver の dry-run のみ実行                             |
+| `node_modules` 未導入   | 📝 lockfile solver の非書き込み検証のみ実行                        |
 
 **MODE が `full` で問題がある場合:**
 
@@ -2763,7 +2776,7 @@ fi
 | マネージド   | `.github/workflows/quality-gate-fallback.yml` | 常に config の最新版で上書き    |
 | マネージド   | `.github/workflows/dependabot-auto-merge.yml` | 安全な契約の最新版で上書き      |
 | マネージド   | `.github/workflows/label-sync.yml`            | 安全な契約の最新版で上書き      |
-| マネージド   | `.github/labels.yml`                          | Dependabot 連携ラベルを含める   |
+| マネージド   | `.github/labels.yml`                          | 必須ラベルのみ追加・検査        |
 | マネージド   | `script/wait-ci-checks.sh`                    | Claude review workflow とセット |
 | マネージド   | `.claude/hooks/block_git_no_verify.py`        | 常に config の最新版で上書き    |
 | マネージド   | `.claude/hooks/pre_git_quality_gates.py`      | 常に config の最新版で上書き    |
@@ -2784,7 +2797,7 @@ fi
 
 `quality-gate-fallback.yml` は `setup-team-protection.sh` がブランチ保護に登録する `Quality Gate` 必須チェックとセットで配布する。ci.yml が paths フィルタ等でスキップされた場合に PR が `Expected — Waiting for status to be reported` のまま blocked にならないよう、Pass を emit する役割を持つ。
 
-`dependabot-auto-merge.yml` / `label-sync.yml` / `labels.yml` は、section 3.10 / 3.11 の安全な契約（job-level actor gate、workflow-level read-only、ラベル事前作成、checkout 用 `contents: read`）とセットで同期する。古い workflow が存在するだけでは OK としない。
+`dependabot-auto-merge.yml` / `label-sync.yml` / `labels.yml` は、section 3.10 / 3.11 の安全な契約（job-level actor gate、workflow-level read-only、ラベル事前作成、checkout 用 `contents: read`）とセットで同期する。古い workflow が存在するだけでは OK としない。`labels.yml` はプロジェクト固有ラベルを保持するため丸ごと上書きせず、必要な Dependabot 連携ラベルだけを追加する。
 
 `.github/policies/` には複雑度・ライセンス・セキュリティ重大度の判定基準を JSON / Markdown で配置する。CI ワークフローや security.yml から参照することで、判定基準を一元管理できる。テンプレートのソースは `templates/github/policies/`。
 
@@ -2841,7 +2854,6 @@ MANAGED_FILES=(
 MANAGED_TEMPLATE_FILES=(
   "templates/workflows/dependabot-auto-merge.yml:.github/workflows/dependabot-auto-merge.yml"
   "templates/workflows/label-sync.yml:.github/workflows/label-sync.yml"
-  "templates/github/labels.yml:.github/labels.yml"
 )
 
 UPDATED=()
@@ -2859,14 +2871,22 @@ for file in "${MANAGED_FILES[@]}"; do
   mkdir -p "$(dirname "$DST")"
 
   if [ ! -f "$DST" ]; then
-    # ファイルが存在しない → 新規コピー
-    cp "$SRC" "$DST"
-    UPDATED+=("$file (新規追加)")
+    if [ "$MODE" = "full" ]; then
+      # ファイルが存在しない → 新規コピー
+      cp "$SRC" "$DST"
+      UPDATED+=("$file (新規追加)")
+    else
+      UPDATED+=("$file (未配置・full modeで追加)")
+    fi
   elif ! diff -q "$SRC" "$DST" >/dev/null 2>&1; then
-    # 差分あり → 上書き
     diff --color=auto -u "$DST" "$SRC" | head -30
-    cp "$SRC" "$DST"
-    UPDATED+=("$file (更新)")
+    if [ "$MODE" = "full" ]; then
+      # 差分あり → 上書き
+      cp "$SRC" "$DST"
+      UPDATED+=("$file (更新)")
+    else
+      UPDATED+=("$file (差分あり・full modeで更新)")
+    fi
   else
     SKIPPED+=("$file (最新)")
   fi
@@ -2885,16 +2905,64 @@ for pair in "${MANAGED_TEMPLATE_FILES[@]}"; do
   mkdir -p "$(dirname "$DST")"
 
   if [ ! -f "$DST" ]; then
-    cp "$SRC" "$DST"
-    UPDATED+=("$DST_REL (新規追加)")
+    if [ "$MODE" = "full" ]; then
+      cp "$SRC" "$DST"
+      UPDATED+=("$DST_REL (新規追加)")
+    else
+      UPDATED+=("$DST_REL (未配置・full modeで追加)")
+    fi
   elif ! diff -q "$SRC" "$DST" >/dev/null 2>&1; then
     diff --color=auto -u "$DST" "$SRC" | head -30
-    cp "$SRC" "$DST"
-    UPDATED+=("$DST_REL (更新)")
+    if [ "$MODE" = "full" ]; then
+      cp "$SRC" "$DST"
+      UPDATED+=("$DST_REL (更新)")
+    else
+      UPDATED+=("$DST_REL (差分あり・full modeで更新)")
+    fi
   else
     SKIPPED+=("$DST_REL (最新)")
   fi
 done
+
+# labels.yml は既存ラベルを保持し、Dependabot 連携に必要なラベルだけ追加する。
+ensure_label() {
+  label="$1"
+  color="$2"
+  description="$3"
+
+  if grep -q "name: ['\"]$label['\"]" .github/labels.yml; then
+    return 0
+  fi
+
+  if [ "$MODE" = "full" ]; then
+    cat >> .github/labels.yml <<EOF
+
+- name: '$label'
+  color: '$color'
+  description: '$description'
+EOF
+    UPDATED+=(".github/labels.yml ($label 追加)")
+  else
+    UPDATED+=(".github/labels.yml ($label 欠落・full modeで追加)")
+  fi
+}
+
+LABELS_SRC="$CONFIG_REPO/templates/github/labels.yml"
+if [ ! -f ".github/labels.yml" ]; then
+  mkdir -p .github
+  if [ "$MODE" = "full" ] && [ -f "$LABELS_SRC" ]; then
+    cp "$LABELS_SRC" .github/labels.yml
+    UPDATED+=(".github/labels.yml (新規追加)")
+  else
+    UPDATED+=(".github/labels.yml (未配置・full modeで追加)")
+  fi
+fi
+
+if [ -f ".github/labels.yml" ]; then
+  ensure_label "dependabot-minor" "0366d6" "Minor dependency update"
+  ensure_label "needs-review" "fbca04" "レビュー待ち"
+  ensure_label "breaking-change" "b60205" "破壊的変更あり"
+fi
 
 if [ "${#UPDATED[@]}" -gt 0 ] && git remote get-url origin 2>/dev/null | grep -q "keito4/config"; then
   echo "🔁 Downstream sync required"
