@@ -317,5 +317,15 @@ describe('Template workflow contracts', () => {
         expect(labels).toContain("name: 'breaking-change'");
       },
     );
+
+    test.each(['templates/github/labels.yml', '.github/labels.yml'])(
+      '%s: should define all labels used by PR size check',
+      (labelsPath) => {
+        const labels = readWorkflow(labelsPath);
+        for (const size of ['XS', 'S', 'M', 'L', 'XL']) {
+          expect(labels).toContain(`name: 'size/${size}'`);
+        }
+      },
+    );
   });
 });

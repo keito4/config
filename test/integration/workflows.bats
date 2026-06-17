@@ -29,6 +29,16 @@ load ../test_helper/test_helper
   grep -q "npm run test:coverage" "$workflow"
 }
 
+@test "CI workflow runs workflow lint when actionlint config changes" {
+  local workflow="${REPO_ROOT}/.github/workflows/ci.yml"
+  assert_file_exists "$workflow"
+
+  grep -Fq "'**.yml'" "$workflow"
+  grep -Fq "'**.yaml'" "$workflow"
+  grep -Fq "'.github/actionlint.yaml'" "$workflow"
+  grep -Fq "workflows:" "$workflow"
+}
+
 @test "CI workflow uses secure practices" {
   local workflow="${REPO_ROOT}/.github/workflows/ci.yml"
 

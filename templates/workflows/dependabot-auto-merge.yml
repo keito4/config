@@ -35,7 +35,7 @@ jobs:
       # 更新種別を取得（patch / minor / major）
       - name: Fetch Dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@ffa630c65fa7e0ecfa0625b5ceda64399aea1b36 # v3
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -44,7 +44,7 @@ jobs:
       # gh pr merge --auto が enablePullRequestAutoMerge エラーで落ちるため、
       # 既知エラーだけ自動承認へフォールバックしてワークフロー自体は green を維持する。
       - name: Auto-merge patch updates
-        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-patch'
         run: |
           set +e
           MERGE_OUTPUT=$(gh pr merge "$PR_URL" --auto --merge 2>&1)
@@ -69,7 +69,7 @@ jobs:
       # GITHUB_TOKEN は既定で PR 承認不可のため continue-on-error: true で失敗しても CI をブロックしない
       # リポジトリ設定「Allow GitHub Actions to create and approve pull requests」を有効にすると承認も動作する
       - name: Label minor updates
-        if: steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-minor'
         run: |
           gh label create "dependabot-minor" --color "0366d6" --description "Minor dependency update" --force
           gh pr edit "$PR_URL" --add-label "dependabot-minor"
@@ -78,7 +78,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Auto-approve minor updates
-        if: steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-minor'
         continue-on-error: true
         run: |
           gh pr review "$PR_URL" --approve --body "Auto-approved: minor version update"
@@ -88,7 +88,7 @@ jobs:
 
       # major: ラベル付与してレビュー必須
       - name: Label major updates for review
-        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-major'
         run: |
           gh label create "needs-review" --color "fbca04" --description "レビュー待ち" --force
           gh label create "breaking-change" --color "b60205" --description "破壊的変更あり" --force

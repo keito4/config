@@ -1,8 +1,27 @@
 # Quality Gate Fallback
 #
-# CI ワークフローが paths フィルタでスキップされた場合に
-# Required Status Check "Quality Gate" を Pass で報告する。
-# CI が実行された場合は ci.yml 側の Quality Gate が優先される。
+# Required Status Check "Quality Gate" を必ず報告するための fallback ワークフロー。
+#
+# 必要な背景:
+#   - setup-team-protection.sh はブランチ保護に "Quality Gate" を必須チェックとして登録する
+#   - ci.yml の Quality Gate ジョブが paths フィルタでスキップされた場合や、
+#     ci.yml 自体が存在しない / 走らない場合、PR は永遠に
+#     "Expected — Waiting for status to be reported" のまま blocked になる
+#   - この fallback は ci.yml の実行可否をチェックし、走っていなければ Pass を emit する
+#
+# 動作:
+#   - ci.yml が走っている / 成功している場合 → 何もしない (本体の Quality Gate が優先)
+#   - ci.yml が走っていない場合 → Pass で Quality Gate を emit
+#
+# 使い方:
+#   .github/workflows/quality-gate-fallback.yml にコピーして配置
+#   setup-team-protection.sh で "Quality Gate" を必須チェックに設定する場合は必須
+#
+# 既知の制限:
+#   - GITHUB_TOKEN で push されたコミット (claude[bot] / dependabot[bot] が
+#     GITHUB_TOKEN で押した場合など) では `pull_request` イベントが発火しないため、
+#     この fallback も実行されない。その場合は別途 PAT 経由の push か
+#     workflow_dispatch / repository_dispatch での再トリガーが必要。
 #
 name: CI Fallback
 
@@ -52,10 +71,14 @@ jobs:
                 core.setOutput('ci_running', 'false');
               }
             } catch (err) {
+              // 権限不足 (actions: read 未付与) や一時的な API 障害でクエリ失敗時は
+              // 安全側に倒す。"CI 実行中扱い" にして fallback の Pass emit をスキップし、
+              // 本体の Quality Gate (ci.yml) の結果を待つ。Required check が
+              // 未報告のままになる可能性はあるが、誤った Pass / Fail よりは安全。
               core.warning(`Could not query workflow runs (${err.status || err.message}). Skipping fallback.`);
               core.setOutput('ci_running', 'true');
             }
 
       - name: Pass (CI skipped)
         if: steps.check.outputs.ci_running == 'false'
-        run: echo "Quality Gate passed (CI skipped — no code changes detected)."
+        run: echo "Quality Gate passed (CI skipped — no code changes detected or workflow disabled)."

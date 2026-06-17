@@ -94,6 +94,14 @@
   color: 'bfdadc'
   description: '自動検出された機能・改善'
 
+- name: 'npm'
+  color: 'cb3837'
+  description: 'npm/yarn 依存関係の更新'
+
+- name: 'docker'
+  color: '0db7ed'
+  description: 'Docker 依存関係の更新'
+
 # ── CI/CD ─────────────────────────────────────────
 - name: 'ci'
   color: '006b75'
@@ -102,3 +110,29 @@
 - name: 'infrastructure'
   color: '5319e7'
   description: 'インフラ関連'
+
+# ── Release ───────────────────────────────────────
+- name: 'released'
+  color: 'ededed'
+  description: 'リリース済み'
+
+# ── Size ──────────────────────────────────────────
+- name: 'size/XS'
+  color: 'c2e0c6'
+  description: 'PR サイズ Extra Small'
+
+- name: 'size/S'
+  color: '2cbe4e'
+  description: 'PR サイズ Small'
+
+- name: 'size/M'
+  color: 'fbca04'
+  description: 'PR サイズ Medium'
+
+- name: 'size/L'
+  color: 'e99695'
+  description: 'PR サイズ Large'
+
+- name: 'size/XL'
+  color: 'd93f0b'
+  description: 'PR サイズ XLarge'

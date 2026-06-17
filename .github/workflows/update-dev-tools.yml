@@ -70,7 +70,6 @@ jobs:
       - name: Compare versions
         id: compare
         run: |
-          UPDATES=""
           HAS_UPDATES="false"
 
           compare_version() {
