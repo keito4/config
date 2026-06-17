@@ -158,8 +158,11 @@ describe('Claude workflow contracts', () => {
     const command = readWorkflow('.claude/commands/repo-maintenance.md');
 
     expect(command).toContain('DEPENDABOT_AUTOMERGE_ISSUES');
+    expect(command).toContain('TOP_LEVEL_PERMISSIONS');
+    expect(command).toContain('DEPENDABOT_JOB_BLOCK');
     expect(command).toContain("if: github.actor == 'dependabot[bot]'");
     expect(command).toContain('workflow-level permissions が read-only ではない');
+    expect(command).toContain('workflow-level permissions に write 権限が残っている');
     expect(command).toContain('gh label create "dependabot-minor"');
     expect(command).toContain('gh label create "needs-review"');
     expect(command).toContain('gh label create "breaking-change"');
@@ -176,7 +179,11 @@ describe('Claude workflow contracts', () => {
       'templates/workflows/dependabot-auto-merge.yml:.github/workflows/dependabot-auto-merge.yml',
     );
     expect(command).toContain('templates/workflows/label-sync.yml:.github/workflows/label-sync.yml');
-    expect(command).toContain('templates/github/labels.yml:.github/labels.yml');
+    expect(command).toContain('ensure_label "dependabot-minor"');
+    expect(command).toContain('ensure_label "needs-review"');
+    expect(command).toContain('ensure_label "breaking-change"');
+    expect(command).toContain('差分あり・full modeで更新');
+    expect(command).not.toContain('templates/github/labels.yml:.github/labels.yml');
   });
 
   test('repo-maintenance checks dependency peer compatibility and stores logs under .context', () => {
@@ -187,6 +194,7 @@ describe('Claude workflow contracts', () => {
     expect(command).toContain('npm ls --all --json');
     expect(command).toContain('.context/npm-peer-compat.log');
     expect(command).toContain('.context/pnpm-peer-compat.log');
+    expect(command).toContain('--frozen-lockfile');
     expect(command).toContain('dependency compatibility issue');
   });
 
