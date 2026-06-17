@@ -29,6 +29,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
+      issues: write
       pull-requests: write
     steps:
       # 更新種別を取得（patch / minor / major）
@@ -70,6 +71,7 @@ jobs:
       - name: Label minor updates
         if: steps.metadata.outputs.update-type == 'version-update:semver-minor'
         run: |
+          gh label create "dependabot-minor" --color "0366d6" --description "Minor dependency update" --force
           gh pr edit "$PR_URL" --add-label "dependabot-minor"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
@@ -88,6 +90,8 @@ jobs:
       - name: Label major updates for review
         if: steps.metadata.outputs.update-type == 'version-update:semver-major'
         run: |
+          gh label create "needs-review" --color "fbca04" --description "レビュー待ち" --force
+          gh label create "breaking-change" --color "b60205" --description "破壊的変更あり" --force
           gh pr edit "$PR_URL" --add-label "needs-review,breaking-change"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}

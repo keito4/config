@@ -86,6 +86,10 @@
   color: 'b60205'
   description: '破壊的変更あり'
 
+- name: 'dependabot-minor'
+  color: '0366d6'
+  description: 'Minor dependency update'
+
 - name: 'auto-discovered'
   color: 'bfdadc'
   description: '自動検出された機能・改善'

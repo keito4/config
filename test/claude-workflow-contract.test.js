@@ -117,6 +117,21 @@ describe('Claude workflow contracts', () => {
     expect(workflow).toContain("needs.check-ci-status.outputs.review_gate_changed != 'true'");
   });
 
+  test('Claude Code Review skips Anthropic action when authentication is not configured', () => {
+    const workflow = readWorkflow('.github/workflows/claude-code-review.yml');
+
+    expect(workflow).toContain('name: Check Claude authentication');
+    expect(workflow).toContain('CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}');
+    expect(workflow).toContain('ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}');
+    expect(workflow).toContain('ANTHROPIC_FEDERATION_RULE_ID: ${{ secrets.ANTHROPIC_FEDERATION_RULE_ID }}');
+    expect(workflow).toContain('ANTHROPIC_ORGANIZATION_ID: ${{ secrets.ANTHROPIC_ORGANIZATION_ID }}');
+    expect(workflow).toContain('available=false');
+    expect(workflow).toContain("if: steps.claude-auth.outputs.available == 'true'");
+    expect(workflow).toContain('anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}');
+    expect(workflow).toContain('anthropic_federation_rule_id: ${{ secrets.ANTHROPIC_FEDERATION_RULE_ID }}');
+    expect(workflow).toContain('anthropic_organization_id: ${{ secrets.ANTHROPIC_ORGANIZATION_ID }}');
+  });
+
   test('repo-maintenance reports downstream sync when managed files change', () => {
     const command = readWorkflow('.claude/commands/repo-maintenance.md');
 

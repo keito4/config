@@ -29,6 +29,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
+      issues: write
       pull-requests: write
     steps:
       # 更新種別を取得（patch / minor / major）
@@ -64,9 +65,21 @@ jobs:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # minor: 自動承認（マージは手動で判断）
+      # minor: ラベル付与（手動マージ）+ 自動承認試行
+      # GITHUB_TOKEN は既定で PR 承認不可のため continue-on-error: true で失敗しても CI をブロックしない
+      # リポジトリ設定「Allow GitHub Actions to create and approve pull requests」を有効にすると承認も動作する
+      - name: Label minor updates
+        if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: |
+          gh label create "dependabot-minor" --color "0366d6" --description "Minor dependency update" --force
+          gh pr edit "$PR_URL" --add-label "dependabot-minor"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Auto-approve minor updates
         if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        continue-on-error: true
         run: |
           gh pr review "$PR_URL" --approve --body "Auto-approved: minor version update"
         env:
@@ -77,6 +90,8 @@ jobs:
       - name: Label major updates for review
         if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-major'
         run: |
+          gh label create "needs-review" --color "fbca04" --description "レビュー待ち" --force
+          gh label create "breaking-change" --color "b60205" --description "破壊的変更あり" --force
           gh pr edit "$PR_URL" --add-label "needs-review,breaking-change"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
