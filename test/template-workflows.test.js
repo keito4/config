@@ -159,6 +159,7 @@ describe('Template workflow contracts', () => {
     test('should have required permissions for merging PRs', () => {
       expect(workflow).toContain('permissions:');
       expect(workflow).toContain('contents: write');
+      expect(workflow).toContain('issues: write');
       expect(workflow).toContain('pull-requests: write');
     });
 
@@ -190,6 +191,7 @@ describe('Template workflow contracts', () => {
       expect(workflow).toContain('contents: read');
       // Job-level: elevated only after actor is verified
       expect(workflow).toContain('contents: write');
+      expect(workflow).toContain('issues: write');
       expect(workflow).toContain('pull-requests: write');
     });
 
@@ -203,6 +205,13 @@ describe('Template workflow contracts', () => {
     test.each(workflowPaths)('%s: should not auto-merge major updates', (wfPath) => {
       const workflow = readWorkflow(wfPath);
       expect(workflow).not.toMatch(/semver-major[\s\S]{0,300}gh pr merge/);
+    });
+
+    test.each(workflowPaths)('%s: should create labels before assigning them', (wfPath) => {
+      const workflow = readWorkflow(wfPath);
+      expect(workflow).toContain('gh label create "dependabot-minor"');
+      expect(workflow).toContain('gh label create "needs-review"');
+      expect(workflow).toContain('gh label create "breaking-change"');
     });
   });
 
@@ -276,8 +285,9 @@ describe('Template workflow contracts', () => {
       expect(workflow).toContain('EndBug/label-sync');
     });
 
-    test.each(workflowPaths)('%s: should have issues and pull-requests write permissions', (wfPath) => {
+    test.each(workflowPaths)('%s: should have checkout read and label write permissions', (wfPath) => {
       const workflow = readWorkflow(wfPath);
+      expect(workflow).toContain('contents: read');
       expect(workflow).toContain('issues: write');
       expect(workflow).toContain('pull-requests: write');
     });
