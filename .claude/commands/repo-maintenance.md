@@ -1174,7 +1174,13 @@ if [ -f ".github/workflows/ci.yml" ]; then
   if ! echo "$CI_YML" | grep -q "'*.yaml'"; then
     ISSUES+=("ci.yml: .yaml workflow が actionlint 対象から漏れています")
   fi
-  if echo "$CI_YML" | grep -q "actionlint_flags: .*templates/workflows/.*\\*"; then
+  ACTIONLINT_FLAGS_BLOCK=$(echo "$CI_YML" | awk '
+    /^[[:space:]]+actionlint_flags:/ { in_flags=1; print; next }
+    in_flags && /^[[:space:]]+[A-Za-z0-9_-]+:/ { exit }
+    in_flags && /^[^[:space:]]/ { exit }
+    in_flags { print }
+  ')
+  if echo "$ACTIONLINT_FLAGS_BLOCK" | grep -q "templates/workflows/.*\\*"; then
     ISSUES+=("ci.yml: actionlint_flags に静的 template glob が残っています（下流 repo で未一致 glob が失敗します）")
   fi
 fi

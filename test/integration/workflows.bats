@@ -47,6 +47,9 @@ load ../test_helper/test_helper
   grep -Fq -- "-name '*.yaml'" "$workflow"
   grep -Fq "actionlint_flags:" "$workflow"
   grep -Fq "steps.workflow-files.outputs.files" "$workflow"
+  grep -Fq "pull-requests: write" "$workflow"
+  grep -Fq "fail_level: error" "$workflow"
+  ! grep -Fq "fail_on_error: true" "$workflow"
 }
 
 @test "CI workflow uses secure practices" {

@@ -195,6 +195,9 @@ jobs:
     timeout-minutes: 5
     needs: changes
     if: needs.changes.outputs.workflows == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
@@ -220,7 +223,7 @@ jobs:
         uses: reviewdog/action-actionlint@6fb7acc99f4a1008869fa8a0f09cfca740837d9d # v1.72.0
         with:
           reporter: github-pr-review
-          fail_on_error: true
+          fail_level: error
           actionlint_flags: ${{ steps.workflow-files.outputs.files }}
 
   pr-size-check:

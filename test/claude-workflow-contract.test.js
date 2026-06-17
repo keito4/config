@@ -265,7 +265,9 @@ describe('Claude workflow contracts', () => {
     expect(command).toContain('.context/actionlint-files.txt');
     expect(command).toContain('find .github/workflows/templates');
     expect(command).toContain('find templates/workflows');
+    expect(command).toContain('ACTIONLINT_FLAGS_BLOCK=$(echo "$CI_YML"');
     expect(command).toContain('actionlint_flags に静的 template glob');
+    expect(command).toContain('templates/workflows/.*\\\\*');
     expect(command).toContain('actionlint "${ACTIONLINT_TARGETS[@]}"');
     expect(command).toContain('for f in templates/workflows/*.yml templates/workflows/*.yaml; do');
   });
