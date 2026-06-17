@@ -307,5 +307,15 @@ describe('Template workflow contracts', () => {
       expect(workflow).toContain('config-file:');
       expect(workflow).toContain('labels.yml');
     });
+
+    test.each(['templates/github/labels.yml', '.github/labels.yml'])(
+      '%s: should define labels used by dependabot auto-merge',
+      (labelsPath) => {
+        const labels = readWorkflow(labelsPath);
+        expect(labels).toContain("name: 'dependabot-minor'");
+        expect(labels).toContain("name: 'needs-review'");
+        expect(labels).toContain("name: 'breaking-change'");
+      },
+    );
   });
 });
