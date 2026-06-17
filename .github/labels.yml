@@ -117,6 +117,10 @@
   description: 'リリース済み'
 
 # ── Size ──────────────────────────────────────────
+- name: 'size/XS'
+  color: 'c2e0c6'
+  description: 'PR サイズ Extra Small'
+
 - name: 'size/S'
   color: '2cbe4e'
   description: 'PR サイズ Small'

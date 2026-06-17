@@ -2,8 +2,7 @@
 #
 # Issue や PR で @claude をメンションすると Claude Code が応答する。
 # Bot からのイベントは自動除外。
-# PR イベント（pull_request_review_comment / pull_request_review）では Draft PR も除外。
-# issue_comment イベントでは Draft 判定不可のため除外なし。
+# PR イベントと PR 上の issue_comment では Draft PR も除外。
 #
 # 使い方:
 #   .github/workflows/claude.yml にコピーして配置
@@ -55,7 +54,8 @@ jobs:
         github.event.issue.author_association
       ) &&
       (
-        (github.event_name == 'issue_comment' && contains(github.event.comment.body || '', '@claude')) ||
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body || '', '@claude') &&
+          !(github.event.issue.pull_request && github.event.issue.pull_request.url && github.event.issue.draft == true)) ||
         (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body || '', '@claude') &&
           github.event.pull_request.draft == false) ||
         (github.event_name == 'pull_request_review' && contains(github.event.review.body || '', '@claude') &&
@@ -69,26 +69,28 @@ jobs:
       pull-requests: write
       issues: write
       id-token: write
-      actions: read
+      actions: read # Required for Claude to read CI results on PRs
       checks: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 1
 
       - name: Run Claude Code
         id: claude
-        uses: anthropics/claude-code-action@6e2bd52842c65e914eba5c8badd17560bd26b5de # v1.0.89
+        uses: anthropics/claude-code-action@d5726de019ec4498aa667642bc3a80fca83aa102 # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
+          # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
             actions: read
             checks: read
 
+          # System prompt to automatically create PRs when working on Issues
           claude_args: |
-            --allowedTools "Bash(git:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*)"
+            --allowedTools "Bash(git:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr status:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*)"
             --system-prompt "When working on GitHub Issues (not PRs), after completing all code changes, commit and push the changes to the Claude branch. Do not run 'gh pr create'; this workflow creates the pull request from the branch after Claude finishes."
 
       - name: Create pull request from Claude branch

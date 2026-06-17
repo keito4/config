@@ -55,7 +55,7 @@ jobs:
         id: changes
         run: |
           # Get the previous commit
-          if [ $(git rev-list --count HEAD) -eq 1 ]; then
+          if [ "$(git rev-list --count HEAD)" -eq 1 ]; then
             # First commit, consider all packages changed
             echo "package1_changed=true" >> $GITHUB_OUTPUT
             echo "package2_changed=true" >> $GITHUB_OUTPUT

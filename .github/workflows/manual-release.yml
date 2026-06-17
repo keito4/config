@@ -81,7 +81,7 @@ jobs:
           echo "Version to release: $(cat $GITHUB_OUTPUT | grep version)"
 
       - name: Fix workspace permissions
-        run: sudo chown -R $(id -u):$(id -g) "$GITHUB_WORKSPACE"
+        run: sudo chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
 
       - uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4
 
