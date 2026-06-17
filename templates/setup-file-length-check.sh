@@ -3,14 +3,15 @@
 # setup-file-length-check.sh - ファイル行数チェックのセットアップ
 #
 # 使用方法:
-#   ./setup-file-length-check.sh          # カレントディレクトリにセットアップ
-#   ./setup-file-length-check.sh /path    # 指定ディレクトリにセットアップ
+#   ./templates/setup-file-length-check.sh          # カレントディレクトリにセットアップ
+#   ./templates/setup-file-length-check.sh /path    # 指定ディレクトリにセットアップ
 # ============================================================================
 
 set -euo pipefail
 
 TARGET_DIR="${1:-.}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_SCRIPT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)/script"
 TEMPLATE_DIR="/usr/local/share/config-templates"
 
 echo "[INFO] ファイル行数チェックをセットアップします..."
@@ -22,7 +23,11 @@ cd "$TARGET_DIR"
 mkdir -p scripts
 
 # check-file-length.sh をコピー
-if [ -f "$SCRIPT_DIR/check-file-length.sh" ]; then
+if [ -f "$REPO_SCRIPT_DIR/check-file-length.sh" ]; then
+  cp "$REPO_SCRIPT_DIR/check-file-length.sh" scripts/
+  chmod +x scripts/check-file-length.sh
+  echo "[SUCCESS] scripts/check-file-length.sh をコピーしました"
+elif [ -f "$SCRIPT_DIR/check-file-length.sh" ]; then
   cp "$SCRIPT_DIR/check-file-length.sh" scripts/
   chmod +x scripts/check-file-length.sh
   echo "[SUCCESS] scripts/check-file-length.sh をコピーしました"

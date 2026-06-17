@@ -16,11 +16,6 @@ load ../test_helper/test_helper
     [ -x "$REPO_ROOT/script/audit-references.sh" ]
 }
 
-@test "check-image-version.sh exists and is executable" {
-    assert_file_exists "$REPO_ROOT/script/check-image-version.sh"
-    [ -x "$REPO_ROOT/script/check-image-version.sh" ]
-}
-
 @test "codespaces-secrets.sh exists and is executable" {
     assert_file_exists "$REPO_ROOT/script/codespaces-secrets.sh"
     [ -x "$REPO_ROOT/script/codespaces-secrets.sh" ]
@@ -84,8 +79,8 @@ load ../test_helper/test_helper
 }
 
 @test "setup-file-length-check.sh exists and is executable" {
-    assert_file_exists "$REPO_ROOT/script/setup-file-length-check.sh"
-    [ -x "$REPO_ROOT/script/setup-file-length-check.sh" ]
+    assert_file_exists "$REPO_ROOT/templates/setup-file-length-check.sh"
+    [ -x "$REPO_ROOT/templates/setup-file-length-check.sh" ]
 }
 
 @test "brew-deps.sh exists and is executable" {
