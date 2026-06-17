@@ -41,6 +41,18 @@ load ../test_helper/test_helper
     [ -x "$REPO_ROOT/script/install-skills.sh" ]
 }
 
+@test "install-skills.sh delegates to install skills library" {
+    grep -q 'source "$SCRIPT_DIR/lib/install_skills.sh"' "$REPO_ROOT/script/install-skills.sh"
+    grep -q 'install_skills_main "$@"' "$REPO_ROOT/script/install-skills.sh"
+    grep -q "install_skills_main()" "$REPO_ROOT/script/lib/install_skills.sh"
+}
+
+@test "install-skills.sh stays below critical complexity threshold" {
+    run "$REPO_ROOT/script/code-complexity-check.sh" --files "$REPO_ROOT/script/install-skills.sh" --json
+    assert_success
+    printf '%s\n' "$output" | grep -q '"critical_complexity_count": 0'
+}
+
 @test "fix-container-plugins.sh exists and is executable" {
     assert_file_exists "$REPO_ROOT/script/fix-container-plugins.sh"
     [ -x "$REPO_ROOT/script/fix-container-plugins.sh" ]
