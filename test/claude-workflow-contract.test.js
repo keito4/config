@@ -105,6 +105,8 @@ describe('Claude workflow contracts', () => {
     expect(workflow).not.toContain('steps.maintenance.outputs.branch_name');
     expect(workflow).not.toMatch(/Bash\(gh pr create:\*\)/);
     expect(workflow).toContain('Bash(gh api:*)');
+    expect(workflow).toContain('script/check-trivyignore-review.sh');
+    expect(workflow).toContain('Bash(script/check-trivyignore-review.sh:*)');
     expect(workflow).toContain("/repo-maintenance --mode ${{ inputs.mode || 'full' }} --create-pr");
     expect(workflow).not.toContain('github_token: ${{ github.token }}');
     expect(workflow).not.toContain('"allowedTools"');

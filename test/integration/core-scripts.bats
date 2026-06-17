@@ -97,3 +97,12 @@ load ../test_helper/test_helper
     assert_file_exists "$REPO_ROOT/script/setup-claude-build.sh"
     [ -x "$REPO_ROOT/script/setup-claude-build.sh" ]
 }
+
+@test "check-trivyignore-review.sh exists and reports due review entries" {
+    assert_file_exists "$REPO_ROOT/script/check-trivyignore-review.sh"
+    [ -x "$REPO_ROOT/script/check-trivyignore-review.sh" ]
+
+    run env TODAY=2026-05-26 "$REPO_ROOT/script/check-trivyignore-review.sh" "$REPO_ROOT/.trivyignore"
+    assert_success
+    printf '%s\n' "$output" | grep -Fq "Trivy ignore entries due for review"
+}

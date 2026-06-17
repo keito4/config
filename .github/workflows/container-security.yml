@@ -49,7 +49,10 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+        uses: ./.github/actions/setup-docker-build
+        with:
+          qemu: 'false'
+          login: 'false'
 
       - name: Build image for scanning
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
@@ -67,7 +70,7 @@ jobs:
           image-ref: 'config-base:scan'
           format: 'sarif'
           output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL,HIGH,MEDIUM'
           vuln-type: 'os,library'
           trivyignores: '.trivyignore'
 
@@ -77,24 +80,52 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-      - name: Run Trivy for summary
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
-        with:
-          image-ref: 'config-base:scan'
-          format: 'table'
-          severity: 'CRITICAL,HIGH,MEDIUM'
-          vuln-type: 'os,library'
-          trivyignores: '.trivyignore'
+      - name: Summarize Trivy results and fail on critical vulnerabilities
+        if: always()
+        run: |
+          if [ ! -s trivy-results.sarif ]; then
+            echo "::warning::trivy-results.sarif was not generated"
+            exit 0
+          fi
 
-      - name: Fail on critical vulnerabilities
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
-        with:
-          image-ref: 'config-base:scan'
-          format: 'table'
-          exit-code: '1'
-          severity: 'CRITICAL'
-          vuln-type: 'os,library'
-          trivyignores: '.trivyignore'
+          count_by_severity() {
+            local min=$1
+            local max=$2
+            jq --argjson min "$min" --argjson max "$max" '
+              [
+                .runs[] as $run
+                | (
+                    $run.tool.driver.rules // []
+                    | map({key: .id, value: (.properties."security-severity" // "0")})
+                    | from_entries
+                  ) as $severities
+                | ($run.results // [])[]
+                | (.ruleId // "") as $rule_id
+                | ($severities[$rule_id] // "0" | tostring | tonumber) as $score
+                | select($score >= $min and $score < $max)
+              ]
+              | length
+            ' trivy-results.sarif
+          }
+
+          CRITICAL_COUNT=$(count_by_severity 9 100)
+          HIGH_COUNT=$(count_by_severity 7 9)
+          MEDIUM_COUNT=$(count_by_severity 4 7)
+
+          {
+            echo "### Trivy Container Scan"
+            echo ""
+            echo "| Severity | Count |"
+            echo "| --- | ---: |"
+            echo "| Critical | $CRITICAL_COUNT |"
+            echo "| High | $HIGH_COUNT |"
+            echo "| Medium | $MEDIUM_COUNT |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "::error::Trivy found $CRITICAL_COUNT critical vulnerabilities"
+            exit 1
+          fi
 
   sbom-generation:
     name: Generate SBOM
@@ -123,7 +154,10 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+        uses: ./.github/actions/setup-docker-build
+        with:
+          qemu: 'false'
+          login: 'false'
 
       - name: Build image for SBOM
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
