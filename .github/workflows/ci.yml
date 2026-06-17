@@ -204,9 +204,9 @@ jobs:
           reporter: github-pr-review
           fail_on_error: true
           actionlint_flags: >-
-            .github/workflows/*.yml
-            .github/workflows/templates/*.yml
-            templates/workflows/*.yml
+            .github/workflows/*.y*ml
+            .github/workflows/templates/*.y*ml
+            templates/workflows/*.y*ml
 
   pr-size-check:
     name: PR Size Check
