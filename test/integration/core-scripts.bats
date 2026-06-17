@@ -93,6 +93,21 @@ load ../test_helper/test_helper
     [ -x "$REPO_ROOT/script/install-npm-globals.sh" ]
 }
 
+@test "repo-maintenance.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/repo-maintenance.sh"
+    [ -x "$REPO_ROOT/script/repo-maintenance.sh" ]
+}
+
+@test "setup-ci.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/setup-ci.sh"
+    [ -x "$REPO_ROOT/script/setup-ci.sh" ]
+}
+
+@test "setup-new-repo.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/setup-new-repo.sh"
+    [ -x "$REPO_ROOT/script/setup-new-repo.sh" ]
+}
+
 @test "setup-claude-build.sh exists and is executable" {
     assert_file_exists "$REPO_ROOT/script/setup-claude-build.sh"
     [ -x "$REPO_ROOT/script/setup-claude-build.sh" ]

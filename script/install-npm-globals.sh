@@ -13,15 +13,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="${SCRIPT_DIR}/.."
 GLOBAL_JSON="${REPO_ROOT}/npm/global.json"
 
-# 色定義
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
-info() { echo -e "${BLUE}[INFO]${NC} $1"; }
-success() { echo -e "${GREEN}✓${NC} $1"; }
-error() { echo -e "${RED}ERROR:${NC} $1" >&2; }
+# shellcheck source=script/lib/output.sh
+source "${SCRIPT_DIR}/lib/output.sh"
 
 if [[ ! -f "$GLOBAL_JSON" ]]; then
     error "npm/global.json not found: $GLOBAL_JSON"
