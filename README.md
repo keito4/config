@@ -234,7 +234,6 @@ config/
 │   └── global.json
 ├── script/                         # ユーティリティスクリプト
 │   ├── README.md
-│   ├── .shellcheck-exclude
 │   ├── branch-cleanup.sh
 │   ├── brew-deps.sh
 │   ├── changelog-generator.sh
@@ -253,11 +252,14 @@ config/
 │   ├── install-npm-globals.sh
 │   ├── install-skills.sh
 │   ├── pre-pr-checklist.sh
+│   ├── repo-maintenance.sh
 │   ├── restore-cli-auth.sh
 │   ├── security-credential-scan.sh
 │   ├── setup-claude-build.sh
 │   ├── setup-claude.sh
+│   ├── setup-ci.sh
 │   ├── setup-lsp.sh
+│   ├── setup-new-repo.sh
 │   ├── setup-team-protection.sh
 │   ├── update-agents-md.sh         # AGENTS.md 自動生成セクション更新
 │   ├── test-coverage-trend.sh
@@ -277,6 +279,7 @@ config/
 │       ├── config.sh
 │       ├── devcontainer.sh
 │       ├── output.sh
+│       ├── project-detect.sh
 │       └── platform.sh
 ├── templates/                      # プロジェクトテンプレート
 │   ├── README.md

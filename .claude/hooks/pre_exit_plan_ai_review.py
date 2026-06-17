@@ -6,11 +6,10 @@ ExitPlanMode前にプランをAIでレビューするPreToolUseフック
 いずれかのAIが「plan needs revision」と判定した場合はブロックして修正を促します。
 """
 import sys
-import subprocess
-import shutil
 import os
 import glob
-from common import load_hook_input, print_header, print_footer, print_section, print_status
+from common import (load_hook_input, print_header, print_footer, print_section,
+                    print_status, command_available, run_ai_command)
 
 data = load_hook_input()
 tool_name = data.get("tool_name", "")
@@ -20,8 +19,8 @@ if tool_name != "ExitPlanMode":
     sys.exit(0)
 
 # 利用可能なAIツールを確認
-has_codex = shutil.which("codex") is not None
-has_gemini = shutil.which("gemini") is not None
+has_codex = command_available("codex")
+has_gemini = command_available("gemini")
 
 if not has_codex and not has_gemini:
     print("⚠️  AIレビューツール（Codex/Gemini）がインストールされていません。スキップします。", file=sys.stderr, flush=True)
@@ -102,32 +101,16 @@ def run_codex_review():
         review_prompt
     ]
 
-    try:
-        result = subprocess.run(
-            codex_command,
-            cwd=os.getcwd(),
-            capture_output=True,
-            text=True,
-            timeout=600
-        )
+    review_text = run_ai_command("Codex", codex_command, cwd=os.getcwd(), timeout=600)
+    if not review_text:
+        return
 
-        if result.stdout:
-            print(result.stdout, file=sys.stderr, flush=True)
-            output = result.stdout.lower()
-
-            review_results["codex"]["success"] = True
-            if "plan needs revision" in output:
-                review_results["codex"]["needs_revision"] = True
-            if "plan is ready" in output:
-                review_results["codex"]["ready"] = True
-
-        if result.returncode != 0:
-            print(f"⚠️  Codex実行エラー (exit code: {result.returncode})", file=sys.stderr, flush=True)
-
-    except subprocess.TimeoutExpired:
-        print("⚠️  Codexレビューがタイムアウトしました（10分）", file=sys.stderr, flush=True)
-    except Exception as e:
-        print(f"⚠️  Codexレビュー実行エラー: {e}", file=sys.stderr, flush=True)
+    output = review_text.lower()
+    review_results["codex"]["success"] = True
+    if "plan needs revision" in output:
+        review_results["codex"]["needs_revision"] = True
+    if "plan is ready" in output:
+        review_results["codex"]["ready"] = True
 
 
 def run_gemini_review():
@@ -139,32 +122,16 @@ def run_gemini_review():
         "-p", review_prompt
     ]
 
-    try:
-        result = subprocess.run(
-            gemini_command,
-            cwd=os.getcwd(),
-            capture_output=True,
-            text=True,
-            timeout=600
-        )
+    review_text = run_ai_command("Gemini", gemini_command, cwd=os.getcwd(), timeout=600)
+    if not review_text:
+        return
 
-        if result.stdout:
-            print(result.stdout, file=sys.stderr, flush=True)
-            output = result.stdout.lower()
-
-            review_results["gemini"]["success"] = True
-            if "plan needs revision" in output:
-                review_results["gemini"]["needs_revision"] = True
-            if "plan is ready" in output:
-                review_results["gemini"]["ready"] = True
-
-        if result.returncode != 0:
-            print(f"⚠️  Gemini実行エラー (exit code: {result.returncode})", file=sys.stderr, flush=True)
-
-    except subprocess.TimeoutExpired:
-        print("⚠️  Geminiレビューがタイムアウトしました（10分）", file=sys.stderr, flush=True)
-    except Exception as e:
-        print(f"⚠️  Geminiレビュー実行エラー: {e}", file=sys.stderr, flush=True)
+    output = review_text.lower()
+    review_results["gemini"]["success"] = True
+    if "plan needs revision" in output:
+        review_results["gemini"]["needs_revision"] = True
+    if "plan is ready" in output:
+        review_results["gemini"]["ready"] = True
 
 
 # 利用可能なツールでレビューを実行

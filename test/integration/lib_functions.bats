@@ -16,6 +16,12 @@ load ../test_helper/test_helper
   [ -x "$script" ]
 }
 
+@test "project-detect.sh script exists and is executable" {
+  local script="${REPO_ROOT}/script/lib/project-detect.sh"
+  assert_file_exists "$script"
+  [ -x "$script" ]
+}
+
 @test "config.sh uses strict error handling" {
   grep -q "set -euo pipefail" "${REPO_ROOT}/script/lib/config.sh"
 }
@@ -34,6 +40,34 @@ load ../test_helper/test_helper
 
 @test "config.sh defines config::filter_credentials function" {
   grep -q "config::filter_credentials()" "${REPO_ROOT}/script/lib/config.sh"
+}
+
+@test "config.sh defines managed import/export repository directories" {
+  grep -q "CONFIG_MANAGED_REPO_DIRS" "${REPO_ROOT}/script/lib/config.sh"
+  grep -q "config::ensure_managed_repo_dirs()" "${REPO_ROOT}/script/lib/config.sh"
+}
+
+@test "config::ensure_managed_repo_dirs creates managed directories" {
+  source "${REPO_ROOT}/script/lib/config.sh"
+
+  local target="${TEST_TEMP_DIR}/managed-repo"
+  config::ensure_managed_repo_dirs "$target"
+
+  [ -d "$target/brew" ]
+  [ -d "$target/vscode" ]
+  [ -d "$target/git" ]
+  [ -d "$target/npm" ]
+  [ -d "$target/.zsh" ]
+  [ -d "$target/dot" ]
+  [ -d "$target/.claude" ]
+  [ -d "$target/.codex" ]
+  [ -d "$target/.cursor" ]
+  [ -d "$target/.gemini" ]
+}
+
+@test "export.sh uses shared managed directory helper" {
+  grep -q "config::ensure_managed_repo_dirs" "${REPO_ROOT}/script/export.sh"
+  ! grep -q 'mkdir -p "$REPO_PATH/brew"' "${REPO_ROOT}/script/export.sh"
 }
 
 # Output function tests (consolidated from errors.sh)
@@ -257,4 +291,3 @@ EOF
   run platform::assert_supported
   [ "$status" -eq 0 ]
 }
-

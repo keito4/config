@@ -10,8 +10,10 @@ This directory contains utility scripts for managing configuration, credentials,
 | `credentials.sh`      | 1Password credential management                          | Makefile               |
 | `update-libraries.sh` | Refresh `npm/global.json` (Dependabot owns package.json) | package.json           |
 | `version.sh`          | Semantic versioning                                      | Makefile               |
-| `.shellcheck-exclude` | ShellCheck 除外パターン定義                              | npm run shellcheck     |
 | `update-agents-md.sh` | AGENTS.md 自動生成セクション更新                         | repo-maintenance       |
+| `repo-maintenance.sh` | Repository maintenance executable workflow               | `/repo-maintenance`    |
+| `setup-ci.sh`         | CI/CD workflow setup                                     | `/setup-ci`            |
+| `setup-new-repo.sh`   | New repository bootstrap                                 | `/setup-new-repo`      |
 
 ## Configuration Management
 
@@ -109,6 +111,40 @@ Updates Claude Code CLI to the latest version.
 
 ## Quality & CI Scripts
 
+### repo-maintenance.sh
+
+Runs repository maintenance checks and managed updates. This is the executable source of truth for `/repo-maintenance`.
+
+**Usage**:
+
+```bash
+./script/repo-maintenance.sh --mode full
+./script/repo-maintenance.sh --mode check-only
+./script/repo-maintenance.sh --check-required-workflows
+```
+
+### setup-ci.sh
+
+Detects project type and package manager, then writes CI/CD workflow defaults.
+
+**Usage**:
+
+```bash
+./script/setup-ci.sh --dry-run
+./script/setup-ci.sh --type nextjs --level standard
+```
+
+### setup-new-repo.sh
+
+Bootstraps a repository with config-managed development defaults.
+
+**Usage**:
+
+```bash
+./script/setup-new-repo.sh ../new-project --type nodejs
+./script/setup-new-repo.sh ../new-project --minimal --no-install
+```
+
 ### check-file-length.sh
 
 Checks staged TS/JS files for excessive line counts.
@@ -126,18 +162,6 @@ Checks staged TS/JS files for excessive line counts.
 **Configuration**: Create `.filelengthignore` (same syntax as `.gitignore`) to exclude files.
 
 **Template**: `.filelengthignore.template`
-
-### .shellcheck-exclude
-
-ShellCheck の除外対象ファイル一覧を管理する設定ファイル。
-
-**場所**: `script/.shellcheck-exclude`
-
-**用途**: `npm run shellcheck` 実行時に `grep -vFf` で参照され、ShellCheck の対象外とするスクリプトパターンを定義する。
-
-**フォーマット**: 1行1パターン（ファイル名またはパス）
-
-**除外対象の追加**: `.shellcheck-exclude` に1行追加するだけで完結。`package.json` の変更不要。
 
 ### pre-pr-checklist.sh
 
@@ -350,6 +374,7 @@ Shared library functions used by multiple scripts:
 | `platform.sh`        | Platform detection (macOS, Linux, etc.)                    |
 | `devcontainer.sh`    | DevContainer-specific utilities                            |
 | `claude_plugins.sh`  | Claude plugin management utilities                         |
+| `project-detect.sh`  | Shared project type and package manager detection          |
 | `brew_categories.py` | Homebrew package categorization                            |
 
 ## Credential Providers (credentials/providers/)
