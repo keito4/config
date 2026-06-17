@@ -15,6 +15,7 @@ source "$SCRIPT_DIR/lib/agents-md-data.sh"
 
 AGENTS_MD="AGENTS.md"
 TEMPLATE="$SCRIPT_DIR/lib/agents-md-template.md"
+CONTEXT_DIR="${CONTEXT_DIR:-.context}"
 CHECK_ONLY=false
 [[ "${1:-}" == "--check" ]] && CHECK_ONLY=true
 
@@ -38,6 +39,11 @@ detect_pm() {
     [[ -f "${entry%%:*}" ]] && { echo "${entry##*:}"; return; }
   done
   echo "npm"
+}
+
+workflow_files() {
+  [[ -d ".github/workflows" ]] || return 0
+  find .github/workflows -maxdepth 1 -type f \( -name '*.yml' -o -name '*.yaml' \) | sort
 }
 
 # shellcheck disable=SC2034 # NODE_VER / PM consumed by template via eval
@@ -74,7 +80,7 @@ collect_dirs() {
       continue
     fi
     if [[ "$name" == ".github" ]]; then
-      wf_count=$(find .github/workflows -maxdepth 1 -name '*.yml' 2>/dev/null | wc -l | tr -d ' ')
+      wf_count=$(workflow_files | wc -l | tr -d ' ')
       emit out "\`.github/workflows/\`" "GitHub Actions CI/CD workflows ($wf_count workflows)"
       continue
     fi
@@ -176,12 +182,12 @@ collect_workflows() {
   local out=""
   table_header out "Workflow" "Purpose"
   local wf base name
-  for wf in .github/workflows/*.yml; do
-    [[ ! -f "$wf" ]] && continue
+  while IFS= read -r wf; do
+    [[ -z "$wf" ]] && continue
     base=$(basename "$wf")
     name=$(grep -m1 '^name:' "$wf" | sed 's/^name: *//' | tr -d "'\"")
     emit out "\`$base\`" "${name:-(unnamed)}"
-  done
+  done < <(workflow_files)
   echo -n "$out"
 }
 
@@ -269,14 +275,17 @@ write_target() {
   content=$(build_full_content)
   printf '%s\n' "$content" > "$target"
   if command -v npx >/dev/null 2>&1; then
-    npx prettier --write "$target" >/dev/null 2>&1 || true
+    if [[ "$target" == "$CONTEXT_DIR"/* ]]; then
+      npx prettier --write --ignore-path /dev/null "$target" >/dev/null 2>&1 || true
+    else
+      npx prettier --write "$target" >/dev/null 2>&1 || true
+    fi
   fi
 }
 
 if $CHECK_ONLY; then
-  # Use system tempdir: .context/ is in .prettierignore, which would skip our format step.
-  # Append .md so prettier picks the markdown parser.
-  TMPDIR_BASE=$(mktemp -d -t agents-md-check.XXXXXXXXXX)
+  mkdir -p "$CONTEXT_DIR"
+  TMPDIR_BASE=$(mktemp -d "$CONTEXT_DIR/agents-md-check-XXXXX")
   TMPFILE="$TMPDIR_BASE/AGENTS.md"
   trap 'rm -rf "$TMPDIR_BASE"' EXIT
   write_target "$TMPFILE"

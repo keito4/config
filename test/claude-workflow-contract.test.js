@@ -208,6 +208,33 @@ describe('Claude workflow contracts', () => {
     expect(command).not.toContain('mktemp -d)');
   });
 
+  test('update-agents-md includes yaml workflows and keeps check artifacts in .context', () => {
+    const script = readWorkflow('script/update-agents-md.sh');
+
+    expect(script).toContain('workflow_files()');
+    expect(script).toContain("-name '*.yml' -o -name '*.yaml'");
+    expect(script).toContain('CONTEXT_DIR="${CONTEXT_DIR:-.context}"');
+    expect(script).toContain('mktemp -d "$CONTEXT_DIR/agents-md-check-XXXXX"');
+    expect(script).toContain('prettier --write --ignore-path /dev/null "$target"');
+    expect(script).not.toContain('mktemp -d -t agents-md-check');
+  });
+
+  test('repo-maintenance scans yml and yaml workflows in cross-workflow checks', () => {
+    const command = readWorkflow('.claude/commands/repo-maintenance.md');
+
+    expect(command).toContain('for wf in .github/workflows/*.yml .github/workflows/*.yaml; do');
+    expect(command).toContain('WORKFLOW_FILES=()');
+    expect(command).toContain('for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do');
+    expect(command).toContain('.github/workflows/*.yml .github/workflows/*.yaml 2>/dev/null');
+    expect(command).toContain(
+      'for workflow in .github/workflows/ci*.yml .github/workflows/ci*.yaml .github/workflows/test*.yml .github/workflows/test*.yaml; do',
+    );
+    expect(command).not.toContain('for workflow in .github/workflows/*.yml; do');
+    expect(command).not.toContain('for wf in .github/workflows/*.yml; do');
+    expect(command).not.toContain('ls .github/workflows/*.yml 2>/dev/null');
+    expect(command).not.toContain("grep -rh 'node-version' .github/workflows/*.yml");
+  });
+
   test('dependency health script reports peer dependency issues in its json contract', () => {
     const script = readWorkflow('script/dependency-health-check.sh');
 

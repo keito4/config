@@ -9,7 +9,8 @@ load ../test_helper/test_helper
   assert_directory_exists "$workflows_dir"
 
   # Check each workflow file has valid YAML syntax
-  for workflow in "$workflows_dir"/*.yml; do
+  for workflow in "$workflows_dir"/*.yml "$workflows_dir"/*.yaml; do
+    [ -f "$workflow" ] || continue
     # Basic YAML structure check using grep
     grep -q "^name:" "$workflow"
     grep -q "^on:" "$workflow"
@@ -116,7 +117,8 @@ load ../test_helper/test_helper
   # Workflows that don't need checkout (no source code access required)
   local skip_patterns="dependabot-auto-merge|quality-gate-fallback"
 
-  for workflow in "$workflows_dir"/*.yml; do
+  for workflow in "$workflows_dir"/*.yml "$workflows_dir"/*.yaml; do
+    [ -f "$workflow" ] || continue
     local basename
     basename=$(basename "$workflow")
     if echo "$basename" | grep -qE "$skip_patterns"; then
@@ -131,7 +133,8 @@ load ../test_helper/test_helper
 @test "all workflows pin action versions" {
   local workflows_dir="${REPO_ROOT}/.github/workflows"
 
-  for workflow in "$workflows_dir"/*.yml; do
+  for workflow in "$workflows_dir"/*.yml "$workflows_dir"/*.yaml; do
+    [ -f "$workflow" ] || continue
     # Check that actions use @vX or @commit_hash
     # Should not use @main or @master
     ! grep -q "uses:.*@main" "$workflow"
@@ -142,7 +145,8 @@ load ../test_helper/test_helper
 @test "workflows do not expose secrets in environment variables" {
   local workflows_dir="${REPO_ROOT}/.github/workflows"
 
-  for workflow in "$workflows_dir"/*.yml; do
+  for workflow in "$workflows_dir"/*.yml "$workflows_dir"/*.yaml; do
+    [ -f "$workflow" ] || continue
     # Should not set secrets as env vars that could be logged
     # Secrets should only be passed to 'with:' or 'env:' of specific steps
     # Check for potential exposure patterns
@@ -153,7 +157,8 @@ load ../test_helper/test_helper
 @test "workflows use GITHUB_TOKEN for GitHub operations" {
   local workflows_dir="${REPO_ROOT}/.github/workflows"
 
-  for workflow in "$workflows_dir"/*.yml; do
+  for workflow in "$workflows_dir"/*.yml "$workflows_dir"/*.yaml; do
+    [ -f "$workflow" ] || continue
     # Workflows that create releases or push should use GITHUB_TOKEN
     if grep -q "gh release create\|git push\|npx semantic-release" "$workflow"; then
       grep -q "GITHUB_TOKEN.*secrets.GITHUB_TOKEN" "$workflow"
@@ -164,7 +169,8 @@ load ../test_helper/test_helper
 @test "workflows do not use deprecated actions" {
   local workflows_dir="${REPO_ROOT}/.github/workflows"
 
-  for workflow in "$workflows_dir"/*.yml; do
+  for workflow in "$workflows_dir"/*.yml "$workflows_dir"/*.yaml; do
+    [ -f "$workflow" ] || continue
     # Should not use deprecated actions
     ! grep -q "actions/setup-node@v1" "$workflow"
     ! grep -q "actions/checkout@v1" "$workflow"
@@ -190,7 +196,8 @@ load ../test_helper/test_helper
 @test "workflows have descriptive job names" {
   local workflows_dir="${REPO_ROOT}/.github/workflows"
 
-  for workflow in "$workflows_dir"/*.yml; do
+  for workflow in "$workflows_dir"/*.yml "$workflows_dir"/*.yaml; do
+    [ -f "$workflow" ] || continue
     # Each workflow should have a descriptive name
     grep -q "^name:.*[A-Za-z]" "$workflow"
   done
