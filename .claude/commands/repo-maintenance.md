@@ -1112,7 +1112,8 @@ fi
 **確認ロジック:**
 
 ```bash
-for f in templates/workflows/*.yml; do
+for f in templates/workflows/*.yml templates/workflows/*.yaml; do
+  [ -f "$f" ] || continue
   base=$(basename "$f")
   actual=".github/workflows/$base"
   if [ -f "$actual" ]; then
@@ -1138,6 +1139,67 @@ done
 1. `diff templates/workflows/$base .github/workflows/$base` を表示
 2. テンプレートを実ファイルに反映するか確認
 3. 承認された場合 `cp templates/workflows/$base .github/workflows/$base` を実行
+
+#### 3.5.1.1 Workflow Template Lint Coverage Check
+
+`ci.yml` の Workflow Lint が、実ワークフローだけでなく config リポジトリのテンプレートも検証できるか確認する。
+これは config リポジトリ自身ではテンプレート品質を守り、他リポジトリへ配布された CI では存在しない
+`templates/workflows/` の glob が literal のまま残って actionlint を失敗させないためのチェック。
+
+**確認項目:**
+
+| #   | チェック                 | 推奨                                                                                                       |
+| --- | ------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| 1   | Workflow Lint の変更検出 | `.github/workflows/**`, `.github/actionlint.yaml`, `templates/workflows/**`, `templates/github/labels.yml` |
+| 2   | YAML 拡張子              | `.yml` と `.yaml` の両方を対象にする                                                                       |
+| 3   | actionlint 対象ファイル  | 静的 glob ではなく、存在するファイルを収集して渡す                                                         |
+| 4   | 下流 repo 安全性         | `templates/workflows/` が無くても Workflow Lint が落ちない                                                 |
+
+**確認ロジック:**
+
+```bash
+if [ -f ".github/workflows/ci.yml" ]; then
+  CI_YML=$(cat .github/workflows/ci.yml)
+
+  if ! echo "$CI_YML" | grep -q "Collect workflow files"; then
+    ISSUES+=("ci.yml: Workflow Lint が存在するファイル収集方式ではありません")
+  fi
+  if ! echo "$CI_YML" | grep -q ".context/actionlint-files.txt"; then
+    ISSUES+=("ci.yml: actionlint 対象ファイルリストを .context に保存していません")
+  fi
+  if ! echo "$CI_YML" | grep -q "find .github/workflows/templates" || \
+     ! echo "$CI_YML" | grep -q "find templates/workflows"; then
+    ISSUES+=("ci.yml: workflow template の actionlint 対象収集が不足しています")
+  fi
+  if ! echo "$CI_YML" | grep -q "'*.yaml'"; then
+    ISSUES+=("ci.yml: .yaml workflow が actionlint 対象から漏れています")
+  fi
+  if echo "$CI_YML" | grep -q "actionlint_flags: .*templates/workflows/.*\\*"; then
+    ISSUES+=("ci.yml: actionlint_flags に静的 template glob が残っています（下流 repo で未一致 glob が失敗します）")
+  fi
+fi
+```
+
+**config リポジトリ自身での検証:**
+
+```bash
+ACTIONLINT_TARGETS=()
+for f in .github/workflows/*.yml .github/workflows/*.yaml \
+         .github/workflows/templates/*.yml .github/workflows/templates/*.yaml \
+         templates/workflows/*.yml templates/workflows/*.yaml; do
+  [ -f "$f" ] && ACTIONLINT_TARGETS+=("$f")
+done
+
+if [ "${#ACTIONLINT_TARGETS[@]}" -gt 0 ]; then
+  actionlint "${ACTIONLINT_TARGETS[@]}"
+fi
+```
+
+**結果:**
+
+- ✅ Workflow Template Lint: 実ワークフロー / テンプレート / `.yaml` すべて対象
+- ⚠️ Workflow Template Lint: テンプレートまたは `.yaml` が対象外
+- ⚠️ Workflow Template Lint: 下流 repo で未一致 glob により失敗する可能性あり
 
 ### 3.5.2 CI Workflow Consistency Check
 
@@ -1486,6 +1548,16 @@ if [ -f ".github/workflows/claude.yml" ]; then
 
   if ! echo "$CLAUDE_YML" | grep -q "draft"; then
     ISSUES+=("claude.yml: Draft PR スキップが未設定")
+  fi
+  if echo "$CLAUDE_YML" | grep -q "github.event.issue.draft"; then
+    ISSUES+=("claude.yml: issue_comment で github.event.issue.draft を参照しています（payload に draft は無く、Draft PR を除外できません）")
+  fi
+  if echo "$CLAUDE_YML" | grep -q "github.event_name == 'issue_comment'" && \
+     echo "$CLAUDE_YML" | grep -q "github.event.issue.pull_request"; then
+    if ! echo "$CLAUDE_YML" | grep -q "github.rest.pulls.get" || \
+       ! echo "$CLAUDE_YML" | grep -q "steps.pr_draft.outputs.is_draft != 'true'"; then
+      ISSUES+=("claude.yml: PR 上の issue_comment は pulls.get で draft 状態を取得してから Claude 実行をスキップする必要があります")
+    fi
   fi
 
   TIMEOUT=$(echo "$CLAUDE_YML" | grep "timeout-minutes:" | head -1 | grep -o '[0-9]*')
@@ -2166,6 +2238,8 @@ GitHub ラベルの IaC 管理が設定されているか、かつ checkout と 
 **背景:**
 `permissions:` を明示した workflow で `contents: read` が無いと `actions/checkout` が失敗する。
 また Dependabot auto-merge が付与する `dependabot-minor` / `needs-review` / `breaking-change` は labels.yml に存在するか、workflow 側で作成される必要がある。
+CI の PR Size Check は `size/XS` / `size/S` / `size/M` / `size/L` / `size/XL` を付与するため、
+Label Sync を使う repo ではこれらも labels.yml に定義されている必要がある。
 
 **確認ロジック:**
 
@@ -2189,7 +2263,9 @@ if [ "$HAS_LABEL_SYNC" = true ]; then
 fi
 
 if [ "$HAS_LABELS_YML" = true ]; then
-  for label in "dependabot-minor" "needs-review" "breaking-change"; do
+  for label in "dependabot-minor" "needs-review" "breaking-change" \
+               "npm" "docker" "released" \
+               "size/XS" "size/S" "size/M" "size/L" "size/XL"; do
     if ! grep -q "name: ['\"]$label['\"]" .github/labels.yml; then
       LABEL_SYNC_ISSUES+=("labels.yml: $label が未定義")
     fi
@@ -2970,6 +3046,14 @@ if [ -f ".github/labels.yml" ]; then
   ensure_label "dependabot-minor" "0366d6" "Minor dependency update"
   ensure_label "needs-review" "fbca04" "レビュー待ち"
   ensure_label "breaking-change" "b60205" "破壊的変更あり"
+  ensure_label "npm" "cb3837" "npm/yarn 依存関係の更新"
+  ensure_label "docker" "0db7ed" "Docker 依存関係の更新"
+  ensure_label "released" "ededed" "リリース済み"
+  ensure_label "size/XS" "c2e0c6" "PR サイズ Extra Small"
+  ensure_label "size/S" "2cbe4e" "PR サイズ Small"
+  ensure_label "size/M" "fbca04" "PR サイズ Medium"
+  ensure_label "size/L" "e99695" "PR サイズ Large"
+  ensure_label "size/XL" "d93f0b" "PR サイズ XLarge"
 fi
 
 if [ "${#UPDATED[@]}" -gt 0 ] && git remote get-url origin 2>/dev/null | grep -q "keito4/config"; then

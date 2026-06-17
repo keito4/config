@@ -180,6 +180,8 @@ describe('Claude workflow contracts', () => {
     expect(command).toContain('gh label create "breaking-change"');
     expect(command).toContain('LABEL_SYNC_ISSUES');
     expect(command).toContain('checkout 用の contents: read');
+    expect(command).toContain('PR Size Check は `size/XS`');
+    expect(command).toContain('"size/XS" "size/S" "size/M" "size/L" "size/XL"');
     expect(command).toContain('labels.yml: $label が未定義');
   });
 
@@ -194,6 +196,14 @@ describe('Claude workflow contracts', () => {
     expect(command).toContain('ensure_label "dependabot-minor"');
     expect(command).toContain('ensure_label "needs-review"');
     expect(command).toContain('ensure_label "breaking-change"');
+    expect(command).toContain('ensure_label "npm"');
+    expect(command).toContain('ensure_label "docker"');
+    expect(command).toContain('ensure_label "released"');
+    expect(command).toContain('ensure_label "size/XS"');
+    expect(command).toContain('ensure_label "size/S"');
+    expect(command).toContain('ensure_label "size/M"');
+    expect(command).toContain('ensure_label "size/L"');
+    expect(command).toContain('ensure_label "size/XL"');
     expect(command).toContain('差分あり・full modeで更新');
     expect(command).not.toContain('templates/github/labels.yml:.github/labels.yml');
   });
@@ -245,6 +255,28 @@ describe('Claude workflow contracts', () => {
     expect(command).not.toContain('for wf in .github/workflows/*.yml; do');
     expect(command).not.toContain('ls .github/workflows/*.yml 2>/dev/null');
     expect(command).not.toContain("grep -rh 'node-version' .github/workflows/*.yml");
+  });
+
+  test('repo-maintenance validates workflow template actionlint coverage', () => {
+    const command = readWorkflow('.claude/commands/repo-maintenance.md');
+
+    expect(command).toContain('Workflow Template Lint Coverage Check');
+    expect(command).toContain('Collect workflow files');
+    expect(command).toContain('.context/actionlint-files.txt');
+    expect(command).toContain('find .github/workflows/templates');
+    expect(command).toContain('find templates/workflows');
+    expect(command).toContain('actionlint_flags に静的 template glob');
+    expect(command).toContain('actionlint "${ACTIONLINT_TARGETS[@]}"');
+    expect(command).toContain('for f in templates/workflows/*.yml templates/workflows/*.yaml; do');
+  });
+
+  test('repo-maintenance rejects stale issue_comment draft checks', () => {
+    const command = readWorkflow('.claude/commands/repo-maintenance.md');
+
+    expect(command).toContain('github.event.issue.draft');
+    expect(command).toContain('payload に draft は無く');
+    expect(command).toContain('github.rest.pulls.get');
+    expect(command).toContain("steps.pr_draft.outputs.is_draft != 'true'");
   });
 
   test('dependency health script reports peer dependency issues in its json contract', () => {
