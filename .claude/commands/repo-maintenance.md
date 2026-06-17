@@ -56,6 +56,35 @@ Starting comprehensive maintenance...
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+### 1.1 Repository State Guard
+
+GitHub 上のリポジトリ状態を先に確認し、以降の更新系ステップの前提にする。
+
+**背景:**
+archive 済みリポジトリは read-only のため、`git push` や `gh pr create` が必ず失敗する。
+また private リポジトリでは `dependency-review-action` の利用可否が GitHub Advanced Security / dependency graph の設定に依存するため、public repo と同じ扱いで必須化しない。
+
+**確認ロジック:**
+
+```bash
+REPO_JSON=$(gh repo view --json nameWithOwner,isArchived,isPrivate 2>/dev/null || echo '{}')
+REPO_NAME=$(echo "$REPO_JSON" | jq -r '.nameWithOwner // empty')
+REPO_ARCHIVED=$(echo "$REPO_JSON" | jq -r '.isArchived // false')
+REPO_PRIVATE=$(echo "$REPO_JSON" | jq -r '.isPrivate // false')
+
+if [ "$REPO_ARCHIVED" = "true" ]; then
+  echo "⏭️ Archived repository: read-only checks only"
+  MODE="check-only"
+  CREATE_PR=false
+fi
+```
+
+**結果:**
+
+- ✅ Repository State: active
+- ⏭️ Archived repository: read-only checks only（更新・PR作成をスキップ）
+- 📝 Private repository: Dependency Review は optional / guarded として扱う
+
 ## Step 2: Environment Category
 
 ### 2.1 Container Health Check
@@ -903,7 +932,9 @@ if [ ! -f "$SCRIPT" ]; then
   elif [ -f "/usr/local/script/update-agents-md.sh" ]; then
     SCRIPT="/usr/local/script/update-agents-md.sh"
   else
-    TMPSCRIPT=$(mktemp /tmp/update-agents-md-XXXXX.sh)
+    CONTEXT_DIR="${CONTEXT_DIR:-.context}"
+    mkdir -p "$CONTEXT_DIR"
+    TMPSCRIPT=$(mktemp "$CONTEXT_DIR/update-agents-md-XXXXX.sh")
     curl -fsSL "https://raw.githubusercontent.com/keito4/config/main/script/update-agents-md.sh" -o "$TMPSCRIPT"
     chmod +x "$TMPSCRIPT"
     SCRIPT="$TMPSCRIPT"
@@ -2025,70 +2056,136 @@ echo "🔧 .editorconfig を生成しました"
 
 ### 3.10 Dependabot Auto-merge ワークフローチェック
 
-Dependabot PR の自動処理ワークフローが設定されているか確認：
+Dependabot PR の自動処理ワークフローが設定されているか、かつ現在の安全なテンプレート仕様に合っているか確認：
+
+**背景:**
+既存リポジトリで `dependabot-auto-merge.yml` が存在していても、古いテンプレートでは以下の問題が残っていた：
+
+- workflow-level で `contents: write` / `pull-requests: write` を付与しており、Dependabot 以外の PR でも write token が発行される
+- minor / major update 用のラベルが存在しない場合に `gh pr edit --add-label` が失敗する
+- `GITHUB_TOKEN` による auto-approve が許可されていない repo で minor update の自動承認が CI を赤くする
+
+このため「存在するか」だけではなく、中身の契約を検査する。
 
 **確認ロジック:**
 
 ```bash
 HAS_DEPENDABOT_AUTOMERGE=false
+HAS_DEPENDABOT_CONFIG=false
+DEPENDABOT_AUTOMERGE_ISSUES=()
+
 [ -f ".github/workflows/dependabot-auto-merge.yml" ] && HAS_DEPENDABOT_AUTOMERGE=true
+[ -f ".github/dependabot.yml" ] || [ -f ".github/dependabot.yaml" ] && HAS_DEPENDABOT_CONFIG=true
+
+if [ "$HAS_DEPENDABOT_AUTOMERGE" = true ]; then
+  DEPENDABOT_WF=$(cat .github/workflows/dependabot-auto-merge.yml)
+
+  if ! echo "$DEPENDABOT_WF" | grep -Fq "if: github.actor == 'dependabot[bot]'"; then
+    DEPENDABOT_AUTOMERGE_ISSUES+=("job-level actor gate が未設定（Dependabot 確認前に write token が発行される）")
+  fi
+  if ! echo "$DEPENDABOT_WF" | grep -q "contents: read"; then
+    DEPENDABOT_AUTOMERGE_ISSUES+=("workflow-level permissions が read-only ではない")
+  fi
+  if ! echo "$DEPENDABOT_WF" | grep -q "contents: write" || \
+     ! echo "$DEPENDABOT_WF" | grep -q "issues: write" || \
+     ! echo "$DEPENDABOT_WF" | grep -q "pull-requests: write"; then
+    DEPENDABOT_AUTOMERGE_ISSUES+=("job-level permissions に contents/issues/pull-requests write が揃っていない")
+  fi
+  if ! echo "$DEPENDABOT_WF" | grep -Fq 'gh label create "dependabot-minor"' || \
+     ! echo "$DEPENDABOT_WF" | grep -Fq 'gh label create "needs-review"' || \
+     ! echo "$DEPENDABOT_WF" | grep -Fq 'gh label create "breaking-change"'; then
+    DEPENDABOT_AUTOMERGE_ISSUES+=("Dependabot 用ラベルを作成してから付与する処理が未設定")
+  fi
+  if echo "$DEPENDABOT_WF" | grep -q "Auto-approve minor updates" && \
+     ! echo "$DEPENDABOT_WF" | grep -q "continue-on-error: true"; then
+    DEPENDABOT_AUTOMERGE_ISSUES+=("minor update の auto-approve が continue-on-error ではない")
+  fi
+fi
 ```
 
 **結果パターン:**
 
 | 状態                          | 対応                                          |
 | ----------------------------- | --------------------------------------------- |
-| ワークフローが設定済み        | ✅ スキップ                                   |
+| WF あり + 契約を満たす        | ✅ スキップ                                   |
+| WF あり + 古い/危険な契約     | ⚠️ → full mode でテンプレート最新版へ更新     |
 | Dependabot 設定あり + WF なし | ⚠️ → full mode でテンプレートからコピーを提案 |
 | Dependabot 未使用             | ⏭️ スキップ                                   |
 
-**MODE が `full` かつ未設定の場合:**
+**MODE が `full` かつ未設定または古い契約の場合:**
 
 ```bash
-# Dependabot が設定されている場合のみ提案
-if [ -f ".github/dependabot.yml" ] || [ -f ".github/dependabot.yaml" ]; then
+if [ "$HAS_DEPENDABOT_CONFIG" = true ] || [ "$HAS_DEPENDABOT_AUTOMERGE" = true ]; then
   TEMPLATE_SRC="/usr/local/share/config-templates/workflows/dependabot-auto-merge.yml"
   TEMPLATE_RAW_URL="https://raw.githubusercontent.com/keito4/config/main/templates/workflows/dependabot-auto-merge.yml"
 
   mkdir -p .github/workflows
-  if [ -f "$TEMPLATE_SRC" ]; then
-    cp "$TEMPLATE_SRC" .github/workflows/dependabot-auto-merge.yml
-  else
-    curl -fsSL "$TEMPLATE_RAW_URL" -o .github/workflows/dependabot-auto-merge.yml
+  if [ ! -f ".github/workflows/dependabot-auto-merge.yml" ] || [ "${#DEPENDABOT_AUTOMERGE_ISSUES[@]}" -gt 0 ]; then
+    if [ -f "$TEMPLATE_SRC" ]; then
+      cp "$TEMPLATE_SRC" .github/workflows/dependabot-auto-merge.yml
+    else
+      curl -fsSL "$TEMPLATE_RAW_URL" -o .github/workflows/dependabot-auto-merge.yml
+    fi
+    echo "🔧 dependabot-auto-merge.yml を最新版テンプレートに更新しました"
   fi
-  echo "🔧 dependabot-auto-merge.yml を追加しました"
 fi
 ```
 
 **結果:**
 
-- ✅ Dependabot Auto-merge 設定済み
-- 🔧 dependabot-auto-merge.yml を追加しました
+- ✅ Dependabot Auto-merge 設定済み（安全な契約）
+- 🔧 dependabot-auto-merge.yml を追加 / 更新しました
+- ⚠️ Dependabot Auto-merge 契約不備: X 件（詳細表示）
 - ⏭️ スキップ（Dependabot 未使用）
 
 ### 3.11 Label Sync ワークフローチェック
 
-GitHub ラベルの IaC 管理が設定されているか確認：
+GitHub ラベルの IaC 管理が設定されているか、かつ checkout と Dependabot 連携に必要な権限・ラベルが揃っているか確認：
+
+**背景:**
+`permissions:` を明示した workflow で `contents: read` が無いと `actions/checkout` が失敗する。
+また Dependabot auto-merge が付与する `dependabot-minor` / `needs-review` / `breaking-change` は labels.yml に存在するか、workflow 側で作成される必要がある。
 
 **確認ロジック:**
 
 ```bash
 HAS_LABEL_SYNC=false
 HAS_LABELS_YML=false
+LABEL_SYNC_ISSUES=()
 
 [ -f ".github/workflows/label-sync.yml" ] && HAS_LABEL_SYNC=true
 [ -f ".github/labels.yml" ] && HAS_LABELS_YML=true
+
+if [ "$HAS_LABEL_SYNC" = true ]; then
+  LABEL_SYNC_WF=$(cat .github/workflows/label-sync.yml)
+  if ! echo "$LABEL_SYNC_WF" | grep -q "contents: read"; then
+    LABEL_SYNC_ISSUES+=("label-sync.yml: checkout 用の contents: read が未設定")
+  fi
+  if ! echo "$LABEL_SYNC_WF" | grep -q "issues: write" || \
+     ! echo "$LABEL_SYNC_WF" | grep -q "pull-requests: write"; then
+    LABEL_SYNC_ISSUES+=("label-sync.yml: label 更新用の issues/pull-requests write が未設定")
+  fi
+fi
+
+if [ "$HAS_LABELS_YML" = true ]; then
+  for label in "dependabot-minor" "needs-review" "breaking-change"; do
+    if ! grep -q "name: ['\"]$label['\"]" .github/labels.yml; then
+      LABEL_SYNC_ISSUES+=("labels.yml: $label が未定義")
+    fi
+  done
+fi
 ```
 
 **結果パターン:**
 
-| 状態                      | 対応                                    |
-| ------------------------- | --------------------------------------- |
-| WF + labels.yml 両方あり  | ✅ スキップ                             |
-| WF あり + labels.yml なし | ⚠️ labels.yml 未定義                    |
-| 両方なし                  | ⚠️ → full mode でテンプレート生成を提案 |
+| 状態                              | 対応                                      |
+| --------------------------------- | ----------------------------------------- |
+| WF + labels.yml 両方あり + 契約OK | ✅ スキップ                               |
+| WF あり + labels.yml なし         | ⚠️ labels.yml 未定義                      |
+| WF/labels.yml の権限・ラベル不備  | ⚠️ → full mode でテンプレート最新版へ更新 |
+| 両方なし                          | ⚠️ → full mode でテンプレート生成を提案   |
 
-**MODE が `full` かつ未設定の場合:**
+**MODE が `full` かつ未設定または古い契約の場合:**
 
 ```bash
 TEMPLATE_WF_SRC="/usr/local/share/config-templates/workflows/label-sync.yml"
@@ -2098,30 +2195,30 @@ TEMPLATE_LABELS_RAW="https://raw.githubusercontent.com/keito4/config/main/templa
 
 mkdir -p .github/workflows
 
-if [ ! -f ".github/workflows/label-sync.yml" ]; then
+if [ ! -f ".github/workflows/label-sync.yml" ] || [ "${#LABEL_SYNC_ISSUES[@]}" -gt 0 ]; then
   if [ -f "$TEMPLATE_WF_SRC" ]; then
     cp "$TEMPLATE_WF_SRC" .github/workflows/label-sync.yml
   else
     curl -fsSL "$TEMPLATE_WF_RAW" -o .github/workflows/label-sync.yml
   fi
-  echo "🔧 label-sync.yml を追加しました"
+  echo "🔧 label-sync.yml を最新版テンプレートに更新しました"
 fi
 
-if [ ! -f ".github/labels.yml" ]; then
+if [ ! -f ".github/labels.yml" ] || [ "${#LABEL_SYNC_ISSUES[@]}" -gt 0 ]; then
   if [ -f "$TEMPLATE_LABELS_SRC" ]; then
     cp "$TEMPLATE_LABELS_SRC" .github/labels.yml
   else
     curl -fsSL "$TEMPLATE_LABELS_RAW" -o .github/labels.yml
   fi
-  echo "🔧 labels.yml を追加しました"
+  echo "🔧 labels.yml を最新版テンプレートに更新しました"
 fi
 ```
 
 **結果:**
 
-- ✅ Label Sync 設定済み
-- 🔧 label-sync.yml + labels.yml を追加しました
-- ⚠️ labels.yml が未定義（ワークフローのみ存在）
+- ✅ Label Sync 設定済み（権限・標準ラベルあり）
+- 🔧 label-sync.yml / labels.yml を追加・更新しました
+- ⚠️ Label Sync 契約不備: X 件（詳細表示）
 
 ### 3.12 pre-commit 設定チェック
 
@@ -2354,6 +2451,59 @@ check_script "typecheck"   "typecheck" "type-check" "tsc"
 - ⚠️ 未定義スクリプト: X 件（リスト表示）
 - ⏭️ スキップ（`package.json` なし）
 
+### 3.17.1 Dependency Peer Compatibility Check
+
+依存更新 PR で、lockfile は更新できていても peer dependency の互換性が崩れていないか確認する。
+
+**背景:**
+Dependabot / Renovate の自動化自体が正常でも、エコシステム側の peer range が追従しておらず CI が失敗することがある。
+例: ESLint major update に対して関連 plugin の peerDependencies がまだ新 major を許容していないケース。
+これは workflow 設定不備ではなく dependency compatibility issue として分類し、依存更新 PR のマージ前に検出する。
+
+**確認ロジック:**
+
+```bash
+PEER_ISSUES=()
+
+if [ -f "package.json" ]; then
+  if [ -d "node_modules" ] && command -v npm >/dev/null 2>&1; then
+    NPM_LS_JSON=$(npm ls --all --json 2>/dev/null || true)
+    PEER_PROBLEMS=$(echo "$NPM_LS_JSON" | jq -r '.problems[]? | select(test("peer|invalid|missing"; "i"))' 2>/dev/null)
+    if [ -n "$PEER_PROBLEMS" ]; then
+      while IFS= read -r problem; do
+        [ -n "$problem" ] && PEER_ISSUES+=("$problem")
+      done <<< "$PEER_PROBLEMS"
+    fi
+  fi
+
+  # lockfile-only の dry-run で solver 互換性を見る。ログは .context に残す。
+  mkdir -p .context
+  if [ -f "package-lock.json" ]; then
+    if ! npm install --package-lock-only --dry-run --ignore-scripts >.context/npm-peer-compat.log 2>&1; then
+      PEER_ISSUES+=("npm lockfile solver が失敗（.context/npm-peer-compat.log を確認）")
+    fi
+  elif [ -f "pnpm-lock.yaml" ] && command -v pnpm >/dev/null 2>&1; then
+    if ! pnpm install --lockfile-only --ignore-scripts >.context/pnpm-peer-compat.log 2>&1; then
+      PEER_ISSUES+=("pnpm lockfile solver が失敗（.context/pnpm-peer-compat.log を確認）")
+    fi
+  fi
+fi
+```
+
+**結果パターン:**
+
+| 状態                    | 対応                                                               |
+| ----------------------- | ------------------------------------------------------------------ |
+| peer 問題なし           | ✅ Dependency Peer Compatibility: OK                               |
+| peer / invalid 問題あり | ⚠️ 依存更新 PR の互換性問題として分類（workflow 設定不備ではない） |
+| `node_modules` 未導入   | 📝 lockfile solver の dry-run のみ実行                             |
+
+**MODE が `full` で問題がある場合:**
+
+- PR が依存更新のみなら、対象 major を保留し互換 plugin の release を待つ
+- 必要なら `dependabot ignore` / Renovate packageRules の提案を出す
+- workflow 修正ではなく `package.json` / lockfile の依存バージョン整合として扱う
+
 ### 3.18 CONTRIBUTING.md チェック
 
 コントリビューションガイドが設定されているか確認：
@@ -2445,11 +2595,14 @@ PR で新規追加される依存関係の脆弱性チェック（Dependency Rev
 Dependabot alerts は既存の依存関係の脆弱性を通知するが、Dependency Review は
 PR 段階で新規追加・更新される依存関係の脆弱性をブロックできる。
 `actions/dependency-review-action` をCI に組み込むことで、脆弱な依存関係のマージを防止する。
+ただし private リポジトリでは GitHub Advanced Security / dependency graph の有効状態に依存するため、
+未設定や skipped を public repo と同じ重大度で扱わない。
 
 **確認ロジック:**
 
 ```bash
 HAS_DEPENDENCY_REVIEW=false
+REPO_PRIVATE="${REPO_PRIVATE:-false}"
 
 for workflow in .github/workflows/*.yml; do
   [ ! -f "$workflow" ] && continue
@@ -2462,12 +2615,14 @@ done
 
 **結果パターン:**
 
-| 状態                          | 対応                                |
-| ----------------------------- | ----------------------------------- |
-| dependency-review-action あり | ✅ 設定済み                         |
-| dependency-review-action なし | ⚠️ → full mode で CI への追加を提案 |
+| 状態                                    | 対応                                              |
+| --------------------------------------- | ------------------------------------------------- |
+| public + dependency-review-action あり  | ✅ 設定済み                                       |
+| public + dependency-review-action なし  | ⚠️ → full mode で CI への追加を提案               |
+| private + dependency-review-action あり | ✅/📝 設定済み（skipped/neutral は許容）          |
+| private + dependency-review-action なし | 📝 optional（npm audit / Dependabot alerts 併用） |
 
-**MODE が `full` かつ未設定の場合:**
+**MODE が `full` かつ public repository で未設定の場合:**
 
 既存の CI ワークフローに dependency-review job を追加するか、
 専用ワークフローの作成を提案：
@@ -2496,7 +2651,8 @@ jobs:
 
 - ✅ Dependency Review 設定済み
 - 🔧 dependency-review.yml を追加しました
-- ⚠️ Dependency Review 未設定（追加を推奨）
+- ⚠️ Dependency Review 未設定（public repo は追加を推奨）
+- 📝 Private repo: Dependency Review は optional / skipped を許容
 
 ### 3.21 Deployment Environment Protection Check
 
@@ -2605,6 +2761,9 @@ fi
 | マネージド   | `.github/workflows/claude.yml`                | 常に config の最新版で上書き    |
 | マネージド   | `.github/workflows/claude-code-review.yml`    | 常に config の最新版で上書き    |
 | マネージド   | `.github/workflows/quality-gate-fallback.yml` | 常に config の最新版で上書き    |
+| マネージド   | `.github/workflows/dependabot-auto-merge.yml` | 安全な契約の最新版で上書き      |
+| マネージド   | `.github/workflows/label-sync.yml`            | 安全な契約の最新版で上書き      |
+| マネージド   | `.github/labels.yml`                          | Dependabot 連携ラベルを含める   |
 | マネージド   | `script/wait-ci-checks.sh`                    | Claude review workflow とセット |
 | マネージド   | `.claude/hooks/block_git_no_verify.py`        | 常に config の最新版で上書き    |
 | マネージド   | `.claude/hooks/pre_git_quality_gates.py`      | 常に config の最新版で上書き    |
@@ -2624,6 +2783,8 @@ fi
 | テンプレート | `commitlint.config.js`                        | 欠落時のみ追加                  |
 
 `quality-gate-fallback.yml` は `setup-team-protection.sh` がブランチ保護に登録する `Quality Gate` 必須チェックとセットで配布する。ci.yml が paths フィルタ等でスキップされた場合に PR が `Expected — Waiting for status to be reported` のまま blocked にならないよう、Pass を emit する役割を持つ。
+
+`dependabot-auto-merge.yml` / `label-sync.yml` / `labels.yml` は、section 3.10 / 3.11 の安全な契約（job-level actor gate、workflow-level read-only、ラベル事前作成、checkout 用 `contents: read`）とセットで同期する。古い workflow が存在するだけでは OK としない。
 
 `.github/policies/` には複雑度・ライセンス・セキュリティ重大度の判定基準を JSON / Markdown で配置する。CI ワークフローや security.yml から参照することで、判定基準を一元管理できる。テンプレートのソースは `templates/github/policies/`。
 
@@ -2652,7 +2813,8 @@ done
 # ローカルに見つからない場合は GitHub API でフェッチ
 TEMP_CONFIG_DIR=""
 if [ -z "$CONFIG_REPO" ]; then
-  TEMP_CONFIG_DIR=$(mktemp -d)
+  mkdir -p .context
+  TEMP_CONFIG_DIR=$(mktemp -d .context/config-template-XXXXX)
   trap 'rm -rf "$TEMP_CONFIG_DIR"' EXIT
   CONFIG_REPO="$TEMP_CONFIG_DIR"
   gh api repos/keito4/config/tarball/main | tar xz -C "$TEMP_CONFIG_DIR" --strip-components=1
@@ -2674,6 +2836,12 @@ MANAGED_FILES=(
   ".claude/rules/development-standards.md"
   ".claude/rules/git-conventions.md"
   ".claude/rules/release-types.md"
+)
+
+MANAGED_TEMPLATE_FILES=(
+  "templates/workflows/dependabot-auto-merge.yml:.github/workflows/dependabot-auto-merge.yml"
+  "templates/workflows/label-sync.yml:.github/workflows/label-sync.yml"
+  "templates/github/labels.yml:.github/labels.yml"
 )
 
 UPDATED=()
@@ -2701,6 +2869,30 @@ for file in "${MANAGED_FILES[@]}"; do
     UPDATED+=("$file (更新)")
   else
     SKIPPED+=("$file (最新)")
+  fi
+done
+
+for pair in "${MANAGED_TEMPLATE_FILES[@]}"; do
+  SRC_REL="${pair%%:*}"
+  DST_REL="${pair#*:}"
+  SRC="$CONFIG_REPO/$SRC_REL"
+  DST="./$DST_REL"
+
+  if [ ! -f "$SRC" ]; then
+    continue
+  fi
+
+  mkdir -p "$(dirname "$DST")"
+
+  if [ ! -f "$DST" ]; then
+    cp "$SRC" "$DST"
+    UPDATED+=("$DST_REL (新規追加)")
+  elif ! diff -q "$SRC" "$DST" >/dev/null 2>&1; then
+    diff --color=auto -u "$DST" "$SRC" | head -30
+    cp "$SRC" "$DST"
+    UPDATED+=("$DST_REL (更新)")
+  else
+    SKIPPED+=("$DST_REL (最新)")
   fi
 done
 
@@ -3321,6 +3513,7 @@ fi
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## Environment (1/4)
+├── Repository State: ✅ Writable (or ⏭️ Archived read-only / 📝 Private repo)
 ├── Container Health: ✅ Healthy (Score: 95/100)
 ├── DevContainer: ⚠️ Update available (v1.13.1 → v1.15.0)
 ├── Claude Code: ✅ Up to date
@@ -3338,8 +3531,8 @@ fi
 ├── Husky: ✅ Git hooks configured\n├── hooksPath: ✅ Valid (.husky) (or 🔧 Fixed / ❌ Manual required)\n├── Husky v8→v9: ✅ v9スタイル済み (or 🔧 移行しました / ✅ スキップ)
 ├── check-file-length: ✅ Configured in pre-commit (or 🔧 Added / ⏭️ Skipped)
 ├── Renovate/Dependabot: ✅ Auto-update configured (or 🔧 renovate.json generated / ⏭️ Skipped)
-├── Dependabot Auto-merge: ✅ Configured (or 🔧 Added / ⏭️ Skipped)
-├── Label Sync: ✅ Configured (or 🔧 Added / ⚠️ labels.yml missing)
+├── Dependabot Auto-merge: ✅ Safe contract configured (or ⚠️ contract issues)
+├── Label Sync: ✅ Safe contract configured (or ⚠️ permissions / labels issues)
 ├── pre-commit: ✅ Configured (or 🔧 Added / ⏭️ Skipped)
 ├── PR Template: ✅ Configured (or 🔧 Added)
 ├── Issue Template: ✅ Configured (or 🔧 Added)
@@ -3349,6 +3542,7 @@ fi
 ├── commitlint: ✅ Configured with commit-msg hook (or ⚠️ Hook missing / ⚠️ Not configured)
 ├── .editorconfig: ✅ Configured (or 🔧 Generated)
 ├── scripts: ✅ All standard scripts defined (or ⚠️ Missing: test, lint)
+├── Dependency Peer Compatibility: ✅ OK (or ⚠️ peer/invalid dependency issue)
 ├── Pre-PR Checklist: ✅ CI workflow exists
 ├── Code Review Rules: ✅ All rules configured (or ⚠️ Missing rules)
 ├── CLAUDE.md: ✅ Symlink to AGENTS.md
@@ -3364,7 +3558,7 @@ fi
 │   └── Runner Size: ✅ (or ⚠️ High-cost runners detected)
 ├── Renovate/Dependabot: ✅ Auto-update configured
 ├── Push Protection: ✅ Enabled (or ⚠️ Disabled)
-├── Dependency Review: ✅ Configured (or ⚠️ Not configured)
+├── Dependency Review: ✅ Configured (or ⚠️ Public repo missing / 📝 Private optional)
 ├── Deploy Env Protection: ✅ Configured (or ⚠️ No reviewers / ⏭️ No environments)
 └── Config Template Sync: ✅ All files up to date (or 🔧 X files updated / ⏭️ Skipped)
 
@@ -3412,6 +3606,15 @@ fi
 ## Step 7: Create PR (Optional)
 
 `--create-pr` が指定されており、かつ変更がある場合：
+
+アーカイブ済みリポジトリでは GitHub 側が push / PR 作成を拒否するため、Step 1.1 の判定に従って read-only の確認結果だけを報告し、ここで終了する。
+
+```bash
+if [ "${REPO_ARCHIVED:-false}" = "true" ]; then
+  echo "Archived repository. Skipping PR creation."
+  exit 0
+fi
+```
 
 ### 7.1 Check for Changes
 

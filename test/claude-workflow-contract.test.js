@@ -141,6 +141,75 @@ describe('Claude workflow contracts', () => {
     expect(command).toContain('git checkout "$CLAUDE_BRANCH" 2>/dev/null || git checkout -b "$CLAUDE_BRANCH"');
   });
 
+  test('repo-maintenance guards archived repositories and private dependency review behavior', () => {
+    const command = readWorkflow('.claude/commands/repo-maintenance.md');
+
+    expect(command).toContain('Repository State Guard');
+    expect(command).toContain('isArchived,isPrivate');
+    expect(command).toContain('REPO_ARCHIVED=$(echo "$REPO_JSON"');
+    expect(command).toContain('if [ "$REPO_ARCHIVED" = "true" ]; then');
+    expect(command).toContain('CREATE_PR=false');
+    expect(command).toContain('Archived repository. Skipping PR creation.');
+    expect(command).toContain('REPO_PRIVATE="${REPO_PRIVATE:-false}"');
+    expect(command).toContain('Private repo: Dependency Review は optional / skipped を許容');
+  });
+
+  test('repo-maintenance validates dependabot and label-sync safety contracts', () => {
+    const command = readWorkflow('.claude/commands/repo-maintenance.md');
+
+    expect(command).toContain('DEPENDABOT_AUTOMERGE_ISSUES');
+    expect(command).toContain("if: github.actor == 'dependabot[bot]'");
+    expect(command).toContain('workflow-level permissions が read-only ではない');
+    expect(command).toContain('gh label create "dependabot-minor"');
+    expect(command).toContain('gh label create "needs-review"');
+    expect(command).toContain('gh label create "breaking-change"');
+    expect(command).toContain('LABEL_SYNC_ISSUES');
+    expect(command).toContain('checkout 用の contents: read');
+    expect(command).toContain('labels.yml: $label が未定義');
+  });
+
+  test('repo-maintenance syncs managed dependabot, label-sync, and label templates', () => {
+    const command = readWorkflow('.claude/commands/repo-maintenance.md');
+
+    expect(command).toContain('MANAGED_TEMPLATE_FILES');
+    expect(command).toContain(
+      'templates/workflows/dependabot-auto-merge.yml:.github/workflows/dependabot-auto-merge.yml',
+    );
+    expect(command).toContain('templates/workflows/label-sync.yml:.github/workflows/label-sync.yml');
+    expect(command).toContain('templates/github/labels.yml:.github/labels.yml');
+  });
+
+  test('repo-maintenance checks dependency peer compatibility and stores logs under .context', () => {
+    const command = readWorkflow('.claude/commands/repo-maintenance.md');
+
+    expect(command).toContain('Dependency Peer Compatibility Check');
+    expect(command).toContain('PEER_ISSUES');
+    expect(command).toContain('npm ls --all --json');
+    expect(command).toContain('.context/npm-peer-compat.log');
+    expect(command).toContain('.context/pnpm-peer-compat.log');
+    expect(command).toContain('dependency compatibility issue');
+  });
+
+  test('repo-maintenance stores temporary artifacts in .context instead of os temp directories', () => {
+    const command = readWorkflow('.claude/commands/repo-maintenance.md');
+
+    expect(command).toContain('CONTEXT_DIR="${CONTEXT_DIR:-.context}"');
+    expect(command).toContain('mktemp "$CONTEXT_DIR/update-agents-md-XXXXX.sh"');
+    expect(command).toContain('mktemp -d .context/config-template-XXXXX');
+    expect(command).not.toContain('mktemp /tmp/');
+    expect(command).not.toContain('mktemp -d)');
+  });
+
+  test('dependency health script reports peer dependency issues in its json contract', () => {
+    const script = readWorkflow('script/dependency-health-check.sh');
+
+    expect(script).toContain('PEER_ISSUES');
+    expect(script).toContain('npm list --all --json');
+    expect(script).toContain('select(test("peer|invalid|missing"; "i"))');
+    expect(script).toContain('"peer_issues": $PEER_ISSUES');
+    expect(script).toContain('"$PEER_ISSUES" -gt 0');
+  });
+
   test('repo-maintenance detects required workflow trigger incompatibility', () => {
     const command = readWorkflow('.claude/commands/repo-maintenance.md');
 
