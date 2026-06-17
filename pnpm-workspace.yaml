@@ -1,5 +1,9 @@
 # pnpm workspace configuration
 # https://pnpm.io/pnpm-workspace_yaml
+#
+# This repository uses npm + package-lock.json as the canonical package manager.
+# Keep this file only for pnpm's supply-chain guardrails when pnpm is used
+# interactively or by downstream templates.
 
 # supply chain attack 対策: 公開から 2 日未満のパッケージをインストール禁止
 # pnpm v10.16.0+ でサポート
