@@ -8,6 +8,7 @@ SCRIPT_DIR="${0:A:h}"
 REPO_ROOT="${SCRIPT_DIR:h}"
 CREDENTIALS_DIR="$REPO_ROOT/credentials"
 CREDENTIAL_PROVIDER="${CREDENTIAL_PROVIDER:-op}"
+# Built-in provider: script/credentials/providers/op.sh
 PROVIDER_PATH="$SCRIPT_DIR/credentials/providers/${CREDENTIAL_PROVIDER}.sh"
 
 source "$SCRIPT_DIR/lib/output.sh"
