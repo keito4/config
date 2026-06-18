@@ -1,7 +1,7 @@
 # セットアップガイド
 
 プロジェクト種別ごとのセットアップ手順を提供する。
-[CLAUDE.md](../../CLAUDE.md) の品質基準に基づく。
+[.claude/CLAUDE.md](../../.claude/CLAUDE.md) の品質基準に基づく。
 
 ## 共通品質ゲート（全プロジェクト必須）
 
@@ -27,6 +27,7 @@
 | [mobile-flutter.md](./mobile-flutter.md)             | モバイル (Flutter)    |
 | [mobile-android.md](./mobile-android.md)             | モバイル (Android)    |
 | [desktop-extension-ts.md](./desktop-extension-ts.md) | デスクトップ拡張 (TS) |
+| [windows.md](./windows.md)                           | Windows ネイティブ    |
 
 ---
 
@@ -63,17 +64,10 @@ echo 'npm run typecheck && npm run lint && npm run test' > .husky/pre-push
 
 > Node.js 非依存のプロジェクト（Flutter / Android）は [lefthook](https://github.com/evilmartians/lefthook) を使用する。
 
-**commitlint.config.js**:
+**commitlint.config.js** はリポジトリルートの `commitlint.config.js` を正とし、セットアップ時はテンプレートをコピーする。
 
-```js
-module.exports = {
-  extends: ['@commitlint/config-conventional'],
-  rules: {
-    'body-max-line-length': [2, 'always', 120],
-    // 日本語コミットメッセージを許可
-    'subject-case': [0],
-  },
-};
+```bash
+cp /path/to/config/templates/commitlint.config.js ./commitlint.config.js
 ```
 
 ### CI/CD パイプライン

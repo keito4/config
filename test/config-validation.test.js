@@ -185,7 +185,7 @@ describe('Configuration Validation', () => {
 
       expect(readme).toMatch(/## Usage/);
       expect(readme).toMatch(/## Security/);
-      expect(readme).toMatch(/## Directory Structure/);
+      expect(readme).toMatch(/## Source Of Truth/);
     });
   });
 });
