@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck disable=SC1071 # zsh-specific script; ShellCheck has no zsh parser.
 
 # Credential management script with pluggable secret providers
 

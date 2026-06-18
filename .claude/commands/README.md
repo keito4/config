@@ -43,10 +43,10 @@ This directory contains pre-configured commands that provide automated workflows
 **Purpose**: Comprehensive repository maintenance - run all health checks and updates
 **Features**:
 
-- Environment health checks (container, DevContainer version, Claude Code)
-- CI/CD setup checks (team protection, Husky, pre-PR checklist)
-- Repository cleanup (branches, git gc)
-- New feature discovery from config repository
+- Delegates execution to `script/repo-maintenance.sh`
+- Repository state guard for archived/private repositories
+- Managed workflow/template checks
+- Required workflow trigger compatibility checks
 
 **Usage**:
 
@@ -213,10 +213,10 @@ This directory contains pre-configured commands that provide automated workflows
 **Purpose**: Setup comprehensive CI/CD workflows for your repository
 **Features**:
 
+- Delegates execution to `script/setup-ci.sh`
 - Project type auto-detection (Next.js, Node.js, Terraform, Monorepo)
-- Gap analysis comparing current vs recommended CI configuration
 - Multi-level setup (minimal, standard, comprehensive)
-- Security scanning, E2E tests, and Claude Code Review integration
+- Supporting managed workflow template copy
 
 **Usage**:
 
@@ -347,6 +347,7 @@ See [templates/testing/README.md](../../templates/testing/README.md) for detaile
 **Purpose**: Setup new repository with DevContainer, CI/CD, and development tools from config template
 **Features**:
 
+- Delegates execution to `script/setup-new-repo.sh`
 - Git リポジトリの初期化
 - DevContainer 設定のコピー
 - GitHub Actions ワークフローの設定

@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck disable=SC1071 # zsh-specific script; ShellCheck has no zsh parser.
 
 # Brew dependency management script
 # This script helps manage Homebrew packages by categorizing them based on dependencies

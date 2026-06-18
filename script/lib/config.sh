@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck disable=SC1071 # zsh-specific script; ShellCheck has no zsh parser.
 # Common configuration functions for import/export scripts
 
 set -euo pipefail
@@ -19,6 +20,29 @@ typeset -ga CONFIG_CURSOR_SHARED_DIRS=(rules)
 # Constants for Gemini configuration
 typeset -ga CONFIG_GEMINI_SHARED_FILES=(settings.json)
 typeset -ga CONFIG_GEMINI_SHARED_DIRS=()
+
+# Repository directories managed by import/export scripts
+typeset -ga CONFIG_MANAGED_REPO_DIRS=(
+  brew
+  vscode
+  git
+  npm
+  .zsh
+  dot
+  .claude
+  .codex
+  .cursor
+  .gemini
+)
+
+config::ensure_managed_repo_dirs() {
+  local repo_path="${1:?Repository path required}"
+  local dir
+
+  for dir in "${CONFIG_MANAGED_REPO_DIRS[@]}"; do
+    mkdir -p "$repo_path/$dir"
+  done
+}
 
 # ============================================================================
 # Generic import/export functions
