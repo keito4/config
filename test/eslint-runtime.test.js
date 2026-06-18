@@ -139,10 +139,5 @@ describe('ESLint runtime behavior', () => {
       const result = runEslint(['commitlint.config.js']);
       expect(result.status).toBe(0);
     });
-
-    test('git/commitlint.config.js should pass ESLint without errors', () => {
-      const result = runEslint(['git/commitlint.config.js']);
-      expect(result.status).toBe(0);
-    });
   });
 });

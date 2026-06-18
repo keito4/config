@@ -10,8 +10,8 @@ pnpm add -D @commitlint/cli @commitlint/config-conventional
 
 **設定ファイル** (`commitlint.config.js`):
 
-```js
-export default { extends: ['@commitlint/config-conventional'] };
+```bash
+cp /path/to/config/templates/commitlint.config.js ./commitlint.config.js
 ```
 
 **husky hook 追加**:

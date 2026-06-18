@@ -18,9 +18,10 @@ assert_tsv_row() {
   run "$REPO_ROOT/script/audit-references.sh" --format tsv
   assert_success
 
+  assert_tsv_row docs script/audit-references.sh .context/refactoring-baseline.md
   assert_tsv_row test script/audit-references.sh test/integration/core-scripts.bats
+  assert_tsv_row code/ci templates/workflows/claude.yml templates/workflows/claude-health-check.yml
   assert_tsv_row test templates/workflows/claude-health-check.yml test/template-workflows.test.js
-  assert_tsv_row docs templates/workflows/claude-health-check.yml README.md
 }
 
 @test "audit-references markdown includes zero code/test summary" {
