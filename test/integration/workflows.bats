@@ -18,6 +18,16 @@ load ../test_helper/test_helper
   done
 }
 
+@test "root workflow count is consolidated to 14 files" {
+  local workflows_dir="${REPO_ROOT}/.github/workflows"
+  local count
+
+  count=$(find "$workflows_dir" -maxdepth 1 -type f \( -name '*.yml' -o -name '*.yaml' \) | wc -l | tr -d ' ')
+
+  [ "$count" -eq 14 ]
+  [ ! -e "$workflows_dir/rebuild-docker-cache.yml" ]
+}
+
 @test "CI workflow has required quality checks" {
   local workflow="${REPO_ROOT}/.github/workflows/ci.yml"
   assert_file_exists "$workflow"
@@ -35,6 +45,7 @@ load ../test_helper/test_helper
 
   grep -Fq "'**.yml'" "$workflow"
   grep -Fq "'**.yaml'" "$workflow"
+  grep -Fq "'.github/actions/**'" "$workflow"
   grep -Fq "'.github/actionlint.yaml'" "$workflow"
   grep -Fq "'templates/workflows/**'" "$workflow"
   grep -Fq "'templates/github/labels.yml'" "$workflow"
@@ -50,6 +61,16 @@ load ../test_helper/test_helper
   grep -Fq "pull-requests: write" "$workflow"
   grep -Fq "fail_level: error" "$workflow"
   ! grep -Fq "fail_on_error: true" "$workflow"
+}
+
+@test "CI workflow uses the PR size composite action" {
+  local workflow="${REPO_ROOT}/.github/workflows/ci.yml"
+  local action="${REPO_ROOT}/.github/actions/pr-size-check/action.yml"
+
+  assert_file_exists "$action"
+  grep -Fq "./.github/actions/pr-size-check" "$workflow"
+  grep -Fq "actions/github-script@" "$action"
+  ! grep -Fq "const { additions, deletions, changed_files }" "$workflow"
 }
 
 @test "CI workflow uses secure practices" {
@@ -104,6 +125,33 @@ load ../test_helper/test_helper
 
   # Should use validated variables in bump_version function
   grep -q 'bump_version.*"\$MODE"' "$workflow"
+}
+
+@test "docker-image workflow owns weekly no-cache cache rebuilds" {
+  local workflow="${REPO_ROOT}/.github/workflows/docker-image.yml"
+
+  grep -Fq "cron: '0 0 * * 0'" "$workflow"
+  grep -Fq "no_cache:" "$workflow"
+  grep -Fq "image_tag=cache-rebuild" "$workflow"
+  grep -Fq "no-cache: \${{ steps.release.outputs.no_cache }}" "$workflow"
+  grep -Fq "steps.release.outputs.cache_rebuild != 'true'" "$workflow"
+}
+
+@test "Docker workflows use setup-docker-build composite action" {
+  local action="${REPO_ROOT}/.github/actions/setup-docker-build/action.yml"
+
+  assert_file_exists "$action"
+  grep -Fq "docker/setup-qemu-action@" "$action"
+  grep -Fq "docker/setup-buildx-action@" "$action"
+  grep -Fq "docker/login-action@" "$action"
+
+  grep -Fq "./.github/actions/setup-docker-build" "$REPO_ROOT/.github/workflows/docker-image.yml"
+  grep -Fq "./.github/actions/setup-docker-build" "$REPO_ROOT/.github/workflows/manual-release.yml"
+  grep -Fq "./.github/actions/setup-docker-build" "$REPO_ROOT/.github/workflows/container-security.yml"
+
+  ! grep -Fq "docker/setup-qemu-action@" "$REPO_ROOT/.github/workflows/docker-image.yml"
+  ! grep -Fq "docker/setup-buildx-action@" "$REPO_ROOT/.github/workflows/docker-image.yml"
+  ! grep -Fq "docker/login-action@" "$REPO_ROOT/.github/workflows/docker-image.yml"
 }
 
 @test "update-libraries workflow has proper permissions" {
@@ -214,6 +262,25 @@ load ../test_helper/test_helper
   # Should use Docker layer caching
   grep -q "cache-from:" "$workflow"
   grep -q "cache-to:" "$workflow"
+}
+
+@test "container-security workflow runs a single Trivy scan and derives results" {
+  local workflow="${REPO_ROOT}/.github/workflows/container-security.yml"
+  local count
+
+  count=$(grep -c "aquasecurity/trivy-action@" "$workflow")
+
+  [ "$count" -eq 1 ]
+  grep -Fq "trivy-results.sarif" "$workflow"
+  grep -Fq "count_by_severity" "$workflow"
+  grep -Fq "CRITICAL_COUNT" "$workflow"
+}
+
+@test "scheduled maintenance reviews trivyignore entries" {
+  local workflow="${REPO_ROOT}/.github/workflows/scheduled-maintenance.yml"
+
+  grep -Fq "script/check-trivyignore-review.sh" "$workflow"
+  grep -Fq "Bash(script/check-trivyignore-review.sh:*)" "$workflow"
 }
 
 @test "workflows have descriptive job names" {
