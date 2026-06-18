@@ -18,11 +18,16 @@ if [[ "${PLATFORM_IN_DEVCONTAINER}" = true ]]; then
 	export KEEP_ZSHRC=yes
 fi
 
+REPO_PATH="${REPO_PATH:-$(pwd)}"
+
+if [[ "${1:-}" == "--check" ]]; then
+	echo "Import source checked: $REPO_PATH"
+	exit 0
+fi
+
 if ! type brew >/dev/null 2>&1; then
 	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/null
 fi
-
-REPO_PATH="${REPO_PATH:-$(pwd)}"
 
 install_packages_linux() {
 	if type brew >/dev/null 2>&1; then
