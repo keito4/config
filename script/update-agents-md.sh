@@ -46,6 +46,17 @@ workflow_files() {
   find .github/workflows -maxdepth 1 -type f \( -name '*.yml' -o -name '*.yaml' \) | sort
 }
 
+dir_has_tracked_files() {
+  local dir="$1"
+
+  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    [[ -n "$(git ls-files -- "$dir/" | head -n 1)" ]]
+    return
+  fi
+
+  [[ -n "$(find "$dir" -type f -print -quit)" ]]
+}
+
 # shellcheck disable=SC2034 # NODE_VER / PM consumed by template via eval
 NODE_VER=$(jq -r '.engines.node // empty' package.json 2>/dev/null)
 # shellcheck disable=SC2034
@@ -72,10 +83,11 @@ collect_dirs() {
     [[ "$d" == "./" || "$d" == "../" ]] && continue
     name="${d%/}"
     [[ "$name" == .git || "$name" == .git-* ]] && continue
+    dir_has_tracked_files "$name" || continue
 
     if [[ "$name" == ".claude" ]]; then
       for sub in "${CLAUDE_SUB_ORDER[@]}"; do
-        [[ -d ".claude/$sub" ]] && emit out "\`.claude/$sub/\`" "${CLAUDE_SUB_PURPOSE[$sub]}"
+        [[ -d ".claude/$sub" ]] && dir_has_tracked_files ".claude/$sub" && emit out "\`.claude/$sub/\`" "${CLAUDE_SUB_PURPOSE[$sub]}"
       done
       continue
     fi
@@ -90,6 +102,7 @@ collect_dirs() {
   for d in */; do
     name="${d%/}"
     [[ "$REG_DIR_SKIP" == *" $name "* ]] && continue
+    dir_has_tracked_files "$name" || continue
     purpose="${REG_DIR_PURPOSE[$name]:-$name}"
     emit out "\`$name/\`" "$purpose"
   done
