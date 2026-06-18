@@ -97,6 +97,39 @@ CVE-2026-27903
 # Review date: 2026-05-02
 CVE-2026-23112
 
+# New linux-libc-dev kernel header vulnerabilities from Ubuntu 24.04 base image
+# Severity: CRITICAL
+# Affected: linux-libc-dev 6.8.0-124.124 (Ubuntu 24.04 base image)
+# Fixed in: no fix available yet
+# Reason: Kernel header package from base image
+#   (mcr.microsoft.com/devcontainers/base:2.0-ubuntu-24.04) pulled in as a
+#   transitive dependency of build-essential; cannot remove or update independently
+# Expected resolution: Wait for Ubuntu to release patched linux-libc-dev package
+# Tracking:
+#   https://ubuntu.com/security/CVE-2026-31402
+#   https://ubuntu.com/security/CVE-2026-31637
+#   https://ubuntu.com/security/CVE-2026-43011
+#   https://ubuntu.com/security/CVE-2026-43037
+#   https://ubuntu.com/security/CVE-2026-43038
+#   https://ubuntu.com/security/CVE-2026-43185
+#   https://ubuntu.com/security/CVE-2026-43304
+#   https://ubuntu.com/security/CVE-2026-43501
+#   https://ubuntu.com/security/CVE-2026-45988
+#   https://ubuntu.com/security/CVE-2026-46043
+#   https://ubuntu.com/security/CVE-2026-46135
+# Review date: 2026-07-17
+CVE-2026-31402
+CVE-2026-31637
+CVE-2026-43011
+CVE-2026-43037
+CVE-2026-43038
+CVE-2026-43185
+CVE-2026-43304
+CVE-2026-43501
+CVE-2026-45988
+CVE-2026-46043
+CVE-2026-46135
+
 # CVE-2026-33186: gRPC-Go authorization bypass via missing leading slash in :path
 # Severity: CRITICAL
 # Affected: google.golang.org/grpc v1.79.2 (usr/bin/gh), v1.75.1 (usr/local/bin/op)

@@ -33,7 +33,7 @@ credentials/
 3. **環境変数を自動セットアップ**
 
    ```bash
-   bash script/credentials.sh fetch
+   ./script/credentials.sh fetch
    cp credentials/devcontainer.env ~/.devcontainer.env && chmod 600 ~/.devcontainer.env
    ```
 
@@ -45,10 +45,19 @@ credentials/
 
 このリポジトリは以下のMCP (Model Context Protocol) サーバーをサポートしています：
 
-| MCPサーバー    | パッケージ                      | 必要な環境変数               | 説明                   |
-| -------------- | ------------------------------- | ---------------------------- | ---------------------- |
-| **Playwright** | `@playwright/mcp@latest`        | なし                         | ブラウザ自動化とテスト |
-| **n8n**        | `@leonardsellem/n8n-mcp-server` | `N8N_API_URL`, `N8N_API_KEY` | n8n ワークフロー自動化 |
+| MCPサーバー         | 設定ファイル        | 必要な環境変数                                | 説明                      |
+| ------------------- | ------------------- | --------------------------------------------- | ------------------------- |
+| **Playwright**      | `.codex`, `.gemini` | なし                                          | ブラウザ自動化とテスト    |
+| **AWS Docs**        | `.codex`, `.gemini` | なし                                          | AWS ドキュメント検索      |
+| **Chrome DevTools** | `.codex`, `.gemini` | なし                                          | ブラウザデバッグ          |
+| **Next DevTools**   | `.codex`, `.gemini` | なし                                          | Next.js 開発支援          |
+| **Supabase**        | `.codex`, `.gemini` | `SUPABASE_ACCESS_TOKEN`, `SUPABASE_MCP_TOKEN` | Supabase プロジェクト操作 |
+| **Vercel**          | `.codex`, `.gemini` | `VERCEL_TOKEN`, `VERCEL_MCP_TOKEN`            | Vercel 操作               |
+| **GitHub**          | `.gemini`           | `GITHUB_COPILOT_MCP_TOKEN`                    | Gemini の GitHub MCP 接続 |
+| **o3**              | `.codex`            | `OPENAI_API_KEY`                              | Web/検索支援              |
+| **Linear**          | `.codex`            | `LINEAR_API_KEY`                              | Linear 課題操作           |
+| **Doppler**         | `.codex`            | `DOPPLER_TOKEN`                               | Secret 管理               |
+| **n8n**             | optional/manual     | `N8N_API_URL`, `N8N_API_KEY`                  | n8n ワークフロー自動化    |
 
 ### MCP環境変数の設定
 
@@ -58,8 +67,16 @@ credentials/
 
 ```bash
 # 例: 1Password "Dev" ボールトに以下のアイテムを作成
-- N8N_API_URL
-- N8N_API_KEY
+- OpenAI / OPENAI_API_KEY
+- Supabase / SUPABASE_ACCESS_TOKEN
+- Supabase / SUPABASE_MCP_TOKEN
+- Vercel / VERCEL_TOKEN
+- Vercel / VERCEL_MCP_TOKEN
+- Linear / LINEAR_API_KEY
+- Doppler / DOPPLER_TOKEN
+- GitHub / GITHUB_COPILOT_MCP_TOKEN
+- N8N_API_URL / value
+- N8N_API_KEY / value
 ```
 
 ### 従来の方法
@@ -153,6 +170,20 @@ Vault: Dev
 │   ├── AWS_SECRET_ACCESS_KEY: ...
 │   └── AWS_REGION: ap-northeast-1
 └── その他のクレデンシャル
+    ├── OpenAI
+    │   └── OPENAI_API_KEY
+    ├── Supabase
+    │   ├── SUPABASE_ACCESS_TOKEN
+    │   └── SUPABASE_MCP_TOKEN
+    ├── Vercel
+    │   ├── VERCEL_TOKEN
+    │   └── VERCEL_MCP_TOKEN
+    ├── Linear
+    │   └── LINEAR_API_KEY
+    ├── Doppler
+    │   └── DOPPLER_TOKEN
+    └── GitHub
+        └── GITHUB_COPILOT_MCP_TOKEN
 ```
 
 ### アイテムの作成例
@@ -165,6 +196,13 @@ op item create --category=login \
   AWS_ACCESS_KEY_ID="AKIA..." \
   AWS_SECRET_ACCESS_KEY="..." \
   AWS_REGION="ap-northeast-1"
+
+# MCP 用トークンの例
+op item create --category=api_credential \
+  --title="Supabase" \
+  --vault=Dev \
+  SUPABASE_ACCESS_TOKEN="..." \
+  SUPABASE_MCP_TOKEN="..."
 ```
 
 ## トラブルシューティング
@@ -192,11 +230,13 @@ cp credentials/templates/devcontainer.env.template ~/.devcontainer.env
 **解決策**:
 
 1. スクリプトの実行権限確認: `ls -l script/setup-*.sh`
-2. 手動実行でデバッグ: `bash -x script/credentials.sh fetch`
+2. 手動実行でデバッグ: `zsh -x script/credentials.sh fetch`
 
 ### MCP設定を変更したい
 
-`.mcp.json` はリポジトリに直接コミットされています。変更が必要な場合はリポジトリの `.mcp.json` を直接編集してください。
+Codex は `.codex/config.toml`、Gemini は `.gemini/settings.json` を使用します。
+MCP 用の環境変数は `credentials/templates/mcp.env.template` から
+`credentials/mcp.env` に展開し、実行環境に読み込ませてください。
 
 ## 関連ファイル
 

@@ -15,6 +15,7 @@
 | [0007](0007-separate-claude-pr-creation-step.md)     | Separate Claude Pull Request Creation From Claude Bash Tools | Accepted           |
 | [0010](0010-ci-workflow-consolidation.md)            | CI workflow consolidation                                    | Accepted           |
 | [0011](0011-hook-and-script-dry-boundaries.md)       | Hook and Script DRY Boundaries                               | Accepted           |
+| [0012](0012-environment-source-of-truth.md)          | Environment Source of Truth                                  | Accepted           |
 
 ## ADR テンプレート
 

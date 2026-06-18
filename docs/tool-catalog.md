@@ -10,7 +10,7 @@ Layer 4: macOS ローカル (Nix + Homebrew cask)
 Layer 3: プロジェクト依存 (package.json / pubspec.yaml / build.gradle)
     ├─ フレームワーク、テストライブラリ、リンター
 Layer 2: DevContainer Features (devcontainer.json)
-    ├─ クラウド CLI、追加ランタイム、インフラツール
+    ├─ ベースイメージに含まれない追加ランタイム、インフラツール
 Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
     └─ Node.js, Python, AI CLI, Language Servers
 ```
@@ -21,6 +21,10 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | L2: Features         | 各 `devcontainer.json`              | リポ個別          | 当該リポのみ |
 | L3: プロジェクト依存 | `package.json` 等                   | 開発中随時        | 当該リポのみ |
 | L4: macOS ローカル   | `nix/` + `nix/modules/homebrew.nix` | `make nix-switch` | ローカルのみ |
+
+> **Source of truth**: [ADR 0012](adr/0012-environment-source-of-truth.md) により、
+> ベースイメージ内蔵ツールは `.devcontainer/Dockerfile` を正本とし、Features では
+> 再インストールしない。
 
 ## 2. ベースイメージ (`config-base`) に含まれるツール
 
@@ -100,9 +104,6 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | -------------------------------------- | ----------------------------- |
 | `homebrew-package`                     | Homebrew パッケージマネージャ |
 | `jq-likes` (jq/yq)                     | JSON/YAML 処理                |
-| `1password`                            | シークレット管理              |
-| `github-cli`                           | GitHub CLI (`gh`)             |
-| `git`                                  | Git（最新版）                 |
 | `terraform`                            | IaC                           |
 | `google-cloud-cli`                     | GCP CLI                       |
 | `aws-cli`                              | AWS CLI                       |
@@ -111,9 +112,10 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | `deno`                                 | Deno ランタイム               |
 | `docker-in-docker` (moby + compose v2) | Docker-in-Docker              |
 | `playwright`                           | ブラウザ自動テスト            |
-| `supabase-cli`                         | Supabase CLI                  |
 
 > **Codespaces 用** (`codespaces/devcontainer.json`) は上記 + `sshd` Feature を追加。
+> `gh`, `git`, `op`, Node.js, pnpm, Supabase CLI はベースイメージに含まれるため
+> Features では追加しない。
 
 ## 4. リポジトリ×ツール マトリクス
 
@@ -146,7 +148,9 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 ## 5. macOS ローカルツール（Nix + Homebrew cask）
 
-`nix/home/packages.nix` (CLI) + `nix/modules/homebrew.nix` (GUI) で管理。
+macOS は `nix/home/packages.nix` (CLI) + `nix/modules/homebrew.nix` (GUI/cask/tap 依存) で管理。
+Linux bootstrap は `brew/LinuxBrewfile` を使用する。共通リスト生成は行わず、OS ごとの
+パッケージ管理境界を明示して重複コストを抑える。
 
 ### 5.1 開発ツール (Nix)
 
@@ -233,8 +237,10 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 ### 7.2 Features の重複
 
-Web アプリ、デスクトップ拡張で `pnpm`, `gh`, `jq` などベースイメージに含まれるツールを Features で再インストールしている。
-ベースイメージ更新後は Features の棚卸しが必要。
+config リポジトリ自身は [ADR 0012](adr/0012-environment-source-of-truth.md) に従い、
+ベースイメージ内蔵ツール（`git`, `gh`, `op`, Node.js, pnpm, Supabase CLI）を
+Features から除外する。下流リポジトリで同じ重複が残る場合は
+`/config-base-sync-update` または個別 PR で棚卸しする。
 
 ### 7.3 テスト未設定のリポジトリ
 
