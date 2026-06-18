@@ -181,6 +181,52 @@ check_workflow_templates() {
   fi
 }
 
+check_workflow_template_lint_coverage() {
+  local ci_yml=".github/workflows/ci.yml"
+  local content actionlint_flags_block
+  local lint_issues=0
+
+  [[ -f "$ci_yml" ]] || return 0
+
+  content="$(cat "$ci_yml")"
+
+  if [[ "$content" != *"Collect workflow files"* ]]; then
+    output::warning "ci.yml: Workflow Lint が存在するファイル収集方式ではありません"
+    lint_issues=1
+  fi
+
+  if [[ "$content" != *".context/actionlint-files.txt"* ]]; then
+    output::warning "ci.yml: actionlint 対象ファイルリストを .context に保存していません"
+    lint_issues=1
+  fi
+
+  if [[ "$content" != *"find .github/workflows/templates"* || "$content" != *"find templates/workflows"* ]]; then
+    output::warning "ci.yml: workflow template の actionlint 対象収集が不足しています"
+    lint_issues=1
+  fi
+
+  if [[ "$content" != *"-name '*.yaml'"* ]]; then
+    output::warning "ci.yml: .yaml workflow が actionlint 対象から漏れています"
+    lint_issues=1
+  fi
+
+  actionlint_flags_block="$(awk '
+    /^[[:space:]]+actionlint_flags:/ { in_flags = 1; print; next }
+    in_flags && /^[[:space:]]+[A-Za-z0-9_-]+:/ { exit }
+    in_flags && /^[^[:space:]]/ { exit }
+    in_flags { print }
+  ' "$ci_yml")"
+
+  if grep -qE 'templates/workflows/.*\*' <<<"$actionlint_flags_block"; then
+    output::warning "ci.yml: actionlint_flags に静的 template glob が残っています"
+    lint_issues=1
+  fi
+
+  if [[ "$lint_issues" -eq 0 ]]; then
+    output::success "Workflow Template Lint coverage ok"
+  fi
+}
+
 check_dependency_peer_compatibility() {
   local peer_issues=0
 
@@ -302,6 +348,7 @@ check_repository_state
 
 if ! has_skip "setup"; then
   check_workflow_templates
+  check_workflow_template_lint_coverage
   check_managed_templates
   ensure_labels
   check_required_workflows || true

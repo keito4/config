@@ -124,11 +124,10 @@ config/
 │       ├── container-security.yml  # コンテナセキュリティスキャン
 │       ├── coverage-report.yml     # カバレッジレポート
 │       ├── dependabot-auto-merge.yml # Dependabot 自動マージ
-│       ├── docker-image.yml        # Docker イメージビルド
+│       ├── docker-image.yml        # Docker イメージビルド・キャッシュ再構築
 │       ├── label-sync.yml          # ラベル同期
 │       ├── manual-release.yml      # 手動リリース
 │       ├── quality-gate-fallback.yml # 品質ゲートフォールバック
-│       ├── rebuild-docker-cache.yml # Docker キャッシュ再構築
 │       ├── scheduled-maintenance.yml # 定期メンテナンス
 │       ├── security.yml            # セキュリティスキャン
 │       ├── update-dev-tools.yml    # 開発ツール更新（Dockerfile ARG）
@@ -989,7 +988,7 @@ See [templates/testing/README.md](templates/testing/README.md) for detailed docu
 
 - **CI Pipeline** (`.github/workflows/ci.yml`): Automated testing, linting, and quality checks (uses Node.js 22)
 - **Claude Code Integration** (`.github/workflows/claude.yml`): AI-assisted code review and issue management
-- **Docker Image Build** (`.github/workflows/docker-image.yml`): Containerized build and deployment pipeline
+- **Docker Image Build** (`.github/workflows/docker-image.yml`): Containerized build, release, and weekly no-cache cache rebuild pipeline
 - **Library Auto-Update** (`.github/workflows/update-libraries.yml`): Scheduled `npm/global.json` refresh that raises a PR when global CLI versions change (npm devDependencies are handled by Dependabot — see [ADR 0006](docs/adr/0006-consolidate-version-updates.md))
 
 #### Local GitHub Actions Testing with act

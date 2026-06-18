@@ -10,6 +10,18 @@ load ../test_helper/test_helper
     [ -x "$REPO_ROOT/script/security-credential-scan.sh" ]
 }
 
+@test "security-credential-scan.sh delegates to credential scan library" {
+    grep -q 'source "$SCRIPT_DIR/lib/security_credential_scan.sh"' "$REPO_ROOT/script/security-credential-scan.sh"
+    grep -q 'security_credential_scan_main "$@"' "$REPO_ROOT/script/security-credential-scan.sh"
+    grep -q "security_credential_scan_main()" "$REPO_ROOT/script/lib/security_credential_scan.sh"
+}
+
+@test "security-credential-scan.sh stays below critical complexity threshold" {
+    run "$REPO_ROOT/script/code-complexity-check.sh" --files "$REPO_ROOT/script/security-credential-scan.sh" --json
+    assert_success
+    printf '%s\n' "$output" | grep -q '"critical_complexity_count": 0'
+}
+
 @test "code-complexity-check.sh exists and is executable" {
     assert_file_exists "$REPO_ROOT/script/code-complexity-check.sh"
     [ -x "$REPO_ROOT/script/code-complexity-check.sh" ]

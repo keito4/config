@@ -8,6 +8,10 @@ network_access = true
 [features]
 rmcp_client = true
 
+# MCP policy:
+# Codex keeps the broader automation/research set because it runs repo maintenance,
+# cloud docs lookup, and token-backed operational tools. Gemini intentionally keeps
+# a smaller interactive-review set in .gemini/settings.json. See ADR 0012.
 [mcp_servers.aws-docs]
 command = "uvx"
 args = ["awslabs.aws-documentation-mcp-server@latest"]

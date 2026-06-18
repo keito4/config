@@ -7,9 +7,6 @@
   "features": {
     "ghcr.io/devcontainers-extra/features/homebrew-package:1": {},
     "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
-    "ghcr.io/itsmechlark/features/1password:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/terraform:1": {},
     "ghcr.io/dhoeric/features/google-cloud-cli:1": {},
     "ghcr.io/devcontainers/features/aws-cli:1": {},
@@ -24,10 +21,7 @@
       "moby": true,
       "dockerDashComposeVersion": "v2"
     },
-    "ghcr.io/schlich/devcontainer-features/playwright:0": {},
-    "ghcr.io/devcontainers-extra/features/supabase-cli": {
-      "version": "latest"
-    }
+    "ghcr.io/schlich/devcontainer-features/playwright:0": {}
   },
   "overrideCommand": true,
   "updateRemoteUserUID": false,
@@ -52,7 +46,7 @@
         "SanjulaGanepola.github-local-actions"
       ],
       "settings": {
-        "npm.packageManager": "pnpm"
+        "npm.packageManager": "npm"
       }
     }
   }

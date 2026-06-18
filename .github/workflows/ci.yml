@@ -13,6 +13,7 @@ on:
       - '**.yaml'
       - '**.sh'
       - '**.bats'
+      - '.github/actions/**'
       - '.github/workflows/**'
       - '.github/actionlint.yaml'
       - 'package.json'
@@ -32,6 +33,7 @@ on:
       - '**.yaml'
       - '**.sh'
       - '**.bats'
+      - '.github/actions/**'
       - '.github/workflows/**'
       - '.github/actionlint.yaml'
       - 'package.json'
@@ -80,6 +82,7 @@ jobs:
               - 'script/**'
               - 'test/integration/**'
             workflows:
+              - '.github/actions/**'
               - '.github/workflows/**'
               - '.github/actionlint.yaml'
               - '.github/labels.yml'
@@ -196,17 +199,36 @@ jobs:
     timeout-minutes: 5
     needs: changes
     if: needs.changes.outputs.workflows == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Collect workflow files
+        id: workflow-files
+        shell: bash
+        run: |
+          mkdir -p .context
+          {
+            find .github/workflows -maxdepth 1 -type f \( -name '*.yml' -o -name '*.yaml' \)
+            find .github/workflows/templates -type f \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null || true
+            find templates/workflows -type f \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null || true
+          } | sort > .context/actionlint-files.txt
+
+          {
+            echo "files<<EOF"
+            tr '\n' ' ' < .context/actionlint-files.txt
+            echo
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Run actionlint
         uses: reviewdog/action-actionlint@6fb7acc99f4a1008869fa8a0f09cfca740837d9d # v1.72.0
         with:
           reporter: github-pr-review
-          fail_on_error: true
-          actionlint_flags: >-
-            .github/workflows/*.y*ml
-            templates/workflows/*.y*ml
+          fail_level: error
+          actionlint_flags: ${{ steps.workflow-files.outputs.files }}
 
   workflow-template-sync:
     name: Workflow Template Sync
@@ -227,83 +249,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
     continue-on-error: true
     steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
       - name: Check PR Size
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        uses: ./.github/actions/pr-size-check
         continue-on-error: true
         with:
-          script: |
-            const { additions, deletions, changed_files } = context.payload.pull_request;
-            const totalChanges = additions + deletions;
-
-            // Define size thresholds
-            const sizes = [
-              { label: 'size/XS', maxLines: 50, maxFiles: 3 },
-              { label: 'size/S', maxLines: 200, maxFiles: 10 },
-              { label: 'size/M', maxLines: 500, maxFiles: 15 },
-              { label: 'size/L', maxLines: 1000, maxFiles: 30 },
-            ];
-
-            // Determine size
-            let sizeLabel = 'size/XL';
-            for (const size of sizes) {
-              if (totalChanges <= size.maxLines && changed_files <= size.maxFiles) {
-                sizeLabel = size.label;
-                break;
-              }
-            }
-
-            // Remove old size labels
-            const currentLabels = context.payload.pull_request.labels.map(l => l.name);
-            for (const label of currentLabels) {
-              if (label.startsWith('size/')) {
-                await github.rest.issues.removeLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  name: label
-                }).catch(() => {});
-              }
-            }
-
-            // Add new size label
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              labels: [sizeLabel]
-            });
-
-            // Post warning for XL PRs
-            if (sizeLabel === 'size/XL') {
-              const body = `## ⚠️ Large PR Warning
-
-            This PR is quite large with **${totalChanges} lines** changed across **${changed_files} files**.
-
-            Large PRs are harder to review and more likely to introduce bugs. Please consider:
-            - Breaking this into smaller, focused PRs
-            - Separating refactoring from feature changes
-            - Creating a PR series with clear dependencies
-
-            **PR Size Guidelines:**
-            | Size | Lines | Files |
-            |------|-------|-------|
-            | XS | ≤50 | ≤3 |
-            | S | ≤200 | ≤10 |
-            | M | ≤500 | ≤15 |
-            | L | ≤1000 | ≤30 |
-            | XL | >1000 | >30 |`;
-
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: body
-              });
-            }
-
-            console.log(`PR Size: ${sizeLabel} (${totalChanges} lines, ${changed_files} files)`);
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   quality-gate:
     name: Quality Gate

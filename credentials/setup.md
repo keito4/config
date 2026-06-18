@@ -32,9 +32,35 @@
 
 #### その他のクレデンシャル
 
-- アイテム名: `Simple`
+- アイテム名: `OpenAI`
 - フィールド:
-  - 簡単な環境変数のテンプレート用
+  - `OPENAI_API_KEY`: Codex o3 MCP 用
+
+- アイテム名: `Supabase`
+- フィールド:
+  - `SUPABASE_ACCESS_TOKEN`: Codex Supabase MCP 用
+  - `SUPABASE_MCP_TOKEN`: Gemini Supabase MCP 用
+
+- アイテム名: `Vercel`
+- フィールド:
+  - `VERCEL_TOKEN`: Codex Vercel MCP 用
+  - `VERCEL_MCP_TOKEN`: Gemini Vercel MCP 用
+
+- アイテム名: `Linear`
+- フィールド:
+  - `LINEAR_API_KEY`: Codex Linear MCP 用
+
+- アイテム名: `Doppler`
+- フィールド:
+  - `DOPPLER_TOKEN`: Codex Doppler MCP 用
+
+- アイテム名: `GitHub`
+- フィールド:
+  - `GITHUB_COPILOT_MCP_TOKEN`: Gemini GitHub MCP 用
+
+- アイテム名: `N8N_API_URL`, `N8N_API_KEY`
+- フィールド:
+  - `value`: optional n8n MCP 用
 
 ## 使用方法
 
@@ -100,4 +126,13 @@ op signin
 
 ```bash
 chmod +x script/credentials.sh
+```
+
+### Debug provider injection
+
+`script/credentials.sh` は zsh スクリプトです。shell trace が必要な場合は
+`bash -x` ではなく以下を使います。
+
+```bash
+zsh -x script/credentials.sh fetch
 ```

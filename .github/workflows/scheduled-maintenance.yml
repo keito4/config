@@ -52,6 +52,9 @@ jobs:
       - name: Prepare maintenance branch
         run: git checkout -b "$CLAUDE_BRANCH"
 
+      - name: Review Trivy ignore entries
+        run: script/check-trivyignore-review.sh
+
       - name: Run scheduled maintenance
         id: maintenance
         uses: anthropics/claude-code-action@d5726de019ec4498aa667642bc3a80fca83aa102 # v1
@@ -61,6 +64,8 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}
           prompt: |
+            Run `script/check-trivyignore-review.sh` first and include any due `.trivyignore` entries in the final summary.
+
             /repo-maintenance --mode ${{ inputs.mode || 'full' }} --create-pr
 
             Use branch `${{ env.CLAUDE_BRANCH }}` for maintenance commits and pushes.
@@ -75,7 +80,7 @@ jobs:
 
             If no updates are needed, do NOT create an issue.
           claude_args: |
-            --allowedTools "Bash(gh api:*),Bash(gh repo view:*),Bash(gh issue create:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr checks:*),Bash(gh run view:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(node:*),Bash(git:*),Bash(curl:*),Bash(jq:*)"
+            --allowedTools "Bash(gh api:*),Bash(gh repo view:*),Bash(gh issue create:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr checks:*),Bash(gh run view:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(node:*),Bash(git:*),Bash(curl:*),Bash(jq:*),Bash(script/check-trivyignore-review.sh:*)"
 
       - name: Create maintenance pull request
         if: env.CLAUDE_BRANCH != ''

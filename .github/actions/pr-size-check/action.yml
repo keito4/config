@@ -1,0 +1,90 @@
+name: 'PR Size Check'
+description: 'Apply a size label to pull requests and warn on very large diffs'
+
+inputs:
+  github-token:
+    description: 'GitHub token used to update labels and comments'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Check PR Size
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+      continue-on-error: true
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const pullRequest = context.payload.pull_request;
+          if (!pullRequest) {
+            core.info('PR size check skipped: event payload has no pull_request.');
+            return;
+          }
+
+          const { additions, deletions, changed_files } = pullRequest;
+          const totalChanges = additions + deletions;
+
+          const sizes = [
+            { label: 'size/XS', maxLines: 50, maxFiles: 3 },
+            { label: 'size/S', maxLines: 200, maxFiles: 10 },
+            { label: 'size/M', maxLines: 500, maxFiles: 15 },
+            { label: 'size/L', maxLines: 1000, maxFiles: 30 },
+          ];
+
+          let sizeLabel = 'size/XL';
+          for (const size of sizes) {
+            if (totalChanges <= size.maxLines && changed_files <= size.maxFiles) {
+              sizeLabel = size.label;
+              break;
+            }
+          }
+
+          const currentLabels = pullRequest.labels.map((label) => label.name);
+          for (const label of currentLabels) {
+            if (label.startsWith('size/')) {
+              await github.rest.issues
+                .removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  name: label,
+                })
+                .catch(() => {});
+            }
+          }
+
+          await github.rest.issues.addLabels({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            labels: [sizeLabel],
+          });
+
+          if (sizeLabel === 'size/XL') {
+            const body = `## Large PR Warning
+
+          This PR is quite large with **${totalChanges} lines** changed across **${changed_files} files**.
+
+          Large PRs are harder to review and more likely to introduce bugs. Please consider:
+          - Breaking this into smaller, focused PRs
+          - Separating refactoring from feature changes
+          - Creating a PR series with clear dependencies
+
+          **PR Size Guidelines:**
+          | Size | Lines | Files |
+          |------|-------|-------|
+          | XS | <=50 | <=3 |
+          | S | <=200 | <=10 |
+          | M | <=500 | <=15 |
+          | L | <=1000 | <=30 |
+          | XL | >1000 | >30 |`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+          }
+
+          core.info(`PR Size: ${sizeLabel} (${totalChanges} lines, ${changed_files} files)`);

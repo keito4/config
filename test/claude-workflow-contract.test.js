@@ -91,6 +91,8 @@ describe('Claude workflow contracts', () => {
     expect(workflow).not.toContain('steps.maintenance.outputs.branch_name');
     expect(workflow).not.toMatch(/Bash\(gh pr create:\*\)/);
     expect(workflow).toContain('Bash(gh api:*)');
+    expect(workflow).toContain('script/check-trivyignore-review.sh');
+    expect(workflow).toContain('Bash(script/check-trivyignore-review.sh:*)');
     expect(workflow).toContain("/repo-maintenance --mode ${{ inputs.mode || 'full' }} --create-pr");
     expect(workflow).not.toContain('github_token: ${{ github.token }}');
     expect(workflow).not.toContain('"allowedTools"');
@@ -234,6 +236,25 @@ describe('Claude workflow contracts', () => {
     expect(script).toContain('for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do');
     expect(script).not.toContain('for workflow in .github/workflows/*.yml; do');
     expect(script).not.toContain('ls .github/workflows/*.yml 2>/dev/null');
+  });
+
+  test('repo-maintenance validates workflow template actionlint coverage', () => {
+    const script = readWorkflow('script/repo-maintenance.sh');
+    const workflow = readWorkflow('.github/workflows/ci.yml');
+
+    expect(script).toContain('check_workflow_template_lint_coverage');
+    expect(script).toContain('Collect workflow files');
+    expect(script).toContain('.context/actionlint-files.txt');
+    expect(script).toContain('find .github/workflows/templates');
+    expect(script).toContain('find templates/workflows');
+    expect(script).toContain("-name '*.yaml'");
+    expect(script).toContain('templates/workflows/.*\\*');
+
+    expect(workflow).toContain('name: Collect workflow files');
+    expect(workflow).toContain('.context/actionlint-files.txt');
+    expect(workflow).toContain('find .github/workflows/templates');
+    expect(workflow).toContain('find templates/workflows');
+    expect(workflow).toContain('steps.workflow-files.outputs.files');
   });
 
   test('dependency health script reports peer dependency issues in its json contract', () => {
