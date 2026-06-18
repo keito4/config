@@ -85,6 +85,19 @@ describe('Claude Code Hooks integrity', () => {
       expect(content).toContain('def extract_pr_url(');
     });
 
+    test('should define CI monitoring helpers', () => {
+      expect(content).toContain('def get_current_branch(');
+      expect(content).toContain('def get_latest_run(');
+      expect(content).toContain('def watch_ci_run(');
+      expect(content).toContain('def get_pr_checks(');
+    });
+
+    test('should define AI review command helpers', () => {
+      expect(content).toContain('def command_available(');
+      expect(content).toContain('def run_ai_command(');
+      expect(content).toContain('def run_parallel_reviews(');
+    });
+
     test('should have shebang line', () => {
       expect(content.startsWith('#!/usr/bin/env python3')).toBe(true);
     });

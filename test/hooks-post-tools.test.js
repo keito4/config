@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const hooksDir = path.join(__dirname, '../.claude/hooks');
+const commonContent = fs.readFileSync(path.join(hooksDir, 'common.py'), 'utf8');
 
 describe('Post-tool hooks — content and structure', () => {
   // ──────────────────────────────────────────────────────────────
@@ -136,29 +137,30 @@ describe('Post-tool hooks — content and structure', () => {
       expect(content).toContain('rejected');
     });
 
-    test('should define get_current_branch helper', () => {
-      expect(content).toContain('def get_current_branch(');
+    test('should use CI helpers from common', () => {
+      expect(content).toContain('get_latest_run');
+      expect(content).toContain('watch_ci_run');
+      expect(content).not.toContain('def get_latest_run(');
+      expect(content).not.toContain('def watch_ci_run(');
     });
 
-    test('should define get_latest_run helper for CI lookup', () => {
-      expect(content).toContain('def get_latest_run(');
-    });
-
-    test('should define watch_ci_run helper for CI monitoring', () => {
-      expect(content).toContain('def watch_ci_run(');
+    test('common.py should define git push CI helpers', () => {
+      expect(commonContent).toContain('def get_current_branch(');
+      expect(commonContent).toContain('def get_latest_run(');
+      expect(commonContent).toContain('def watch_ci_run(');
     });
 
     test('should use gh run list to query workflow runs', () => {
       // Invoked via subprocess list: ["gh", "run", "list", ...]
-      expect(content).toContain('"run", "list"');
+      expect(commonContent).toContain('"run", "list"');
     });
 
     test('should use gh run view to poll run status', () => {
-      expect(content).toContain('gh run view');
+      expect(commonContent).toContain('"run", "view"');
     });
 
     test('should handle timeout when CI takes too long', () => {
-      expect(content).toContain('"timeout"');
+      expect(commonContent).toContain('"timeout"');
     });
 
     test('should always exit 0 (PostToolUse must not block)', () => {
@@ -198,13 +200,15 @@ describe('Post-tool hooks — content and structure', () => {
       expect(content).toContain('pr_number');
     });
 
-    test('should define get_pr_checks helper', () => {
-      expect(content).toContain('def get_pr_checks(');
+    test('should use get_pr_checks helper from common', () => {
+      expect(content).toContain('get_pr_checks');
+      expect(content).not.toContain('def get_pr_checks(');
+      expect(commonContent).toContain('def get_pr_checks(');
     });
 
     test('should use gh pr checks to query check results', () => {
       // Invoked via subprocess list: ["gh", "pr", "checks", ...]
-      expect(content).toContain('"pr", "checks"');
+      expect(commonContent).toContain('"pr", "checks"');
     });
 
     test('should handle "success" conclusion', () => {
@@ -255,12 +259,13 @@ describe('Post-tool hooks — content and structure', () => {
       expect(content).toContain('"gh pr create"');
     });
 
-    test('should check for codex availability via shutil.which', () => {
-      expect(content).toContain('shutil.which("codex")');
+    test('should check for codex availability via common helper', () => {
+      expect(content).toContain('command_available("codex")');
+      expect(commonContent).toContain('def command_available(');
     });
 
-    test('should check for gemini availability via shutil.which', () => {
-      expect(content).toContain('shutil.which("gemini")');
+    test('should check for gemini availability via common helper', () => {
+      expect(content).toContain('command_available("gemini")');
     });
 
     test('should skip gracefully when neither AI tool is installed', () => {
@@ -292,16 +297,17 @@ describe('Post-tool hooks — content and structure', () => {
       expect(content).toContain('"pr", "comment"');
     });
 
-    test('should run codex and gemini in parallel via ThreadPoolExecutor', () => {
-      expect(content).toContain('ThreadPoolExecutor');
+    test('should run codex and gemini in parallel via common helper', () => {
+      expect(content).toContain('run_parallel_reviews');
+      expect(commonContent).toContain('ThreadPoolExecutor');
     });
 
     test('should include a timeout for AI review calls', () => {
       expect(content).toContain('timeout=600');
     });
 
-    test('should handle codex timeout gracefully', () => {
-      expect(content).toContain('TimeoutExpired');
+    test('common.py should handle AI command timeouts gracefully', () => {
+      expect(commonContent).toContain('TimeoutExpired');
     });
 
     test('should always exit 0 (PostToolUse must not block)', () => {
@@ -334,6 +340,11 @@ describe('Post-tool hooks — content and structure', () => {
 
     test('should skip gracefully when neither AI tool is installed', () => {
       expect(content).toContain('not has_codex and not has_gemini');
+    });
+
+    test('should check AI tool availability via common helper', () => {
+      expect(content).toContain('command_available("codex")');
+      expect(content).toContain('command_available("gemini")');
     });
 
     test('should look for plan files in ~/.claude/plans directory', () => {

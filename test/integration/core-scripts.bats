@@ -11,9 +11,9 @@ load ../test_helper/test_helper
     [ -x "$REPO_ROOT/script/branch-cleanup.sh" ]
 }
 
-@test "check-image-version.sh exists and is executable" {
-    assert_file_exists "$REPO_ROOT/script/check-image-version.sh"
-    [ -x "$REPO_ROOT/script/check-image-version.sh" ]
+@test "audit-references.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/audit-references.sh"
+    [ -x "$REPO_ROOT/script/audit-references.sh" ]
 }
 
 @test "codespaces-secrets.sh exists and is executable" {
@@ -41,6 +41,18 @@ load ../test_helper/test_helper
     [ -x "$REPO_ROOT/script/install-skills.sh" ]
 }
 
+@test "install-skills.sh delegates to install skills library" {
+    grep -q 'source "$SCRIPT_DIR/lib/install_skills.sh"' "$REPO_ROOT/script/install-skills.sh"
+    grep -q 'install_skills_main "$@"' "$REPO_ROOT/script/install-skills.sh"
+    grep -q "install_skills_main()" "$REPO_ROOT/script/lib/install_skills.sh"
+}
+
+@test "install-skills.sh stays below critical complexity threshold" {
+    run "$REPO_ROOT/script/code-complexity-check.sh" --files "$REPO_ROOT/script/install-skills.sh" --json
+    assert_success
+    printf '%s\n' "$output" | grep -q '"critical_complexity_count": 0'
+}
+
 @test "fix-container-plugins.sh exists and is executable" {
     assert_file_exists "$REPO_ROOT/script/fix-container-plugins.sh"
     [ -x "$REPO_ROOT/script/fix-container-plugins.sh" ]
@@ -56,16 +68,28 @@ load ../test_helper/test_helper
     [ -x "$REPO_ROOT/script/setup-team-protection.sh" ]
 }
 
+@test "setup-team-protection.sh delegates to setup team protection library" {
+    grep -q 'source "$SCRIPT_DIR/lib/setup_team_protection.sh"' "$REPO_ROOT/script/setup-team-protection.sh"
+    grep -q 'setup_team_protection_main "$@"' "$REPO_ROOT/script/setup-team-protection.sh"
+    grep -q "setup_team_protection_main()" "$REPO_ROOT/script/lib/setup_team_protection.sh"
+}
+
 @test "setup-team-protection.sh defines include_existing_environment_branches function" {
-    grep -q "include_existing_environment_branches()" "$REPO_ROOT/script/setup-team-protection.sh"
+    grep -q "include_existing_environment_branches()" "$REPO_ROOT/script/lib/setup_team_protection.sh"
 }
 
 @test "setup-team-protection.sh initializes BRANCHES_EXPLICIT to false" {
-    grep -q "BRANCHES_EXPLICIT=false" "$REPO_ROOT/script/setup-team-protection.sh"
+    grep -q "BRANCHES_EXPLICIT=false" "$REPO_ROOT/script/lib/setup_team_protection.sh"
 }
 
 @test "setup-team-protection.sh sets BRANCHES_EXPLICIT=true when --branches is given" {
-    grep -q "BRANCHES_EXPLICIT=true" "$REPO_ROOT/script/setup-team-protection.sh"
+    grep -q "BRANCHES_EXPLICIT=true" "$REPO_ROOT/script/lib/setup_team_protection.sh"
+}
+
+@test "setup-team-protection.sh stays below critical complexity threshold" {
+    run "$REPO_ROOT/script/code-complexity-check.sh" --files "$REPO_ROOT/script/setup-team-protection.sh" --json
+    assert_success
+    printf '%s\n' "$output" | grep -q '"critical_complexity_count": 0'
 }
 
 @test "check-file-length.sh exists and is executable" {
@@ -79,8 +103,8 @@ load ../test_helper/test_helper
 }
 
 @test "setup-file-length-check.sh exists and is executable" {
-    assert_file_exists "$REPO_ROOT/script/setup-file-length-check.sh"
-    [ -x "$REPO_ROOT/script/setup-file-length-check.sh" ]
+    assert_file_exists "$REPO_ROOT/templates/setup-file-length-check.sh"
+    [ -x "$REPO_ROOT/templates/setup-file-length-check.sh" ]
 }
 
 @test "brew-deps.sh exists and is executable" {
@@ -91,6 +115,21 @@ load ../test_helper/test_helper
 @test "install-npm-globals.sh exists and is executable" {
     assert_file_exists "$REPO_ROOT/script/install-npm-globals.sh"
     [ -x "$REPO_ROOT/script/install-npm-globals.sh" ]
+}
+
+@test "repo-maintenance.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/repo-maintenance.sh"
+    [ -x "$REPO_ROOT/script/repo-maintenance.sh" ]
+}
+
+@test "setup-ci.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/setup-ci.sh"
+    [ -x "$REPO_ROOT/script/setup-ci.sh" ]
+}
+
+@test "setup-new-repo.sh exists and is executable" {
+    assert_file_exists "$REPO_ROOT/script/setup-new-repo.sh"
+    [ -x "$REPO_ROOT/script/setup-new-repo.sh" ]
 }
 
 @test "setup-claude-build.sh exists and is executable" {

@@ -90,9 +90,10 @@
 
 ### その他
 
-| テンプレート   | 対象                     |
-| -------------- | ------------------------ |
-| `editorconfig` | エディタ間のスタイル統一 |
+| テンプレート                 | 対象                                       |
+| ---------------------------- | ------------------------------------------ |
+| `editorconfig`               | エディタ間のスタイル統一                   |
+| `setup-file-length-check.sh` | ファイル行数チェック導入用の配布スクリプト |
 
 ## 使い方
 
@@ -112,6 +113,9 @@ cp templates/github/pull_request_template.md .github/
 # 例: pre-commit を追加（プロジェクト種別に応じて選択）
 cp templates/pre-commit-config-base.yaml .pre-commit-config.yaml
 pip install pre-commit && pre-commit install
+
+# 例: ファイル行数チェックを導入
+./templates/setup-file-length-check.sh /path/to/project
 ```
 
 ## 配布

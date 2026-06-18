@@ -126,6 +126,22 @@ This directory contains 11 specialized AI agents designed to provide comprehensi
 
 ## Agent Invocation
 
+### On-Demand Trigger Registry
+
+The agents below are intentionally retained even when static search finds no
+command, hook, or workflow invocation. Claude Code activates them through their
+frontmatter `description` and through explicit manual requests, so their active
+trigger is the natural-language contract documented here.
+
+| Agent                            | Active Trigger                                                                  | Retention Decision                                               |
+| -------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `act-local-ci-manager.md`        | User asks to run, debug, or configure GitHub Actions locally with `act`.        | Keep as an on-demand CI debugging specialist.                    |
+| `docs-consistency-checker.md`    | PR or task changes docs/API specs, or a PR description needs Why/What/How/Risk. | Keep as an on-demand documentation and PR-description reviewer.  |
+| `playwright-test-generator.md`   | User asks to create E2E tests from browser flows or manual test cases.          | Keep as the Playwright test generation specialist.               |
+| `playwright-test-healer.md`      | User asks to fix failing Playwright tests, selectors, timing, or assertions.    | Keep as the Playwright failure diagnosis specialist.             |
+| `playwright-test-planner.md`     | User asks to plan E2E coverage, regression suites, or user-flow test matrices.  | Keep as the Playwright coverage planning specialist.             |
+| `issue-resolver-orchestrator.md` | User asks to process the issue backlog or resolve multiple GitHub issues.       | Keep and route issue categories to the issue-resolver subagents. |
+
 ### Proactive Invocation
 
 Agents are automatically invoked by Claude Code based on context and code changes:

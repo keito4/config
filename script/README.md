@@ -4,16 +4,16 @@ This directory contains utility scripts for managing configuration, credentials,
 
 ## Quick Reference
 
-| Script                      | Purpose                                                  | Used By                |
-| --------------------------- | -------------------------------------------------------- | ---------------------- |
-| `setup-claude.sh`           | Claude Code CLI setup                                    | Makefile, DevContainer |
-| `credentials.sh`            | 1Password credential management                          | Makefile               |
-| `update-libraries.sh`       | Refresh `npm/global.json` (Dependabot owns package.json) | package.json           |
-| `version.sh`                | Semantic versioning                                      | Makefile               |
-| `check-image-version.sh`    | Show DevContainer image version                          | Manual                 |
-| `.shellcheck-exclude`       | ShellCheck 除外パターン定義                              | npm run shellcheck     |
-| `setup-scheduled-agents.sh` | Claude Code スケジュール済みエージェント セットアップ    | Manual                 |
-| `update-agents-md.sh`       | AGENTS.md 自動生成セクション更新                         | repo-maintenance       |
+| Script                | Purpose                                                  | Used By                |
+| --------------------- | -------------------------------------------------------- | ---------------------- |
+| `setup-claude.sh`     | Claude Code CLI setup                                    | Makefile, DevContainer |
+| `credentials.sh`      | 1Password credential management                          | Makefile               |
+| `update-libraries.sh` | Refresh `npm/global.json` (Dependabot owns package.json) | package.json           |
+| `version.sh`          | Semantic versioning                                      | Makefile               |
+| `update-agents-md.sh` | AGENTS.md 自動生成セクション更新                         | repo-maintenance       |
+| `repo-maintenance.sh` | Repository maintenance executable workflow               | `/repo-maintenance`    |
+| `setup-ci.sh`         | CI/CD workflow setup                                     | `/setup-ci`            |
+| `setup-new-repo.sh`   | New repository bootstrap                                 | `/setup-new-repo`      |
 
 ## Configuration Management
 
@@ -23,11 +23,15 @@ Exports configuration settings (Zsh dotfiles, etc.) to the home directory.
 
 **Usage**: `./script/export.sh`
 
+**Check mode**: `./script/export.sh --check`
+
 ### import.sh
 
 Imports configuration settings from the home directory back to the repository.
 
 **Usage**: `./script/import.sh`
+
+**Check mode**: `./script/import.sh --check`
 
 ## Credential Management
 
@@ -111,6 +115,40 @@ Updates Claude Code CLI to the latest version.
 
 ## Quality & CI Scripts
 
+### repo-maintenance.sh
+
+Runs repository maintenance checks and managed updates. This is the executable source of truth for `/repo-maintenance`.
+
+**Usage**:
+
+```bash
+./script/repo-maintenance.sh --mode full
+./script/repo-maintenance.sh --mode check-only
+./script/repo-maintenance.sh --check-required-workflows
+```
+
+### setup-ci.sh
+
+Detects project type and package manager, then writes CI/CD workflow defaults.
+
+**Usage**:
+
+```bash
+./script/setup-ci.sh --dry-run
+./script/setup-ci.sh --type nextjs --level standard
+```
+
+### setup-new-repo.sh
+
+Bootstraps a repository with config-managed development defaults.
+
+**Usage**:
+
+```bash
+./script/setup-new-repo.sh ../new-project --type nodejs
+./script/setup-new-repo.sh ../new-project --minimal --no-install
+```
+
 ### check-file-length.sh
 
 Checks staged TS/JS files for excessive line counts.
@@ -128,18 +166,6 @@ Checks staged TS/JS files for excessive line counts.
 **Configuration**: Create `.filelengthignore` (same syntax as `.gitignore`) to exclude files.
 
 **Template**: `.filelengthignore.template`
-
-### .shellcheck-exclude
-
-ShellCheck の除外対象ファイル一覧を管理する設定ファイル。
-
-**場所**: `script/.shellcheck-exclude`
-
-**用途**: `npm run shellcheck` 実行時に `grep -vFf` で参照され、ShellCheck の対象外とするスクリプトパターンを定義する。
-
-**フォーマット**: 1行1パターン（ファイル名またはパス）
-
-**除外対象の追加**: `.shellcheck-exclude` に1行追加するだけで完結。`package.json` の変更不要。
 
 ### pre-pr-checklist.sh
 
@@ -238,19 +264,6 @@ Comprehensive DevContainer health check.
 
 **Claude command**: `/container-health`
 
-### check-image-version.sh
-
-Displays the config-base DevContainer image version.
-
-**Usage**:
-
-```bash
-./script/check-image-version.sh        # Show version
-./script/check-image-version.sh -v     # Show version with additional info
-```
-
-**Note**: Version tracking was added in v1.64.0. Older images will show "unknown".
-
 ### install-npm-globals.sh
 
 Installs global npm packages defined in `npm/global.json`.
@@ -291,28 +304,6 @@ Creates a GitHub Codespace with configurable options.
 Sets up Language Server Protocol servers for various languages.
 
 **Usage**: `./script/setup-lsp.sh`
-
-### setup-scheduled-agents.sh
-
-Sets up Claude Code scheduled remote agents (9 agents) for automated repository maintenance.
-
-**Usage**: `./script/setup-scheduled-agents.sh`
-
-Registers the following scheduled agents:
-
-| #   | Agent Name               | Schedule           | Purpose                                |
-| --- | ------------------------ | ------------------ | -------------------------------------- |
-| 1   | 依存関係健全性レビュー   | 毎週月曜 10:00 JST | npm audit / outdated チェック          |
-| 2   | config-base同期チェック  | 毎週水曜 10:00 JST | ベースイメージのダイジスト比較・更新PR |
-| 3   | コード複雑度監視         | 毎週金曜 10:00 JST | 循環的複雑度の悪化検出                 |
-| 4   | テンプレート乖離チェック | 毎月1日 10:00 JST  | templates/ と実ファイルの差分確認      |
-| 5   | ドキュメント鮮度チェック | 毎月15日 10:00 JST | README / CLAUDE.md の陳腐化検出        |
-| 6   | CI失敗分析               | 毎日 10:00 JST     | 過去24時間のCI失敗を根本原因ごとに分類 |
-| 7   | 未テストパス検出         | 毎週木曜 10:00 JST | 変更ファイルのカバレッジ不足を検出     |
-| 8   | 新規Issueトリアージ      | 毎日 11:00 JST     | ラベルなしIssueに自動でラベル付与      |
-| 9   | 週次リリースノート       | 毎週月曜 11:00 JST | 先週マージPRからリリースノートを生成   |
-
-**Note**: 冪等性あり（登録済みのスケジュールはスキップ）。管理画面: https://claude.ai/code/scheduled
 
 ### update-agents-md.sh
 
@@ -376,18 +367,6 @@ Analyzes project dependencies for security vulnerabilities and updates.
 
 **Claude command**: `/dependency-health-check`
 
-## macOS Specific
-
-### aerospace-fix-layout
-
-Fixes AeroSpace window manager layout issues on macOS.
-
-**Usage**: Add as alias in `.zshrc`:
-
-```bash
-alias aerospace-fix='~/path/to/config/script/aerospace-fix-layout'
-```
-
 ## Library Functions (lib/)
 
 Shared library functions used by multiple scripts:
@@ -399,6 +378,7 @@ Shared library functions used by multiple scripts:
 | `platform.sh`        | Platform detection (macOS, Linux, etc.)                    |
 | `devcontainer.sh`    | DevContainer-specific utilities                            |
 | `claude_plugins.sh`  | Claude plugin management utilities                         |
+| `project-detect.sh`  | Shared project type and package manager detection          |
 | `brew_categories.py` | Homebrew package categorization                            |
 
 ## Credential Providers (credentials/providers/)

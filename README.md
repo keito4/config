@@ -165,7 +165,6 @@ config/
 │   │       ├── dart.zsh
 │   │       ├── java.zsh
 │   │       ├── node.zsh
-│   │       ├── php.zsh
 │   │       └── ruby.zsh
 │   └── functions/                  # カスタムシェル関数
 │       ├── docker
@@ -235,13 +234,10 @@ config/
 │   └── global.json
 ├── script/                         # ユーティリティスクリプト
 │   ├── README.md
-│   ├── .shellcheck-exclude
-│   ├── aerospace-fix-layout
 │   ├── branch-cleanup.sh
 │   ├── brew-deps.sh
 │   ├── changelog-generator.sh
 │   ├── check-file-length.sh
-│   ├── check-image-version.sh
 │   ├── code-complexity-check.sh
 │   ├── codespaces-secrets.sh
 │   ├── container-health.sh
@@ -256,13 +252,14 @@ config/
 │   ├── install-npm-globals.sh
 │   ├── install-skills.sh
 │   ├── pre-pr-checklist.sh
+│   ├── repo-maintenance.sh
 │   ├── restore-cli-auth.sh
 │   ├── security-credential-scan.sh
 │   ├── setup-claude-build.sh
 │   ├── setup-claude.sh
-│   ├── setup-file-length-check.sh
+│   ├── setup-ci.sh
 │   ├── setup-lsp.sh
-│   ├── setup-scheduled-agents.sh  # Scheduled remote agents セットアップ
+│   ├── setup-new-repo.sh
 │   ├── setup-team-protection.sh
 │   ├── update-agents-md.sh         # AGENTS.md 自動生成セクション更新
 │   ├── test-coverage-trend.sh
@@ -282,11 +279,13 @@ config/
 │       ├── config.sh
 │       ├── devcontainer.sh
 │       ├── output.sh
+│       ├── project-detect.sh
 │       └── platform.sh
 ├── templates/                      # プロジェクトテンプレート
 │   ├── README.md
 │   ├── doppler.yaml                # Doppler プロジェクト設定テンプレート
 │   ├── editorconfig
+│   ├── setup-file-length-check.sh  # ファイル行数チェック導入テンプレート
 │   ├── github/                     # GitHub テンプレート
 │   │   ├── CODEOWNERS
 │   │   ├── CONTRIBUTING.md
@@ -379,6 +378,7 @@ config/
 │   │   ├── update_all.bats
 │   │   ├── update_libraries.bats
 │   │   ├── verify_container_setup.bats
+│   │   ├── wait_ci_checks.bats
 │   │   └── workflows.bats
 │   └── test_helper/
 │       └── test_helper.bash
