@@ -195,18 +195,36 @@ jobs:
     timeout-minutes: 5
     needs: changes
     if: needs.changes.outputs.workflows == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Collect workflow files
+        id: workflow-files
+        shell: bash
+        run: |
+          mkdir -p .context
+          {
+            find .github/workflows -maxdepth 1 -type f \( -name '*.yml' -o -name '*.yaml' \)
+            find .github/workflows/templates -type f \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null || true
+            find templates/workflows -type f \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null || true
+          } | sort > .context/actionlint-files.txt
+
+          {
+            echo "files<<EOF"
+            tr '\n' ' ' < .context/actionlint-files.txt
+            echo
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Run actionlint
         uses: reviewdog/action-actionlint@6fb7acc99f4a1008869fa8a0f09cfca740837d9d # v1.72.0
         with:
           reporter: github-pr-review
-          fail_on_error: true
-          actionlint_flags: >-
-            .github/workflows/*.y*ml
-            .github/workflows/templates/*.y*ml
-            templates/workflows/*.y*ml
+          fail_level: error
+          actionlint_flags: ${{ steps.workflow-files.outputs.files }}
 
   pr-size-check:
     name: PR Size Check

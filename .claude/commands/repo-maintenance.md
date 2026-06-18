@@ -30,6 +30,7 @@ Repository state guard runs before updates. Archived repositories switch to `che
 
 - Private repositories allow Dependency Review to be optional or skipped.
 - Managed workflow templates are checked against `templates/workflows/`.
+- Workflow Lint coverage checks verify `.github/workflows/`, `.github/workflows/templates/`, and `templates/workflows/` are collected without static unmatched globs.
 
 ### Required Workflow Trigger Compatibility Check
 
