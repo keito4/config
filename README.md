@@ -17,6 +17,8 @@ Lists that drift easily are generated or centralized. Do not hand-maintain dupli
 | DevContainer and config-base usage                                                            | [.devcontainer/README.md](.devcontainer/README.md), [docs/using-config-base-image.md](docs/using-config-base-image.md) |
 | Project setup guides                                                                          | [docs/setup/README.md](docs/setup/README.md)                                                                           |
 | Template catalog                                                                              | [templates/README.md](templates/README.md)                                                                             |
+| Tool catalog                                                                                  | [docs/tool-catalog.md](docs/tool-catalog.md)                                                                           |
+| Gemini setup                                                                                  | [.gemini/README.md](.gemini/README.md)                                                                                 |
 | Security policy and credential handling                                                       | [SECURITY.md](SECURITY.md), [credentials/README.md](credentials/README.md)                                             |
 | Architecture decisions                                                                        | [docs/adr/README.md](docs/adr/README.md)                                                                               |
 

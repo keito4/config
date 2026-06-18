@@ -1,0 +1,43 @@
+name: 'Setup Docker Build'
+description: 'Set up Docker QEMU, Buildx, and optional registry login'
+
+inputs:
+  qemu:
+    description: 'Whether to set up QEMU for multi-platform builds'
+    required: false
+    default: 'true'
+  login:
+    description: 'Whether to log in to a container registry'
+    required: false
+    default: 'true'
+  registry:
+    description: 'Container registry host'
+    required: false
+    default: 'ghcr.io'
+  username:
+    description: 'Registry username'
+    required: false
+  password:
+    description: 'Registry password'
+    required: false
+  driver-opts:
+    description: 'Docker Buildx driver options'
+    required: false
+    default: 'image=moby/buildkit:latest'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4
+      if: inputs.qemu == 'true'
+
+    - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+      with:
+        driver-opts: ${{ inputs.driver-opts }}
+
+    - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+      if: inputs.login == 'true'
+      with:
+        registry: ${{ inputs.registry }}
+        username: ${{ inputs.username }}
+        password: ${{ inputs.password }}

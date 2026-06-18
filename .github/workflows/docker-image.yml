@@ -15,8 +15,19 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/docker-image.yml'
+  schedule:
+    # Weekly no-cache rebuild: Sunday 00:00 UTC (JST 09:00)
+    - cron: '0 0 * * 0'
   workflow_dispatch:
     inputs:
+      no_cache:
+        description: 'Rebuild the image and registry cache without using existing cache. Skips release creation.'
+        required: false
+        default: false
+        type: boolean
+      reason:
+        description: 'Optional reason for no-cache rebuild.'
+        required: false
       release_mode:
         description: 'auto = semantic-release (default). Select patch/minor/major/custom to force a manual release when needed.'
         required: false
@@ -57,9 +68,34 @@ jobs:
         with:
           node-version-file: '.node-version'
 
+      - name: Resolve build mode
+        id: build_mode
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          NO_CACHE_INPUT: ${{ inputs.no_cache || false }}
+          REASON_INPUT: ${{ inputs.reason }}
+        run: |
+          NO_CACHE=false
+          REASON=""
+
+          if [ "$EVENT_NAME" = "schedule" ]; then
+            NO_CACHE=true
+            REASON="Scheduled weekly rebuild"
+          elif [ "$NO_CACHE_INPUT" = "true" ]; then
+            NO_CACHE=true
+            REASON="${REASON_INPUT:-Manual no-cache rebuild}"
+          fi
+
+          echo "no_cache=$NO_CACHE" >> "$GITHUB_OUTPUT"
+          echo "reason=$REASON" >> "$GITHUB_OUTPUT"
+          echo "Build mode: no_cache=$NO_CACHE"
+          if [ -n "$REASON" ]; then
+            echo "Reason: $REASON"
+          fi
+
       - name: Determine manual release version
         id: manual_release
-        if: github.event_name == 'workflow_dispatch' && inputs.release_mode != 'auto'
+        if: steps.build_mode.outputs.no_cache != 'true' && github.event_name == 'workflow_dispatch' && inputs.release_mode != 'auto'
         run: |
           CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           CURRENT_VERSION=${CURRENT_TAG#v}
@@ -99,7 +135,7 @@ jobs:
 
       - name: Semantic Release Dry Run
         id: semantic
-        if: github.event_name != 'workflow_dispatch' || inputs.release_mode == 'auto'
+        if: steps.build_mode.outputs.no_cache != 'true' && (github.event_name != 'workflow_dispatch' || inputs.release_mode == 'auto')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -119,6 +155,8 @@ jobs:
       - name: Resolve release outputs
         id: release
         env:
+          NO_CACHE_BUILD: ${{ steps.build_mode.outputs.no_cache }}
+          NO_CACHE_REASON: ${{ steps.build_mode.outputs.reason }}
           MANUAL_VERSION: ${{ steps.manual_release.outputs.version }}
           MANUAL_VERSION_TAG: ${{ steps.manual_release.outputs.version_tag }}
           MANUAL_SKIP_RELEASE: ${{ steps.manual_release.outputs.skip_release }}
@@ -126,17 +164,39 @@ jobs:
           SEMANTIC_VERSION_TAG: ${{ steps.semantic.outputs.version_tag }}
           SEMANTIC_SKIP_RELEASE: ${{ steps.semantic.outputs.skip_release }}
         run: |
+          if [ "$NO_CACHE_BUILD" = "true" ]; then
+            CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+            CURRENT_VERSION=${CURRENT_TAG#v}
+            {
+              echo "version=$CURRENT_VERSION"
+              echo "version_tag=$CURRENT_TAG"
+              echo "skip_release=false"
+              echo "cache_rebuild=true"
+              echo "image_tag=cache-rebuild"
+              echo "no_cache=true"
+            } >> "$GITHUB_OUTPUT"
+            echo "No-cache rebuild requested: ${NO_CACHE_REASON:-no reason provided}"
+            exit 0
+          fi
+
+          {
+            echo "cache_rebuild=false"
+            echo "no_cache=false"
+          } >> "$GITHUB_OUTPUT"
+
           if [ -n "$MANUAL_VERSION" ]; then
             {
               echo "version=$MANUAL_VERSION"
               echo "version_tag=$MANUAL_VERSION_TAG"
               echo "skip_release=$MANUAL_SKIP_RELEASE"
+              echo "image_tag=$MANUAL_VERSION"
             } >> "$GITHUB_OUTPUT"
           else
             if [ -n "$SEMANTIC_VERSION" ]; then
               {
                 echo "version=$SEMANTIC_VERSION"
                 echo "version_tag=$SEMANTIC_VERSION_TAG"
+                echo "image_tag=$SEMANTIC_VERSION"
               } >> "$GITHUB_OUTPUT"
             fi
             if [ -n "$SEMANTIC_SKIP_RELEASE" ]; then
@@ -150,18 +210,9 @@ jobs:
         if: steps.release.outputs.skip_release != 'true'
         run: sudo chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
 
-      - uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4
-        if: steps.release.outputs.skip_release != 'true'
-
-      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+      - uses: ./.github/actions/setup-docker-build
         if: steps.release.outputs.skip_release != 'true'
         with:
-          driver-opts: image=moby/buildkit:latest
-
-      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
-        if: steps.release.outputs.skip_release != 'true'
-        with:
-          registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -173,11 +224,12 @@ jobs:
           file: .devcontainer/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/config-base:${{ steps.release.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/config-base:${{ steps.release.outputs.image_tag }}
             ghcr.io/${{ github.repository_owner }}/config-base:latest
           platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/config-base:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/config-base:cache,mode=max
+          no-cache: ${{ steps.release.outputs.no_cache }}
           build-args: |
             IMAGE_VERSION=${{ steps.release.outputs.version }}
           secrets: |
@@ -196,15 +248,32 @@ jobs:
           path: devcontainer-info.txt
           retention-days: 7
 
+      - name: Summarize no-cache rebuild
+        if: steps.release.outputs.cache_rebuild == 'true'
+        env:
+          REASON: ${{ steps.build_mode.outputs.reason }}
+          OWNER: ${{ github.repository_owner }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          {
+            echo "### Docker Cache Rebuild Complete"
+            echo ""
+            echo "- Trigger: $EVENT_NAME"
+            echo "- Reason: ${REASON:-No reason provided}"
+            echo "- Platforms: linux/amd64, linux/arm64"
+            echo "- Cache updated: ghcr.io/$OWNER/config-base:cache"
+            echo "- Image tag updated: ghcr.io/$OWNER/config-base:latest"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Create Release
-        if: steps.release.outputs.skip_release != 'true' && (github.event_name != 'workflow_dispatch' || inputs.release_mode == 'auto')
+        if: steps.release.outputs.skip_release != 'true' && steps.release.outputs.cache_rebuild != 'true' && (github.event_name != 'workflow_dispatch' || inputs.release_mode == 'auto')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npx semantic-release --no-ci
 
       - name: Create Manual Release
-        if: steps.release.outputs.skip_release != 'true' && github.event_name == 'workflow_dispatch' && inputs.release_mode != 'auto'
+        if: steps.release.outputs.skip_release != 'true' && steps.release.outputs.cache_rebuild != 'true' && github.event_name == 'workflow_dispatch' && inputs.release_mode != 'auto'
         env:
           VERSION: ${{ steps.release.outputs.version }}
           TAG: ${{ steps.release.outputs.version_tag }}
