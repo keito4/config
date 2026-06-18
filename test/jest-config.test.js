@@ -35,6 +35,11 @@ function expectJestFailure(args) {
 }
 
 describe('Jest configuration runtime behavior', () => {
+  test('ignores persistent worktrees under .context', () => {
+    expect(baseJestConfig.testPathIgnorePatterns).toContain('<rootDir>/.context/worktrees/');
+    expect(baseJestConfig.modulePathIgnorePatterns).toContain('<rootDir>/.context/worktrees/');
+  });
+
   test('runs a matching test file in the Node environment', () => {
     const tempDir = makeTempDir('jest-runtime');
     try {

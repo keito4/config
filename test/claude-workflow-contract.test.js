@@ -34,6 +34,39 @@ function runRequiredWorkflowScript(workflows) {
   }
 }
 
+function runUpdateAgentsScriptWithUntrackedDirectory() {
+  const contextDir = path.join(repoPath, '.context');
+  fs.mkdirSync(contextDir, { recursive: true });
+  const tempRoot = fs.mkdtempSync(path.join(contextDir, 'agents-md-test-'));
+
+  try {
+    fs.writeFileSync(
+      path.join(tempRoot, 'AGENTS.md'),
+      ['# Test Agents', '', '<!-- BEGIN AUTO-GENERATED -->', '<!-- END AUTO-GENERATED -->', ''].join('\n'),
+    );
+    fs.writeFileSync(
+      path.join(tempRoot, 'package.json'),
+      JSON.stringify({ scripts: {}, engines: { node: '24.14.1' } }, null, 2),
+    );
+    fs.mkdirSync(path.join(tempRoot, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(tempRoot, 'docs', 'README.md'), '# Docs\n');
+    fs.mkdirSync(path.join(tempRoot, 'next'), { recursive: true });
+
+    execFileSync('git', ['init'], { cwd: tempRoot, stdio: 'ignore' });
+    execFileSync('git', ['add', 'AGENTS.md', 'package.json', 'docs/README.md'], {
+      cwd: tempRoot,
+      stdio: 'ignore',
+    });
+
+    const scriptPath = path.join(repoPath, 'script', 'update-agents-md.sh');
+    execFileSync('bash', [scriptPath], { cwd: tempRoot, encoding: 'utf8' });
+
+    return fs.readFileSync(path.join(tempRoot, 'AGENTS.md'), 'utf8');
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+}
+
 describe('Claude workflow contracts', () => {
   const issueWorkflows = ['.github/workflows/claude.yml', 'templates/workflows/claude.yml'];
   const maintenanceWorkflows = [
@@ -228,6 +261,13 @@ describe('Claude workflow contracts', () => {
     expect(script).toContain('mktemp -d "$CONTEXT_DIR/agents-md-check-XXXXX"');
     expect(script).toContain('prettier --write --ignore-path /dev/null "$target"');
     expect(script).not.toContain('mktemp -d -t agents-md-check');
+  });
+
+  test('update-agents-md ignores untracked project directories', () => {
+    const generated = runUpdateAgentsScriptWithUntrackedDirectory();
+
+    expect(generated).toContain('`docs/`');
+    expect(generated).not.toContain('`next/`');
   });
 
   test('repo-maintenance scans yml and yaml workflows in cross-workflow checks', () => {

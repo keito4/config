@@ -13,7 +13,7 @@ function makeTempDir(prefix) {
 }
 
 function runEslint(filePath, extraArgs = []) {
-  return execFileSync(eslintBin, ['--config', configPath, ...extraArgs, filePath], {
+  return execFileSync(eslintBin, ['--config', configPath, '--no-ignore', ...extraArgs, filePath], {
     cwd: repoPath,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -33,6 +33,12 @@ function expectEslintFailure(filePath, extraArgs = []) {
 }
 
 describe('ESLint configuration runtime behavior', () => {
+  test('ignores shared context artifacts during full repository lint', () => {
+    const config = fs.readFileSync(configPath, 'utf8');
+
+    expect(config).toContain("'.context/'");
+  });
+
   test('allows console usage and ignored underscore arguments', () => {
     const tempDir = makeTempDir('eslint-valid');
     try {

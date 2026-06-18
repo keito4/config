@@ -1,6 +1,8 @@
 module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/test/**/*.test.js', '**/test/**/*.spec.js'],
+  testPathIgnorePatterns: ['<rootDir>/.context/worktrees/'],
+  modulePathIgnorePatterns: ['<rootDir>/.context/worktrees/'],
   collectCoverageFrom: [
     '**/*.{js,mjs,cjs}',
     '!script/**/*',
