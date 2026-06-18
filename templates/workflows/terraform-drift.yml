@@ -2,6 +2,8 @@
 # Terraform Drift Detection ワークフロー
 # =============================================================================
 #
+# Reference-only template; this repository does not install it under .github/workflows/.
+#
 # 概要:
 #   Terraform State と実際のインフラの差分（ドリフト）を定期的に検出する。
 #   ドリフト検出時は GitHub Issue を自動作成し、Slack にも通知する。

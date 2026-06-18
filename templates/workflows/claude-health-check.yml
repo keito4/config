@@ -1,3 +1,5 @@
+# Reference-only template; this repository does not install it under .github/workflows/.
+#
 name: Claude Code Health Check
 
 on:

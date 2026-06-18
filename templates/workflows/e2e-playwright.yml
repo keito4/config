@@ -1,5 +1,7 @@
 # E2E Playwright テストワークフロー
 #
+# Reference-only template; this repository does not install it under .github/workflows/.
+#
 # Playwright を使った E2E テストを実行する再利用可能ワークフロー。
 # Next.js アプリケーションのビルド → Playwright テスト → レポートアップロード。
 #

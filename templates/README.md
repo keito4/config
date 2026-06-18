@@ -6,15 +6,19 @@
 
 ### ワークフロー（`workflows/`）
 
-| テンプレート                | 対象                            | 自動適用条件                      |
-| --------------------------- | ------------------------------- | --------------------------------- |
-| `dependabot-auto-merge.yml` | Dependabot を使う全プロジェクト | dependabot.yml が存在する場合     |
-| `label-sync.yml`            | 全プロジェクト                  | 常に推奨                          |
-| `stale.yml`                 | Issue/PR が多いプロジェクト     | 常に推奨                          |
-| `terraform-drift.yml`       | Terraform プロジェクト          | Terraform ファイルが存在する場合  |
-| `e2e-playwright.yml`        | Playwright E2E テスト           | test:e2e スクリプトが存在する場合 |
-| `claude.yml`                | Claude Code 連携                | 常に推奨                          |
-| `quality-gate-fallback.yml` | CI パス保証（fallback）         | setup-team-protection 導入済み    |
+| テンプレート                | 対象                            | 自動適用条件                        |
+| --------------------------- | ------------------------------- | ----------------------------------- |
+| `dependabot-auto-merge.yml` | Dependabot を使う全プロジェクト | dependabot.yml が存在する場合       |
+| `label-sync.yml`            | 全プロジェクト                  | 常に推奨                            |
+| `claude.yml`                | Claude Code 連携                | 常に推奨                            |
+| `quality-gate-fallback.yml` | CI パス保証（fallback）         | setup-team-protection 導入済み      |
+| `scheduled-maintenance.yml` | config 系リポジトリ             | repo-maintenance を定期実行する場合 |
+| `claude-health-check.yml`   | Claude Code OAuth 監視          | 参照専用（本リポジトリ未使用）      |
+| `e2e-playwright.yml`        | Playwright E2E テスト           | 参照専用（本リポジトリ未使用）      |
+| `stale.yml`                 | Issue/PR が多いプロジェクト     | 参照専用（本リポジトリ未使用）      |
+| `terraform-drift.yml`       | Terraform プロジェクト          | 参照専用（本リポジトリ未使用）      |
+
+テンプレート置き場は `templates/` のみです。`.github/workflows/` にはこのリポジトリで実行する実体ワークフローだけを置きます。
 
 ### pre-commit（`pre-commit-config-*.yaml`）
 

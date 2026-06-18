@@ -29,7 +29,7 @@ script/repo-maintenance.sh $ARGUMENTS
 Repository state guard runs before updates. Archived repositories switch to `check-only` and skip PR creation.
 
 - Private repositories allow Dependency Review to be optional or skipped.
-- Managed workflow templates are checked against `templates/workflows/`.
+- Managed workflow templates are checked against `templates/workflows/` with `npm run workflow:sync:check`.
 - Workflow Lint coverage checks verify `.github/workflows/`, `.github/workflows/templates/`, and `templates/workflows/` are collected without static unmatched globs.
 
 ### Required Workflow Trigger Compatibility Check
