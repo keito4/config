@@ -5,13 +5,9 @@ git push後にGitHub Actions CIを監視するPostToolUseフック
 git push 成功後に自動的にCIの状態を確認し、結果を報告します。
 """
 import sys
-import json
-import subprocess
 import re
-import time
-from typing import Optional
 from common import (load_hook_input, parse_tool_context, is_bash_command,
-                    print_header, print_footer, print_status)
+                    get_latest_run, watch_ci_run, print_header, print_footer)
 
 data = load_hook_input()
 tool_name, tool_input, tool_response = parse_tool_context(data)
@@ -57,88 +53,6 @@ if not is_success:
     sys.exit(0)
 
 print_header("🚀 Push完了。GitHub Actions CIを確認中...")
-
-
-def get_current_branch() -> Optional[str]:
-    """現在のブランチ名を取得"""
-    try:
-        result = subprocess.run(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-        return result.stdout.strip()
-    except Exception:
-        return None
-
-
-def get_latest_run() -> Optional[dict]:
-    """最新のworkflow runを取得"""
-    try:
-        branch = get_current_branch()
-        if not branch:
-            return None
-
-        # 少し待ってからCIの状態を確認（ワークフロー起動に時間がかかる場合があるため）
-        time.sleep(3)
-
-        result = subprocess.run(
-            ["gh", "run", "list", "--branch", branch, "--limit", "1", "--json", "databaseId,status,conclusion,name,workflowName,headSha,createdAt"],
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
-
-        if result.returncode != 0:
-            return None
-
-        runs = json.loads(result.stdout)
-        if runs:
-            return runs[0]
-        return None
-
-    except Exception as e:
-        print(f"⚠️  CI状態取得エラー: {e}", file=sys.stderr, flush=True)
-        return None
-
-
-def watch_ci_run(run_id: int, timeout_seconds: int = 300) -> tuple[str, list]:
-    """CIの実行を監視（最大5分）"""
-    print(f"\n🔄 CI実行を監視中... (最大{timeout_seconds // 60}分)", file=sys.stderr, flush=True)
-
-    start_time = time.time()
-    check_interval = 15  # 15秒ごとにチェック
-
-    while time.time() - start_time < timeout_seconds:
-        try:
-            result = subprocess.run(
-                ["gh", "run", "view", str(run_id), "--json", "status,conclusion,jobs"],
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
-
-            if result.returncode != 0:
-                break
-
-            run_data = json.loads(result.stdout)
-            status = run_data.get("status", "")
-            conclusion = run_data.get("conclusion", "")
-
-            if status == "completed":
-                return conclusion, run_data.get("jobs", [])
-
-            # 進行中の場合は待機
-            elapsed = int(time.time() - start_time)
-            print(f"   ⏳ {elapsed}秒経過... (status: {status})", file=sys.stderr, flush=True)
-            time.sleep(check_interval)
-
-        except Exception as e:
-            print(f"⚠️  監視エラー: {e}", file=sys.stderr, flush=True)
-            break
-
-    return "timeout", []
 
 
 # メイン処理

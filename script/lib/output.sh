@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck disable=SC1071 # zsh-specific script; ShellCheck has no zsh parser.
 # ============================================================================
 # Unified output and error handling functions for all scripts
 # Usage: source "$SCRIPT_DIR/lib/output.sh"

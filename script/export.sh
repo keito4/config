@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck disable=SC1071 # zsh-specific script; ShellCheck has no zsh parser.
 
 set -euo pipefail
 
@@ -7,7 +8,12 @@ source "$SCRIPT_DIR/lib/platform.sh"
 source "$SCRIPT_DIR/lib/config.sh"
 
 REPO_PATH="${REPO_PATH:-$(pwd)}"
-mkdir -p "$REPO_PATH/brew" "$REPO_PATH/vscode" "$REPO_PATH/git" "$REPO_PATH/npm" "$REPO_PATH/.zsh" "$REPO_PATH/dot" "$REPO_PATH/.claude" "$REPO_PATH/.codex" "$REPO_PATH/.cursor" "$REPO_PATH/.gemini"
+config::ensure_managed_repo_dirs "$REPO_PATH"
+
+if [[ "${1:-}" == "--check" ]]; then
+	echo "Export target ready: $REPO_PATH"
+	exit 0
+fi
 
 export_extensions_darwin() {
 	if type cursor >/dev/null 2>&1; then

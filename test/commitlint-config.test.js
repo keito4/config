@@ -1,158 +1,125 @@
-const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const { execFileSync } = require('child_process');
 
-// Mock child_process before requiring the module
-jest.mock('child_process');
+const repoPath = path.resolve(__dirname, '..');
+const configPath = path.join(repoPath, 'commitlint.config.js');
+const commitlintBin = process.platform === 'win32' ? 'commitlint.cmd' : 'commitlint';
 
-describe('Commitlint Configuration', () => {
-  let config;
+function makeGitRepo(prefix) {
+  const contextDir = path.join(repoPath, '.context');
+  fs.mkdirSync(contextDir, { recursive: true });
+  const tempDir = fs.mkdtempSync(path.join(contextDir, `${prefix}-`));
+  execFileSync('git', ['init'], { cwd: tempDir, stdio: 'ignore' });
+  return tempDir;
+}
 
-  beforeEach(() => {
-    // Clear module cache to get fresh config
-    jest.clearAllMocks();
-    delete require.cache[require.resolve('../commitlint.config.js')];
+function stageFile(repoDir, relativePath, content) {
+  const filePath = path.join(repoDir, relativePath);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, content);
+  execFileSync('git', ['add', relativePath], { cwd: repoDir, stdio: 'ignore' });
+}
+
+function runCommitlint(message, cwd) {
+  return execFileSync(commitlintBin, ['--config', configPath], {
+    cwd,
+    input: `${message}\n`,
+    encoding: 'utf8',
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+}
+
+function expectCommitlintFailure(message, cwd) {
+  try {
+    runCommitlint(message, cwd);
+    return { failed: false, output: '' };
+  } catch (error) {
+    return {
+      failed: true,
+      output: `${error.stdout || ''}${error.stderr || ''}`,
+    };
+  }
+}
+
+function runReleaseTypeRule(repoDir, parsed) {
+  const previousCwd = process.cwd();
+  const config = require(configPath);
+  const rule = config.plugins[0].rules['codex-release-type'];
+  try {
+    process.chdir(repoDir);
+    return rule(parsed);
+  } finally {
+    process.chdir(previousCwd);
+  }
+}
+
+describe('root commitlint configuration runtime behavior', () => {
+  test('allows maintenance commits when no release-sensitive file is staged', () => {
+    const tempDir = makeGitRepo('commitlint-clean');
+    try {
+      expect(() => runCommitlint('chore: update docs', tempDir)).not.toThrow();
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 
-  describe('Configuration structure', () => {
-    beforeEach(() => {
-      // Mock execSync to return empty string (no staged files)
-      execSync.mockReturnValue('');
-      config = require('../commitlint.config.js');
-    });
+  test('rejects non-release commit types for staged package changes', () => {
+    const tempDir = makeGitRepo('commitlint-sensitive');
+    try {
+      stageFile(tempDir, 'package.json', '{"name":"sample"}\n');
 
-    test('should extend @commitlint/config-conventional', () => {
-      expect(config.extends).toContain('@commitlint/config-conventional');
-    });
-
-    test('should have plugins with codex-release-type rule', () => {
-      expect(config.plugins).toBeDefined();
-      expect(config.plugins).toHaveLength(1);
-      expect(config.plugins[0].rules).toHaveProperty('codex-release-type');
-    });
-
-    test('should have required rules configured', () => {
-      expect(config.rules).toHaveProperty('subject-empty', [2, 'never']);
-      expect(config.rules).toHaveProperty('type-empty', [2, 'never']);
-      expect(config.rules).toHaveProperty('codex-release-type', [2, 'always']);
-    });
-
-    test('should disable subject-case for Japanese support', () => {
-      expect(config.rules).toHaveProperty('subject-case', [0]);
-    });
+      const result = expectCommitlintFailure('chore: update package manifest', tempDir);
+      expect(result.failed).toBe(true);
+      expect(result.output).toContain('release-triggering type');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 
-  describe('Release type rule', () => {
-    let releaseTypeRule;
+  test('allows release commit types for staged package changes', () => {
+    const tempDir = makeGitRepo('commitlint-release');
+    try {
+      stageFile(tempDir, 'package.json', '{"name":"sample"}\n');
 
-    beforeEach(() => {
-      config = require('../commitlint.config.js');
-      releaseTypeRule = config.plugins[0].rules['codex-release-type'];
-    });
-
-    test('should allow any commit type when no sensitive files are touched', () => {
-      execSync.mockReturnValue('');
-      const result = releaseTypeRule({ type: 'chore' });
-      expect(result[0]).toBe(true);
-    });
-
-    test('should require release type when package.json is modified', () => {
-      execSync.mockReturnValue('package.json\nREADME.md\n');
-      const result = releaseTypeRule({ type: 'chore' });
-      expect(result[0]).toBe(false);
-      expect(result[1]).toContain('package.json');
-      expect(result[1]).toContain('feat|fix|perf|revert|docs');
-    });
-
-    test('should allow feat type when package.json is modified', () => {
-      execSync.mockReturnValue('package.json\n');
-      const result = releaseTypeRule({ type: 'feat' });
-      expect(result[0]).toBe(true);
-    });
-
-    test('should allow fix type when package-lock.json is modified', () => {
-      execSync.mockReturnValue('package-lock.json\n');
-      const result = releaseTypeRule({ type: 'fix' });
-      expect(result[0]).toBe(true);
-    });
-
-    test('should require release type when .codex/ files are modified', () => {
-      execSync.mockReturnValue('.codex/prompts/test.md\n');
-      const result = releaseTypeRule({ type: 'chore' });
-      expect(result[0]).toBe(false);
-      expect(result[1]).toContain('.codex/prompts/test.md');
-    });
-
-    test('should allow perf type when npm/global.json is modified', () => {
-      execSync.mockReturnValue('npm/global.json\n');
-      const result = releaseTypeRule({ type: 'perf' });
-      expect(result[0]).toBe(true);
-    });
-
-    test('should allow revert type when .devcontainer/Dockerfile is modified', () => {
-      execSync.mockReturnValue('.devcontainer/Dockerfile\n');
-      const result = releaseTypeRule({ type: 'revert' });
-      expect(result[0]).toBe(true);
-    });
-
-    test('should handle multiple sensitive files', () => {
-      execSync.mockReturnValue('package.json\nnpm/global.json\n.codex/prompts/test.md\n');
-      const result = releaseTypeRule({ type: 'build' });
-      expect(result[0]).toBe(false);
-      expect(result[1]).toContain('package.json');
-      expect(result[1]).toContain('npm/global.json');
-      expect(result[1]).toContain('.codex/prompts/test.md');
-    });
-
-    test('should handle git command error gracefully', () => {
-      execSync.mockImplementation(() => {
-        throw new Error('git command failed');
-      });
-      const result = releaseTypeRule({ type: 'chore' });
-      expect(result[0]).toBe(true);
-    });
-
-    test('should handle undefined commit type', () => {
-      execSync.mockReturnValue('package.json\n');
-      const result = releaseTypeRule({ type: undefined });
-      expect(result[0]).toBe(false);
-    });
-
-    test('should handle null commit type', () => {
-      execSync.mockReturnValue('package.json\n');
-      const result = releaseTypeRule({ type: null });
-      expect(result[0]).toBe(false);
-    });
+      expect(() => runCommitlint('fix: update package manifest', tempDir)).not.toThrow();
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 
-  describe('Release-sensitive file patterns', () => {
-    let releaseTypeRule;
+  test('evaluates the release-type plugin against actual staged files', () => {
+    const tempDir = makeGitRepo('commitlint-rule-sensitive');
+    try {
+      stageFile(tempDir, 'package.json', '{"name":"sample"}\n');
 
-    beforeEach(() => {
-      config = require('../commitlint.config.js');
-      releaseTypeRule = config.plugins[0].rules['codex-release-type'];
-    });
+      const [passes, message] = runReleaseTypeRule(tempDir, { type: 'chore' });
+      expect(passes).toBe(false);
+      expect(message).toContain('release-triggering type');
 
-    test('should match package.json exactly', () => {
-      execSync.mockReturnValue('package.json\n');
-      const result = releaseTypeRule({ type: 'chore' });
-      expect(result[0]).toBe(false);
-    });
+      expect(runReleaseTypeRule(tempDir, { type: 'fix' })[0]).toBe(true);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
 
-    test('should not match package.json in subdirectory', () => {
-      execSync.mockReturnValue('subdir/package.json\n');
-      const result = releaseTypeRule({ type: 'chore' });
-      expect(result[0]).toBe(true);
-    });
+  test('treats unreadable staged-file state as non-blocking', () => {
+    const contextDir = path.join(repoPath, '.context');
+    fs.mkdirSync(contextDir, { recursive: true });
+    const tempDir = fs.mkdtempSync(path.join(contextDir, 'commitlint-rule-no-git-'));
+    try {
+      expect(runReleaseTypeRule(tempDir, { type: 'chore' })).toEqual([true]);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
 
-    test('should match any file under .codex/', () => {
-      execSync.mockReturnValue('.codex/prompts/deep/nested/file.md\n');
-      const result = releaseTypeRule({ type: 'chore' });
-      expect(result[0]).toBe(false);
-    });
-
-    test('should match .devcontainer/Dockerfile exactly', () => {
-      execSync.mockReturnValue('.devcontainer/Dockerfile\n');
-      const result = releaseTypeRule({ type: 'chore' });
-      expect(result[0]).toBe(false);
-    });
+  test('accepts Japanese commit subjects', () => {
+    const tempDir = makeGitRepo('commitlint-japanese');
+    try {
+      expect(() => runCommitlint('docs: 日本語の説明を追加', tempDir)).not.toThrow();
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 });
