@@ -10,6 +10,11 @@ source "$SCRIPT_DIR/lib/config.sh"
 REPO_PATH="${REPO_PATH:-$(pwd)}"
 config::ensure_managed_repo_dirs "$REPO_PATH"
 
+if [[ "${1:-}" == "--check" ]]; then
+	echo "Export target ready: $REPO_PATH"
+	exit 0
+fi
+
 export_extensions_darwin() {
 	if type cursor >/dev/null 2>&1; then
 		cursor --list-extensions > "$REPO_PATH/vscode/extensions.txt"
