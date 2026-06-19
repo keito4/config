@@ -50,7 +50,7 @@ On container startup, the following configurations are automatically applied:
 
 ### Development Tools Included
 
-- **Languages**: Node.js 24.14.1, npm, various language runtimes
+- **Languages**: Node.js 24.15.0, npm, various language runtimes
 - **Version Control**: Git with advanced configuration and hooks
 - **Container Tools**: Docker, docker-compose
 - **Cloud Tools**: AWS CLI, Terraform, kubectl
@@ -59,14 +59,14 @@ On container startup, the following configurations are automatically applied:
 
 ### Known Issues
 
-No known issues at this time. The container uses Node.js v24.14.1, which is compatible with all dependencies including `semantic-release` (v25.0.2).
+No known issues at this time. The container uses Node.js v24.15.0, which is compatible with all dependencies including `semantic-release` (v25.0.5).
 
 ### Claude Code Integration
 
 The container includes comprehensive AI-assisted development capabilities:
 
-- **17 Specialized Agents**: Architecture validation, performance analysis, security review, accessibility validation, concurrency safety analysis, Playwright test automation, and more
-- **22 Automated Commands**: Repository maintenance, Git workflows, code analysis, quality checks, DevContainer management, dependency health, security scanning, and CI/CD setup
+- **11 Specialized Agents**: Issue resolution (code quality, dependencies, documentation, security, test coverage), CI management, Playwright test automation, documentation consistency checking, and more
+- **28 Automated Commands**: Repository maintenance, Git workflows, code analysis, quality checks, DevContainer management, dependency health, security scanning, and CI/CD setup
 - **Quality Standards**: Japanese-language development guidelines with TDD methodology and static quality gates
 
 ## Container Versioning
