@@ -30,7 +30,7 @@ describe('Scheduled maintenance workflow contracts', () => {
       'timeout-minutes: 45',
       'name: Validate maintenance token',
       'name: Validate TAKT authentication',
-      'token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}',
+      'token: ${{ github.token }}',
       'persist-credentials: false',
       'This managed config-repository workflow depends on .takt/**',
       'uses: ./.github/actions/setup-node-ci',
@@ -53,6 +53,8 @@ describe('Scheduled maintenance workflow contracts', () => {
       'git commit -m "chore: scheduled maintenance"',
       'git -c http.https://github.com/.extraheader="AUTHORIZATION: bearer $GH_TOKEN" push -u origin "$CLAUDE_BRANCH"',
       'gh pr create',
+      'LABEL_ARGS=()',
+      'gh issue create',
       'script/check-trivyignore-review.sh',
     ];
     const forbiddenSnippets = [

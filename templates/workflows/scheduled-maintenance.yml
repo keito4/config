@@ -57,7 +57,7 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-          token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}
+          token: ${{ github.token }}
 
       # This managed config-repository workflow depends on .takt/**,
       # script/repo-maintenance.sh, script/run-takt-repo-maintenance.sh,
@@ -139,7 +139,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          EXISTING=$(gh issue list --label "maintenance" --state open --json number --jq 'length')
+          LABEL_ARGS=()
+          if gh label list --json name --jq '.[].name' | grep -Fxq "maintenance"; then
+            LABEL_ARGS=(--label "maintenance")
+          fi
+
+          EXISTING=$(gh issue list "${LABEL_ARGS[@]}" --state open --json number --jq 'length')
           if [ "$EXISTING" -gt 0 ]; then
             echo "Open maintenance issue already exists. Skipping."
             exit 0
@@ -147,7 +152,7 @@ jobs:
 
           gh issue create \
             --title "fix: Scheduled Maintenance failed" \
-            --label "maintenance,bug" \
+            "${LABEL_ARGS[@]}" \
             --body "## Scheduled Maintenance Failure
 
           The scheduled maintenance workflow failed.
