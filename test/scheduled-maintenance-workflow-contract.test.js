@@ -12,6 +12,16 @@ function readWorkflow(relativePath) {
 }
 
 describe('Scheduled maintenance workflow contracts', () => {
+  test('TAKT wrapper keeps PR creation outside the command gate', () => {
+    const script = readWorkflow('script/run-takt-repo-maintenance.sh');
+
+    expect(script).toContain('MODE_FILE="${TAKT_MAINTENANCE_MODE_FILE:-.context/takt-maintenance-mode}"');
+    expect(script).toContain('script/repo-maintenance.sh --mode "$MODE"');
+    expect(script).not.toContain('--create-pr');
+    expect(script).not.toContain('GH_TOKEN');
+    expect(script).not.toContain('CLAUDE_BRANCH');
+  });
+
   test.each(maintenanceWorkflows)('%s runs TAKT maintenance with deterministic PR fallback', (workflowPath) => {
     const workflow = readWorkflow(workflowPath);
     const requiredSnippets = [
@@ -24,6 +34,8 @@ describe('Scheduled maintenance workflow contracts', () => {
       'name: Prepare maintenance branch',
       'git checkout -b "$CLAUDE_BRANCH"',
       'git config user.name "github-actions[bot]"',
+      'name: Write TAKT maintenance context',
+      'printf \'%s\\n\' "$REPO_MAINTENANCE_MODE" > .context/takt-maintenance-mode',
       'name: Run scheduled maintenance with TAKT',
       './node_modules/.bin/takt --pipeline',
       '--skip-git',
@@ -33,8 +45,11 @@ describe('Scheduled maintenance workflow contracts', () => {
       'TAKT_ANTHROPIC_API_KEY: ${{ secrets.TAKT_ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY }}',
       'GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}',
       'if: env.CLAUDE_BRANCH !=',
+      "git add -A -- . ':!.context'",
+      'git diff --cached --quiet',
+      'git commit -m "chore: scheduled maintenance"',
+      'git push -u origin "$CLAUDE_BRANCH"',
       'gh pr create',
-      'git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH"',
       'script/check-trivyignore-review.sh',
     ];
     const forbiddenSnippets = [
@@ -44,12 +59,23 @@ describe('Scheduled maintenance workflow contracts', () => {
       'Bash(gh pr create:*)',
       'github_token: ${{ github.token }}',
       '"allowedTools"',
+      'script/repo-maintenance.sh --mode "$MODE" --create-pr',
+      'git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH"',
     ];
 
     for (const snippet of requiredSnippets) expect(workflow).toContain(snippet);
     expect(workflow.indexOf('name: Validate maintenance token')).toBeLessThan(
       workflow.indexOf('name: Checkout repository'),
     );
+    expect(workflow.indexOf('name: Run scheduled maintenance with TAKT')).toBeLessThan(
+      workflow.indexOf('name: Create maintenance pull request'),
+    );
+    const taktStep = workflow.slice(
+      workflow.indexOf('name: Run scheduled maintenance with TAKT'),
+      workflow.indexOf('name: Create maintenance pull request'),
+    );
+    expect(taktStep).not.toContain('GH_TOKEN:');
+    expect(taktStep).not.toContain('CLAUDE_BRANCH:');
     for (const snippet of forbiddenSnippets) expect(workflow).not.toContain(snippet);
   });
 });

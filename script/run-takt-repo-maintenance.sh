@@ -3,14 +3,19 @@
 
 set -euo pipefail
 
-MODE="${REPO_MAINTENANCE_MODE:-full}"
+MODE_FILE="${TAKT_MAINTENANCE_MODE_FILE:-.context/takt-maintenance-mode}"
+if [[ -f "$MODE_FILE" ]]; then
+  MODE="$(<"$MODE_FILE")"
+else
+  MODE="${REPO_MAINTENANCE_MODE:-full}"
+fi
 
 case "$MODE" in
   full|quick|check-only) ;;
   *)
-    echo "Unsupported REPO_MAINTENANCE_MODE: $MODE" >&2
+    echo "Unsupported maintenance mode: $MODE" >&2
     exit 2
     ;;
 esac
 
-script/repo-maintenance.sh --mode "$MODE" --create-pr
+script/repo-maintenance.sh --mode "$MODE"

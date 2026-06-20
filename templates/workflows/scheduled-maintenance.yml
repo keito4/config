@@ -75,11 +75,16 @@ jobs:
       - name: Review Trivy ignore entries
         run: script/check-trivyignore-review.sh
 
+      - name: Write TAKT maintenance context
+        env:
+          REPO_MAINTENANCE_MODE: ${{ inputs.mode || 'full' }}
+        run: |
+          mkdir -p .context
+          printf '%s\n' "$REPO_MAINTENANCE_MODE" > .context/takt-maintenance-mode
+
       - name: Run scheduled maintenance with TAKT
         id: maintenance
         env:
-          CLAUDE_BRANCH: ${{ env.CLAUDE_BRANCH }}
-          GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}
           REPO_MAINTENANCE_MODE: ${{ inputs.mode || 'full' }}
           TAKT_ANTHROPIC_API_KEY: ${{ secrets.TAKT_ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY }}
         run: |
@@ -97,14 +102,18 @@ jobs:
           MODE: ${{ inputs.mode || 'full' }}
         run: |
           if [ -z "$CLAUDE_BRANCH" ]; then
-            echo "Claude did not create a branch. Skipping PR creation."
+            echo "Maintenance branch is empty. Skipping PR creation."
             exit 0
           fi
 
-          if ! git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH" >/dev/null; then
-            echo "Claude branch $CLAUDE_BRANCH was not pushed. Skipping PR creation."
+          git add -A -- . ':!.context'
+          if git diff --cached --quiet; then
+            echo "No committable maintenance changes. Skipping PR creation."
             exit 0
           fi
+
+          git commit -m "chore: scheduled maintenance"
+          git push -u origin "$CLAUDE_BRANCH"
 
           EXISTING_PR=$(gh pr list --head "$CLAUDE_BRANCH" --state open --json number --jq '.[0].number // empty')
           if [ -n "$EXISTING_PR" ]; then

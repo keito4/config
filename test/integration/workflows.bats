@@ -236,7 +236,7 @@ load ../test_helper/test_helper
     [ -f "$workflow" ] || continue
     # Workflows that create releases or push should use GITHUB_TOKEN
     if grep -q "gh release create\|git push\|npx semantic-release" "$workflow"; then
-      grep -q "GITHUB_TOKEN.*secrets.GITHUB_TOKEN" "$workflow"
+      grep -Eq "GITHUB_TOKEN.*secrets\\.GITHUB_TOKEN|GH_TOKEN:.*secrets\\.(GITHUB_TOKEN|CLAUDE_PR_GITHUB_TOKEN)|token:.*secrets\\.CLAUDE_PR_GITHUB_TOKEN" "$workflow"
     fi
   done
 }
@@ -284,9 +284,13 @@ load ../test_helper/test_helper
   local workflow="${REPO_ROOT}/.github/workflows/scheduled-maintenance.yml"
 
   grep -Fq "script/check-trivyignore-review.sh" "$workflow"
+  grep -Fq "Write TAKT maintenance context" "$workflow"
+  grep -Fq ".context/takt-maintenance-mode" "$workflow"
   grep -Fq "./node_modules/.bin/takt --pipeline" "$workflow"
   grep -Fq -- "--workflow .takt/workflows/repo-maintenance.yml" "$workflow"
   grep -Fq "TAKT_ANTHROPIC_API_KEY" "$workflow"
+  grep -Fq "git add -A -- . ':!.context'" "$workflow"
+  grep -Fq "git push -u origin \"\$CLAUDE_BRANCH\"" "$workflow"
 }
 
 @test "workflows have descriptive job names" {

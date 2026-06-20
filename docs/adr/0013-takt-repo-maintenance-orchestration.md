@@ -26,14 +26,17 @@ tokens to issue-driven workflows.
 Use TAKT for scheduled repository maintenance orchestration only.
 
 Keep `script/repo-maintenance.sh` as the executable source of truth for the
-actual checks, managed updates, commits, pushes, and maintenance PR creation.
-The TAKT workflow invokes a narrow wrapper script,
-`script/run-takt-repo-maintenance.sh`, through a command quality gate.
+actual checks and managed updates. The TAKT workflow invokes a narrow wrapper
+script, `script/run-takt-repo-maintenance.sh`, through a command quality gate.
 
 Scheduled maintenance runs TAKT in pipeline mode with `--skip-git`. TAKT owns
-the agent loop and report generation; `script/repo-maintenance.sh --create-pr`
-and the existing post-step fallback remain responsible for branch and PR
-operations.
+the agent loop and report generation. GitHub Actions owns the prepared
+maintenance branch, commit, push, and PR creation after TAKT completes.
+
+TAKT command gates intentionally execute with a restricted child-process
+environment. The scheduled workflow writes non-secret execution context such as
+the requested maintenance mode under `.context/`, and the wrapper reads that
+file. The GitHub token is not passed into the TAKT command gate.
 
 Configure project TAKT files in `.takt/`:
 
@@ -50,7 +53,7 @@ Configure project TAKT files in `.takt/`:
 Scheduled maintenance uses `TAKT_ANTHROPIC_API_KEY` first and falls back to
 `ANTHROPIC_API_KEY`. The existing maintenance PR token
 `CLAUDE_PR_GITHUB_TOKEN` or legacy `CLAUDE_PAT` remains separate and is used
-only by trusted scheduled maintenance.
+only by the deterministic GitHub Actions PR creation step.
 
 ## Consequences
 
@@ -60,6 +63,10 @@ large prompt.
 TAKT command gates require `workflow_command_gates.custom_scripts: true`. That
 is intentionally enabled only for this repository-level workflow, and the gate
 points to one checked-in wrapper script.
+
+The workflow commit step excludes `.context/` so TAKT reports, dependency
+diagnostics, and other agent-readable intermediate artifacts are not committed
+as maintenance changes.
 
 Maintainers must configure `TAKT_ANTHROPIC_API_KEY` or `ANTHROPIC_API_KEY` for
 scheduled maintenance. `CLAUDE_CODE_OAUTH_TOKEN` alone is not sufficient for
