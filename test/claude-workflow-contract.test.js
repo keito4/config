@@ -112,12 +112,12 @@ describe('Claude workflow contracts', () => {
     expect(workflow.indexOf('name: Validate maintenance token')).toBeLessThan(
       workflow.indexOf('name: Checkout repository'),
     );
-    expect(workflow).toContain('token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}');
-    expect(workflow).toContain('github_token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}');
+    expect(workflow).toContain('token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}');
+    expect(workflow).toContain('github_token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}');
     expect(workflow).toContain('name: Prepare maintenance branch');
     expect(workflow).toContain('git checkout -b "$CLAUDE_BRANCH"');
     expect(workflow).toContain('Use branch `${{ env.CLAUDE_BRANCH }}`');
-    expect(workflow).toContain('GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}');
+    expect(workflow).toContain('GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}');
     expect(workflow).toContain('if: env.CLAUDE_BRANCH !=');
     expect(workflow).toContain('gh pr create');
     expect(workflow).toContain('git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH"');

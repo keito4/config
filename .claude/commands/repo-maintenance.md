@@ -1,7 +1,7 @@
 ---
 description: Comprehensive repository maintenance - run all health checks and updates
 allowed-tools: Read, Bash(script/repo-maintenance.sh:*), Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(pnpm:*), Bash(jq:*), Skill
-argument-hint: '[--mode full|quick|check-only] [--skip CATEGORY] [--create-pr] [--check-actions-pr-settings]'
+argument-hint: '[--mode full|quick|check-only] [--skip CATEGORY] [--create-pr] [--check-actions-pr-settings] [--check-scheduled-maintenance] [--check-artifact-retention]'
 ---
 
 # Repository Maintenance Workflow
@@ -31,6 +31,8 @@ Repository state guard runs before updates. Archived repositories switch to `che
 - Private repositories allow Dependency Review to be optional or skipped.
 - GitHub Actions PR creation settings are checked with `script/repo-maintenance.sh --check-actions-pr-settings`.
 - Automated issue and maintenance PR creation expects `default_workflow_permissions=write` and `can_approve_pull_request_reviews=true`.
+- Scheduled Maintenance configuration is checked with `script/repo-maintenance.sh --check-scheduled-maintenance`.
+- Artifact retention is checked with `script/repo-maintenance.sh --check-artifact-retention` and should be 30 days or less.
 - Managed workflow templates are checked against `templates/workflows/` with `npm run workflow:sync:check`.
 - Workflow Lint coverage checks verify `.github/workflows/`, `.github/workflows/templates/`, and `templates/workflows/` are collected without static unmatched globs.
 

@@ -7,17 +7,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_REPO="$(cd "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=script/lib/output.sh
 source "$SCRIPT_DIR/lib/output.sh"
+# shellcheck source=script/lib/repo_maintenance_checks.sh
+source "$SCRIPT_DIR/lib/repo_maintenance_checks.sh"
 
 MODE="full"
 SKIP_CATEGORIES=""
 CREATE_PR=false
 CHECK_REQUIRED_WORKFLOWS_ONLY=false
 CHECK_ACTIONS_PR_SETTINGS_ONLY=false
+CHECK_SCHEDULED_MAINTENANCE_ONLY=false
+CHECK_ARTIFACT_RETENTION_ONLY=false
 CONTEXT_DIR="${CONTEXT_DIR:-.context}"
 
 usage() {
   cat <<'EOF'
-Usage: script/repo-maintenance.sh [--mode full|quick|check-only] [--skip CATEGORY] [--create-pr] [--check-required-workflows] [--check-actions-pr-settings]
+Usage: script/repo-maintenance.sh [--mode full|quick|check-only] [--skip CATEGORY] [--create-pr] [--check-required-workflows] [--check-actions-pr-settings] [--check-scheduled-maintenance] [--check-artifact-retention]
 EOF
 }
 
@@ -42,6 +46,16 @@ while [[ $# -gt 0 ]]; do
       ;;
     --check-actions-pr-settings)
       CHECK_ACTIONS_PR_SETTINGS_ONLY=true
+      MODE="check-only"
+      shift
+      ;;
+    --check-scheduled-maintenance)
+      CHECK_SCHEDULED_MAINTENANCE_ONLY=true
+      MODE="check-only"
+      shift
+      ;;
+    --check-artifact-retention)
+      CHECK_ARTIFACT_RETENTION_ONLY=true
       MODE="check-only"
       shift
       ;;
@@ -372,13 +386,20 @@ create_pr_if_requested() {
     return 0
   fi
 
-  local branch
-  branch="maintenance/$(date +%Y%m%d-%H%M%S)"
-  git checkout -b "$branch"
+  local branch current_branch
+  branch="${CLAUDE_BRANCH:-maintenance/$(date +%Y%m%d-%H%M%S)}"
+  current_branch="$(git branch --show-current 2>/dev/null || true)"
+  if [[ "$current_branch" != "$branch" ]]; then
+    if git rev-parse --verify "$branch" >/dev/null 2>&1; then
+      git checkout "$branch"
+    else
+      git checkout -b "$branch"
+    fi
+  fi
   git add -A
   git commit -m "chore: repository maintenance"
   git push -u origin "$branch"
-  gh pr create --title "chore: repository maintenance" --body "Automated repository maintenance."
+  gh pr create --head "$branch" --title "chore: repository maintenance" --body "Automated repository maintenance."
 }
 
 if [[ "$CHECK_REQUIRED_WORKFLOWS_ONLY" == "true" ]]; then
@@ -388,6 +409,16 @@ fi
 
 if [[ "$CHECK_ACTIONS_PR_SETTINGS_ONLY" == "true" ]]; then
   check_actions_pr_creation_settings
+  exit $?
+fi
+
+if [[ "$CHECK_SCHEDULED_MAINTENANCE_ONLY" == "true" ]]; then
+  check_scheduled_maintenance_configuration
+  exit $?
+fi
+
+if [[ "$CHECK_ARTIFACT_RETENTION_ONLY" == "true" ]]; then
+  check_artifact_retention
   exit $?
 fi
 
@@ -404,7 +435,13 @@ EOF
 check_repository_state
 
 if ! has_skip "setup"; then
-  check_actions_pr_creation_settings || true
+  if [[ "$CREATE_PR" == "true" ]]; then
+    check_actions_pr_creation_settings
+  else
+    check_actions_pr_creation_settings || true
+  fi
+  check_scheduled_maintenance_configuration || true
+  check_artifact_retention || true
   check_workflow_templates
   check_workflow_template_lint_coverage
   check_managed_templates
