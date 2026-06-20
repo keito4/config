@@ -125,6 +125,9 @@ Runs repository maintenance checks and managed updates. This is the executable s
 ./script/repo-maintenance.sh --mode full
 ./script/repo-maintenance.sh --mode check-only
 ./script/repo-maintenance.sh --check-required-workflows
+./script/repo-maintenance.sh --check-actions-pr-settings
+./script/repo-maintenance.sh --check-scheduled-maintenance
+./script/repo-maintenance.sh --check-artifact-retention
 ```
 
 ### setup-ci.sh
