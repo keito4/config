@@ -86,6 +86,7 @@ function scheduledMaintenanceWorkflow() {
     '      - name: Use token',
     '        env:',
     '          CLAUDE_PR_GITHUB_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}',
+    '          TAKT_ANTHROPIC_API_KEY: ${{ secrets.TAKT_ANTHROPIC_API_KEY }}',
     '      - name: Post failure issue',
     '        env:',
     '          GH_REPO: ${{ github.repository }}',
@@ -225,6 +226,7 @@ describe('repo-maintenance GitHub Actions PR creation settings', () => {
 
     expect(result.status).toBe(1);
     expect(result.output).toContain('requires CLAUDE_PR_GITHUB_TOKEN or CLAUDE_PAT secret');
+    expect(result.output).toContain('requires TAKT_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY secret');
     expect(result.output).toContain('https://github.com/owner/repo/settings/secrets/actions');
   });
 
@@ -233,7 +235,7 @@ describe('repo-maintenance GitHub Actions PR creation settings', () => {
       files: {
         '.github/workflows/scheduled-maintenance.yml': readRepoFile('templates/workflows/scheduled-maintenance.yml'),
       },
-      secrets: ['CLAUDE_PAT'],
+      secrets: ['CLAUDE_PAT', 'ANTHROPIC_API_KEY'],
     });
 
     expect(result.status).toBe(0);

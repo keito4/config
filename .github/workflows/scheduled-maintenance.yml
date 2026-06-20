@@ -43,44 +43,52 @@ jobs:
             exit 1
           fi
 
+      - name: Validate TAKT authentication
+        env:
+          TAKT_ANTHROPIC_API_KEY: ${{ secrets.TAKT_ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$TAKT_ANTHROPIC_API_KEY" ]; then
+            echo "TAKT_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY is required for scheduled TAKT maintenance."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 1
           token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}
 
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node-ci
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
       - name: Prepare maintenance branch
         run: git checkout -b "$CLAUDE_BRANCH"
+
+      - name: Configure Git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Review Trivy ignore entries
         run: script/check-trivyignore-review.sh
 
-      - name: Run scheduled maintenance
+      - name: Run scheduled maintenance with TAKT
         id: maintenance
-        uses: anthropics/claude-code-action@d5726de019ec4498aa667642bc3a80fca83aa102 # v1
         env:
           CLAUDE_BRANCH: ${{ env.CLAUDE_BRANCH }}
-        with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}
-          prompt: |
-            Run `script/check-trivyignore-review.sh` first and include any due `.trivyignore` entries in the final summary.
-
-            /repo-maintenance --mode ${{ inputs.mode || 'full' }} --create-pr
-
-            Use branch `${{ env.CLAUDE_BRANCH }}` for maintenance commits and pushes.
-
-            After completing maintenance, summarize:
-            - What was checked
-            - What was updated
-            - What needs manual attention
-
-            If `script/repo-maintenance.sh --create-pr` creates a pull request, do not create another one.
-            If the script only pushes the branch, this workflow creates the pull request from the Claude branch after Claude finishes.
-
-            If no updates are needed, do NOT create an issue.
-          claude_args: |
-            --allowedTools "Bash(gh api:*),Bash(gh repo view:*),Bash(gh issue create:*),Bash(gh issue list:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr checks:*),Bash(gh run view:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(node:*),Bash(git:*),Bash(curl:*),Bash(jq:*),Bash(script/check-trivyignore-review.sh:*)"
+          GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}
+          REPO_MAINTENANCE_MODE: ${{ inputs.mode || 'full' }}
+          TAKT_ANTHROPIC_API_KEY: ${{ secrets.TAKT_ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npm exec --yes --package=takt@0.47.0 -- \
+            takt --pipeline \
+              --skip-git \
+              --quiet \
+              --workflow .takt/workflows/repo-maintenance.yml \
+              --task "Run scheduled repository maintenance in ${REPO_MAINTENANCE_MODE} mode."
 
       - name: Create maintenance pull request
         if: env.CLAUDE_BRANCH != ''

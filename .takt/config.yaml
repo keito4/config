@@ -1,0 +1,9 @@
+language: ja
+provider: claude-sdk
+model: sonnet
+auto_pr: false
+minimal_output: true
+workflow_command_gates:
+  custom_scripts: true
+observability:
+  enabled: false

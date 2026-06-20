@@ -47,6 +47,7 @@ load ../test_helper/test_helper
   grep -Fq "'**.yaml'" "$workflow"
   grep -Fq "'.github/actions/**'" "$workflow"
   grep -Fq "'.github/actionlint.yaml'" "$workflow"
+  grep -Fq "'.takt/**'" "$workflow"
   grep -Fq "'templates/workflows/**'" "$workflow"
   grep -Fq "'templates/github/labels.yml'" "$workflow"
   grep -Fq "workflows:" "$workflow"
@@ -283,7 +284,9 @@ load ../test_helper/test_helper
   local workflow="${REPO_ROOT}/.github/workflows/scheduled-maintenance.yml"
 
   grep -Fq "script/check-trivyignore-review.sh" "$workflow"
-  grep -Fq "Bash(script/check-trivyignore-review.sh:*)" "$workflow"
+  grep -Fq "npm exec --yes --package=takt@0.47.0" "$workflow"
+  grep -Fq -- "--workflow .takt/workflows/repo-maintenance.yml" "$workflow"
+  grep -Fq "TAKT_ANTHROPIC_API_KEY" "$workflow"
 }
 
 @test "workflows have descriptive job names" {
