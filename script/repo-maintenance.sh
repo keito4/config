@@ -12,11 +12,12 @@ MODE="full"
 SKIP_CATEGORIES=""
 CREATE_PR=false
 CHECK_REQUIRED_WORKFLOWS_ONLY=false
+CHECK_ACTIONS_PR_SETTINGS_ONLY=false
 CONTEXT_DIR="${CONTEXT_DIR:-.context}"
 
 usage() {
   cat <<'EOF'
-Usage: script/repo-maintenance.sh [--mode full|quick|check-only] [--skip CATEGORY] [--create-pr] [--check-required-workflows]
+Usage: script/repo-maintenance.sh [--mode full|quick|check-only] [--skip CATEGORY] [--create-pr] [--check-required-workflows] [--check-actions-pr-settings]
 EOF
 }
 
@@ -36,6 +37,11 @@ while [[ $# -gt 0 ]]; do
       ;;
     --check-required-workflows)
       CHECK_REQUIRED_WORKFLOWS_ONLY=true
+      MODE="check-only"
+      shift
+      ;;
+    --check-actions-pr-settings)
+      CHECK_ACTIONS_PR_SETTINGS_ONLY=true
       MODE="check-only"
       shift
       ;;
@@ -171,6 +177,52 @@ check_repository_state() {
   if [[ "$REPO_PRIVATE" == "true" ]]; then
     output::info "Private repo: Dependency Review は optional / skipped を許容"
   fi
+}
+
+check_actions_pr_creation_settings() {
+  local repo settings default_permissions can_create_pr settings_url issue_count=0
+
+  if ! command -v gh >/dev/null 2>&1; then
+    output::warning "GitHub Actions PR creation settings check skipped: gh not found"
+    return 0
+  fi
+  if ! command -v jq >/dev/null 2>&1; then
+    output::warning "GitHub Actions PR creation settings check skipped: jq not found"
+    return 0
+  fi
+
+  repo="$(gh repo view --json nameWithOwner --jq '.nameWithOwner' 2>/dev/null || true)"
+  if [[ -z "$repo" || "$repo" == "null" ]]; then
+    output::warning "GitHub Actions PR creation settings check skipped: repository unavailable"
+    return 0
+  fi
+
+  settings="$(gh api "repos/$repo/actions/permissions/workflow" 2>/dev/null || true)"
+  if [[ -z "$settings" ]]; then
+    output::warning "GitHub Actions PR creation settings unavailable for $repo"
+    return 0
+  fi
+
+  default_permissions="$(echo "$settings" | jq -r '.default_workflow_permissions // empty')"
+  can_create_pr="$(echo "$settings" | jq -r '.can_approve_pull_request_reviews // false')"
+  settings_url="https://github.com/$repo/settings/actions"
+
+  if [[ "$default_permissions" != "write" ]]; then
+    output::warning "GitHub Actions default workflow permissions are '$default_permissions' (expected: write)"
+    issue_count=$((issue_count + 1))
+  fi
+
+  if [[ "$can_create_pr" != "true" ]]; then
+    output::warning "GitHub Actions PR creation is disabled (expected: Allow GitHub Actions to create and approve pull requests)"
+    issue_count=$((issue_count + 1))
+  fi
+
+  if [[ "$issue_count" -gt 0 ]]; then
+    echo "Settings: $settings_url"
+    return 1
+  fi
+
+  output::success "GitHub Actions PR creation settings ok"
 }
 
 check_workflow_templates() {
@@ -334,6 +386,11 @@ if [[ "$CHECK_REQUIRED_WORKFLOWS_ONLY" == "true" ]]; then
   exit $?
 fi
 
+if [[ "$CHECK_ACTIONS_PR_SETTINGS_ONLY" == "true" ]]; then
+  check_actions_pr_creation_settings
+  exit $?
+fi
+
 cat <<EOF
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Repository Maintenance
@@ -347,6 +404,7 @@ EOF
 check_repository_state
 
 if ! has_skip "setup"; then
+  check_actions_pr_creation_settings || true
   check_workflow_templates
   check_workflow_template_lint_coverage
   check_managed_templates
