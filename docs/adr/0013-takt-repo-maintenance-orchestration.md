@@ -32,6 +32,9 @@ script, `script/run-takt-repo-maintenance.sh`, through a command quality gate.
 Scheduled maintenance runs TAKT in pipeline mode with `--skip-git`. TAKT owns
 the agent loop and report generation. GitHub Actions owns the prepared
 maintenance branch, commit, push, and PR creation after TAKT completes.
+The GitHub Actions job timeout is longer than the TAKT command gate timeout so
+TAKT can report command-gate failures and the workflow can still run its
+deterministic post-processing steps.
 
 TAKT command gates intentionally execute with a restricted child-process
 environment. The scheduled workflow writes non-secret execution context such as

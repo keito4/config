@@ -27,9 +27,11 @@ describe('Scheduled maintenance workflow contracts', () => {
     const requiredSnippets = [
       'name: Create maintenance pull request',
       'CLAUDE_BRANCH: maintenance/${{ github.run_id }}-${{ github.run_attempt }}',
+      'timeout-minutes: 45',
       'name: Validate maintenance token',
       'name: Validate TAKT authentication',
       'token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}',
+      'This managed config-repository workflow depends on .takt/**',
       'uses: ./.github/actions/setup-node-ci',
       'name: Prepare maintenance branch',
       'git checkout -b "$CLAUDE_BRANCH"',
@@ -77,5 +79,14 @@ describe('Scheduled maintenance workflow contracts', () => {
     expect(taktStep).not.toContain('GH_TOKEN:');
     expect(taktStep).not.toContain('CLAUDE_BRANCH:');
     for (const snippet of forbiddenSnippets) expect(workflow).not.toContain(snippet);
+  });
+
+  test('template README documents scheduled maintenance support-file requirements', () => {
+    const readme = readWorkflow('templates/README.md');
+
+    expect(readme).toContain('workflow 単体で導入するテンプレートではありません');
+    expect(readme).toContain('script/run-takt-repo-maintenance.sh');
+    expect(readme).toContain('.github/actions/setup-node-ci');
+    expect(readme).toContain('takt');
   });
 });

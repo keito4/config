@@ -25,7 +25,7 @@ concurrency:
 jobs:
   maintenance:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       CLAUDE_BRANCH: maintenance/${{ github.run_id }}-${{ github.run_attempt }}
     permissions:
@@ -58,6 +58,9 @@ jobs:
           fetch-depth: 1
           token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}
 
+      # This managed config-repository workflow depends on .takt/**,
+      # script/repo-maintenance.sh, script/run-takt-repo-maintenance.sh,
+      # script/check-trivyignore-review.sh, and the setup-node-ci action.
       - name: Setup Node.js
         uses: ./.github/actions/setup-node-ci
 

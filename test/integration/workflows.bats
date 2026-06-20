@@ -286,6 +286,8 @@ load ../test_helper/test_helper
   grep -Fq "script/check-trivyignore-review.sh" "$workflow"
   grep -Fq "Write TAKT maintenance context" "$workflow"
   grep -Fq ".context/takt-maintenance-mode" "$workflow"
+  grep -Fq "timeout-minutes: 45" "$workflow"
+  grep -Fq "This managed config-repository workflow depends on .takt/**" "$workflow"
   grep -Fq "./node_modules/.bin/takt --pipeline" "$workflow"
   grep -Fq -- "--workflow .takt/workflows/repo-maintenance.yml" "$workflow"
   grep -Fq "TAKT_ANTHROPIC_API_KEY" "$workflow"
