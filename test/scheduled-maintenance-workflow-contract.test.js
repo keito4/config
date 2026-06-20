@@ -31,6 +31,7 @@ describe('Scheduled maintenance workflow contracts', () => {
       'name: Validate maintenance token',
       'name: Validate TAKT authentication',
       'token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}',
+      'persist-credentials: false',
       'This managed config-repository workflow depends on .takt/**',
       'uses: ./.github/actions/setup-node-ci',
       'name: Prepare maintenance branch',
@@ -50,7 +51,7 @@ describe('Scheduled maintenance workflow contracts', () => {
       "git add -A -- . ':!.context'",
       'git diff --cached --quiet',
       'git commit -m "chore: scheduled maintenance"',
-      'git push -u origin "$CLAUDE_BRANCH"',
+      'git -c http.https://github.com/.extraheader="AUTHORIZATION: bearer $GH_TOKEN" push -u origin "$CLAUDE_BRANCH"',
       'gh pr create',
       'script/check-trivyignore-review.sh',
     ];

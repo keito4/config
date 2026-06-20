@@ -95,6 +95,24 @@ function scheduledMaintenanceWorkflow() {
   ].join('\n');
 }
 
+function scheduledMaintenanceFallbackOnlyWorkflow() {
+  return [
+    'name: Scheduled Maintenance',
+    'jobs:',
+    '  maintenance:',
+    '    steps:',
+    '      - name: Use fallback token',
+    '        env:',
+    '          CLAUDE_PR_GITHUB_TOKEN: ${{ secrets.CLAUDE_PAT }}',
+    '          TAKT_ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}',
+    '      - name: Post failure issue',
+    '        env:',
+    '          GH_REPO: ${{ github.repository }}',
+    '        run: gh issue create --title failed --body failed',
+    '',
+  ].join('\n');
+}
+
 function runCreatePrWithClaudeBranch() {
   const contextDir = path.join(repoPath, '.context');
   fs.mkdirSync(contextDir, { recursive: true });
@@ -228,6 +246,17 @@ describe('repo-maintenance GitHub Actions PR creation settings', () => {
     expect(result.output).toContain('requires CLAUDE_PR_GITHUB_TOKEN or CLAUDE_PAT secret');
     expect(result.output).toContain('requires TAKT_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY secret');
     expect(result.output).toContain('https://github.com/owner/repo/settings/secrets/actions');
+  });
+
+  test('checks scheduled maintenance fallback-only secret references', () => {
+    const result = runRepoMaintenanceScript(['--check-scheduled-maintenance'], {
+      files: { '.github/workflows/scheduled-maintenance.yml': scheduledMaintenanceFallbackOnlyWorkflow() },
+      secrets: [],
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.output).toContain('requires CLAUDE_PR_GITHUB_TOKEN or CLAUDE_PAT secret');
+    expect(result.output).toContain('requires TAKT_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY secret');
   });
 
   test('accepts scheduled maintenance when required secret is present', () => {

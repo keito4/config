@@ -292,7 +292,8 @@ load ../test_helper/test_helper
   grep -Fq -- "--workflow .takt/workflows/repo-maintenance.yml" "$workflow"
   grep -Fq "TAKT_ANTHROPIC_API_KEY" "$workflow"
   grep -Fq "git add -A -- . ':!.context'" "$workflow"
-  grep -Fq "git push -u origin \"\$CLAUDE_BRANCH\"" "$workflow"
+  grep -Fq "persist-credentials: false" "$workflow"
+  grep -Fq "git -c http.https://github.com/.extraheader=\"AUTHORIZATION: bearer \$GH_TOKEN\" push -u origin \"\$CLAUDE_BRANCH\"" "$workflow"
 }
 
 @test "workflows have descriptive job names" {

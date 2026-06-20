@@ -56,6 +56,7 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 1
+          persist-credentials: false
           token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}
 
       # This managed config-repository workflow depends on .takt/**,
@@ -116,7 +117,7 @@ jobs:
           fi
 
           git commit -m "chore: scheduled maintenance"
-          git push -u origin "$CLAUDE_BRANCH"
+          git -c http.https://github.com/.extraheader="AUTHORIZATION: bearer $GH_TOKEN" push -u origin "$CLAUDE_BRANCH"
 
           EXISTING_PR=$(gh pr list --head "$CLAUDE_BRANCH" --state open --json number --jq '.[0].number // empty')
           if [ -n "$EXISTING_PR" ]; then

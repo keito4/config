@@ -9,12 +9,12 @@ check_scheduled_maintenance_configuration() {
 
   [[ -f "$workflow" ]] || return 0
 
-  if grep -qE "CLAUDE_PR_GITHUB_TOKEN|TAKT_ANTHROPIC_API_KEY" "$workflow"; then
+  if grep -qE "CLAUDE_PR_GITHUB_TOKEN|CLAUDE_PAT|TAKT_ANTHROPIC_API_KEY|ANTHROPIC_API_KEY" "$workflow"; then
     if command -v gh >/dev/null 2>&1; then
       repo="$(gh repo view --json nameWithOwner --jq '.nameWithOwner' 2>/dev/null || true)"
       if [[ -n "$repo" && "$repo" != "null" ]]; then
         secrets="$(gh secret list --repo "$repo" --json name --jq '.[].name' 2>/dev/null || true)"
-        if grep -q "CLAUDE_PR_GITHUB_TOKEN" "$workflow"; then
+        if grep -qE "CLAUDE_PR_GITHUB_TOKEN|CLAUDE_PAT" "$workflow"; then
           grep -Fxq "CLAUDE_PR_GITHUB_TOKEN" <<<"$secrets" && has_pr_token=true
           if grep -q "CLAUDE_PAT" "$workflow" && grep -Fxq "CLAUDE_PAT" <<<"$secrets"; then
             has_legacy_pat=true
@@ -25,7 +25,7 @@ check_scheduled_maintenance_configuration() {
             issue_count=$((issue_count + 1))
           fi
         fi
-        if grep -q "TAKT_ANTHROPIC_API_KEY" "$workflow"; then
+        if grep -qE "TAKT_ANTHROPIC_API_KEY|ANTHROPIC_API_KEY" "$workflow"; then
           grep -Fxq "TAKT_ANTHROPIC_API_KEY" <<<"$secrets" && has_takt_key=true
           grep -Fxq "ANTHROPIC_API_KEY" <<<"$secrets" && has_anthropic_key=true
           if [[ "$has_takt_key" != "true" && "$has_anthropic_key" != "true" ]]; then
