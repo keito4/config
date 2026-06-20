@@ -75,12 +75,12 @@ jobs:
             - What was updated
             - What needs manual attention
 
-            If changes were committed and pushed, do NOT create a pull request yourself.
-            This workflow creates the pull request from the Claude branch after Claude finishes.
+            If `script/repo-maintenance.sh --create-pr` creates a pull request, do not create another one.
+            If the script only pushes the branch, this workflow creates the pull request from the Claude branch after Claude finishes.
 
             If no updates are needed, do NOT create an issue.
           claude_args: |
-            --allowedTools "Bash(gh api:*),Bash(gh repo view:*),Bash(gh issue create:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr checks:*),Bash(gh run view:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(node:*),Bash(git:*),Bash(curl:*),Bash(jq:*),Bash(script/check-trivyignore-review.sh:*)"
+            --allowedTools "Bash(gh api:*),Bash(gh repo view:*),Bash(gh issue create:*),Bash(gh issue list:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr checks:*),Bash(gh run view:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(node:*),Bash(git:*),Bash(curl:*),Bash(jq:*),Bash(script/check-trivyignore-review.sh:*)"
 
       - name: Create maintenance pull request
         if: env.CLAUDE_BRANCH != ''
