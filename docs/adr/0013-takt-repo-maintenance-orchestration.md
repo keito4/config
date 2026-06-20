@@ -38,6 +38,9 @@ operations.
 Configure project TAKT files in `.takt/`:
 
 - Commit `.takt/config.yaml`, `.takt/workflows/`, and workflow facet files.
+- Pin `takt` in `package-lock.json` and execute the installed binary from
+  `node_modules` after `npm ci`; do not fetch TAKT dynamically in the privileged
+  scheduled workflow.
 - Ignore generated TAKT runtime state such as `.takt/runs/`, `.takt/tasks/`,
   and `.takt/tasks.yaml`.
 - This scheduled maintenance pilot uses `--skip-git`, so TAKT shared clones are

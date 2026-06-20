@@ -284,7 +284,7 @@ load ../test_helper/test_helper
   local workflow="${REPO_ROOT}/.github/workflows/scheduled-maintenance.yml"
 
   grep -Fq "script/check-trivyignore-review.sh" "$workflow"
-  grep -Fq "npm exec --yes --package=takt@0.47.0" "$workflow"
+  grep -Fq "./node_modules/.bin/takt --pipeline" "$workflow"
   grep -Fq -- "--workflow .takt/workflows/repo-maintenance.yml" "$workflow"
   grep -Fq "TAKT_ANTHROPIC_API_KEY" "$workflow"
 }

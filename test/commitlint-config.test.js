@@ -54,6 +54,23 @@ function runReleaseTypeRule(repoDir, parsed) {
   }
 }
 
+function runReleaseTypeRuleWithGitFailure(parsed) {
+  let result;
+  jest.isolateModules(() => {
+    jest.doMock('child_process', () => ({
+      ...jest.requireActual('child_process'),
+      execSync: () => {
+        throw new Error('git unavailable');
+      },
+    }));
+    const config = require(configPath);
+    const rule = config.plugins[0].rules['codex-release-type'];
+    result = rule(parsed);
+    jest.dontMock('child_process');
+  });
+  return result;
+}
+
 describe('root commitlint configuration runtime behavior', () => {
   test('allows maintenance commits when no release-sensitive file is staged', () => {
     const tempDir = makeGitRepo('commitlint-clean');
@@ -108,7 +125,7 @@ describe('root commitlint configuration runtime behavior', () => {
     fs.mkdirSync(contextDir, { recursive: true });
     const tempDir = fs.mkdtempSync(path.join(contextDir, 'commitlint-rule-no-git-'));
     try {
-      expect(runReleaseTypeRule(tempDir, { type: 'chore' })).toEqual([true]);
+      expect(runReleaseTypeRuleWithGitFailure({ type: 'chore' })).toEqual([true]);
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
@@ -124,26 +141,16 @@ describe('root commitlint configuration runtime behavior', () => {
   });
 
   test('getStagedFiles falls back to [] when git cannot discover a repository (catch branch)', () => {
-    // The existing "unreadable staged-file state" test runs inside .context/ which is
-    // still part of the git repo, so git succeeds and the catch block at line 19 is
-    // never exercised. This test sets GIT_CEILING_DIRECTORIES to .context/ so that git
-    // stops searching before it can find the parent .git directory, forcing the
-    // execSync call to throw and triggering the catch → return [].
+    // .context/ is still under the parent repository, so force git discovery to
+    // fail instead of reading the outer repo's staged files.
     const contextDir = path.join(repoPath, '.context');
     fs.mkdirSync(contextDir, { recursive: true });
     const tempDir = fs.mkdtempSync(path.join(contextDir, 'commitlint-ceiling-'));
-    const savedCeiling = process.env.GIT_CEILING_DIRECTORIES;
-    process.env.GIT_CEILING_DIRECTORIES = contextDir;
     try {
-      // getStagedFiles() → git diff throws (no repo visible) → catch returns []
-      // → touched is empty → releaseTypeRule returns [true] (non-blocking)
-      expect(runReleaseTypeRule(tempDir, { type: 'chore' })).toEqual([true]);
+      // getStagedFiles() -> git diff throws -> catch returns []
+      // -> touched is empty -> releaseTypeRule returns [true].
+      expect(runReleaseTypeRuleWithGitFailure({ type: 'chore' })).toEqual([true]);
     } finally {
-      if (savedCeiling === undefined) {
-        delete process.env.GIT_CEILING_DIRECTORIES;
-      } else {
-        process.env.GIT_CEILING_DIRECTORIES = savedCeiling;
-      }
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
   });
