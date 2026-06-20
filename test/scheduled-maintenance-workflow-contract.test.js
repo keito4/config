@@ -54,7 +54,9 @@ describe('Scheduled maintenance workflow contracts', () => {
       'git -c http.https://github.com/.extraheader="AUTHORIZATION: bearer $GH_TOKEN" push -u origin "$CLAUDE_BRANCH"',
       'gh pr create',
       'LABEL_ARGS=()',
+      'gh issue list --state open --search "fix: Scheduled Maintenance failed in:title"',
       'gh issue create',
+      'If this failed with \\`Invalid API key\\`, rotate \\`TAKT_ANTHROPIC_API_KEY\\`',
       'script/check-trivyignore-review.sh',
     ];
     const forbiddenSnippets = [
