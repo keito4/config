@@ -69,6 +69,7 @@
       # AI Tools
       "chatgpt"
       "claude"
+      "cmux"
 
       # Browsers
       "arc"

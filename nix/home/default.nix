@@ -5,6 +5,8 @@
     ./packages.nix
     ./git.nix
     ./zsh.nix
+    ./cmux.nix
+    ./karabiner.nix
   ];
 
   home = {
