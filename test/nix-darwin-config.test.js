@@ -11,6 +11,7 @@ describe('nix-darwin and home-manager macOS configuration', () => {
   test('home-manager imports cmux and Karabiner modules', () => {
     const homeDefault = readRepoFile('nix/home/default.nix');
 
+    expect(homeDefault).toContain('./dotfiles.nix');
     expect(homeDefault).toContain('./cmux.nix');
     expect(homeDefault).toContain('./karabiner.nix');
   });
@@ -73,5 +74,44 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(karabinerModule).toContain('cmuxImeShortcut "j" "japanese_kana"');
     expect(karabinerModule).toContain('cmuxImeShortcut "semicolon" "japanese_eisuu"');
     expect(karabinerModule).toContain('cmuxImeShortcut "quote" "japanese_eisuu"');
+  });
+
+  test('portable user dotfiles are managed without credential state', () => {
+    const dotfilesModule = readRepoFile('nix/home/dotfiles.nix');
+
+    [
+      'dot/aerospace.toml',
+      'dot/config/act/actrc',
+      'dot/config/agent-deck/config.toml',
+      'dot/config/codespaces-secrets/repos.txt',
+      'dot/config/graphite/aliases',
+      'git/gitignore',
+      'dot/.peco/config.json',
+      '.zsh/configs/aliases.zsh',
+      '.zsh/configs/virtual/go.zsh',
+      '.zsh/configs/virtual/php.zsh',
+      '.zsh/configs/virtual/python.zsh',
+      '.zsh/functions/git',
+    ].forEach((relativePath) => {
+      expect(fs.existsSync(path.join(repoPath, relativePath))).toBe(true);
+    });
+
+    expect(dotfilesModule).toContain('managedSource');
+    expect(dotfilesModule).toContain('".aerospace.toml"');
+    expect(dotfilesModule).toContain('".config/act/actrc"');
+    expect(dotfilesModule).toContain('".config/agent-deck/config.toml"');
+    expect(dotfilesModule).toContain('".config/codespaces-secrets/repos.txt"');
+    expect(dotfilesModule).toContain('".config/graphite/aliases"');
+    expect(dotfilesModule).toContain('".gitignore"');
+    expect(dotfilesModule).toContain('".peco/config.json"');
+    expect(dotfilesModule).toContain('".zsh/configs/virtual/go.zsh"');
+    expect(dotfilesModule).toContain('".zsh/configs/virtual/php.zsh"');
+    expect(dotfilesModule).toContain('".zsh/configs/virtual/python.zsh"');
+
+    expect(dotfilesModule).not.toContain('user_config');
+    expect(dotfilesModule).not.toContain('hosts.yml');
+    expect(dotfilesModule).not.toContain('.npmrc');
+    expect(dotfilesModule).not.toContain('.ssh');
+    expect(dotfilesModule).not.toContain('.env.secret"');
   });
 });

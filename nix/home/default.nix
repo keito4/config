@@ -5,6 +5,7 @@
     ./packages.nix
     ./git.nix
     ./zsh.nix
+    ./dotfiles.nix
     ./cmux.nix
     ./karabiner.nix
   ];
