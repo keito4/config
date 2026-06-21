@@ -33,6 +33,35 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(cmuxModule).not.toContain('C-Semicolon');
   });
 
+  test('cmux app config manages agent-friendly defaults', () => {
+    const cmuxModule = readRepoFile('nix/home/cmux.nix');
+
+    expect(cmuxModule).toContain('home.file.".config/cmux/cmux.json"');
+    expect(cmuxModule).toContain('"$schema" = cmuxSchema;');
+    expect(cmuxModule).toContain('confirmQuit = "dirty-only";');
+    expect(cmuxModule).toContain('workspaceInheritWorkingDirectory = true;');
+    expect(cmuxModule).toContain('socketControlMode = "cmuxOnly";');
+    expect(cmuxModule).toContain('suppressSubagentNotifications = true;');
+    expect(cmuxModule).toContain('ripgrepBinaryPath = "${pkgs.ripgrep}/bin/rg";');
+    expect(cmuxModule).toContain('hostsToOpenInEmbeddedBrowser = localBrowserHosts;');
+    expect(cmuxModule).toContain('openTerminalLinksInCmuxBrowser = true;');
+    expect(cmuxModule).toContain('showPullRequests = true;');
+    expect(cmuxModule).toContain('autoResumeAgentSessions = true;');
+    expect(cmuxModule).toContain('copyOnSelect = true;');
+  });
+
+  test('Ghostty config is managed for cmux terminal rendering', () => {
+    const cmuxModule = readRepoFile('nix/home/cmux.nix');
+
+    expect(cmuxModule).toContain('home.file.".config/ghostty/config"');
+    expect(cmuxModule).toContain('font-family = SF Mono');
+    expect(cmuxModule).toContain('font-size = 13');
+    expect(cmuxModule).toContain('sidebar-font-size = 14');
+    expect(cmuxModule).toContain('surface-tab-bar-font-size = 11');
+    expect(cmuxModule).toContain('scrollback-limit = 50000000');
+    expect(cmuxModule).toContain('split-divider-color = #3e4451');
+  });
+
   test('Karabiner maps Caps Lock and scopes cmux IME shortcuts', () => {
     const karabinerModule = readRepoFile('nix/home/karabiner.nix');
 

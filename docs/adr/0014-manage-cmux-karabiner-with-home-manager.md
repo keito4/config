@@ -22,8 +22,13 @@ Manage cmux and Karabiner user configuration through home-manager modules under
 
 - Install cmux through the nix-darwin Homebrew cask list.
 - Keep Karabiner Elements and Google Japanese Input in the Homebrew cask list.
-- Generate `~/.config/cmux/config` from home-manager and keep terminal keybind
-  overrides empty so input-method shortcuts are not consumed by cmux.
+- Generate `~/.config/cmux/config` from home-manager and keep legacy terminal
+  keybind overrides empty so input-method shortcuts are not consumed by cmux.
+- Generate `~/.config/cmux/cmux.json` from home-manager for app, automation,
+  notification, browser, sidebar, and terminal behavior that should be stable
+  across rebuilds.
+- Generate `~/.config/ghostty/config` from home-manager for the terminal
+  rendering settings that cmux reads through Ghostty.
 - Generate `~/.config/karabiner/karabiner.json` from home-manager.
 - Keep the Karabiner virtual keyboard type as `jis` so Japanese-specific virtual
   keys work.
@@ -37,9 +42,10 @@ Manage cmux and Karabiner user configuration through home-manager modules under
 `darwin-rebuild switch --flake ~/develop/github.com/keito4/config/nix` becomes
 the source of truth for these local input settings.
 
-Manual changes to `~/.config/cmux/config` and
-`~/.config/karabiner/karabiner.json` will be overwritten by home-manager. This
-is intentional so shortcut behavior stays reproducible across machines.
+Manual changes to `~/.config/cmux/config`, `~/.config/cmux/cmux.json`,
+`~/.config/ghostty/config`, and `~/.config/karabiner/karabiner.json` will be
+overwritten by home-manager. This is intentional so shortcut behavior and cmux
+runtime behavior stay reproducible across machines.
 
 The Karabiner workaround is app-scoped to avoid changing the same shortcuts in
 other applications.
