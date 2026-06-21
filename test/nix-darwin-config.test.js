@@ -12,6 +12,7 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     const homeDefault = readRepoFile('nix/home/default.nix');
 
     expect(homeDefault).toContain('./dotfiles.nix');
+    expect(homeDefault).toContain('./agent-commands.nix');
     expect(homeDefault).toContain('./cmux.nix');
     expect(homeDefault).toContain('./karabiner.nix');
   });
@@ -113,5 +114,25 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(dotfilesModule).not.toContain('.npmrc');
     expect(dotfilesModule).not.toContain('.ssh');
     expect(dotfilesModule).not.toContain('.env.secret"');
+  });
+
+  test('agent local config collector is installed as a safe command', () => {
+    const agentCommandsModule = readRepoFile('nix/home/agent-commands.nix');
+    const collectorScript = readRepoFile('script/agent/collect-local-configs.sh');
+    const collectorPath = path.join(repoPath, 'script/agent/collect-local-configs.sh');
+
+    expect(fs.statSync(collectorPath).mode & 0o111).toBeTruthy();
+    expect(agentCommandsModule).toContain('".local/bin/agent-collect-local-configs"');
+    expect(agentCommandsModule).toContain('../../script/agent/collect-local-configs.sh');
+    expect(agentCommandsModule).toContain('executable = true;');
+    expect(agentCommandsModule).toContain('force = true;');
+
+    expect(collectorScript).toContain('config.local.json');
+    expect(collectorScript).toContain('settings.local.json');
+    expect(collectorScript).toContain('.env.local');
+    expect(collectorScript).toContain('auth.json');
+    expect(collectorScript).toContain('credentials*.json');
+    expect(collectorScript).toContain('category\\tbytes\\tmtime\\tpath');
+    expect(collectorScript).toContain('intentionally does not copy or print file contents');
   });
 });

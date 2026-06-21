@@ -6,6 +6,7 @@
     ./git.nix
     ./zsh.nix
     ./dotfiles.nix
+    ./agent-commands.nix
     ./cmux.nix
     ./karabiner.nix
   ];
