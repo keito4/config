@@ -75,19 +75,27 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     const karabinerModule = readRepoFile('nix/home/karabiner.nix');
 
     expect(karabinerModule).toContain('home.file.".config/karabiner/karabiner.json"');
-    expect(karabinerModule).toContain('keyboard_type_v2 = "jis"');
+    expect(karabinerModule).not.toContain('keyboard_type_v2 = "jis"');
     expect(karabinerModule).toContain('key_code = "caps_lock"');
     expect(karabinerModule).toContain('key_code = "left_control"');
     expect(karabinerModule).toContain('^com\\\\.cmuxterm\\\\.app$');
-    expect(karabinerModule).toContain('cmuxImeShortcut "j" "japanese_kana"');
-    expect(karabinerModule).toContain('cmuxImeShortcut "semicolon" "japanese_eisuu"');
-    expect(karabinerModule).toContain('cmuxImeShortcut "quote" "japanese_eisuu"');
-    expect(karabinerModule).toContain('cmuxCapsLockImeShortcut "j" "japanese_kana"');
-    expect(karabinerModule).toContain('cmuxCapsLockImeShortcut "semicolon" "japanese_eisuu"');
-    expect(karabinerModule).toContain('cmuxCapsLockImeShortcut "quote" "japanese_eisuu"');
-    expect(karabinerModule).toContain('cmuxImeSimultaneousShortcut "left_control" "j" "japanese_kana"');
-    expect(karabinerModule).toContain('cmuxImeSimultaneousShortcut "right_control" "j" "japanese_kana"');
-    expect(karabinerModule).toContain('cmuxImeSimultaneousShortcut "caps_lock" "j" "japanese_kana"');
+    expect(karabinerModule).toContain('cmuxJapaneseInputSource = "com.google.inputmethod.Japanese.base";');
+    expect(karabinerModule).toContain('cmuxEnglishInputSource = "com.google.inputmethod.Japanese.Roman";');
+    expect(karabinerModule).toContain('shell_command = "${inputSourceCommand} ${inputSourceID}"');
+    expect(karabinerModule).toContain('cmuxImeShortcut "j" cmuxJapaneseInputSource');
+    expect(karabinerModule).toContain('cmuxImeShortcut "semicolon" cmuxEnglishInputSource');
+    expect(karabinerModule).toContain('cmuxImeShortcut "quote" cmuxEnglishInputSource');
+    expect(karabinerModule).toContain('cmuxCapsLockImeShortcut "j" cmuxJapaneseInputSource');
+    expect(karabinerModule).toContain('cmuxImeSimultaneousShortcut "left_control" "j" cmuxJapaneseInputSource');
+    expect(karabinerModule).toContain('home.file.".local/bin/agent-select-input-source"');
+    expect(karabinerModule).toContain('source = ../../script/macos/agent-select-input-source.sh;');
+
+    const selectInputSourceScript = readRepoFile('script/macos/select-input-source.swift');
+    expect(selectInputSourceScript).toContain('TISSelectInputSource');
+    expect(selectInputSourceScript).toContain('TISCopyCurrentKeyboardInputSource');
+
+    const selectInputSourceWrapper = readRepoFile('script/macos/agent-select-input-source.sh');
+    expect(selectInputSourceWrapper).toContain('exec /usr/bin/xcrun swift "$src" "$@"');
   });
 
   test('portable user dotfiles are managed without credential state', () => {

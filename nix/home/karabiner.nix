@@ -1,12 +1,21 @@
-{ ... }:
+{ config, ... }:
 
 let
+  inputSourceCommand = "${config.home.homeDirectory}/.local/bin/agent-select-input-source";
+
+  cmuxJapaneseInputSource = "com.google.inputmethod.Japanese.base";
+  cmuxEnglishInputSource = "com.google.inputmethod.Japanese.Roman";
+
   cmuxBundleCondition = {
     type = "frontmost_application_if";
     bundle_identifiers = [ "^com\\.cmuxterm\\.app$" ];
   };
 
-  cmuxImeShortcutWithModifiers = mandatoryModifiers: fromKey: toKey: {
+  selectInputSource = inputSourceID: {
+    shell_command = "${inputSourceCommand} ${inputSourceID}";
+  };
+
+  cmuxImeShortcutWithModifiers = mandatoryModifiers: fromKey: inputSourceID: {
     type = "basic";
     from = {
       key_code = fromKey;
@@ -15,7 +24,7 @@ let
         optional = [ "any" ];
       };
     };
-    to = [ { key_code = toKey; } ];
+    to = [ (selectInputSource inputSourceID) ];
     conditions = [ cmuxBundleCondition ];
   };
 
@@ -29,7 +38,7 @@ let
     "shift"
   ];
 
-  cmuxImeSimultaneousShortcut = modifierKey: fromKey: toKey: {
+  cmuxImeSimultaneousShortcut = modifierKey: fromKey: inputSourceID: {
     type = "basic";
     from = {
       simultaneous = [
@@ -46,7 +55,7 @@ let
         optional = [ "any" ];
       };
     };
-    to = [ { key_code = toKey; } ];
+    to = [ (selectInputSource inputSourceID) ];
     conditions = [ cmuxBundleCondition ];
   };
 
@@ -55,10 +64,6 @@ let
       {
         name = "Default profile";
         selected = true;
-
-        virtual_hid_keyboard = {
-          keyboard_type_v2 = "jis";
-        };
 
         simple_modifications = [
           {
@@ -79,21 +84,21 @@ let
             {
               description = "cmux: keep Google Japanese IME shortcuts out of terminal";
               manipulators = [
-                (cmuxImeShortcut "j" "japanese_kana")
-                (cmuxImeShortcut "semicolon" "japanese_eisuu")
-                (cmuxImeShortcut "quote" "japanese_eisuu")
-                (cmuxCapsLockImeShortcut "j" "japanese_kana")
-                (cmuxCapsLockImeShortcut "semicolon" "japanese_eisuu")
-                (cmuxCapsLockImeShortcut "quote" "japanese_eisuu")
-                (cmuxImeSimultaneousShortcut "left_control" "j" "japanese_kana")
-                (cmuxImeSimultaneousShortcut "right_control" "j" "japanese_kana")
-                (cmuxImeSimultaneousShortcut "caps_lock" "j" "japanese_kana")
-                (cmuxImeSimultaneousShortcut "left_control" "semicolon" "japanese_eisuu")
-                (cmuxImeSimultaneousShortcut "right_control" "semicolon" "japanese_eisuu")
-                (cmuxImeSimultaneousShortcut "caps_lock" "semicolon" "japanese_eisuu")
-                (cmuxImeSimultaneousShortcut "left_control" "quote" "japanese_eisuu")
-                (cmuxImeSimultaneousShortcut "right_control" "quote" "japanese_eisuu")
-                (cmuxImeSimultaneousShortcut "caps_lock" "quote" "japanese_eisuu")
+                (cmuxImeShortcut "j" cmuxJapaneseInputSource)
+                (cmuxImeShortcut "semicolon" cmuxEnglishInputSource)
+                (cmuxImeShortcut "quote" cmuxEnglishInputSource)
+                (cmuxCapsLockImeShortcut "j" cmuxJapaneseInputSource)
+                (cmuxCapsLockImeShortcut "semicolon" cmuxEnglishInputSource)
+                (cmuxCapsLockImeShortcut "quote" cmuxEnglishInputSource)
+                (cmuxImeSimultaneousShortcut "left_control" "j" cmuxJapaneseInputSource)
+                (cmuxImeSimultaneousShortcut "right_control" "j" cmuxJapaneseInputSource)
+                (cmuxImeSimultaneousShortcut "caps_lock" "j" cmuxJapaneseInputSource)
+                (cmuxImeSimultaneousShortcut "left_control" "semicolon" cmuxEnglishInputSource)
+                (cmuxImeSimultaneousShortcut "right_control" "semicolon" cmuxEnglishInputSource)
+                (cmuxImeSimultaneousShortcut "caps_lock" "semicolon" cmuxEnglishInputSource)
+                (cmuxImeSimultaneousShortcut "left_control" "quote" cmuxEnglishInputSource)
+                (cmuxImeSimultaneousShortcut "right_control" "quote" cmuxEnglishInputSource)
+                (cmuxImeSimultaneousShortcut "caps_lock" "quote" cmuxEnglishInputSource)
               ];
             }
           ];
@@ -106,5 +111,16 @@ in
   home.file.".config/karabiner/karabiner.json" = {
     force = true;
     text = builtins.toJSON karabinerConfig + "\n";
+  };
+
+  home.file.".config/karabiner/select-input-source.swift" = {
+    source = ../../script/macos/select-input-source.swift;
+    force = true;
+  };
+
+  home.file.".local/bin/agent-select-input-source" = {
+    source = ../../script/macos/agent-select-input-source.sh;
+    executable = true;
+    force = true;
   };
 }
