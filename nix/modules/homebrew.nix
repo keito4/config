@@ -41,17 +41,19 @@
       "1password-cli"
 
       # Development Tools
+      "android-studio"
       "cursor"
       "dotnet-sdk"
+      "flutter"
       "gcloud-cli"
       "ngrok"
       "orbstack"
-      "rancher"
       "tableplus"
       "visual-studio-code"
 
       # Communication
       "discord"
+      "mattermost"
       "messenger"
       "slack"
       "zoom"
@@ -59,7 +61,6 @@
       # Productivity
       "aerospace"
       "alfred"
-      "bartender"
       "bettertouchtool"
       "karabiner-elements"
       "notion"

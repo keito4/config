@@ -20,9 +20,16 @@ describe('nix-darwin and home-manager macOS configuration', () => {
   test('Homebrew casks install cmux and input tooling', () => {
     const homebrewModule = readRepoFile('nix/modules/homebrew.nix');
 
+    expect(homebrewModule).toContain('"android-studio"');
     expect(homebrewModule).toContain('"cmux"');
+    expect(homebrewModule).toContain('"flutter"');
     expect(homebrewModule).toContain('"karabiner-elements"');
+    expect(homebrewModule).toContain('"mattermost"');
     expect(homebrewModule).toContain('"google-japanese-ime"');
+    expect(homebrewModule).not.toContain('"bartender"');
+    expect(homebrewModule).not.toContain('"rancher"');
+    expect(homebrewModule).not.toContain('"google-cloud-sdk"');
+    expect(homebrewModule).not.toContain('"tailscale"');
   });
 
   test('cmux terminal config leaves IME shortcuts unbound', () => {
