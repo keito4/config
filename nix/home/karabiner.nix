@@ -29,6 +29,27 @@ let
     "shift"
   ];
 
+  cmuxImeSimultaneousShortcut = modifierKey: fromKey: toKey: {
+    type = "basic";
+    from = {
+      simultaneous = [
+        { key_code = modifierKey; }
+        { key_code = fromKey; }
+      ];
+      simultaneous_options = {
+        detect_key_down_uninterruptedly = true;
+        key_down_order = "insensitive";
+        key_up_order = "insensitive";
+      };
+      modifiers = {
+        mandatory = [ "shift" ];
+        optional = [ "any" ];
+      };
+    };
+    to = [ { key_code = toKey; } ];
+    conditions = [ cmuxBundleCondition ];
+  };
+
   karabinerConfig = {
     profiles = [
       {
@@ -64,6 +85,15 @@ let
                 (cmuxCapsLockImeShortcut "j" "japanese_kana")
                 (cmuxCapsLockImeShortcut "semicolon" "japanese_eisuu")
                 (cmuxCapsLockImeShortcut "quote" "japanese_eisuu")
+                (cmuxImeSimultaneousShortcut "left_control" "j" "japanese_kana")
+                (cmuxImeSimultaneousShortcut "right_control" "j" "japanese_kana")
+                (cmuxImeSimultaneousShortcut "caps_lock" "j" "japanese_kana")
+                (cmuxImeSimultaneousShortcut "left_control" "semicolon" "japanese_eisuu")
+                (cmuxImeSimultaneousShortcut "right_control" "semicolon" "japanese_eisuu")
+                (cmuxImeSimultaneousShortcut "caps_lock" "semicolon" "japanese_eisuu")
+                (cmuxImeSimultaneousShortcut "left_control" "quote" "japanese_eisuu")
+                (cmuxImeSimultaneousShortcut "right_control" "quote" "japanese_eisuu")
+                (cmuxImeSimultaneousShortcut "caps_lock" "quote" "japanese_eisuu")
               ];
             }
           ];
