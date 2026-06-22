@@ -1,10 +1,8 @@
-{ config, ... }:
+{ ... }:
 
 let
-  inputSourceCommand = "${config.home.homeDirectory}/.local/bin/agent-select-input-source";
-
-  cmuxJapaneseInputSource = "com.google.inputmethod.Japanese.base";
-  cmuxEnglishInputSource = "com.google.inputmethod.Japanese.Roman";
+  cmuxJapaneseInputSource = "^com\\.google\\.inputmethod\\.Japanese\\.base$";
+  cmuxEnglishInputSource = "^com\\.google\\.inputmethod\\.Japanese\\.Roman$";
 
   cmuxBundleCondition = {
     type = "frontmost_application_if";
@@ -12,7 +10,9 @@ let
   };
 
   selectInputSource = inputSourceID: {
-    shell_command = "${inputSourceCommand} ${inputSourceID}";
+    select_input_source = {
+      input_source_id = inputSourceID;
+    };
   };
 
   cmuxImeShortcutWithModifiers = mandatoryModifiers: fromKey: inputSourceID: {
@@ -65,6 +65,10 @@ let
         name = "Default profile";
         selected = true;
 
+        virtual_hid_keyboard = {
+          keyboard_type_v2 = "ansi";
+        };
+
         simple_modifications = [
           {
             from = {
@@ -111,16 +115,5 @@ in
   home.file.".config/karabiner/karabiner.json" = {
     force = true;
     text = builtins.toJSON karabinerConfig + "\n";
-  };
-
-  home.file.".config/karabiner/select-input-source.swift" = {
-    source = ../../script/macos/select-input-source.swift;
-    force = true;
-  };
-
-  home.file.".local/bin/agent-select-input-source" = {
-    source = ../../script/macos/agent-select-input-source.sh;
-    executable = true;
-    force = true;
   };
 }
