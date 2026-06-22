@@ -6,21 +6,28 @@ let
     bundle_identifiers = [ "^com\\.cmuxterm\\.app$" ];
   };
 
-  cmuxImeShortcut = fromKey: toKey: {
+  cmuxImeShortcutWithModifiers = mandatoryModifiers: fromKey: toKey: {
     type = "basic";
     from = {
       key_code = fromKey;
       modifiers = {
-        mandatory = [
-          "control"
-          "shift"
-        ];
+        mandatory = mandatoryModifiers;
         optional = [ "any" ];
       };
     };
     to = [ { key_code = toKey; } ];
     conditions = [ cmuxBundleCondition ];
   };
+
+  cmuxImeShortcut = cmuxImeShortcutWithModifiers [
+    "control"
+    "shift"
+  ];
+
+  cmuxCapsLockImeShortcut = cmuxImeShortcutWithModifiers [
+    "caps_lock"
+    "shift"
+  ];
 
   karabinerConfig = {
     profiles = [
@@ -54,6 +61,9 @@ let
                 (cmuxImeShortcut "j" "japanese_kana")
                 (cmuxImeShortcut "semicolon" "japanese_eisuu")
                 (cmuxImeShortcut "quote" "japanese_eisuu")
+                (cmuxCapsLockImeShortcut "j" "japanese_kana")
+                (cmuxCapsLockImeShortcut "semicolon" "japanese_eisuu")
+                (cmuxCapsLockImeShortcut "quote" "japanese_eisuu")
               ];
             }
           ];

@@ -53,7 +53,7 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(cmuxModule).toContain('suppressSubagentNotifications = true;');
     expect(cmuxModule).toContain('ripgrepBinaryPath = "${pkgs.ripgrep}/bin/rg";');
     expect(cmuxModule).toContain('hostsToOpenInEmbeddedBrowser = localBrowserHosts;');
-    expect(cmuxModule).toContain('openTerminalLinksInCmuxBrowser = true;');
+    expect(cmuxModule).toContain('openTerminalLinksInCmuxBrowser = false;');
     expect(cmuxModule).toContain('showPullRequests = true;');
     expect(cmuxModule).toContain('autoResumeAgentSessions = true;');
     expect(cmuxModule).toContain('copyOnSelect = true;');
@@ -82,6 +82,9 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(karabinerModule).toContain('cmuxImeShortcut "j" "japanese_kana"');
     expect(karabinerModule).toContain('cmuxImeShortcut "semicolon" "japanese_eisuu"');
     expect(karabinerModule).toContain('cmuxImeShortcut "quote" "japanese_eisuu"');
+    expect(karabinerModule).toContain('cmuxCapsLockImeShortcut "j" "japanese_kana"');
+    expect(karabinerModule).toContain('cmuxCapsLockImeShortcut "semicolon" "japanese_eisuu"');
+    expect(karabinerModule).toContain('cmuxCapsLockImeShortcut "quote" "japanese_eisuu"');
   });
 
   test('portable user dotfiles are managed without credential state', () => {

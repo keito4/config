@@ -36,7 +36,7 @@ let
       defaultSearchEngine = "google";
       hostsToOpenInEmbeddedBrowser = localBrowserHosts;
       insecureHttpHostsAllowedInEmbeddedBrowser = localBrowserHosts;
-      openTerminalLinksInCmuxBrowser = true;
+      openTerminalLinksInCmuxBrowser = false;
     };
 
     notifications = {
