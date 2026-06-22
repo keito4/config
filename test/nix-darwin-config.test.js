@@ -75,7 +75,7 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     const karabinerModule = readRepoFile('nix/home/karabiner.nix');
 
     expect(karabinerModule).toContain('home.file.".config/karabiner/karabiner.json"');
-    expect(karabinerModule).toContain('keyboard_type_v2 = "ansi"');
+    expect(karabinerModule).not.toContain('keyboard_type_v2 = "ansi"');
     expect(karabinerModule).not.toContain('keyboard_type_v2 = "jis"');
     expect(karabinerModule).toContain('key_code = "caps_lock"');
     expect(karabinerModule).toContain('key_code = "left_control"');
