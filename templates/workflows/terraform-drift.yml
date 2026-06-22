@@ -121,7 +121,7 @@ jobs:
       # -----------------------------------------------------------------
       - name: Checkout repository
         if: steps.selected.outputs.run == 'true'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # -----------------------------------------------------------------
       # Terraform セットアップ

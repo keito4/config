@@ -301,7 +301,10 @@ load ../test_helper/test_helper
 
   # Should upload coverage with token (SHA or tag)
   grep -q "codecov/codecov-action@" "$workflow"
-  grep -q "token:.*secrets.CODECOV_TOKEN" "$workflow"
+  grep -q "id: codecov-token" "$workflow"
+  grep -q "CODECOV_TOKEN:.*secrets.CODECOV_TOKEN" "$workflow"
+  grep -q "if: always().*steps.codecov-token.outputs.available == 'true'" "$workflow"
+  grep -q "token:.*env.CODECOV_TOKEN" "$workflow"
 
   # Should not fail CI on coverage upload errors
   grep -q "fail_ci_if_error: false" "$workflow"

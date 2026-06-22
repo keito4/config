@@ -10,7 +10,7 @@ unit-tests:
   needs: quality-gate
   timeout-minutes: 15
   steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Setup Node.js
       uses: actions/setup-node@v6
@@ -70,7 +70,7 @@ e2e-critical:
   if: github.event_name == 'pull_request'
   timeout-minutes: 20
   steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Setup Node.js
       uses: actions/setup-node@v6
@@ -117,7 +117,7 @@ e2e-full:
   if: github.ref == 'refs/heads/main'
   timeout-minutes: 30
   steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Setup Node.js
       uses: actions/setup-node@v6
