@@ -29,6 +29,7 @@ describe('User Flow Integration', () => {
     });
 
     if (error) throw error;
+    if (!data.user) throw new Error('User creation returned no user data');
     testUserId = data.user.id;
   });
 
