@@ -89,7 +89,7 @@ function validateSchema(data: unknown, schema: Record<string, unknown>): boolean
     if (typeof data !== 'object' || data === null) return false;
 
     const obj = data as Record<string, unknown>;
-    const required = (schema.required as string[]) || [];
+    const required = Array.isArray(schema.required) ? (schema.required as string[]) : [];
 
     for (const field of required) {
       if (!(field in obj)) return false;
@@ -99,7 +99,7 @@ function validateSchema(data: unknown, schema: Record<string, unknown>): boolean
 
   if (schema.type === 'array') {
     if (!Array.isArray(data)) return false;
-    if (!schema.items) return true;
+    if (typeof schema.items !== 'object' || schema.items === null) return true;
 
     const itemSchema = schema.items as Record<string, unknown>;
     return data.every((item) => validateSchema(item, itemSchema));

@@ -67,9 +67,11 @@ for (const [templatePath, actualPath] of syncPairs) {
 
   const diff = firstDifference(expected, actual);
   console.error(`::error file=${templatePath}::Workflow template drift from ${actualPath}`);
-  console.error(`  first differing normalized line: ${diff.line}`);
-  console.error(`  template: ${diff.expected}`);
-  console.error(`  actual:   ${diff.actual}`);
+  if (diff !== null) {
+    console.error(`  first differing normalized line: ${diff.line}`);
+    console.error(`  template: ${diff.expected}`);
+    console.error(`  actual:   ${diff.actual}`);
+  }
   hasDrift = true;
 }
 

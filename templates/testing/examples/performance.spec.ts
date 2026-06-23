@@ -55,9 +55,15 @@ test.describe('Performance Tests', () => {
           }
 
           function collectMetrics() {
-            const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-            const paint = performance.getEntriesByType('paint');
+            const navEntries = performance.getEntriesByType('navigation');
+            const navigation = navEntries[0] as PerformanceNavigationTiming | undefined;
 
+            if (!navigation) {
+              resolve({ domContentLoaded: 0, load: 0, ttfb: 0, fcp: null, domElements: 0 });
+              return;
+            }
+
+            const paint = performance.getEntriesByType('paint');
             const fcp = paint.find((entry) => entry.name === 'first-contentful-paint');
 
             resolve({
@@ -96,10 +102,11 @@ test.describe('Performance Tests', () => {
 
       // メトリクス収集
       const metrics = await page.evaluate(() => {
-        const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+        const navEntries = performance.getEntriesByType('navigation');
+        const navigation = navEntries[0] as PerformanceNavigationTiming | undefined;
 
         return {
-          load: navigation.loadEventEnd - navigation.startTime,
+          load: navigation ? navigation.loadEventEnd - navigation.startTime : 0,
           domElements: document.querySelectorAll('*').length,
         };
       });
