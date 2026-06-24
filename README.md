@@ -100,6 +100,7 @@ Quality gates and hook behavior are defined by the hook scripts and settings ref
 - Update the source file and regenerate the generated output when generated content changes.
 - Add an ADR in [docs/adr/](docs/adr/) for non-trivial documentation architecture changes.
 - Store intermediate review artifacts under `.context/`.
+- `CLAUDE.md` is a symlink to `AGENTS.md` — it exists to satisfy Claude Code's CLAUDE.md lookup path without duplicating content. Do not edit `CLAUDE.md` directly; run `bash script/update-agents-md.sh` instead.
 
 ## Glossary
 
