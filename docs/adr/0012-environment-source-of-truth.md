@@ -38,8 +38,7 @@ layers that make the repository harder to understand.
    downstream templates.
 4. Codex intentionally has the broader MCP set for repo maintenance and
    operations. Gemini intentionally has a smaller review-oriented MCP set. The
-   difference is documented in `.codex/config.toml`, `.gemini/README.md`, and the
-   environment diff report under `.context/`.
+   difference is documented in `.codex/config.toml` and `.gemini/README.md`.
 
 ## Consequences
 
@@ -63,8 +62,6 @@ layers that make the repository harder to understand.
 
 ### Mitigation
 
-- Keep the `.context/issue-819-environment-diff.md` report in this PR as review
-  evidence.
 - BATS validates the credential template variables expected by the MCP settings.
 - Future shared list generation should wait until at least three maintained
   surfaces need the same generated output.
