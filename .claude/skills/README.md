@@ -119,12 +119,20 @@ PR 作成後等に自動トリガーされるスキル。
 
 ## E. Hooks（`.claude/hooks/`）
 
-| フック                        | イベント    | 説明                                 |
-| ----------------------------- | ----------- | ------------------------------------ |
-| `block_git_no_verify.py`      | PreToolUse  | `--no-verify` / `HUSKY=0` をブロック |
-| `block_dangerous_commands.py` | PreToolUse  | 危険コマンド実行を防止               |
-| `pre_git_quality_gates.py`    | PreToolUse  | Git 操作前に Quality Gates 自動実行  |
-| `post_git_push_ci.py`         | PostToolUse | push 後に CI 状態を監視              |
-| `post_pr_ci_watch.py`         | PostToolUse | PR 作成後に CI 監視                  |
-| `post_pr_ai_review.py`        | PostToolUse | PR 作成後に AI レビュー実行          |
-| `pre_exit_plan_ai_review.py`  | PreToolUse  | Plan 終了前に AI レビュー            |
+完全なカタログは [../../AGENTS.md](../../AGENTS.md) を参照してください。
+
+| フック                        | イベント    | 説明                                                |
+| ----------------------------- | ----------- | --------------------------------------------------- |
+| `block_config_edit.py`        | PreToolUse  | リンター/フォーマッター設定ファイルの編集をブロック |
+| `block_dangerous_commands.py` | PreToolUse  | 危険コマンド実行を防止                              |
+| `block_git_no_verify.py`      | PreToolUse  | `--no-verify` / `HUSKY=0` をブロック                |
+| `block_inline_secrets.py`     | PreToolUse  | インライン埋め込み認証情報を検出してブロック        |
+| `common.py`                   | —           | 共有ユーティリティライブラリ（他フックから import） |
+| `post_commit_adr_reminder.py` | PostToolUse | commit 後にアーキテクチャ変更検出 → ADR リマインド  |
+| `post_edit_auto_lint.py`      | PostToolUse | ファイル編集後に自動フォーマット＋リント            |
+| `post_git_push_ci.py`         | PostToolUse | push 後に CI 状態を監視                             |
+| `post_pr_ai_review.py`        | PostToolUse | PR 作成後に AI レビュー実行                         |
+| `post_pr_ci_watch.py`         | PostToolUse | PR 作成後に CI 監視                                 |
+| `pre_exit_plan_ai_review.py`  | PreToolUse  | Plan 終了前に AI レビュー                           |
+| `pre_git_quality_gates.py`    | PreToolUse  | Git 操作前に Quality Gates 自動実行                 |
+| `stop_test_verification.py`   | Stop        | エージェント完了前にテストを自動実行                |
