@@ -4,20 +4,22 @@
 
 ## ADR 一覧
 
-| ADR                                                  | タイトル                                                     | Status             |
-| ---------------------------------------------------- | ------------------------------------------------------------ | ------------------ |
-| [0001](0001-devcontainer-base-image.md)              | DevContainer Base Image Architecture                         | Accepted           |
-| [0002](0002-auto-version-updates.md)                 | Automated Version Updates Strategy                           | Superseded by 0006 |
-| [0003](0003-remove-rust-from-base-image.md)          | Remove Rust from base image                                  | Accepted           |
-| [0004](0004-dependabot-minor-auto-merge.md)          | Dependabot minor auto-merge                                  | Accepted           |
-| [0005](0005-npm-legacy-peer-deps-for-typescript6.md) | npm legacy-peer-deps for TypeScript 6                        | Accepted           |
-| [0006](0006-consolidate-version-updates.md)          | バージョン更新の Dependabot 一本化                           | Accepted           |
-| [0007](0007-separate-claude-pr-creation-step.md)     | Separate Claude Pull Request Creation From Claude Bash Tools | Accepted           |
-| [0008](0008-documentation-single-source-of-truth.md) | Documentation Single Source Of Truth                         | Accepted           |
-| [0009](0009-workflow-template-synchronization.md)    | Workflow Template Synchronization                            | Accepted           |
-| [0010](0010-ci-workflow-consolidation.md)            | CI workflow consolidation                                    | Accepted           |
-| [0011](0011-hook-and-script-dry-boundaries.md)       | Hook and Script DRY Boundaries                               | Accepted           |
-| [0012](0012-environment-source-of-truth.md)          | Environment Source of Truth                                  | Accepted           |
+| ADR                                                             | タイトル                                                     | Status             |
+| --------------------------------------------------------------- | ------------------------------------------------------------ | ------------------ |
+| [0001](0001-devcontainer-base-image.md)                         | DevContainer Base Image Architecture                         | Accepted           |
+| [0002](0002-auto-version-updates.md)                            | Automated Version Updates Strategy                           | Superseded by 0006 |
+| [0003](0003-remove-rust-from-base-image.md)                     | Remove Rust from base image                                  | Accepted           |
+| [0004](0004-dependabot-minor-auto-merge.md)                     | Dependabot minor auto-merge                                  | Accepted           |
+| [0005](0005-npm-legacy-peer-deps-for-typescript6.md)            | npm legacy-peer-deps for TypeScript 6                        | Accepted           |
+| [0006](0006-consolidate-version-updates.md)                     | バージョン更新の Dependabot 一本化                           | Accepted           |
+| [0007](0007-separate-claude-pr-creation-step.md)                | Separate Claude Pull Request Creation From Claude Bash Tools | Accepted           |
+| [0008](0008-documentation-single-source-of-truth.md)            | Documentation Single Source Of Truth                         | Accepted           |
+| [0009](0009-workflow-template-synchronization.md)               | Workflow Template Synchronization                            | Accepted           |
+| [0010](0010-ci-workflow-consolidation.md)                       | CI workflow consolidation                                    | Accepted           |
+| [0011](0011-hook-and-script-dry-boundaries.md)                  | Hook and Script DRY Boundaries                               | Accepted           |
+| [0012](0012-environment-source-of-truth.md)                     | Environment Source of Truth                                  | Accepted           |
+| [0014](0014-manage-cmux-karabiner-with-home-manager.md)         | Manage cmux and Karabiner Configuration with Home Manager    | Accepted           |
+| [0015](0015-manage-portable-user-dotfiles-with-home-manager.md) | Manage Portable User Dotfiles with Home Manager              | Accepted           |
 
 ## ADR テンプレート
 
