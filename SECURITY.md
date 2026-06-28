@@ -82,10 +82,22 @@ git config --global gpg.format ssh
 
 ### 依存関係の脆弱性
 
-`semantic-release` が内部で利用する `@semantic-release/npm` は `npm` を依存として含みます。現時点の `npm` 最新版 (11.8.0) は `tar` の修正済みバージョンを含んでおらず、`npm audit` で高リスクが表示されることがあります。これは上流の更新待ちです。
+#### npm 内蔵 undici (HIGH)
 
-- 対応: `npm` のリリース更新を確認し、修正版が出たら依存関係を更新
-- 回避策: 当面は `npm audit` の警告を記録し、CIの動作に影響しないことを確認
+`npm@11.17.0` は `undici@6.26.0` を内部にバンドル（`inBundle: true`）しています。`npm audit` で HIGH 脆弱性が検出されます：
+
+- GHSA-vxpw-j846-p89q: WebSocket DoS via fragment count bypass
+- GHSA-p88m-4jfj-68fv: HTTP header injection via Set-Cookie
+
+これは npm パッケージのバンドル依存であり、`overrides` による上書きは不可能です。
+
+- 対応: npm が `undici >= 6.27.0` を内包するバージョンをリリースするまで待機
+- 監視: `npm audit --audit-level=high` で確認（CI は `--audit-level=critical` を使用）
+- 影響範囲: npm CLI の内部 HTTP クライアントのみ。プロダクションアプリには直接影響しない
+
+#### Trivy で検出されるコンテナ脆弱性
+
+`.trivyignore` に登録されている脆弱性は、上流ツール (Vercel CLI, Doppler CLI, GitHub CLI 等) の更新待ちです。各エントリにレビュー日付を記録しています。詳細は `.trivyignore` を参照してください。
 
 ### Git設定の確認
 

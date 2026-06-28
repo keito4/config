@@ -1,4 +1,5 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
@@ -104,12 +105,20 @@ describe('root commitlint configuration runtime behavior', () => {
   });
 
   test('treats unreadable staged-file state as non-blocking', () => {
-    const contextDir = path.join(repoPath, '.context');
-    fs.mkdirSync(contextDir, { recursive: true });
-    const tempDir = fs.mkdtempSync(path.join(contextDir, 'commitlint-rule-no-git-'));
+    // Create tempDir in os.tmpdir() so git auto-discovery finds no .git ancestor.
+    // Using a path inside the repo (e.g. .context/) causes git to traverse up and
+    // find the parent repo's staged files, making the test environment-sensitive.
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'commitlint-rule-no-git-'));
+    const savedGitDir = process.env.GIT_DIR;
+    // Remove any inherited GIT_DIR (e.g. set by CI/pre-commit hooks) so git must
+    // auto-discover from tempDir and fail to find a repo.
+    delete process.env.GIT_DIR;
     try {
       expect(runReleaseTypeRule(tempDir, { type: 'chore' })).toEqual([true]);
     } finally {
+      if (savedGitDir !== undefined) {
+        process.env.GIT_DIR = savedGitDir;
+      }
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
   });
@@ -124,25 +133,18 @@ describe('root commitlint configuration runtime behavior', () => {
   });
 
   test('getStagedFiles falls back to [] when git cannot discover a repository (catch branch)', () => {
-    // The existing "unreadable staged-file state" test runs inside .context/ which is
-    // still part of the git repo, so git succeeds and the catch block at line 19 is
-    // never exercised. This test sets GIT_CEILING_DIRECTORIES to .context/ so that git
-    // stops searching before it can find the parent .git directory, forcing the
-    // execSync call to throw and triggering the catch → return [].
-    const contextDir = path.join(repoPath, '.context');
-    fs.mkdirSync(contextDir, { recursive: true });
-    const tempDir = fs.mkdtempSync(path.join(contextDir, 'commitlint-ceiling-'));
-    const savedCeiling = process.env.GIT_CEILING_DIRECTORIES;
-    process.env.GIT_CEILING_DIRECTORIES = contextDir;
+    // Create tempDir in os.tmpdir() so git auto-discovery finds no .git ancestor.
+    // getStagedFiles() → git diff throws (no repo) → catch returns [] → [true].
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'commitlint-no-repo-'));
+    const savedGitDir = process.env.GIT_DIR;
+    // Remove any inherited GIT_DIR (e.g. set by CI/pre-commit hooks) so git must
+    // auto-discover from tempDir and fail to find a repo.
+    delete process.env.GIT_DIR;
     try {
-      // getStagedFiles() → git diff throws (no repo visible) → catch returns []
-      // → touched is empty → releaseTypeRule returns [true] (non-blocking)
       expect(runReleaseTypeRule(tempDir, { type: 'chore' })).toEqual([true]);
     } finally {
-      if (savedCeiling === undefined) {
-        delete process.env.GIT_CEILING_DIRECTORIES;
-      } else {
-        process.env.GIT_CEILING_DIRECTORIES = savedCeiling;
+      if (savedGitDir !== undefined) {
+        process.env.GIT_DIR = savedGitDir;
       }
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
