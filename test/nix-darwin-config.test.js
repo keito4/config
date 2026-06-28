@@ -8,13 +8,23 @@ function readRepoFile(relativePath) {
 }
 
 describe('nix-darwin and home-manager macOS configuration', () => {
-  test('home-manager imports cmux and Karabiner modules', () => {
+  test('nix-darwin imports Kanary guard before Homebrew', () => {
+    const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
+
+    expect(darwinHost).toContain('../../modules/kanary.nix');
+    expect(darwinHost).toContain('../../modules/homebrew.nix');
+    expect(darwinHost.indexOf('../../modules/kanary.nix')).toBeLessThan(
+      darwinHost.indexOf('../../modules/homebrew.nix'),
+    );
+  });
+
+  test('home-manager imports cmux without Karabiner', () => {
     const homeDefault = readRepoFile('nix/home/default.nix');
 
     expect(homeDefault).toContain('./dotfiles.nix');
     expect(homeDefault).toContain('./agent-commands.nix');
     expect(homeDefault).toContain('./cmux.nix');
-    expect(homeDefault).toContain('./karabiner.nix');
+    expect(homeDefault).not.toContain('./karabiner.nix');
   });
 
   test('Homebrew casks install cmux and input tooling', () => {
@@ -23,9 +33,9 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(homebrewModule).toContain('"android-studio"');
     expect(homebrewModule).toContain('"cmux"');
     expect(homebrewModule).toContain('"flutter"');
-    expect(homebrewModule).toContain('"karabiner-elements"');
     expect(homebrewModule).toContain('"mattermost"');
     expect(homebrewModule).toContain('"google-japanese-ime"');
+    expect(homebrewModule).not.toContain('"karabiner-elements"');
     expect(homebrewModule).not.toContain('"bartender"');
     expect(homebrewModule).not.toContain('"rancher"');
     expect(homebrewModule).not.toContain('"google-cloud-sdk"');
@@ -71,30 +81,21 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(cmuxModule).toContain('split-divider-color = #3e4451');
   });
 
-  test('Karabiner maps Caps Lock and scopes cmux IME shortcuts', () => {
-    const karabinerModule = readRepoFile('nix/home/karabiner.nix');
+  test('Kanary replacement is documented without home-manager Karabiner state', () => {
+    const adr = readRepoFile('docs/adr/0016-use-kanary-for-keyboard-remapping.md');
+    const kanaryModule = readRepoFile('nix/modules/kanary.nix');
 
-    expect(karabinerModule).toContain('home.file.".config/karabiner/karabiner.json"');
-    expect(karabinerModule).not.toContain('keyboard_type_v2 = "ansi"');
-    expect(karabinerModule).not.toContain('keyboard_type_v2 = "jis"');
-    expect(karabinerModule).toContain('key_code = "caps_lock"');
-    expect(karabinerModule).toContain('key_code = "left_control"');
-    expect(karabinerModule).toContain('^com\\\\.cmuxterm\\\\.app$');
-    expect(karabinerModule).toContain(
-      'cmuxJapaneseInputSource = "^com\\\\.google\\\\.inputmethod\\\\.Japanese\\\\.base$";',
-    );
-    expect(karabinerModule).toContain(
-      'cmuxEnglishInputSource = "^com\\\\.google\\\\.inputmethod\\\\.Japanese\\\\.Roman$";',
-    );
-    expect(karabinerModule).toContain('select_input_source = {');
-    expect(karabinerModule).toContain('input_source_id = inputSourceID;');
-    expect(karabinerModule).toContain('cmuxImeShortcut "j" cmuxJapaneseInputSource');
-    expect(karabinerModule).toContain('cmuxImeShortcut "semicolon" cmuxEnglishInputSource');
-    expect(karabinerModule).toContain('cmuxImeShortcut "quote" cmuxEnglishInputSource');
-    expect(karabinerModule).toContain('cmuxCapsLockImeShortcut "j" cmuxJapaneseInputSource');
-    expect(karabinerModule).toContain('cmuxImeSimultaneousShortcut "left_control" "j" cmuxJapaneseInputSource');
-    expect(karabinerModule).not.toContain('agent-select-input-source');
-    expect(karabinerModule).not.toContain('shell_command');
+    expect(fs.existsSync(path.join(repoPath, 'nix/home/karabiner.nix'))).toBe(false);
+    expect(adr).toContain('Use Kanary as the primary local keyboard remapping tool');
+    expect(adr).toContain('Stop installing Karabiner Elements');
+    expect(adr).toContain('Stop generating `~/.config/karabiner/karabiner.json`');
+    expect(adr).toContain('Make nix-darwin system checks fail');
+    expect(adr).toContain('Left Command tap to alphanumeric input');
+    expect(adr).toContain('Right Command tap to kana input');
+    expect(kanaryModule).toContain('system.checks.text');
+    expect(kanaryModule).toContain('/Applications/Kanary.app');
+    expect(kanaryModule).toContain('config.system.primaryUser');
+    expect(kanaryModule).toContain('https://kanary.download/download');
   });
 
   test('portable user dotfiles are managed without credential state', () => {

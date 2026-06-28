@@ -62,7 +62,6 @@
       "aerospace"
       "alfred"
       "bettertouchtool"
-      "karabiner-elements"
       "notion"
       "notion-calendar"
       "raycast"
