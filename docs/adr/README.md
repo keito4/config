@@ -18,8 +18,9 @@
 | [0010](0010-ci-workflow-consolidation.md)                       | CI workflow consolidation                                    | Accepted           |
 | [0011](0011-hook-and-script-dry-boundaries.md)                  | Hook and Script DRY Boundaries                               | Accepted           |
 | [0012](0012-environment-source-of-truth.md)                     | Environment Source of Truth                                  | Accepted           |
-| [0014](0014-manage-cmux-karabiner-with-home-manager.md)         | Manage cmux and Karabiner Configuration with Home Manager    | Accepted           |
+| [0014](0014-manage-cmux-karabiner-with-home-manager.md)         | Manage cmux and Karabiner Configuration with Home Manager    | Superseded by 0016 |
 | [0015](0015-manage-portable-user-dotfiles-with-home-manager.md) | Manage Portable User Dotfiles with Home Manager              | Accepted           |
+| [0016](0016-use-kanary-for-keyboard-remapping.md)               | Use Kanary for Keyboard Remapping                            | Accepted           |
 
 ## ADR テンプレート
 
