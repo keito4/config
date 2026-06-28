@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Personal configuration files and setup scripts",
   "private": true,
-  "packageManager": "npm@11.16.0",
+  "packageManager": "npm@11.17.0",
   "engines": {
     "node": "^22.14.0 || >= 24.10.0"
   },
@@ -53,6 +53,6 @@
     "js-yaml": "^4.2.0",
     "tar": "^7.5.11",
     "handlebars": ">=4.7.9",
-    "npm": "^11.16.0"
+    "npm": "^11.17.0"
   }
 }
