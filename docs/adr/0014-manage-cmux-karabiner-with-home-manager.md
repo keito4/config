@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR 0016](0016-use-kanary-for-keyboard-remapping.md)
 
 ## Context
 

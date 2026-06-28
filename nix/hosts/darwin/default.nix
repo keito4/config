@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ../../modules/kanary.nix
     ../../modules/homebrew.nix
   ];
 
