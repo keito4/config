@@ -2,7 +2,6 @@
 
 {
   imports = [
-    ../../modules/kanary.nix
     ../../modules/homebrew.nix
   ];
 
@@ -52,6 +51,19 @@
         autohide = true;
         show-recents = false;
         mru-spaces = false;
+        persistent-apps = [
+          "/Applications/Google Chrome.app"
+          "/Applications/Arc.app"
+          "/Applications/Cursor.app"
+          "/Applications/Visual Studio Code.app"
+          "/Applications/Codex.app"
+          "/Applications/cmux.app"
+          "/System/Applications/Utilities/Terminal.app"
+          "/Applications/Slack.app"
+          "/Applications/1Password.app"
+          "/Applications/Raycast.app"
+        ];
+        persistent-others = [ ];
       };
       # Finder
       finder = {
@@ -64,6 +76,51 @@
         InitialKeyRepeat = 15;
         KeyRepeat = 2;
       };
+      CustomUserPreferences = {
+        "com.apple.HIToolbox" = {
+          AppleEnabledInputSources = [
+            {
+              InputSourceKind = "Keyboard Layout";
+              "KeyboardLayout ID" = 252;
+              "KeyboardLayout Name" = "ABC";
+            }
+            {
+              "Bundle ID" = "com.google.inputmethod.Japanese";
+              InputSourceKind = "Keyboard Input Method";
+            }
+            {
+              "Bundle ID" = "com.google.inputmethod.Japanese";
+              "Input Mode" = "com.google.inputmethod.Japanese.base";
+              InputSourceKind = "Input Mode";
+            }
+            {
+              "Bundle ID" = "com.google.inputmethod.Japanese";
+              "Input Mode" = "com.google.inputmethod.Japanese.Roman";
+              InputSourceKind = "Input Mode";
+            }
+            {
+              "Bundle ID" = "com.apple.CharacterPaletteIM";
+              InputSourceKind = "Non Keyboard Input Method";
+            }
+            {
+              "Bundle ID" = "com.apple.50onPaletteIM";
+              InputSourceKind = "Non Keyboard Input Method";
+            }
+          ];
+          AppleSelectedInputSources = [
+            {
+              "Bundle ID" = "com.google.inputmethod.Japanese";
+              "Input Mode" = "com.google.inputmethod.Japanese.base";
+              InputSourceKind = "Input Mode";
+            }
+          ];
+        };
+      };
+    };
+
+    keyboard = {
+      enableKeyMapping = true;
+      remapCapsLockToControl = true;
     };
   };
 

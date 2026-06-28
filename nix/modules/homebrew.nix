@@ -7,7 +7,7 @@
     onActivation = {
       autoUpdate = true;
       upgrade = true;
-      cleanup = "zap"; # Remove unlisted packages
+      cleanup = "none"; # Keep user-installed apps outside this config.
     };
 
     # === Taps ===
@@ -53,8 +53,6 @@
 
       # Communication
       "discord"
-      "mattermost"
-      "messenger"
       "slack"
       "zoom"
 
@@ -73,6 +71,7 @@
 
       # Browsers
       "arc"
+      "google-chrome"
 
       # Utilities
       "appcleaner"
@@ -91,12 +90,9 @@
 
     # === Mac App Store ===
     masApps = {
-      "Keynote" = 409183694;
+      "Keynote" = 361285480;
       "LINE" = 539883307;
-      "Numbers" = 409203825;
-      "Pages" = 409201541;
       "Paste" = 967805235;
-      "Prime Video" = 545519333;
       "Windows App" = 1295203466;
       "Xcode" = 497799835;
     };
