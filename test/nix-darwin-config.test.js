@@ -150,6 +150,30 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(dotfilesModule).not.toContain('.env.secret"');
   });
 
+  test('devcontainer env loader exports approved local credential keys', () => {
+    const zshModule = readRepoFile('nix/home/zsh.nix');
+    const devcontainerEnvLoader = readRepoFile('.zsh/configs/pre/devcontainer-env.zsh');
+
+    [
+      'SUPABASE_ACCESS_TOKEN',
+      'VERCEL_TOKEN',
+      'LINEAR_API_KEY',
+      'DOPPLER_TOKEN',
+      'ELU_SENTRY_TOKEN',
+      'GEMINI_API_KEY',
+      'ELU_NOTION_API_KEY',
+      'OYKOT_NOTION_API_KEY',
+      'GITHUB_TOKEN',
+      'NODE_AUTH_TOKEN',
+    ].forEach((envKey) => {
+      expect(zshModule).toContain(envKey);
+      expect(devcontainerEnvLoader).toContain(envKey);
+    });
+
+    expect(zshModule).not.toContain('OP_SERVICE_ACCOUNT_TOKEN');
+    expect(devcontainerEnvLoader).not.toContain('OP_SERVICE_ACCOUNT_TOKEN');
+  });
+
   test('agent local config collector is installed as a safe command', () => {
     const agentCommandsModule = readRepoFile('nix/home/agent-commands.nix');
     const packagesModule = readRepoFile('nix/home/packages.nix');

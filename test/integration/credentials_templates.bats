@@ -23,7 +23,16 @@ extract_mcp_env_vars() {
   local template="$REPO_ROOT/credentials/templates/mcp.env.template"
   local readme="$REPO_ROOT/credentials/README.md"
   local referenced_vars
-  local optional_vars=(N8N_API_URL N8N_API_KEY)
+  local optional_vars=(
+    N8N_API_URL
+    N8N_API_KEY
+    ELU_SENTRY_TOKEN
+    GEMINI_API_KEY
+    ELU_NOTION_API_KEY
+    OYKOT_NOTION_API_KEY
+    GITHUB_TOKEN
+    NODE_AUTH_TOKEN
+  )
   local var
 
   assert_file_exists "$template"
@@ -42,4 +51,7 @@ extract_mcp_env_vars() {
     grep -q "^${var}=op://Dev/" "$template"
     grep -q "$var" "$readme"
   done
+
+  ! grep -q "^OP_SERVICE_ACCOUNT_TOKEN=" "$template"
+  grep -q "OP_SERVICE_ACCOUNT_TOKEN" "$readme"
 }
