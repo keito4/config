@@ -1,4 +1,4 @@
-{ ... }:
+{ config, configRoot, ... }:
 
 let
   managedCommand = source: {
@@ -9,7 +9,13 @@ let
 in
 {
   home.file = {
-    ".local/bin/agent-collect-local-configs" =
-      managedCommand ../../script/agent/collect-local-configs.sh;
+    ".local/bin/agent-deck" = {
+      source = config.lib.file.mkOutOfStoreSymlink "/opt/homebrew/bin/agent-deck";
+      force = true;
+    };
+
+    ".local/bin/agent-collect-local-configs" = managedCommand (
+      configRoot + /script/agent/collect-local-configs.sh
+    );
   };
 }
