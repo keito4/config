@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ../../modules/kanary.nix
     ../../modules/homebrew.nix
   ];
 
@@ -116,11 +117,6 @@
           ];
         };
       };
-    };
-
-    keyboard = {
-      enableKeyMapping = true;
-      remapCapsLockToControl = true;
     };
   };
 

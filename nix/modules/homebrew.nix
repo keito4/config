@@ -13,6 +13,7 @@
     # === Taps ===
     taps = [
       "1password/tap"
+      "asheshgoplani/tap"
       "koekeishiya/formulae"
       "nikitabobko/tap"
       "supabase/tap"
@@ -22,6 +23,7 @@
 
     # === Formulae (Nix にないもの / tap 依存 / macOS 固有) ===
     brews = [
+      "asheshgoplani/tap/agent-deck" # Agent Deck CLI
       "cliclick" # macOS automation
       "mas" # Mac App Store CLI
       "pinentry-mac" # GPG pinentry for macOS
@@ -44,6 +46,7 @@
       "android-studio"
       "cursor"
       "dotnet-sdk"
+      "elgato-stream-deck"
       "flutter"
       "gcloud-cli"
       "ngrok"
