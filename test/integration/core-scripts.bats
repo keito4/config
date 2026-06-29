@@ -141,7 +141,13 @@ load ../test_helper/test_helper
     assert_file_exists "$REPO_ROOT/script/check-trivyignore-review.sh"
     [ -x "$REPO_ROOT/script/check-trivyignore-review.sh" ]
 
-    run env TODAY=2026-05-26 "$REPO_ROOT/script/check-trivyignore-review.sh" "$REPO_ROOT/.trivyignore"
+    local fixture="$BATS_TEST_TMPDIR/trivyignore-due"
+    cat > "$fixture" <<'EOF'
+# Review date: 2026-05-26
+CVE-2099-0001
+EOF
+
+    run env TODAY=2026-05-26 "$REPO_ROOT/script/check-trivyignore-review.sh" "$fixture"
     assert_success
     printf '%s\n' "$output" | grep -Fq "Trivy ignore entries due for review"
 }

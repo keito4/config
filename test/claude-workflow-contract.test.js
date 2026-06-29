@@ -3,6 +3,15 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const repoPath = path.resolve(__dirname, '..');
+const inheritedGitEnvKeys = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_PREFIX'];
+
+function cleanGitEnv(extra = {}) {
+  const env = { ...process.env, ...extra };
+  for (const key of inheritedGitEnvKeys) {
+    delete env[key];
+  }
+  return env;
+}
 
 function readWorkflow(relativePath) {
   return fs.readFileSync(path.join(repoPath, relativePath), 'utf8');
@@ -24,6 +33,7 @@ function runRequiredWorkflowScript(workflows) {
     try {
       return execFileSync('bash', [scriptPath, '--check-required-workflows'], {
         cwd: tempRoot,
+        env: cleanGitEnv(),
         encoding: 'utf8',
       });
     } catch (error) {
@@ -52,14 +62,15 @@ function runUpdateAgentsScriptWithUntrackedDirectory() {
     fs.writeFileSync(path.join(tempRoot, 'docs', 'README.md'), '# Docs\n');
     fs.mkdirSync(path.join(tempRoot, 'next'), { recursive: true });
 
-    execFileSync('git', ['init'], { cwd: tempRoot, stdio: 'ignore' });
+    execFileSync('git', ['init'], { cwd: tempRoot, env: cleanGitEnv(), stdio: 'ignore' });
     execFileSync('git', ['add', 'AGENTS.md', 'package.json', 'docs/README.md'], {
       cwd: tempRoot,
+      env: cleanGitEnv(),
       stdio: 'ignore',
     });
 
     const scriptPath = path.join(repoPath, 'script', 'update-agents-md.sh');
-    execFileSync('bash', [scriptPath], { cwd: tempRoot, encoding: 'utf8' });
+    execFileSync('bash', [scriptPath], { cwd: tempRoot, env: cleanGitEnv(), encoding: 'utf8' });
 
     return fs.readFileSync(path.join(tempRoot, 'AGENTS.md'), 'utf8');
   } finally {
