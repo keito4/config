@@ -14,6 +14,8 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(darwinHost).toContain('../../modules/kanary.nix');
     expect(darwinHost).toContain('../../modules/homebrew.nix');
     expect(darwinHost).not.toContain('karabiner');
+    expect(darwinHost).toContain('enableKeyMapping = true;');
+    expect(darwinHost).toContain('remapCapsLockToControl = true;');
   });
 
   test('Google Japanese Input sources include hiragana and alphanumeric modes', () => {
@@ -70,7 +72,7 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(cmuxModule).toContain('"$schema" = cmuxSchema;');
     expect(cmuxModule).toContain('confirmQuit = "dirty-only";');
     expect(cmuxModule).toContain('workspaceInheritWorkingDirectory = true;');
-    expect(cmuxModule).toContain('socketControlMode = "cmuxOnly";');
+    expect(cmuxModule).toContain('socketControlMode = "automation";');
     expect(cmuxModule).toContain('suppressSubagentNotifications = true;');
     expect(cmuxModule).toContain('ripgrepBinaryPath = "${pkgs.ripgrep}/bin/rg";');
     expect(cmuxModule).toContain('hostsToOpenInEmbeddedBrowser = localBrowserHosts;');
@@ -102,8 +104,9 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(adr).toContain('Stop installing Karabiner Elements');
     expect(adr).toContain('Stop generating `~/.config/karabiner/karabiner.json`');
     expect(adr).toContain('Require Kanary for local keyboard remapping');
+    expect(adr).toContain('system.keyboard.remapCapsLockToControl');
     expect(darwinHost).toContain('../../modules/kanary.nix');
-    expect(darwinHost).not.toContain('remapCapsLockToControl');
+    expect(darwinHost).toContain('remapCapsLockToControl = true;');
     expect(kanaryModule).toContain('Kanary.app is required for keyboard remapping');
     expect(kanaryModule).toContain('https://kanary.download/download');
   });

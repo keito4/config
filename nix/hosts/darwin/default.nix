@@ -118,6 +118,11 @@
         };
       };
     };
+
+    keyboard = {
+      enableKeyMapping = true;
+      remapCapsLockToControl = true;
+    };
   };
 
   # Allow unfree packages

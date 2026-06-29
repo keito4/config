@@ -30,10 +30,11 @@ Stop using Karabiner Elements for local keyboard remapping.
 - Stop generating `~/.config/karabiner/karabiner.json` through home-manager.
 - Keep Google Japanese Input installed.
 - Require Kanary for local keyboard remapping through a nix-darwin system check.
+- Use nix-darwin's built-in `system.keyboard.remapCapsLockToControl` option for
+  the baseline Caps Lock to Control mapping.
 - Install Kanary manually from `https://kanary.download/download` until a stable
   package-manager source exists.
 - Use Kanary to manage:
-  - Caps Lock to Control.
   - Left Command tap to alphanumeric input.
   - Right Command tap to kana input.
   - Per-app default input modes where useful.
@@ -41,9 +42,10 @@ Stop using Karabiner Elements for local keyboard remapping.
 ## Consequences
 
 `darwin-rebuild switch --flake ~/develop/github.com/keito4/config/nix` no longer
-installs or configures Karabiner. Kanary must be present before activation, and
-the nix-darwin configuration fails early with an actionable message when
-`Kanary.app` is missing.
+installs or configures Karabiner. Caps Lock to Control is handled by nix-darwin
+so the baseline remap works even before Kanary app-level settings are configured.
+Kanary must be present before activation, and the nix-darwin configuration fails
+early with an actionable message when `Kanary.app` is missing.
 
 Kanary installation and app-level settings are manual for now. The repository
 avoids adding a bespoke ZIP download, checksum, and install flow while Kanary is
