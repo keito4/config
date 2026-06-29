@@ -8,14 +8,21 @@ function readRepoFile(relativePath) {
 }
 
 describe('nix-darwin and home-manager macOS configuration', () => {
-  test('nix-darwin imports Kanary guard before Homebrew', () => {
+  test('nix-darwin imports Kanary and Homebrew modules', () => {
     const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
 
     expect(darwinHost).toContain('../../modules/kanary.nix');
     expect(darwinHost).toContain('../../modules/homebrew.nix');
-    expect(darwinHost.indexOf('../../modules/kanary.nix')).toBeLessThan(
-      darwinHost.indexOf('../../modules/homebrew.nix'),
-    );
+    expect(darwinHost).not.toContain('karabiner');
+  });
+
+  test('Google Japanese Input sources include hiragana and alphanumeric modes', () => {
+    const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
+
+    expect(darwinHost).toContain('"com.apple.HIToolbox"');
+    expect(darwinHost).toContain('AppleEnabledInputSources');
+    expect(darwinHost).toContain('com.google.inputmethod.Japanese.base');
+    expect(darwinHost).toContain('com.google.inputmethod.Japanese.Roman');
   });
 
   test('home-manager imports cmux without Karabiner', () => {
@@ -31,10 +38,14 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     const homebrewModule = readRepoFile('nix/modules/homebrew.nix');
 
     expect(homebrewModule).toContain('"android-studio"');
+    expect(homebrewModule).toContain('"asheshgoplani/tap/agent-deck"');
     expect(homebrewModule).toContain('"cmux"');
+    expect(homebrewModule).toContain('"elgato-stream-deck"');
     expect(homebrewModule).toContain('"flutter"');
-    expect(homebrewModule).toContain('"mattermost"');
+    expect(homebrewModule).toContain('"google-chrome"');
     expect(homebrewModule).toContain('"google-japanese-ime"');
+    expect(homebrewModule).not.toContain('"mattermost"');
+    expect(homebrewModule).not.toContain('"messenger"');
     expect(homebrewModule).not.toContain('"karabiner-elements"');
     expect(homebrewModule).not.toContain('"bartender"');
     expect(homebrewModule).not.toContain('"rancher"');
@@ -81,20 +92,19 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(cmuxModule).toContain('split-divider-color = #3e4451');
   });
 
-  test('Kanary replacement is documented without home-manager Karabiner state', () => {
+  test('keyboard remapping is documented through Kanary without home-manager Karabiner state', () => {
     const adr = readRepoFile('docs/adr/0016-use-kanary-for-keyboard-remapping.md');
+    const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
     const kanaryModule = readRepoFile('nix/modules/kanary.nix');
 
     expect(fs.existsSync(path.join(repoPath, 'nix/home/karabiner.nix'))).toBe(false);
-    expect(adr).toContain('Use Kanary as the primary local keyboard remapping tool');
+    expect(adr).toContain('Stop using Karabiner Elements');
     expect(adr).toContain('Stop installing Karabiner Elements');
     expect(adr).toContain('Stop generating `~/.config/karabiner/karabiner.json`');
-    expect(adr).toContain('Make nix-darwin system checks fail');
-    expect(adr).toContain('Left Command tap to alphanumeric input');
-    expect(adr).toContain('Right Command tap to kana input');
-    expect(kanaryModule).toContain('system.checks.text');
-    expect(kanaryModule).toContain('/Applications/Kanary.app');
-    expect(kanaryModule).toContain('config.system.primaryUser');
+    expect(adr).toContain('Require Kanary for local keyboard remapping');
+    expect(darwinHost).toContain('../../modules/kanary.nix');
+    expect(darwinHost).not.toContain('remapCapsLockToControl');
+    expect(kanaryModule).toContain('Kanary.app is required for keyboard remapping');
     expect(kanaryModule).toContain('https://kanary.download/download');
   });
 
@@ -139,12 +149,16 @@ describe('nix-darwin and home-manager macOS configuration', () => {
 
   test('agent local config collector is installed as a safe command', () => {
     const agentCommandsModule = readRepoFile('nix/home/agent-commands.nix');
+    const packagesModule = readRepoFile('nix/home/packages.nix');
     const collectorScript = readRepoFile('script/agent/collect-local-configs.sh');
     const collectorPath = path.join(repoPath, 'script/agent/collect-local-configs.sh');
 
+    expect(packagesModule).toContain('nodejs_24');
+    expect(agentCommandsModule).toContain('".local/bin/agent-deck"');
+    expect(agentCommandsModule).toContain('mkOutOfStoreSymlink "/opt/homebrew/bin/agent-deck"');
     expect(fs.statSync(collectorPath).mode & 0o111).toBeTruthy();
     expect(agentCommandsModule).toContain('".local/bin/agent-collect-local-configs"');
-    expect(agentCommandsModule).toContain('../../script/agent/collect-local-configs.sh');
+    expect(agentCommandsModule).toContain('configRoot + /script/agent/collect-local-configs.sh');
     expect(agentCommandsModule).toContain('executable = true;');
     expect(agentCommandsModule).toContain('force = true;');
 
