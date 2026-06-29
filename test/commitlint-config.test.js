@@ -69,6 +69,21 @@ function runReleaseTypeRuleWithGitFailure(parsed) {
   return result;
 }
 
+function runReleaseTypeRuleWithStagedFiles(parsed, stagedFiles) {
+  let result;
+  jest.isolateModules(() => {
+    jest.doMock('child_process', () => ({
+      ...jest.requireActual('child_process'),
+      execSync: () => `${stagedFiles.join('\n')}\n`,
+    }));
+    const config = require(configPath);
+    const rule = config.plugins[0].rules['codex-release-type'];
+    result = rule(parsed);
+    jest.dontMock('child_process');
+  });
+  return result;
+}
+
 describe('root commitlint configuration runtime behavior', () => {
   test('allows maintenance commits when no release-sensitive file is staged', () => {
     const tempDir = makeGitRepo('commitlint-clean');
@@ -133,5 +148,23 @@ describe('root commitlint configuration runtime behavior', () => {
 
   test('getStagedFiles falls back to [] when git cannot discover a repository (catch branch)', () => {
     expect(runReleaseTypeRuleWithGitFailure({ type: 'chore' })).toEqual([true]);
+  });
+
+  test('release-type rule ignores non-sensitive staged files', () => {
+    expect(runReleaseTypeRuleWithStagedFiles({ type: undefined }, ['README.md'])).toEqual([true]);
+  });
+
+  test('release-type rule rejects non-release types for sensitive staged files', () => {
+    const [passed, message] = runReleaseTypeRuleWithStagedFiles({ type: 'chore' }, ['package.json']);
+
+    expect(passed).toBe(false);
+    expect(message).toContain('release-triggering type');
+  });
+
+  test('release-type rule allows release types for sensitive staged files', () => {
+    expect(runReleaseTypeRuleWithStagedFiles({ type: 'fix' }, ['package-lock.json'])).toEqual([
+      true,
+      expect.any(String),
+    ]);
   });
 });
