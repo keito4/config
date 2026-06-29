@@ -28,7 +28,7 @@ let
     automation = {
       claudeCodeIntegration = true;
       ripgrepBinaryPath = "${pkgs.ripgrep}/bin/rg";
-      socketControlMode = "cmuxOnly";
+      socketControlMode = "automation";
       suppressSubagentNotifications = true;
     };
 

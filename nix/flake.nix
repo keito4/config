@@ -25,7 +25,8 @@
     let
       system = "aarch64-darwin";
       username = "keito";
-      hostname = "keitos-MacBook-Pro";
+      hostname = "keitonoMacBook-Pro";
+      configRoot = ../.;
     in
     {
       darwinConfigurations.${hostname} = nix-darwin.lib.darwinSystem {
@@ -38,6 +39,10 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
+              backupFileExtension = "before-home-manager";
+              extraSpecialArgs = {
+                inherit configRoot;
+              };
               users.${username} = import ./home;
             };
           }

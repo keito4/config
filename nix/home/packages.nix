@@ -7,6 +7,7 @@
     gh
     ghq
     deno
+    nodejs_24
     openjdk
     pipenv
     uv

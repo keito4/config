@@ -7,12 +7,13 @@
     onActivation = {
       autoUpdate = true;
       upgrade = true;
-      cleanup = "zap"; # Remove unlisted packages
+      cleanup = "none"; # Keep user-installed apps outside this config.
     };
 
     # === Taps ===
     taps = [
       "1password/tap"
+      "asheshgoplani/tap"
       "koekeishiya/formulae"
       "nikitabobko/tap"
       "supabase/tap"
@@ -22,6 +23,7 @@
 
     # === Formulae (Nix にないもの / tap 依存 / macOS 固有) ===
     brews = [
+      "asheshgoplani/tap/agent-deck" # Agent Deck CLI
       "cliclick" # macOS automation
       "mas" # Mac App Store CLI
       "pinentry-mac" # GPG pinentry for macOS
@@ -44,6 +46,7 @@
       "android-studio"
       "cursor"
       "dotnet-sdk"
+      "elgato-stream-deck"
       "flutter"
       "gcloud-cli"
       "ngrok"
@@ -53,8 +56,6 @@
 
       # Communication
       "discord"
-      "mattermost"
-      "messenger"
       "slack"
       "zoom"
 
@@ -73,6 +74,7 @@
 
       # Browsers
       "arc"
+      "google-chrome"
 
       # Utilities
       "appcleaner"
@@ -91,12 +93,9 @@
 
     # === Mac App Store ===
     masApps = {
-      "Keynote" = 409183694;
+      "Keynote" = 361285480;
       "LINE" = 539883307;
-      "Numbers" = 409203825;
-      "Pages" = 409201541;
       "Paste" = 967805235;
-      "Prime Video" = 545519333;
       "Windows App" = 1295203466;
       "Xcode" = 497799835;
     };
