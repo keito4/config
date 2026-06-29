@@ -1,5 +1,4 @@
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
@@ -120,15 +119,7 @@ describe('root commitlint configuration runtime behavior', () => {
   });
 
   test('treats unreadable staged-file state as non-blocking', () => {
-    // Create tempDir in os.tmpdir() so git auto-discovery finds no .git ancestor.
-    // Using a path inside the repo (e.g. .context/) causes git to traverse up and
-    // find the parent repo's staged files, making the test environment-sensitive.
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'commitlint-rule-no-git-'));
-    try {
-      expect(runReleaseTypeRuleWithGitFailure({ type: 'chore' })).toEqual([true]);
-    } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    }
+    expect(runReleaseTypeRuleWithGitFailure({ type: 'chore' })).toEqual([true]);
   });
 
   test('accepts Japanese commit subjects', () => {
