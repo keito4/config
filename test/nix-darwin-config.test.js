@@ -46,6 +46,7 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(homebrewModule).toContain('"flutter"');
     expect(homebrewModule).toContain('"google-chrome"');
     expect(homebrewModule).toContain('"google-japanese-ime"');
+    expect(homebrewModule).toContain('"readdle-spark"');
     expect(homebrewModule).not.toContain('"mattermost"');
     expect(homebrewModule).not.toContain('"messenger"');
     expect(homebrewModule).not.toContain('"karabiner-elements"');

@@ -66,6 +66,7 @@
       "notion"
       "notion-calendar"
       "raycast"
+      "readdle-spark"
 
       # AI Tools
       "chatgpt"
