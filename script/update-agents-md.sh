@@ -161,12 +161,14 @@ _truncate_desc() {
   echo -n "$raw"
 }
 
-collect_agents() {
-  [[ ! -d ".claude/agents" ]] && return 0
+collect_claude_dir_table() {
+  local dir="${1:?Directory required}"
+  local label="${2:?Label required}"
+  [[ ! -d "$dir" ]] && return 0
   local out=""
-  table_header out "Agent" "Description"
+  table_header out "$label" "Description"
   local f base desc
-  for f in .claude/agents/*.md; do
+  for f in "$dir"/*.md; do
     [[ ! -f "$f" ]] && continue
     base=$(basename "$f" .md)
     [[ "$base" == "README" ]] && continue
@@ -176,20 +178,8 @@ collect_agents() {
   echo -n "$out"
 }
 
-collect_skills() {
-  [[ ! -d ".claude/skills" ]] && return 0
-  local out=""
-  table_header out "Skill" "Description"
-  local f base desc
-  for f in .claude/skills/*.md; do
-    [[ ! -f "$f" ]] && continue
-    base=$(basename "$f" .md)
-    [[ "$base" == "README" ]] && continue
-    desc=$(_truncate_desc "$(_extract_desc "$f")")
-    emit out "\`$base\`" "${desc:-(no description)}"
-  done
-  echo -n "$out"
-}
+collect_agents() { collect_claude_dir_table ".claude/agents" "Agent"; }
+collect_skills() { collect_claude_dir_table ".claude/skills" "Skill"; }
 
 collect_workflows() {
   local out=""
