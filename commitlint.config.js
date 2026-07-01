@@ -33,8 +33,11 @@ const releaseTypeRule = (parsed) => {
   }
 
   const isReleaseType = releaseTypeAllowList.has(parsed.type || '');
+  if (isReleaseType) {
+    return [true];
+  }
   return [
-    isReleaseType,
+    false,
     `Changes in ${touched.join(', ')} require a release-triggering type (feat|fix|perf|revert|docs) to keep semantic-release automated.`,
   ];
 };
