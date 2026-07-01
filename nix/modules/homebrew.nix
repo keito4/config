@@ -63,6 +63,7 @@
       "aerospace"
       "alfred"
       "bettertouchtool"
+      "linear"
       "notion"
       "notion-calendar"
       "raycast"
