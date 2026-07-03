@@ -15,6 +15,14 @@ on:
     paths:
       - '.github/labels.yml'
   workflow_dispatch:
+  # 下流リポジトリの caller スタブ（templates/workflows/label-sync.yml）から参照される
+  workflow_call:
+    inputs:
+      config-file:
+        description: 'Path to the label definition file'
+        required: false
+        type: string
+        default: '.github/labels.yml'
 
 permissions:
   contents: read
@@ -36,7 +44,7 @@ jobs:
       - name: Sync labels
         uses: EndBug/label-sync@52074158190acb45f3077f9099fea818aa43f97a # v2
         with:
-          config-file: .github/labels.yml
+          config-file: ${{ inputs.config-file || '.github/labels.yml' }}
           # 既存ラベルを保持（false = labels.yml にないラベルを削除しない）
           delete-other-labels: false
           token: ${{ secrets.GITHUB_TOKEN }}
