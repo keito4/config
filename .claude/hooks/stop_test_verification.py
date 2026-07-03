@@ -6,8 +6,6 @@
 
 無限ループ防止: STOP_HOOK_ACTIVE 環境変数で再帰実行を防ぐ。
 Git 変更がない場合はスキップ（新規セッションでの空実行を防止）。
-変更がテストに影響しないファイル（ドキュメント・エディタ設定・.context/ 等）
-のみの場合もスキップし、セッション終了ごとのフルテスト実行を避ける。
 """
 import sys
 import json
@@ -15,6 +13,30 @@ import subprocess
 import os
 from pathlib import Path
 from common import get_git_root, detect_package_manager, build_run_command
+
+
+# Test-irrelevant path definitions (skip tests when only these files changed)
+IRRELEVANT_SUFFIXES = ('.md', '.txt')
+IRRELEVANT_PREFIXES = (
+    'docs/',
+    '.context/',
+    '.gemini/',
+    '.cursor/',
+    '.vscode/',
+    '.idea/',
+)
+
+
+def affects_tests(files):
+    """Return True if any changed file could affect tests."""
+    for f in files:
+        if not (
+            f.endswith(IRRELEVANT_SUFFIXES)
+            or any(f.startswith(p) for p in IRRELEVANT_PREFIXES)
+        ):
+            return True
+    return False
+
 
 # 無限ループ防止
 if os.environ.get("STOP_HOOK_ACTIVE") == "1":
@@ -25,16 +47,6 @@ os.environ["STOP_HOOK_ACTIVE"] = "1"
 repo_root = get_git_root()
 if not repo_root:
     sys.exit(0)
-
-# ── テストに影響しない変更の判定 ──────────────────────────
-# ドキュメント・エディタ設定・中間成果物のみの変更ではテストを走らせない
-IRRELEVANT_SUFFIXES = (".md", ".txt")
-IRRELEVANT_PREFIXES = (".context/", "docs/", ".gemini/", ".cursor/", ".vscode/", ".idea/")
-
-
-def affects_tests(path: str) -> bool:
-    return not (path.endswith(IRRELEVANT_SUFFIXES) or path.startswith(IRRELEVANT_PREFIXES))
-
 
 # ── Git 変更の有無を確認 ──────────────────────────────────
 # ステージング済み or 未ステージングの変更がなければスキップ
@@ -51,13 +63,14 @@ try:
         ["git", "ls-files", "--others", "--exclude-standard"],
         capture_output=True, text=True, timeout=10, cwd=repo_root
     )
-    changed_files = [
-        line.strip()
-        for result in (diff_result, staged_result, untracked_result)
-        for line in (result.stdout or "").splitlines()
-        if line.strip()
-    ]
-    if not any(affects_tests(path) for path in changed_files):
+    changed_files = list(filter(None,
+        (diff_result.stdout or "").strip().splitlines()
+        + (staged_result.stdout or "").strip().splitlines()
+        + (untracked_result.stdout or "").strip().splitlines()
+    ))
+    if not changed_files:
+        sys.exit(0)
+    if not affects_tests(changed_files):
         sys.exit(0)
 except (subprocess.TimeoutExpired, FileNotFoundError):
     sys.exit(0)
