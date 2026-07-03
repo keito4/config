@@ -6,6 +6,8 @@
 
 無限ループ防止: STOP_HOOK_ACTIVE 環境変数で再帰実行を防ぐ。
 Git 変更がない場合はスキップ（新規セッションでの空実行を防止）。
+変更がテストに影響しないファイル（ドキュメント・エディタ設定・.context/ 等）
+のみの場合もスキップし、セッション終了ごとのフルテスト実行を避ける。
 """
 import sys
 import json
@@ -24,6 +26,16 @@ repo_root = get_git_root()
 if not repo_root:
     sys.exit(0)
 
+# ── テストに影響しない変更の判定 ──────────────────────────
+# ドキュメント・エディタ設定・中間成果物のみの変更ではテストを走らせない
+IRRELEVANT_SUFFIXES = (".md", ".txt")
+IRRELEVANT_PREFIXES = (".context/", "docs/", ".gemini/", ".cursor/", ".vscode/", ".idea/")
+
+
+def affects_tests(path: str) -> bool:
+    return not (path.endswith(IRRELEVANT_SUFFIXES) or path.startswith(IRRELEVANT_PREFIXES))
+
+
 # ── Git 変更の有無を確認 ──────────────────────────────────
 # ステージング済み or 未ステージングの変更がなければスキップ
 try:
@@ -39,12 +51,13 @@ try:
         ["git", "ls-files", "--others", "--exclude-standard"],
         capture_output=True, text=True, timeout=10, cwd=repo_root
     )
-    has_changes = bool(
-        (diff_result.stdout or "").strip()
-        or (staged_result.stdout or "").strip()
-        or (untracked_result.stdout or "").strip()
-    )
-    if not has_changes:
+    changed_files = [
+        line.strip()
+        for result in (diff_result, staged_result, untracked_result)
+        for line in (result.stdout or "").splitlines()
+        if line.strip()
+    ]
+    if not any(affects_tests(path) for path in changed_files):
         sys.exit(0)
 except (subprocess.TimeoutExpired, FileNotFoundError):
     sys.exit(0)

@@ -168,6 +168,35 @@ describe('.claude/settings.json — hooks configuration', () => {
     });
   });
 
+  describe('DevContainer settings parity', () => {
+    // .claude/settings.json（相対パス）と .devcontainer/claude-settings.json（絶対パス）は
+    // 同じ hooks を二重管理している。片方だけへの hook 追加＝ドリフトを検出する。
+    function referencedHookScripts(settingsObject) {
+      const scripts = new Set();
+      const events = Object.values(settingsObject.hooks || {});
+      for (const entries of events) {
+        for (const entry of entries) {
+          for (const hook of entry.hooks) {
+            for (const match of hook.command.matchAll(/hooks\/(\w+\.py)/g)) {
+              scripts.add(match[1]);
+            }
+          }
+        }
+      }
+      return scripts;
+    }
+
+    test('repo settings and devcontainer settings reference the same hook scripts', () => {
+      const devcontainerSettings = JSON.parse(
+        fs.readFileSync(path.join(repoPath, '.devcontainer', 'claude-settings.json'), 'utf8'),
+      );
+      const repoScripts = referencedHookScripts(settings);
+      const devcontainerScripts = referencedHookScripts(devcontainerSettings);
+
+      expect([...repoScripts].sort()).toEqual([...devcontainerScripts].sort());
+    });
+  });
+
   describe('Hook script existence', () => {
     // Verify that every hook script referenced in settings.json actually exists
     function extractScriptNames(commands) {
