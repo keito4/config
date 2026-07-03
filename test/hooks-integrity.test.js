@@ -9,6 +9,7 @@ describe('Claude Code Hooks integrity', () => {
   const EXPECTED_HOOKS = [
     'common.py',
     'block_config_edit.py',
+    'block_managed_file_edit.py',
     'block_dangerous_commands.py',
     'block_inline_secrets.py',
     'block_git_no_verify.py',
@@ -360,6 +361,96 @@ describe('Claude Code Hooks integrity', () => {
 
     test('should return structured JSON output for the hook framework', () => {
       expect(content).toContain('hookSpecificOutput');
+    });
+  });
+  describe('block_managed_file_edit.py — managed sync file protection', () => {
+    const { spawnSync } = require('child_process');
+    let content;
+
+    beforeAll(() => {
+      content = fs.readFileSync(path.join(hooksDir, 'block_managed_file_edit.py'), 'utf8');
+    });
+
+    test('should have shebang line', () => {
+      expect(content.startsWith('#!/usr/bin/env python3')).toBe(true);
+    });
+
+    test('should detect the Managed by keito4/config marker', () => {
+      expect(content).toContain('Managed by keito4/config');
+    });
+
+    test('should skip inside the config repository itself', () => {
+      expect(content).toContain('.github/sync-downstream.json');
+    });
+
+    test('should exit 2 when a managed file is edited', () => {
+      expect(content).toContain('sys.exit(main())');
+      expect(content).toContain('return 2');
+    });
+
+    /**
+     * Run the hook as a subprocess against a temp working directory.
+     * @param {string} cwd - Working directory (simulated repo root)
+     * @param {string} filePath - The tool_input file path being edited
+     * @returns {{ status: number, stderr: string }}
+     */
+    function runHook(cwd, filePath) {
+      const result = spawnSync('python3', [path.join(hooksDir, 'block_managed_file_edit.py')], {
+        cwd,
+        encoding: 'utf8',
+        input: JSON.stringify({ tool_input: { file_path: filePath } }),
+        timeout: 15000,
+      });
+      return { status: result.status ?? 1, stderr: result.stderr ?? '' };
+    }
+
+    function makeTempRepo() {
+      const contextDir = path.join(__dirname, '../.context');
+      fs.mkdirSync(contextDir, { recursive: true });
+      return fs.mkdtempSync(path.join(contextDir, 'managed-edit-'));
+    }
+
+    test('blocks editing a downstream file carrying the managed marker', () => {
+      const repo = makeTempRepo();
+      try {
+        const managed = path.join(repo, '.github/workflows/label-sync.yml');
+        fs.mkdirSync(path.dirname(managed), { recursive: true });
+        fs.writeFileSync(managed, '# Managed by keito4/config — do not edit here.\nname: Label Sync\n');
+
+        const result = runHook(repo, managed);
+        expect(result.status).toBe(2);
+        expect(result.stderr).toContain('BLOCKED');
+      } finally {
+        fs.rmSync(repo, { recursive: true, force: true });
+      }
+    });
+
+    test('allows editing unmanaged files', () => {
+      const repo = makeTempRepo();
+      try {
+        const normal = path.join(repo, 'src/index.js');
+        fs.mkdirSync(path.dirname(normal), { recursive: true });
+        fs.writeFileSync(normal, 'console.log(1);\n');
+
+        expect(runHook(repo, normal).status).toBe(0);
+      } finally {
+        fs.rmSync(repo, { recursive: true, force: true });
+      }
+    });
+
+    test('allows editing marked templates inside the config repository itself', () => {
+      const repo = makeTempRepo();
+      try {
+        fs.mkdirSync(path.join(repo, '.github'), { recursive: true });
+        fs.writeFileSync(path.join(repo, '.github/sync-downstream.json'), '{}');
+        const template = path.join(repo, 'templates/workflows/label-sync.yml');
+        fs.mkdirSync(path.dirname(template), { recursive: true });
+        fs.writeFileSync(template, '# Managed by keito4/config — do not edit here.\nname: Label Sync\n');
+
+        expect(runHook(repo, template).status).toBe(0);
+      } finally {
+        fs.rmSync(repo, { recursive: true, force: true });
+      }
     });
   });
 });
