@@ -42,8 +42,8 @@ Required workflow trigger compatibility is checked by `script/repo-maintenance.s
 
 - Temporary artifacts must stay under `.context/`.
 - If managed config files change, report downstream sync:
-  - `Downstream sync required`
-  - `Repositories using config-base should run /repo-maintenance or receive a sync PR.`
+  - `Downstream sync pending`
+  - `sync-downstream.yml creates sync PRs in downstream repositories after this change reaches main.`
 
 ## PR Creation
 
