@@ -94,7 +94,7 @@ describe('Jest configuration runtime behavior', () => {
       ]);
 
       expect(result.failed).toBe(true);
-      expect(result.output).toContain('does not meet "global" threshold');
+      expect(result.output).toMatch(/"global" coverage threshold for \w+ \(\d+%\) not met/);
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
