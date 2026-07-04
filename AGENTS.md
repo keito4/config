@@ -94,7 +94,6 @@ Development infrastructure template repository providing DevContainer images, CI
 | `/setup-new-repo`               | Setup new repository with DevContainer, CI/CD, and development tools from config template |
 | `/setup-team-protection`        | チーム開発のためのリポジトリ保護設定                                                      |
 | `/setup-tests`                  | Setup comprehensive testing infrastructure for Next.js projects                           |
-| `/sharehouse-utility-update`    | シェアハウスの電気・ガス代をGmailの請求メールからNotionの「お金周り」DBに記入する         |
 | `/similarity-analysis`          | Analyze code similarity in the repository to detect duplicate functions and patterns      |
 | `/sync-settings`                | Sync Claude & Codex settings from your-org projects to DevContainer configuration         |
 | `/test-coverage-trend`          | Track and visualize test coverage trends over time.                                       |
