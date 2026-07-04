@@ -94,6 +94,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `/setup-new-repo`               | Setup new repository with DevContainer, CI/CD, and development tools from config template |
 | `/setup-team-protection`        | チーム開発のためのリポジトリ保護設定                                                      |
 | `/setup-tests`                  | Setup comprehensive testing infrastructure for Next.js projects                           |
+| `/sharehouse-utility-update`    | シェアハウスの電気・ガス代をGmailの請求メールからNotionの「お金周り」DBに記入する         |
 | `/similarity-analysis`          | Analyze code similarity in the repository to detect duplicate functions and patterns      |
 | `/sync-settings`                | Sync Claude & Codex settings from your-org projects to DevContainer configuration         |
 | `/test-coverage-trend`          | Track and visualize test coverage trends over time.                                       |
@@ -147,12 +148,12 @@ Development infrastructure template repository providing DevContainer images, CI
 
 The following scripts are auto-detected and run before git commit/push:
 
-| Script | Command | Purpose |
+| Script         | Command                            | Purpose                    |
 | -------------- | ---------------------------------- | -------------------------- | ----------------------- |
-| `format:check` | `prettier --check .` | Code formatting validation |
-| `lint` | `eslint . --ext .js` | Code quality validation |
-| `test` | `jest --runInBand` | Unit test execution |
-| `shellcheck` | `find script -name '\*.sh' -type f | xargs -r shellcheck -x` | Shell script validation |
+| `format:check` | `prettier --check .`               | Code formatting validation |
+| `lint`         | `eslint . --ext .js`               | Code quality validation    |
+| `test`         | `jest --runInBand`                 | Unit test execution        |
+| `shellcheck`   | `find script -name '\*.sh' -type f | xargs -r shellcheck -x`    | Shell script validation |
 
 Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + coverage), `test:all` (unit + integration)
 
