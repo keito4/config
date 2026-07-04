@@ -4,6 +4,10 @@ Always prefer simplicity over pathological correctness. YAGNI, KISS, DRY. No bac
 
 ## Operational Rules
 
+### Notion Context（常時参照）
+
+Notion MCP が利用可能なセッションでは、作業前に必ず [📖 README｜Claude運用マニュアル](https://app.notion.com/p/39070a52207f81c0aab0df4285d69f68) を参照し、その運用ルールに従うこと。要約と DB 早見表は [.claude/rules/notion-context.md](.claude/rules/notion-context.md) を参照。
+
 ### Memory Management
 
 Session memory is not persistent across worktree-based sessions. All information that must survive sessions MUST be committed to git. Do NOT rely on auto memory or in-memory state for cross-session continuity. Auto memory contents should be properly documented in the repository (e.g., AGENTS.md, docs/).
@@ -147,12 +151,12 @@ Development infrastructure template repository providing DevContainer images, CI
 
 The following scripts are auto-detected and run before git commit/push:
 
-| Script | Command | Purpose |
+| Script         | Command                            | Purpose                    |
 | -------------- | ---------------------------------- | -------------------------- | ----------------------- |
-| `format:check` | `prettier --check .` | Code formatting validation |
-| `lint` | `eslint . --ext .js` | Code quality validation |
-| `test` | `jest --runInBand` | Unit test execution |
-| `shellcheck` | `find script -name '\*.sh' -type f | xargs -r shellcheck -x` | Shell script validation |
+| `format:check` | `prettier --check .`               | Code formatting validation |
+| `lint`         | `eslint . --ext .js`               | Code quality validation    |
+| `test`         | `jest --runInBand`                 | Unit test execution        |
+| `shellcheck`   | `find script -name '\*.sh' -type f | xargs -r shellcheck -x`    | Shell script validation |
 
 Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + coverage), `test:all` (unit + integration)
 
