@@ -147,6 +147,7 @@ RUN mkdir -p /home/vscode/.claude /home/vscode/.cursor /home/vscode/.openai /hom
 COPY --chown=vscode:vscode .devcontainer/claude-settings.json /home/vscode/.claude/settings.json
 COPY --chown=vscode:vscode .devcontainer/claude-settings.local.json /home/vscode/.claude/settings.local.json
 COPY --chown=vscode:vscode .gemini/settings.json /home/vscode/.gemini/settings.json
+COPY --chown=vscode:vscode .claude/CLAUDE.md /home/vscode/.claude/CLAUDE.md
 COPY --chown=vscode:vscode .claude/commands /home/vscode/.claude/commands
 COPY --chown=vscode:vscode .claude/agents /home/vscode/.claude/agents
 COPY --chown=vscode:vscode .claude/hooks /home/vscode/.claude/hooks

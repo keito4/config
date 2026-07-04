@@ -41,6 +41,16 @@ plugins::sync_repo_content() {
 
     # フックの同期
     plugins::_sync_directory "$repo_hooks_dir" "${claude_dir}/hooks" "フック"
+
+    # ユーザーメモリー（CLAUDE.md）の同期
+    if [[ -f "${repo_root}/.claude/CLAUDE.md" ]]; then
+        mkdir -p "$claude_dir"
+        if cp "${repo_root}/.claude/CLAUDE.md" "${claude_dir}/CLAUDE.md" 2>/dev/null; then
+            log_success "ユーザーメモリー（CLAUDE.md）を同期しました"
+        else
+            log_warn "ユーザーメモリー（CLAUDE.md）の同期に失敗しました"
+        fi
+    fi
 }
 
 # ディレクトリの同期（内部関数）
