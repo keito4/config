@@ -1,0 +1,15 @@
+# Trivy configuration
+# See: https://trivy.dev/docs/references/configuration/config-file/
+#
+# ignore-unfixed: true suppresses CVEs that have no fix available
+# in the current Ubuntu repositories.
+#
+# This primarily handles the continuously changing kernel (linux-libc-dev)
+# CVEs from Ubuntu 24.04 (Noble) base image that Ubuntu hasn't yet patched.
+# Ubuntu marks these as "needed" with no fixed version, causing spurious
+# CRITICAL alerts in every new linux-libc-dev version bump.
+#
+# Library CVEs with available fixes (grpc-go, protobufjs, Vercel CLI etc.)
+# are still reported and managed in .trivyignore, since their fix versions
+# exist but haven't been applied by upstream tool maintainers.
+ignore-unfixed: true
