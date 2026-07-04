@@ -20,6 +20,10 @@ For any non-trivial architectural change, create an ADR in `docs/adr/` before im
 
 Before presenting a plan to the user, run an AI review pass to identify and resolve issues. Plans shown to users must be pre-validated — do not expose draft plans with known gaps or contradictions.
 
+### Project Context Documentation
+
+Project- or domain-specific documentation (procedures, runbooks, domain knowledge — e.g., household finance workflows) MUST be recorded in that project's own context, such as the project's Notion pages or its own repository — NOT in this config repository. This repository only holds cross-project development infrastructure (DevContainer, CI/CD, commands, hooks). Automations (Routines, scheduled triggers) should reference the project-side document so procedure changes take effect without touching this repository.
+
 ---
 
 <!-- BEGIN AUTO-GENERATED -->
