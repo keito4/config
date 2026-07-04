@@ -356,6 +356,24 @@
             "command": "python3 /home/vscode/.claude/hooks/post_pr_ai_review.py"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/vscode/.claude/hooks/post_pr_ci_watch.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && python3 /home/vscode/.claude/hooks/post_commit_adr_reminder.py'"
+          }
+        ]
       }
     ],
     "Stop": [

@@ -290,7 +290,13 @@ describe('Claude Code Hooks integrity', () => {
     });
 
     test('should check git changes before running tests', () => {
-      expect(content).toContain('has_changes');
+      expect(content).toContain('changed_files');
+    });
+
+    test('should skip when only test-irrelevant files changed', () => {
+      expect(content).toContain('affects_tests');
+      expect(content).toContain('IRRELEVANT_SUFFIXES');
+      expect(content).toContain('IRRELEVANT_PREFIXES');
     });
 
     test('should look for test script in package.json', () => {

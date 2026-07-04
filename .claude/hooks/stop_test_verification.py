@@ -14,6 +14,30 @@ import os
 from pathlib import Path
 from common import get_git_root, detect_package_manager, build_run_command
 
+
+# Test-irrelevant path definitions (skip tests when only these files changed)
+IRRELEVANT_SUFFIXES = ('.md', '.txt')
+IRRELEVANT_PREFIXES = (
+    'docs/',
+    '.context/',
+    '.gemini/',
+    '.cursor/',
+    '.vscode/',
+    '.idea/',
+)
+
+
+def affects_tests(files):
+    """Return True if any changed file could affect tests."""
+    for f in files:
+        if not (
+            f.endswith(IRRELEVANT_SUFFIXES)
+            or any(f.startswith(p) for p in IRRELEVANT_PREFIXES)
+        ):
+            return True
+    return False
+
+
 # 無限ループ防止
 if os.environ.get("STOP_HOOK_ACTIVE") == "1":
     sys.exit(0)
@@ -39,12 +63,14 @@ try:
         ["git", "ls-files", "--others", "--exclude-standard"],
         capture_output=True, text=True, timeout=10, cwd=repo_root
     )
-    has_changes = bool(
-        (diff_result.stdout or "").strip()
-        or (staged_result.stdout or "").strip()
-        or (untracked_result.stdout or "").strip()
-    )
-    if not has_changes:
+    changed_files = list(filter(None,
+        (diff_result.stdout or "").strip().splitlines()
+        + (staged_result.stdout or "").strip().splitlines()
+        + (untracked_result.stdout or "").strip().splitlines()
+    ))
+    if not changed_files:
+        sys.exit(0)
+    if not affects_tests(changed_files):
         sys.exit(0)
 except (subprocess.TimeoutExpired, FileNotFoundError):
     sys.exit(0)
