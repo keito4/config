@@ -195,8 +195,6 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     [
       'dot/aerospace.toml',
       'dot/config/act/actrc',
-      'dot/config/agent-deck/config.toml',
-      'dot/config/codespaces-secrets/repos.txt',
       'dot/config/graphite/aliases',
       'git/gitignore',
       'dot/.peco/config.json',
@@ -212,6 +210,9 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(dotfilesModule).toContain('managedSource');
     expect(dotfilesModule).toContain('".aerospace.toml"');
     expect(dotfilesModule).toContain('".config/act/actrc"');
+    // 組織情報を含む設定は keito4/private-config から out-of-store symlink で参照する
+    expect(dotfilesModule).toContain('privateConfig');
+    expect(dotfilesModule).toContain('mkOutOfStoreSymlink');
     expect(dotfilesModule).toContain('".config/agent-deck/config.toml"');
     expect(dotfilesModule).toContain('".config/codespaces-secrets/repos.txt"');
     expect(dotfilesModule).toContain('".config/graphite/aliases"');
