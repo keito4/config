@@ -65,10 +65,15 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(darwinHost).toContain('ShowOnClick = true;');
     expect(darwinHost).toContain('ShowOnScroll = true;');
     expect(darwinHost).toContain('UseIceBar = false;');
-    expect(darwinHost).toContain('launchd.user.agents.ice');
+    expect(darwinHost).toContain('launchd.user.agents = {');
+    expect(darwinHost).toContain('bettertouchtool = {');
+    expect(darwinHost).toContain('ice = {');
+    expect(darwinHost).toContain('raycast = {');
     expect(darwinHost).toContain('"/usr/bin/open"');
     expect(darwinHost).toContain('"-a"');
+    expect(darwinHost).toContain('"BetterTouchTool"');
     expect(darwinHost).toContain('"Ice"');
+    expect(darwinHost).toContain('"Raycast"');
     expect(darwinHost).toContain('RunAtLoad = true;');
   });
 
@@ -94,13 +99,42 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(homebrewModule).toContain('"google-chrome"');
     expect(homebrewModule).toContain('"google-japanese-ime"');
     expect(homebrewModule).toContain('"jordanbaird-ice"');
+    expect(homebrewModule).toContain('"aerospace"');
+    expect(homebrewModule).toContain('"bettertouchtool"');
+    expect(homebrewModule).toContain('"raycast"');
     expect(homebrewModule).not.toContain('"mattermost"');
     expect(homebrewModule).not.toContain('"messenger"');
+    expect(homebrewModule).not.toContain('"alfred"');
     expect(homebrewModule).not.toContain('"karabiner-elements"');
     expect(homebrewModule).not.toContain('"bartender"');
     expect(homebrewModule).not.toContain('"rancher"');
     expect(homebrewModule).not.toContain('"google-cloud-sdk"');
     expect(homebrewModule).not.toContain('"tailscale"');
+    expect(homebrewModule).not.toContain('"koekeishiya/formulae/yabai"');
+  });
+
+  test('AeroSpace owns window management with app workspace routing', () => {
+    const aerospaceConfig = readRepoFile('dot/aerospace.toml');
+
+    expect(aerospaceConfig).toContain('config-version = 2');
+    expect(aerospaceConfig).toContain('start-at-login = true');
+    expect(aerospaceConfig).toContain('auto-reload-config = true');
+    expect(aerospaceConfig).toContain('persistent-workspaces = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]');
+    expect(aerospaceConfig).toContain('inner.horizontal = 6');
+    expect(aerospaceConfig).toContain('outer.top =        6');
+    expect(aerospaceConfig).toContain('[[on-window-detected]]');
+    expect(aerospaceConfig).toContain("if.app-id = 'com.cmuxterm.app'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.google.Chrome'");
+    expect(aerospaceConfig).toContain("if.app-id = 'company.thebrowser.Browser'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.todesktop.230313mzl4w4u92'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.openai.codex'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.anthropic.claudefordesktop'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.tinyspeck.slackmacgap'");
+    expect(aerospaceConfig).toContain("if.app-id = 'notion.id'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.readdle.SparkDesktop'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.raycast.macos'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.hegenberg.BetterTouchTool'");
+    expect(aerospaceConfig).toContain("run = 'move-node-to-workspace 9'");
   });
 
   test('skhd binds IME shortcuts without Karabiner', () => {

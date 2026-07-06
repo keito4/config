@@ -146,15 +146,39 @@
     };
   };
 
-  launchd.user.agents.ice = {
-    serviceConfig = {
-      ProgramArguments = [
-        "/usr/bin/open"
-        "-g"
-        "-a"
-        "Ice"
-      ];
-      RunAtLoad = true;
+  launchd.user.agents = {
+    bettertouchtool = {
+      serviceConfig = {
+        ProgramArguments = [
+          "/usr/bin/open"
+          "-g"
+          "-a"
+          "BetterTouchTool"
+        ];
+        RunAtLoad = true;
+      };
+    };
+    ice = {
+      serviceConfig = {
+        ProgramArguments = [
+          "/usr/bin/open"
+          "-g"
+          "-a"
+          "Ice"
+        ];
+        RunAtLoad = true;
+      };
+    };
+    raycast = {
+      serviceConfig = {
+        ProgramArguments = [
+          "/usr/bin/open"
+          "-g"
+          "-a"
+          "Raycast"
+        ];
+        RunAtLoad = true;
+      };
     };
   };
 
