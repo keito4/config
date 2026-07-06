@@ -27,6 +27,56 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(darwinHost).toContain('com.google.inputmethod.Japanese.Roman');
   });
 
+  test('Dock shows running apps without pinned or recent apps', () => {
+    const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
+
+    expect(darwinHost).toContain('dock = {');
+    expect(darwinHost).toContain('show-recents = false;');
+    expect(darwinHost).toContain('persistent-apps = [ ];');
+    expect(darwinHost).toContain('persistent-others = [ ];');
+    expect(darwinHost).not.toContain('"/Applications/Google Chrome.app"');
+    expect(darwinHost).not.toContain('"/Applications/Raycast.app"');
+  });
+
+  test('menu bar keeps only work-essential system controls visible', () => {
+    const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
+
+    expect(darwinHost).toContain('controlcenter = {');
+    expect(darwinHost).toContain('BatteryShowPercentage = true;');
+    expect(darwinHost).toContain('AirDrop = false;');
+    expect(darwinHost).toContain('Bluetooth = false;');
+    expect(darwinHost).toContain('Display = false;');
+    expect(darwinHost).toContain('FocusModes = false;');
+    expect(darwinHost).toContain('NowPlaying = false;');
+    expect(darwinHost).toContain('Sound = false;');
+
+    expect(darwinHost).toContain('menuExtraClock = {');
+    expect(darwinHost).toContain('Show24Hour = true;');
+    expect(darwinHost).toContain('ShowAMPM = false;');
+    expect(darwinHost).toContain('ShowDate = 1;');
+    expect(darwinHost).toContain('ShowDayOfMonth = true;');
+    expect(darwinHost).toContain('ShowDayOfWeek = true;');
+    expect(darwinHost).toContain('ShowSeconds = false;');
+
+    expect(darwinHost).toContain('"com.apple.Spotlight"');
+    expect(darwinHost).toContain('"NSStatusItem VisibleCC Item-0" = false;');
+    expect(darwinHost).toContain('"com.jordanbaird.Ice"');
+    expect(darwinHost).toContain('HideApplicationMenus = true;');
+    expect(darwinHost).toContain('ShowOnClick = true;');
+    expect(darwinHost).toContain('ShowOnScroll = true;');
+    expect(darwinHost).toContain('UseIceBar = false;');
+    expect(darwinHost).toContain('launchd.user.agents = {');
+    expect(darwinHost).toContain('bettertouchtool = {');
+    expect(darwinHost).toContain('ice = {');
+    expect(darwinHost).toContain('raycast = {');
+    expect(darwinHost).toContain('"/usr/bin/open"');
+    expect(darwinHost).toContain('"-a"');
+    expect(darwinHost).toContain('"BetterTouchTool"');
+    expect(darwinHost).toContain('"Ice"');
+    expect(darwinHost).toContain('"Raycast"');
+    expect(darwinHost).toContain('RunAtLoad = true;');
+  });
+
   test('home-manager imports cmux and input source helpers without Karabiner', () => {
     const homeDefault = readRepoFile('nix/home/default.nix');
 
@@ -48,13 +98,43 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(homebrewModule).toContain('"flutter"');
     expect(homebrewModule).toContain('"google-chrome"');
     expect(homebrewModule).toContain('"google-japanese-ime"');
+    expect(homebrewModule).toContain('"jordanbaird-ice"');
+    expect(homebrewModule).toContain('"aerospace"');
+    expect(homebrewModule).toContain('"bettertouchtool"');
+    expect(homebrewModule).toContain('"raycast"');
     expect(homebrewModule).not.toContain('"mattermost"');
     expect(homebrewModule).not.toContain('"messenger"');
+    expect(homebrewModule).not.toContain('"alfred"');
     expect(homebrewModule).not.toContain('"karabiner-elements"');
     expect(homebrewModule).not.toContain('"bartender"');
     expect(homebrewModule).not.toContain('"rancher"');
     expect(homebrewModule).not.toContain('"google-cloud-sdk"');
     expect(homebrewModule).not.toContain('"tailscale"');
+    expect(homebrewModule).not.toContain('"koekeishiya/formulae/yabai"');
+  });
+
+  test('AeroSpace owns window management with app workspace routing', () => {
+    const aerospaceConfig = readRepoFile('dot/aerospace.toml');
+
+    expect(aerospaceConfig).toContain('config-version = 2');
+    expect(aerospaceConfig).toContain('start-at-login = true');
+    expect(aerospaceConfig).toContain('auto-reload-config = true');
+    expect(aerospaceConfig).toContain('persistent-workspaces = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]');
+    expect(aerospaceConfig).toContain('inner.horizontal = 6');
+    expect(aerospaceConfig).toContain('outer.top =        6');
+    expect(aerospaceConfig).toContain('[[on-window-detected]]');
+    expect(aerospaceConfig).toContain("if.app-id = 'com.cmuxterm.app'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.google.Chrome'");
+    expect(aerospaceConfig).toContain("if.app-id = 'company.thebrowser.Browser'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.todesktop.230313mzl4w4u92'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.openai.codex'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.anthropic.claudefordesktop'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.tinyspeck.slackmacgap'");
+    expect(aerospaceConfig).toContain("if.app-id = 'notion.id'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.readdle.SparkDesktop'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.raycast.macos'");
+    expect(aerospaceConfig).toContain("if.app-id = 'com.hegenberg.BetterTouchTool'");
+    expect(aerospaceConfig).toContain("run = 'move-node-to-workspace 9'");
   });
 
   test('skhd binds IME shortcuts without Karabiner', () => {
@@ -149,8 +229,6 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     [
       'dot/aerospace.toml',
       'dot/config/act/actrc',
-      'dot/config/agent-deck/config.toml',
-      'dot/config/codespaces-secrets/repos.txt',
       'dot/config/graphite/aliases',
       'git/gitignore',
       'dot/.peco/config.json',
@@ -166,6 +244,9 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(dotfilesModule).toContain('managedSource');
     expect(dotfilesModule).toContain('".aerospace.toml"');
     expect(dotfilesModule).toContain('".config/act/actrc"');
+    // 組織情報を含む設定は keito4/private-config から out-of-store symlink で参照する
+    expect(dotfilesModule).toContain('privateConfig');
+    expect(dotfilesModule).toContain('mkOutOfStoreSymlink');
     expect(dotfilesModule).toContain('".config/agent-deck/config.toml"');
     expect(dotfilesModule).toContain('".config/codespaces-secrets/repos.txt"');
     expect(dotfilesModule).toContain('".config/graphite/aliases"');
