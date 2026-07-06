@@ -131,6 +131,14 @@
   # Security
   security.pam.services.sudo_local.touchIdAuth = true;
 
+  services.skhd = {
+    enable = true;
+    skhdConfig = ''
+      ctrl + shift - j    : /Users/keito/.local/bin/select-input-source com.google.inputmethod.Japanese.base
+      ctrl + shift - 0x29 : /Users/keito/.local/bin/select-input-source com.google.inputmethod.Japanese.Roman
+    '';
+  };
+
   # Shells
   programs.zsh.enable = true;
 }
