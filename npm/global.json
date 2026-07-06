@@ -2,11 +2,11 @@
   "name": "lib",
   "dependencies": {
     "@commitlint/cli": {
-      "version": "21.1.0",
+      "version": "21.2.0",
       "overridden": false
     },
     "@commitlint/config-conventional": {
-      "version": "21.1.0",
+      "version": "21.2.0",
       "overridden": false
     },
     "@leonardsellem/n8n-mcp-server": {
@@ -14,7 +14,7 @@
       "overridden": false
     },
     "@openai/codex": {
-      "version": "0.142.3",
+      "version": "0.142.5",
       "overridden": false
     },
     "@google/gemini-cli": {
@@ -54,7 +54,7 @@
       "overridden": false
     },
     "difit": {
-      "version": "5.0.3",
+      "version": "5.0.6",
       "overridden": false
     },
     "mcp-remote": {
@@ -62,19 +62,19 @@
       "overridden": false
     },
     "n8n": {
-      "version": "2.27.4",
+      "version": "2.28.6",
       "overridden": false
     },
     "npm": {
-      "version": "11.17.0",
+      "version": "11.18.0",
       "overridden": false
     },
     "pm2": {
-      "version": "7.0.1",
+      "version": "7.0.3",
       "overridden": false
     },
     "vercel": {
-      "version": "54.18.2",
+      "version": "54.20.1",
       "overridden": false
     }
   }
