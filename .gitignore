@@ -48,6 +48,7 @@ supabase/.temp/
 credentials/*.env
 !credentials/*.env.template
 credentials/secrets/
+.env
 .env.secret
 .env*.local
 .devcontainer.env

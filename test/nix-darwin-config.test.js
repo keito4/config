@@ -27,12 +27,14 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(darwinHost).toContain('com.google.inputmethod.Japanese.Roman');
   });
 
-  test('home-manager imports cmux without Karabiner', () => {
+  test('home-manager imports cmux and input source helpers without Karabiner', () => {
     const homeDefault = readRepoFile('nix/home/default.nix');
 
     expect(homeDefault).toContain('./dotfiles.nix');
     expect(homeDefault).toContain('./agent-commands.nix');
+    expect(homeDefault).toContain('./input-source.nix');
     expect(homeDefault).toContain('./cmux.nix');
+    expect(homeDefault).not.toContain('./tmux.nix');
     expect(homeDefault).not.toContain('./karabiner.nix');
   });
 
@@ -55,12 +57,26 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(homebrewModule).not.toContain('"tailscale"');
   });
 
-  test('cmux terminal config leaves IME shortcuts unbound', () => {
+  test('skhd binds IME shortcuts without Karabiner', () => {
+    const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
+
+    expect(darwinHost).toContain('services.skhd = {');
+    expect(darwinHost).toContain('enable = true;');
+    expect(darwinHost).toContain('ctrl + shift - j');
+    expect(darwinHost).toContain('ctrl + shift - 0x29');
+    expect(darwinHost).toContain('/Users/keito/.local/bin/select-input-source');
+    expect(darwinHost).toContain('com.google.inputmethod.Japanese.base');
+    expect(darwinHost).toContain('com.google.inputmethod.Japanese.Roman');
+  });
+
+  test('cmux terminal config leaves IME shortcuts to skhd', () => {
     const cmuxModule = readRepoFile('nix/home/cmux.nix');
 
     expect(cmuxModule).toContain('home.file.".config/cmux/config"');
     expect(cmuxModule).toContain('force = true;');
     expect(cmuxModule).toContain('text = "";');
+    expect(cmuxModule).not.toContain('keybind = ctrl+shift+j');
+    expect(cmuxModule).not.toContain('keybind = ctrl+shift+semicolon');
     expect(cmuxModule).not.toContain('C-j');
     expect(cmuxModule).not.toContain('C-Semicolon');
   });
@@ -92,6 +108,22 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(cmuxModule).toContain('surface-tab-bar-font-size = 11');
     expect(cmuxModule).toContain('scrollback-limit = 50000000');
     expect(cmuxModule).toContain('split-divider-color = #3e4451');
+  });
+
+  test('input source helper exposes macOS input source selection commands', () => {
+    const inputSourceModule = readRepoFile('nix/home/input-source.nix');
+    const inputSourceWrapper = readRepoFile('script/macos/agent-select-input-source.sh');
+    const inputSourceSwift = readRepoFile('script/macos/select-input-source.swift');
+
+    expect(fs.existsSync(path.join(repoPath, 'nix/home/tmux.nix'))).toBe(false);
+    expect(inputSourceModule).toContain('".local/share/input-source/select-input-source.swift"');
+    expect(inputSourceModule).toContain('".local/bin/select-input-source"');
+    expect(inputSourceModule).toContain('".local/bin/agent-select-input-source"');
+    expect(inputSourceWrapper).toContain('XDG_DATA_HOME');
+    expect(inputSourceWrapper).toContain('/input-source/select-input-source.swift');
+    expect(inputSourceWrapper).not.toContain('.config/karabiner');
+    expect(inputSourceSwift).toContain('TISSelectInputSource(source)');
+    expect(inputSourceSwift).not.toContain('TISEnableInputSource');
   });
 
   test('keyboard remapping is documented through Kanary without home-manager Karabiner state', () => {

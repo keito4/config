@@ -46,7 +46,6 @@ in
     ".zsh/functions/gcp" = managedSource (configRoot + /.zsh/functions/gcp);
     ".zsh/functions/git" = managedSource (configRoot + /.zsh/functions/git);
     ".zsh/functions/mkcd" = managedSource (configRoot + /.zsh/functions/mkcd);
-    ".zsh/functions/op" = managedSource (configRoot + /.zsh/functions/op);
     ".zsh/functions/peco" = managedSource (configRoot + /.zsh/functions/peco);
     ".zsh/functions/process" = managedSource (configRoot + /.zsh/functions/process);
     ".zsh/functions/terraform" = managedSource (configRoot + /.zsh/functions/terraform);
