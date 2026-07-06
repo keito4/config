@@ -83,6 +83,7 @@
       "deepl"
       "dropbox"
       "google-japanese-ime"
+      "jordanbaird-ice"
       "parallels-client"
       "qblocker"
       "the-unarchiver"
