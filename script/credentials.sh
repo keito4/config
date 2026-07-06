@@ -8,6 +8,15 @@ set -euo pipefail
 SCRIPT_DIR="${0:A:h}"
 REPO_ROOT="${SCRIPT_DIR:h}"
 CREDENTIALS_DIR="$REPO_ROOT/credentials"
+# テンプレート（op:// の vault/item 名を含む）は private-config 側を優先する
+DEFAULT_PRIVATE_TEMPLATES="$HOME/develop/github.com/keito4/private-config/credentials/templates"
+if [[ -z "${CREDENTIALS_TEMPLATES_DIR:-}" ]]; then
+    if [[ -d "$DEFAULT_PRIVATE_TEMPLATES" ]]; then
+        CREDENTIALS_TEMPLATES_DIR="$DEFAULT_PRIVATE_TEMPLATES"
+    else
+        CREDENTIALS_TEMPLATES_DIR="$CREDENTIALS_DIR/templates"
+    fi
+fi
 CREDENTIAL_PROVIDER="${CREDENTIAL_PROVIDER:-op}"
 # Built-in provider: script/credentials/providers/op.sh
 PROVIDER_PATH="$SCRIPT_DIR/credentials/providers/${CREDENTIAL_PROVIDER}.sh"
@@ -70,7 +79,7 @@ inject_template() {
 fetch_all_credentials() {
     echo "Fetching all credentials via provider ($(provider_name))..."
 
-    for template in "$CREDENTIALS_DIR"/templates/*.env.template; do
+    for template in "$CREDENTIALS_TEMPLATES_DIR"/*.env.template(N); do
         if [[ -f "$template" ]]; then
             local basename
             basename=$(basename "$template" .env.template)
@@ -90,7 +99,7 @@ list_templates() {
     echo "Available credential templates:"
     echo
 
-    for template in "$CREDENTIALS_DIR"/templates/*.env.template; do
+    for template in "$CREDENTIALS_TEMPLATES_DIR"/*.env.template(N); do
         if [[ -f "$template" ]]; then
             local basename
             basename=$(basename "$template" .env.template)
