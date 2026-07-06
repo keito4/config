@@ -52,19 +52,26 @@
         autohide = true;
         show-recents = false;
         mru-spaces = false;
-        persistent-apps = [
-          "/Applications/Google Chrome.app"
-          "/Applications/Arc.app"
-          "/Applications/Cursor.app"
-          "/Applications/Visual Studio Code.app"
-          "/Applications/Codex.app"
-          "/Applications/cmux.app"
-          "/System/Applications/Utilities/Terminal.app"
-          "/Applications/Slack.app"
-          "/Applications/1Password.app"
-          "/Applications/Raycast.app"
-        ];
+        persistent-apps = [ ];
         persistent-others = [ ];
+      };
+      # Menu bar
+      controlcenter = {
+        AirDrop = false;
+        BatteryShowPercentage = true;
+        Bluetooth = false;
+        Display = false;
+        FocusModes = false;
+        NowPlaying = false;
+        Sound = false;
+      };
+      menuExtraClock = {
+        Show24Hour = true;
+        ShowAMPM = false;
+        ShowDate = 1;
+        ShowDayOfMonth = true;
+        ShowDayOfWeek = true;
+        ShowSeconds = false;
       };
       # Finder
       finder = {
@@ -78,6 +85,20 @@
         KeyRepeat = 2;
       };
       CustomUserPreferences = {
+        "com.jordanbaird.Ice" = {
+          AutoRehide = true;
+          EnableAlwaysHiddenSection = false;
+          HideApplicationMenus = true;
+          ShowIceIcon = true;
+          ShowOnClick = true;
+          ShowOnHover = false;
+          ShowOnScroll = true;
+          ShowSectionDividers = false;
+          UseIceBar = false;
+        };
+        "com.apple.Spotlight" = {
+          "NSStatusItem VisibleCC Item-0" = false;
+        };
         "com.apple.HIToolbox" = {
           AppleEnabledInputSources = [
             {
@@ -125,6 +146,42 @@
     };
   };
 
+  launchd.user.agents = {
+    bettertouchtool = {
+      serviceConfig = {
+        ProgramArguments = [
+          "/usr/bin/open"
+          "-g"
+          "-a"
+          "BetterTouchTool"
+        ];
+        RunAtLoad = true;
+      };
+    };
+    ice = {
+      serviceConfig = {
+        ProgramArguments = [
+          "/usr/bin/open"
+          "-g"
+          "-a"
+          "Ice"
+        ];
+        RunAtLoad = true;
+      };
+    };
+    raycast = {
+      serviceConfig = {
+        ProgramArguments = [
+          "/usr/bin/open"
+          "-g"
+          "-a"
+          "Raycast"
+        ];
+        RunAtLoad = true;
+      };
+    };
+  };
+
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
@@ -137,6 +194,28 @@
       ctrl + shift - j    : /Users/keito/.local/bin/select-input-source com.google.inputmethod.Japanese.base
       ctrl + shift - 0x29 : /Users/keito/.local/bin/select-input-source com.google.inputmethod.Japanese.Roman
     '';
+  };
+
+  # Agent Deck Web UI (headless) — http://127.0.0.1:8420
+  # loopback バインドのみ。外部公開する場合は tailscale serve を経由させること
+  launchd.user.agents.agent-deck-web = {
+    serviceConfig = {
+      ProgramArguments = [
+        "/opt/homebrew/bin/agent-deck"
+        "web"
+        "--no-tui"
+        "--listen"
+        "127.0.0.1:8420"
+      ];
+      RunAtLoad = true;
+      KeepAlive = true;
+      StandardOutPath = "/Users/keito/Library/Logs/agent-deck-web.log";
+      StandardErrorPath = "/Users/keito/Library/Logs/agent-deck-web.err.log";
+      EnvironmentVariables = {
+        # claude/codex (~/.local/bin, ~/.bin)・node/gh (nix profile)・agent-deck (homebrew) を解決できる PATH
+        PATH = "/Users/keito/.local/bin:/Users/keito/.bin:/opt/homebrew/bin:/etc/profiles/per-user/keito/bin:/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin";
+      };
+    };
   };
 
   # Shells
