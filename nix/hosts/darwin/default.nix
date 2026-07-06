@@ -52,18 +52,7 @@
         autohide = true;
         show-recents = false;
         mru-spaces = false;
-        persistent-apps = [
-          "/Applications/Google Chrome.app"
-          "/Applications/Arc.app"
-          "/Applications/Cursor.app"
-          "/Applications/Visual Studio Code.app"
-          "/Applications/Codex.app"
-          "/Applications/cmux.app"
-          "/System/Applications/Utilities/Terminal.app"
-          "/Applications/Slack.app"
-          "/Applications/1Password.app"
-          "/Applications/Raycast.app"
-        ];
+        persistent-apps = [ ];
         persistent-others = [ ];
       };
       # Finder

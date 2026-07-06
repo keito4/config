@@ -27,6 +27,17 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(darwinHost).toContain('com.google.inputmethod.Japanese.Roman');
   });
 
+  test('Dock shows running apps without pinned or recent apps', () => {
+    const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
+
+    expect(darwinHost).toContain('dock = {');
+    expect(darwinHost).toContain('show-recents = false;');
+    expect(darwinHost).toContain('persistent-apps = [ ];');
+    expect(darwinHost).toContain('persistent-others = [ ];');
+    expect(darwinHost).not.toContain('"/Applications/Google Chrome.app"');
+    expect(darwinHost).not.toContain('"/Applications/Raycast.app"');
+  });
+
   test('home-manager imports cmux and input source helpers without Karabiner', () => {
     const homeDefault = readRepoFile('nix/home/default.nix');
 
