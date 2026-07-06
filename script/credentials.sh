@@ -79,7 +79,7 @@ inject_template() {
 fetch_all_credentials() {
     echo "Fetching all credentials via provider ($(provider_name))..."
 
-    for template in "$CREDENTIALS_TEMPLATES_DIR"/*.env.template; do
+    for template in "$CREDENTIALS_TEMPLATES_DIR"/*.env.template(N); do
         if [[ -f "$template" ]]; then
             local basename
             basename=$(basename "$template" .env.template)
@@ -99,7 +99,7 @@ list_templates() {
     echo "Available credential templates:"
     echo
 
-    for template in "$CREDENTIALS_TEMPLATES_DIR"/*.env.template; do
+    for template in "$CREDENTIALS_TEMPLATES_DIR"/*.env.template(N); do
         if [[ -f "$template" ]]; then
             local basename
             basename=$(basename "$template" .env.template)
