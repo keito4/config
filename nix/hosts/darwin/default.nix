@@ -85,6 +85,20 @@
         KeyRepeat = 2;
       };
       CustomUserPreferences = {
+        "com.jordanbaird.Ice" = {
+          AutoRehide = true;
+          EnableAlwaysHiddenSection = false;
+          HideApplicationMenus = true;
+          ShowIceIcon = true;
+          ShowOnClick = true;
+          ShowOnHover = false;
+          ShowOnScroll = true;
+          ShowSectionDividers = false;
+          UseIceBar = false;
+        };
+        "com.apple.Spotlight" = {
+          "NSStatusItem VisibleCC Item-0" = false;
+        };
         "com.apple.HIToolbox" = {
           AppleEnabledInputSources = [
             {
@@ -129,6 +143,18 @@
     keyboard = {
       enableKeyMapping = true;
       remapCapsLockToControl = true;
+    };
+  };
+
+  launchd.user.agents.ice = {
+    serviceConfig = {
+      ProgramArguments = [
+        "/usr/bin/open"
+        "-g"
+        "-a"
+        "Ice"
+      ];
+      RunAtLoad = true;
     };
   };
 

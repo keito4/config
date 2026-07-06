@@ -57,6 +57,19 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(darwinHost).toContain('ShowDayOfMonth = true;');
     expect(darwinHost).toContain('ShowDayOfWeek = true;');
     expect(darwinHost).toContain('ShowSeconds = false;');
+
+    expect(darwinHost).toContain('"com.apple.Spotlight"');
+    expect(darwinHost).toContain('"NSStatusItem VisibleCC Item-0" = false;');
+    expect(darwinHost).toContain('"com.jordanbaird.Ice"');
+    expect(darwinHost).toContain('HideApplicationMenus = true;');
+    expect(darwinHost).toContain('ShowOnClick = true;');
+    expect(darwinHost).toContain('ShowOnScroll = true;');
+    expect(darwinHost).toContain('UseIceBar = false;');
+    expect(darwinHost).toContain('launchd.user.agents.ice');
+    expect(darwinHost).toContain('"/usr/bin/open"');
+    expect(darwinHost).toContain('"-a"');
+    expect(darwinHost).toContain('"Ice"');
+    expect(darwinHost).toContain('RunAtLoad = true;');
   });
 
   test('home-manager imports cmux and input source helpers without Karabiner', () => {
@@ -80,6 +93,7 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(homebrewModule).toContain('"flutter"');
     expect(homebrewModule).toContain('"google-chrome"');
     expect(homebrewModule).toContain('"google-japanese-ime"');
+    expect(homebrewModule).toContain('"jordanbaird-ice"');
     expect(homebrewModule).not.toContain('"mattermost"');
     expect(homebrewModule).not.toContain('"messenger"');
     expect(homebrewModule).not.toContain('"karabiner-elements"');
