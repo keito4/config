@@ -291,3 +291,164 @@ EOF
   run platform::assert_supported
   [ "$status" -eq 0 ]
 }
+
+# ============================================================================
+# project-detect.sh runtime behaviour tests
+# ============================================================================
+
+@test "project::has_file_matching returns true when file exists" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/proj-a"
+  touch "${TEST_TEMP_DIR}/proj-a/next.config.js"
+
+  project::has_file_matching "${TEST_TEMP_DIR}/proj-a" "next.config.*"
+}
+
+@test "project::has_file_matching returns false when file does not exist" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/proj-empty"
+
+  run project::has_file_matching "${TEST_TEMP_DIR}/proj-empty" "next.config.*"
+  [ "$status" -ne 0 ]
+}
+
+@test "project::detect_package_manager detects npm from package-lock.json" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/pm-npm"
+  echo '{}' > "${TEST_TEMP_DIR}/pm-npm/package-lock.json"
+
+  result="$(project::detect_package_manager "${TEST_TEMP_DIR}/pm-npm")"
+  [ "$result" = "npm" ]
+}
+
+@test "project::detect_package_manager detects pnpm from pnpm-lock.yaml" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/pm-pnpm"
+  touch "${TEST_TEMP_DIR}/pm-pnpm/pnpm-lock.yaml"
+
+  result="$(project::detect_package_manager "${TEST_TEMP_DIR}/pm-pnpm")"
+  [ "$result" = "pnpm" ]
+}
+
+@test "project::detect_package_manager detects yarn from yarn.lock" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/pm-yarn"
+  touch "${TEST_TEMP_DIR}/pm-yarn/yarn.lock"
+
+  result="$(project::detect_package_manager "${TEST_TEMP_DIR}/pm-yarn")"
+  [ "$result" = "yarn" ]
+}
+
+@test "project::detect_package_manager returns unknown without lockfiles" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/pm-none"
+
+  result="$(project::detect_package_manager "${TEST_TEMP_DIR}/pm-none")"
+  [ "$result" = "unknown" ]
+}
+
+@test "project::detect_type detects nextjs from next.config file" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/type-nextjs"
+  touch "${TEST_TEMP_DIR}/type-nextjs/next.config.js"
+  echo '{"name":"test"}' > "${TEST_TEMP_DIR}/type-nextjs/package.json"
+
+  result="$(project::detect_type "${TEST_TEMP_DIR}/type-nextjs")"
+  [ "$result" = "nextjs" ]
+}
+
+@test "project::detect_type detects flutter from pubspec.yaml" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/type-flutter"
+  touch "${TEST_TEMP_DIR}/type-flutter/pubspec.yaml"
+
+  result="$(project::detect_type "${TEST_TEMP_DIR}/type-flutter")"
+  [ "$result" = "flutter" ]
+}
+
+@test "project::detect_type detects nodejs from bare package.json" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/type-nodejs"
+  echo '{"name":"test","dependencies":{}}' > "${TEST_TEMP_DIR}/type-nodejs/package.json"
+
+  result="$(project::detect_type "${TEST_TEMP_DIR}/type-nodejs")"
+  [ "$result" = "nodejs" ]
+}
+
+@test "project::detect_type returns unknown when no project file found" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/type-unknown"
+
+  result="$(project::detect_type "${TEST_TEMP_DIR}/type-unknown")"
+  [ "$result" = "unknown" ]
+}
+
+@test "project::name returns directory basename" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/myproject"
+
+  result="$(project::name "${TEST_TEMP_DIR}/myproject")"
+  [ "$result" = "myproject" ]
+}
+
+@test "project::has_package_dependency detects dependency in dependencies section" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/dep-test"
+  echo '{"name":"test","dependencies":{"react":"^18.0.0"}}' \
+    > "${TEST_TEMP_DIR}/dep-test/package.json"
+
+  project::has_package_dependency "${TEST_TEMP_DIR}/dep-test" "react"
+}
+
+@test "project::has_package_dependency detects dependency in devDependencies section" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/dep-dev"
+  echo '{"name":"test","devDependencies":{"jest":"^30.0.0"}}' \
+    > "${TEST_TEMP_DIR}/dep-dev/package.json"
+
+  project::has_package_dependency "${TEST_TEMP_DIR}/dep-dev" "jest"
+}
+
+@test "project::has_package_dependency returns false for missing dependency" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/dep-missing"
+  echo '{"name":"test","dependencies":{}}' \
+    > "${TEST_TEMP_DIR}/dep-missing/package.json"
+
+  run project::has_package_dependency "${TEST_TEMP_DIR}/dep-missing" "nonexistent-pkg"
+  [ "$status" -ne 0 ]
+}
+
+@test "project::has_package_field detects bin field" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/field-bin"
+  echo '{"name":"test","bin":{"cli":"index.js"}}' \
+    > "${TEST_TEMP_DIR}/field-bin/package.json"
+
+  project::has_package_field "${TEST_TEMP_DIR}/field-bin" "bin"
+}
+
+@test "project::has_package_field returns false for missing field" {
+  source "${REPO_ROOT}/script/lib/project-detect.sh"
+
+  mkdir -p "${TEST_TEMP_DIR}/field-none"
+  echo '{"name":"test"}' > "${TEST_TEMP_DIR}/field-none/package.json"
+
+  run project::has_package_field "${TEST_TEMP_DIR}/field-none" "bin"
+  [ "$status" -ne 0 ]
+}
