@@ -38,6 +38,27 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(darwinHost).not.toContain('"/Applications/Raycast.app"');
   });
 
+  test('menu bar keeps only work-essential system controls visible', () => {
+    const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
+
+    expect(darwinHost).toContain('controlcenter = {');
+    expect(darwinHost).toContain('BatteryShowPercentage = true;');
+    expect(darwinHost).toContain('AirDrop = false;');
+    expect(darwinHost).toContain('Bluetooth = false;');
+    expect(darwinHost).toContain('Display = false;');
+    expect(darwinHost).toContain('FocusModes = false;');
+    expect(darwinHost).toContain('NowPlaying = false;');
+    expect(darwinHost).toContain('Sound = false;');
+
+    expect(darwinHost).toContain('menuExtraClock = {');
+    expect(darwinHost).toContain('Show24Hour = true;');
+    expect(darwinHost).toContain('ShowAMPM = false;');
+    expect(darwinHost).toContain('ShowDate = 1;');
+    expect(darwinHost).toContain('ShowDayOfMonth = true;');
+    expect(darwinHost).toContain('ShowDayOfWeek = true;');
+    expect(darwinHost).toContain('ShowSeconds = false;');
+  });
+
   test('home-manager imports cmux and input source helpers without Karabiner', () => {
     const homeDefault = readRepoFile('nix/home/default.nix');
 
