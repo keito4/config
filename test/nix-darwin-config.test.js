@@ -137,6 +137,27 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(aerospaceConfig).toContain("run = 'move-node-to-workspace 9'");
   });
 
+  test('BetterTouchTool gesture setup is GitHub-managed and preserves existing triggers', () => {
+    const bttSetup = readRepoFile('script/macos/setup-bettertouchtool.js');
+    const adr = readRepoFile('docs/adr/0017-manage-bettertouchtool-gestures.md');
+
+    expect(fs.existsSync(path.join(repoPath, 'script/macos/setup-bettertouchtool.js'))).toBe(true);
+    expect(bttSetup).toContain("Application('/Applications/BetterTouchTool.app')");
+    expect(bttSetup).toContain('existingUuids.has(trigger.BTTUUID)');
+    expect(bttSetup).not.toContain('delete_triggers');
+    expect(bttSetup).toContain('CODEX-BTT-CMD-W');
+    expect(bttSetup).toContain("BTTShortcutToSend: '55,13'");
+    expect(bttSetup).toContain("const aerospace = '/opt/homebrew/bin/aerospace'");
+    expect(bttSetup).toContain('workspace --wrap-around next');
+    expect(bttSetup).toContain('workspace --wrap-around prev');
+    expect(bttSetup).toContain('workspace-back-and-forth');
+    expect(bttSetup).toContain('focus left');
+    expect(bttSetup).toContain('/usr/bin/open -a Raycast');
+    expect(adr).toContain('The script adds only missing `CODEX-BTT-*` triggers.');
+    expect(adr).toContain('The script does not delete existing triggers');
+    expect(adr).toContain('3 finger swipe down: send `Cmd+W`.');
+  });
+
   test('skhd binds IME shortcuts without Karabiner', () => {
     const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
 
