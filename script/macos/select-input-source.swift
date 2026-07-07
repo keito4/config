@@ -70,12 +70,6 @@ guard let source = inputSource(withID: targetID) else {
   exit(66)
 }
 
-let enableStatus = TISEnableInputSource(source)
-if enableStatus != noErr {
-  fputs("failed to enable input source: \(enableStatus)\n", stderr)
-  exit(1)
-}
-
 let status = TISSelectInputSource(source)
 if status != noErr {
   fputs("failed to select input source: \(status)\n", stderr)

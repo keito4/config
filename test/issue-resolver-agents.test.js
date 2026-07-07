@@ -99,7 +99,7 @@ describe('Issue resolver sub-agent structural contracts', () => {
     test('purpose section should mention PR creation', () => {
       const purposeMatch = content.match(/## 目的\n+([\s\S]+?)(?=\n##)/);
       expect(purposeMatch).not.toBeNull();
-      expect(purposeMatch[1]).toContain('PRを作成');
+      expect(purposeMatch?.[1]).toContain('PRを作成');
     });
   });
 
@@ -129,7 +129,7 @@ describe('Issue resolver sub-agent structural contracts', () => {
     test('purpose section should mention vulnerability fixes', () => {
       const purposeMatch = content.match(/## 目的\n+([\s\S]+?)(?=\n##)/);
       expect(purposeMatch).not.toBeNull();
-      const purpose = purposeMatch[1];
+      const purpose = purposeMatch?.[1] ?? '';
       const hasVulnContext =
         purpose.includes('脆弱性') || purpose.includes('vulnerabilit') || purpose.includes('古いパッケージ');
       expect(hasVulnContext).toBe(true);
@@ -155,7 +155,7 @@ describe('Issue resolver sub-agent structural contracts', () => {
     test('should describe the documentation enrichment goal in the purpose section', () => {
       const purposeMatch = content.match(/## 目的\n+([\s\S]+?)(?=\n##)/);
       expect(purposeMatch).not.toBeNull();
-      const purpose = purposeMatch[1];
+      const purpose = purposeMatch?.[1] ?? '';
       expect(purpose).toContain('README');
     });
   });
@@ -192,7 +192,7 @@ describe('Issue resolver sub-agent structural contracts', () => {
     test('purpose section should reference hardcoded secret removal', () => {
       const purposeMatch = content.match(/## 目的\n+([\s\S]+?)(?=\n##)/);
       expect(purposeMatch).not.toBeNull();
-      const purpose = purposeMatch[1];
+      const purpose = purposeMatch?.[1] ?? '';
       const hasSecretRemoval =
         purpose.includes('秘密情報') || purpose.includes('ハードコード') || purpose.includes('secret');
       expect(hasSecretRemoval).toBe(true);
@@ -223,7 +223,7 @@ describe('Issue resolver sub-agent structural contracts', () => {
     test('purpose section should mention 70% coverage goal', () => {
       const purposeMatch = content.match(/## 目的\n+([\s\S]+?)(?=\n##)/);
       expect(purposeMatch).not.toBeNull();
-      expect(purposeMatch[1]).toContain('70');
+      expect(purposeMatch?.[1]).toContain('70');
     });
   });
 

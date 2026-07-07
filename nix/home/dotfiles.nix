@@ -1,8 +1,14 @@
-{ configRoot, ... }:
+{ config, configRoot, ... }:
 
 let
   managedSource = source: {
     inherit source;
+    force = true;
+  };
+  # 組織情報を含む設定は keito4/private-config（別リポジトリ・非公開）で管理し、
+  # ローカルチェックアウトを out-of-store symlink で参照する（編集は rebuild 不要で即反映）
+  privateConfig = path: {
+    source = config.lib.file.mkOutOfStoreSymlink "/Users/keito/develop/github.com/keito4/private-config/${path}";
     force = true;
   };
 in
@@ -11,10 +17,9 @@ in
     ".aerospace.toml" = managedSource (configRoot + /dot/aerospace.toml);
 
     ".config/act/actrc" = managedSource (configRoot + /dot/config/act/actrc);
-    ".config/agent-deck/config.toml" = managedSource (configRoot + /dot/config/agent-deck/config.toml);
-    ".config/codespaces-secrets/repos.txt" = managedSource (
-      configRoot + /dot/config/codespaces-secrets/repos.txt
-    );
+    ".config/agent-deck/config.toml" = privateConfig "agent-deck/config.toml";
+    ".config/codespaces-secrets/repos.txt" = privateConfig "codespaces-secrets/repos.txt";
+    ".config/devcontainer-env-keys.txt" = privateConfig "devcontainer-env-keys.txt";
     ".config/graphite/aliases" = managedSource (configRoot + /dot/config/graphite/aliases);
 
     ".gitignore" = managedSource (configRoot + /git/gitignore);
@@ -46,7 +51,6 @@ in
     ".zsh/functions/gcp" = managedSource (configRoot + /.zsh/functions/gcp);
     ".zsh/functions/git" = managedSource (configRoot + /.zsh/functions/git);
     ".zsh/functions/mkcd" = managedSource (configRoot + /.zsh/functions/mkcd);
-    ".zsh/functions/op" = managedSource (configRoot + /.zsh/functions/op);
     ".zsh/functions/peco" = managedSource (configRoot + /.zsh/functions/peco);
     ".zsh/functions/process" = managedSource (configRoot + /.zsh/functions/process);
     ".zsh/functions/terraform" = managedSource (configRoot + /.zsh/functions/terraform);

@@ -30,7 +30,6 @@
 
       # Tap-dependent formulae
       "koekeishiya/formulae/skhd"
-      "koekeishiya/formulae/yabai"
       "supabase/tap/supabase"
       "ynqa/tap/jnv"
       "yukiarrr/tap/ecsk"
@@ -61,7 +60,6 @@
 
       # Productivity
       "aerospace"
-      "alfred"
       "bettertouchtool"
       "duet"
       "linear"
@@ -86,6 +84,7 @@
       "deepl"
       "dropbox"
       "google-japanese-ime"
+      "jordanbaird-ice"
       "parallels-client"
       "qblocker"
       "the-unarchiver"

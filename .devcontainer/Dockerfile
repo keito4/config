@@ -68,7 +68,7 @@ RUN OP_VERSION="${OP_CLI_VERSION}" \
 
 # Install Node.js
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG NODE_VERSION=24.17.0
+ARG NODE_VERSION=24.18.0
 RUN NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/arm64/arm64/') \
  && wget -q https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
  && tar -xJf node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz -C /usr/local --strip-components=1 \
@@ -77,7 +77,7 @@ RUN NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/
 
 # Install pnpm
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG PNPM_VERSION=11.8.0
+ARG PNPM_VERSION=11.9.0
 RUN npm install -g pnpm@${PNPM_VERSION}
 
 USER vscode
@@ -99,7 +99,7 @@ COPY npm/global.json /tmp/npm-global.json
 # Install Claude Code using native installer (npm installation deprecated)
 # Must run as vscode user so claude installs to /home/vscode/.claude/local/bin
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG CLAUDE_CODE_VERSION=2.1.185
+ARG CLAUDE_CODE_VERSION=2.1.195
 USER vscode
 RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
  && echo 'export PATH="$HOME/.local/bin:$HOME/.claude/local/bin:$PATH"' >> /home/vscode/.bashrc
@@ -215,6 +215,6 @@ RUN echo "${IMAGE_VERSION}" > /etc/config-base-version \
 
 COPY package.json package-lock.json /tmp/
 COPY .husky /tmp/.husky/
-COPY git/commitlint.config.js /tmp/commitlint.config.js
+COPY commitlint.config.js /tmp/commitlint.config.js
 # package.json の overrides により handlebars >= 4.7.9 (CVE-2026-33937対応) が強制インストールされる
 RUN cd /tmp && npm ci && npm run prepare || true
