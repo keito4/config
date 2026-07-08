@@ -61,9 +61,12 @@
       # Productivity
       "aerospace"
       "bettertouchtool"
+      "duet"
+      "linear"
       "notion"
       "notion-calendar"
       "raycast"
+      "readdle-spark"
 
       # AI Tools
       "chatgpt"
