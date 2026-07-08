@@ -68,37 +68,48 @@ function firstDifference(expected, actual) {
   return null;
 }
 
-let hasDrift = false;
+/**
+ * Run the workflow template sync check and exit with an appropriate code.
+ */
+function run() {
+  let hasDrift = false;
 
-for (const [templatePath, actualPath] of syncPairs) {
-  const templateFile = path.join(repoRoot, templatePath);
-  const actualFile = path.join(repoRoot, actualPath);
+  for (const [templatePath, actualPath] of syncPairs) {
+    const templateFile = path.join(repoRoot, templatePath);
+    const actualFile = path.join(repoRoot, actualPath);
 
-  if (!fs.existsSync(templateFile) || !fs.existsSync(actualFile)) {
-    console.error(`::error::Missing workflow sync pair: ${templatePath} -> ${actualPath}`);
+    if (!fs.existsSync(templateFile) || !fs.existsSync(actualFile)) {
+      console.error(`::error::Missing workflow sync pair: ${templatePath} -> ${actualPath}`);
+      hasDrift = true;
+      continue;
+    }
+
+    const expected = normalizeWorkflow(readRelative(templatePath));
+    const actual = normalizeWorkflow(readRelative(actualPath));
+    if (expected === actual) {
+      continue;
+    }
+
+    const diff = firstDifference(expected, actual);
+    console.error(`::error file=${templatePath}::Workflow template drift from ${actualPath}`);
+    if (diff !== null) {
+      console.error(`  first differing normalized line: ${diff.line}`);
+      console.error(`  template: ${diff.expected}`);
+      console.error(`  actual:   ${diff.actual}`);
+    }
     hasDrift = true;
-    continue;
   }
 
-  const expected = normalizeWorkflow(readRelative(templatePath));
-  const actual = normalizeWorkflow(readRelative(actualPath));
-  if (expected === actual) {
-    continue;
+  if (hasDrift) {
+    console.error('workflow template sync check failed');
+    process.exit(1);
   }
 
-  const diff = firstDifference(expected, actual);
-  console.error(`::error file=${templatePath}::Workflow template drift from ${actualPath}`);
-  if (diff !== null) {
-    console.error(`  first differing normalized line: ${diff.line}`);
-    console.error(`  template: ${diff.expected}`);
-    console.error(`  actual:   ${diff.actual}`);
-  }
-  hasDrift = true;
+  console.log(`ok: ${syncPairs.length} workflow templates are synchronized`);
 }
 
-if (hasDrift) {
-  console.error('workflow template sync check failed');
-  process.exit(1);
+if (require.main === module) {
+  run();
 }
 
-console.log(`ok: ${syncPairs.length} workflow templates are synchronized`);
+module.exports = { normalizeWorkflow, firstDifference };
