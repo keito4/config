@@ -75,9 +75,10 @@ describe('check-workflow-template-sync — script contract', () => {
     expect(content).toContain("'templates/workflows/claude.yml'");
     expect(content).toContain("'.github/workflows/claude.yml'");
     expect(content).toContain("'templates/workflows/dependabot-auto-merge.yml'");
-    expect(content).toContain("'templates/workflows/label-sync.yml'");
     expect(content).toContain("'templates/workflows/quality-gate-fallback.yml'");
     expect(content).toContain("'templates/workflows/scheduled-maintenance.yml'");
+    // label-sync.yml is a reusable-workflow caller stub (ADR 0018), not a managed copy
+    expect(content).not.toContain("'templates/workflows/label-sync.yml'");
   });
 });
 

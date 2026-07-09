@@ -321,9 +321,10 @@ check_dependency_peer_compatibility() {
 }
 
 check_managed_templates() {
+  # label-sync.yml は reusable workflow の caller スタブ配布に移行済み（ADR 0018）。
+  # スタブを config 自身の実体ワークフローへ上書きしないよう、ここには含めない。
   local managed_template_files=(
     "templates/workflows/dependabot-auto-merge.yml:.github/workflows/dependabot-auto-merge.yml"
-    "templates/workflows/label-sync.yml:.github/workflows/label-sync.yml"
   )
   local item source target
 

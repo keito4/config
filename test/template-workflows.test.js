@@ -277,46 +277,55 @@ describe('Template workflow contracts', () => {
     });
   });
 
-  describe('label-sync.yml (template and actual)', () => {
-    const workflowPaths = ['templates/workflows/label-sync.yml', '.github/workflows/label-sync.yml'];
+  describe('label-sync.yml (reusable workflow and caller stub)', () => {
+    const actualPath = '.github/workflows/label-sync.yml';
+    const stubPath = 'templates/workflows/label-sync.yml';
 
-    test.each(workflowPaths)('%s: should trigger on push to main with .github/labels.yml changes', (wfPath) => {
-      const workflow = readWorkflow(wfPath);
-      expect(workflow).toContain('push:');
-      expect(workflow).toContain('.github/labels.yml');
-    });
+    test.each([stubPath, actualPath])(
+      '%s: should trigger on push to main with .github/labels.yml changes',
+      (wfPath) => {
+        const workflow = readWorkflow(wfPath);
+        expect(workflow).toContain('push:');
+        expect(workflow).toContain('.github/labels.yml');
+      },
+    );
 
-    test.each(workflowPaths)('%s: should support workflow_dispatch for manual sync', (wfPath) => {
+    test.each([stubPath, actualPath])('%s: should support workflow_dispatch for manual sync', (wfPath) => {
       const workflow = readWorkflow(wfPath);
       expect(workflow).toContain('workflow_dispatch:');
     });
 
-    test.each(workflowPaths)('%s: should use EndBug/label-sync action', (wfPath) => {
-      const workflow = readWorkflow(wfPath);
-      expect(workflow).toContain('EndBug/label-sync');
-    });
-
-    test.each(workflowPaths)('%s: should have checkout read and label write permissions', (wfPath) => {
+    test.each([stubPath, actualPath])('%s: should have checkout read and label write permissions', (wfPath) => {
       const workflow = readWorkflow(wfPath);
       expect(workflow).toContain('contents: read');
       expect(workflow).toContain('issues: write');
       expect(workflow).toContain('pull-requests: write');
     });
 
-    test.each(workflowPaths)('%s: should have concurrency control to prevent duplicate syncs', (wfPath) => {
+    test.each([stubPath, actualPath])('%s: should have concurrency control to prevent duplicate syncs', (wfPath) => {
       const workflow = readWorkflow(wfPath);
       expect(workflow).toContain('concurrency:');
     });
 
-    test.each(workflowPaths)('%s: should have timeout-minutes', (wfPath) => {
-      const workflow = readWorkflow(wfPath);
+    test('actual workflow declares workflow_call with a config-file input', () => {
+      const workflow = readWorkflow(actualPath);
+      expect(workflow).toContain('workflow_call:');
+      expect(workflow).toContain('config-file:');
+      expect(workflow).toContain("config-file: ${{ inputs.config-file || '.github/labels.yml' }}");
+    });
+
+    test('actual workflow uses EndBug/label-sync with a timeout', () => {
+      const workflow = readWorkflow(actualPath);
+      expect(workflow).toContain('EndBug/label-sync');
       expect(workflow).toContain('timeout-minutes:');
     });
 
-    test.each(workflowPaths)('%s: should reference the labels config file', (wfPath) => {
-      const workflow = readWorkflow(wfPath);
-      expect(workflow).toContain('config-file:');
-      expect(workflow).toContain('labels.yml');
+    test('stub calls the reusable workflow on main and carries the managed header', () => {
+      const stub = readWorkflow(stubPath);
+      expect(stub).toContain('uses: keito4/config/.github/workflows/label-sync.yml@main');
+      expect(stub).toContain('# Managed by keito4/config');
+      expect(stub).toContain('config-file: .github/labels.yml');
+      expect(stub).not.toContain('EndBug/label-sync');
     });
 
     test.each(['templates/github/labels.yml', '.github/labels.yml'])(
