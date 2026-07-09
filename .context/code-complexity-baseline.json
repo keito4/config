@@ -3,10 +3,10 @@
   "tool": "script/code-complexity-check.sh",
   "overall_score": 20,
   "rating": "Poor",
-  "total_files": 37,
+  "total_files": 36,
   "distribution": {
     "low_lt5": 4,
-    "medium_5_10": 6,
+    "medium_5_10": 5,
     "high_10_20": 12,
     "critical_gt20": 15
   },
@@ -36,7 +36,6 @@
     { "file": "script/check-file-length.sh", "complexity": 11, "lines": 65 },
     { "file": "script/version.sh", "complexity": 11, "lines": 132 },
     { "file": "script/setup-claude.sh", "complexity": 11, "lines": 133 },
-    { "file": "script/fix-container-plugins.sh", "complexity": 10, "lines": 78 },
     { "file": "script/update-claude-code.sh", "complexity": 10, "lines": 106 }
   ]
 }

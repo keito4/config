@@ -31,11 +31,6 @@ load ../test_helper/test_helper
     [ -x "$REPO_ROOT/script/pre-pr-checklist.sh" ]
 }
 
-@test "setup-lsp.sh exists and is executable" {
-    assert_file_exists "$REPO_ROOT/script/setup-lsp.sh"
-    [ -x "$REPO_ROOT/script/setup-lsp.sh" ]
-}
-
 @test "install-skills.sh exists and is executable" {
     assert_file_exists "$REPO_ROOT/script/install-skills.sh"
     [ -x "$REPO_ROOT/script/install-skills.sh" ]
@@ -51,11 +46,6 @@ load ../test_helper/test_helper
     run "$REPO_ROOT/script/code-complexity-check.sh" --files "$REPO_ROOT/script/install-skills.sh" --json
     assert_success
     printf '%s\n' "$output" | grep -q '"critical_complexity_count": 0'
-}
-
-@test "fix-container-plugins.sh exists and is executable" {
-    assert_file_exists "$REPO_ROOT/script/fix-container-plugins.sh"
-    [ -x "$REPO_ROOT/script/fix-container-plugins.sh" ]
 }
 
 @test "restore-cli-auth.sh exists and is executable" {

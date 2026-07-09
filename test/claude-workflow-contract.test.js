@@ -179,24 +179,25 @@ describe('Claude workflow contracts', () => {
     expect(script).toContain('Private repo: Dependency Review は optional / skipped を許容');
   });
 
-  test('repo-maintenance validates dependabot and label-sync safety contracts', () => {
+  test('repo-maintenance validates dependabot safety contracts', () => {
     const script = readWorkflow('script/repo-maintenance.sh');
 
     expect(script).toContain('templates/workflows/dependabot-auto-merge.yml');
-    expect(script).toContain('templates/workflows/label-sync.yml');
     expect(script).toContain('gh label create "dependabot-minor"');
     expect(script).toContain('gh label create "needs-review"');
     expect(script).toContain('gh label create "breaking-change"');
   });
 
-  test('repo-maintenance syncs managed dependabot, label-sync, and label templates', () => {
+  test('repo-maintenance syncs managed dependabot and label templates', () => {
     const script = readWorkflow('script/repo-maintenance.sh');
 
     expect(script).toContain('managed_template_files');
     expect(script).toContain(
       'templates/workflows/dependabot-auto-merge.yml:.github/workflows/dependabot-auto-merge.yml',
     );
-    expect(script).toContain('templates/workflows/label-sync.yml:.github/workflows/label-sync.yml');
+    // label-sync.yml is a reusable-workflow caller stub (ADR 0018); copying it
+    // over the runnable workflow would break this repository.
+    expect(script).not.toContain('templates/workflows/label-sync.yml:.github/workflows/label-sync.yml');
     expect(script).toContain('gh label create "dependabot-minor"');
     expect(script).toContain('gh label create "needs-review"');
     expect(script).toContain('gh label create "breaking-change"');

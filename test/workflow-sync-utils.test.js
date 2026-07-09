@@ -3,9 +3,8 @@
 /**
  * Tests for the workflow template sync utilities in script/check-workflow-template-sync.js.
  *
- * The utility functions (normalizeWorkflow, firstDifference) are not exported,
- * so this file tests the script's observable contract via subprocess invocation
- * and by running scenario workflows in a temporary directory structure.
+ * normalizeWorkflow and firstDifference are exported from the script and called
+ * directly here, eliminating the need for subprocess probes or duplicated logic.
  *
  * Scenarios covered:
  *  - Identical template and actual → exit 0, "ok: N synchronized"
@@ -22,126 +21,32 @@ const { spawnSync } = require('child_process');
 const repoRoot = path.resolve(__dirname, '..');
 const scriptPath = path.join(repoRoot, 'script', 'check-workflow-template-sync.js');
 
-/**
- * Run the sync script against a custom set of file pairs.
- *
- * The script resolves all paths relative to the process working directory.
- * We create a temporary directory structure with the expected relative paths,
- * then run the script with cwd set to that temp dir.
- *
- * The script reads its sync pairs from a hard-coded constant, so we cannot
- * inject custom pairs. Instead we run it from the real repo root (for the
- * happy-path tests) and build isolated repos for the negative-case tests by
- * wrapping the script logic in a minimal probe.
- *
- * @param {string} code - Node.js code to run (may import the script helpers)
- * @param {string} cwd  - Working directory for the subprocess
- * @returns {{ status: number, stdout: string, stderr: string }}
- */
-function runNodeScript(code, cwd) {
-  const contextDir = path.join(repoRoot, '.context');
-  fs.mkdirSync(contextDir, { recursive: true });
-  const tmpFile = path.join(contextDir, 'workflow-sync-probe.mjs');
-  try {
-    fs.writeFileSync(tmpFile, code, 'utf8');
-    const result = spawnSync('node', [tmpFile], {
-      cwd,
-      encoding: 'utf8',
-      timeout: 15000,
-    });
-    return {
-      status: result.status ?? 1,
-      stdout: result.stdout ?? '',
-      stderr: result.stderr ?? '',
-    };
-  } finally {
-    fs.rmSync(tmpFile, { force: true });
-  }
-}
+const { normalizeWorkflow, firstDifference } = require('../script/check-workflow-template-sync');
 
 /**
- * Create a temporary directory containing a pair of workflow files
- * (template and actual) and run the normalize-and-compare logic
- * inline via a Node.js probe script.
+ * Run normalizeWorkflow and firstDifference directly and return a result object
+ * that mirrors the { status, stdout, stderr } shape used by the test assertions.
  *
  * @param {string} templateContent - Content for the template file
  * @param {string} actualContent   - Content for the actual workflow file
  * @returns {{ status: number, stdout: string, stderr: string }}
  */
 function runSyncCheck(templateContent, actualContent) {
-  const contextDir = path.join(repoRoot, '.context');
-  fs.mkdirSync(contextDir, { recursive: true });
-  const tempRoot = fs.mkdtempSync(path.join(contextDir, 'workflow-sync-'));
+  const expected = normalizeWorkflow(templateContent);
+  const actual = normalizeWorkflow(actualContent);
 
-  try {
-    // Create the directory structure expected by check-workflow-template-sync.js
-    const templateDir = path.join(tempRoot, 'templates', 'workflows');
-    const actualDir = path.join(tempRoot, '.github', 'workflows');
-    fs.mkdirSync(templateDir, { recursive: true });
-    fs.mkdirSync(actualDir, { recursive: true });
-
-    fs.writeFileSync(path.join(templateDir, 'test.yml'), templateContent);
-    fs.writeFileSync(path.join(actualDir, 'test.yml'), actualContent);
-
-    // Inline the same normalizeWorkflow / firstDifference logic used by the script
-    // so we can unit-test it without modifying the production file.
-    const probe = `
-import { readFileSync } from 'fs';
-import { join } from 'path';
-
-const root = ${JSON.stringify(tempRoot)};
-
-function normalizeWorkflow(content) {
-  return content
-    .split(/\\r?\\n/)
-    .map(line => line.replace(/\\s+$/u, ''))
-    .filter(line => {
-      const trimmed = line.trim();
-      return trimmed !== '' && !trimmed.startsWith('#');
-    })
-    .join('\\n');
-}
-
-function firstDifference(expected, actual) {
-  const expectedLines = expected.split('\\n');
-  const actualLines = actual.split('\\n');
-  const max = Math.max(expectedLines.length, actualLines.length);
-  for (let i = 0; i < max; i++) {
-    if (expectedLines[i] !== actualLines[i]) {
-      return {
-        line: i + 1,
-        expected: expectedLines[i] ?? '<missing>',
-        actual: actualLines[i] ?? '<missing>',
-      };
-    }
+  if (expected === actual) {
+    return { status: 0, stdout: 'ok: 1 workflow templates are synchronized\n', stderr: '' };
   }
-  return null;
-}
 
-const templateContent = readFileSync(join(root, 'templates/workflows/test.yml'), 'utf8');
-const actualContent   = readFileSync(join(root, '.github/workflows/test.yml'), 'utf8');
-
-const expected = normalizeWorkflow(templateContent);
-const actual   = normalizeWorkflow(actualContent);
-
-if (expected === actual) {
-  process.stdout.write('ok: 1 workflow templates are synchronized\\n');
-  process.exit(0);
-} else {
   const diff = firstDifference(expected, actual);
-  process.stderr.write('::error::Workflow template drift\\n');
-  if (diff) {
-    process.stderr.write('  line: ' + diff.line + '\\n');
-    process.stderr.write('  expected: ' + diff.expected + '\\n');
-    process.stderr.write('  actual: ' + diff.actual + '\\n');
+  let stderr = '::error::Workflow template drift\n';
+  if (diff !== null) {
+    stderr += `  line: ${diff.line}\n`;
+    stderr += `  expected: ${diff.expected}\n`;
+    stderr += `  actual: ${diff.actual}\n`;
   }
-  process.exit(1);
-}
-`;
-    return runNodeScript(probe, tempRoot);
-  } finally {
-    fs.rmSync(tempRoot, { recursive: true, force: true });
-  }
+  return { status: 1, stdout: '', stderr };
 }
 
 describe('check-workflow-template-sync — script contract', () => {
@@ -170,13 +75,14 @@ describe('check-workflow-template-sync — script contract', () => {
     expect(content).toContain("'templates/workflows/claude.yml'");
     expect(content).toContain("'.github/workflows/claude.yml'");
     expect(content).toContain("'templates/workflows/dependabot-auto-merge.yml'");
-    expect(content).toContain("'templates/workflows/label-sync.yml'");
     expect(content).toContain("'templates/workflows/quality-gate-fallback.yml'");
     expect(content).toContain("'templates/workflows/scheduled-maintenance.yml'");
+    // label-sync.yml is a reusable-workflow caller stub (ADR 0018), not a managed copy
+    expect(content).not.toContain("'templates/workflows/label-sync.yml'");
   });
 });
 
-describe('normalizeWorkflow — inline behaviour tests', () => {
+describe('normalizeWorkflow / firstDifference — behaviour tests', () => {
   test('identical content → exit 0, "synchronized"', () => {
     const workflow = 'name: CI\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n';
     const result = runSyncCheck(workflow, workflow);

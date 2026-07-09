@@ -277,12 +277,6 @@ Verifies that DevContainer setup completed successfully.
 
 **Used by**: DevContainer validation
 
-### fix-container-plugins.sh
-
-Fixes container plugin permission and path issues.
-
-**Used by**: DevContainer troubleshooting
-
 ### container-health.sh
 
 Comprehensive DevContainer health check.
@@ -325,12 +319,6 @@ Creates a GitHub Codespace with configurable options.
 | `-c, --devcontainer` | devcontainer.json path      | .devcontainer/codespaces/devcontainer.json |
 
 **Machine sizes**: `basicLinux32gb`, `standardLinux32gb`, `premiumLinux`, `largePremiumLinux`
-
-### setup-lsp.sh
-
-Sets up Language Server Protocol servers for various languages.
-
-**Usage**: `./script/setup-lsp.sh`
 
 ### update-agents-md.sh
 

@@ -1,4 +1,4 @@
-# ADR 0018: Downstream Template Auto-Sync
+# ADR 0019: Downstream Template Auto-Sync
 
 ## Status
 
