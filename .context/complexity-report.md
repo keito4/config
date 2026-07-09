@@ -62,5 +62,4 @@ Generated: Thu Jul 03 00:00:00 UTC 2026
 | script/check-file-length.sh | 11 | 65 | 1 |
 | script/version.sh | 11 | 132 | 1 |
 | script/setup-claude.sh | 11 | 133 | 1 |
-| script/fix-container-plugins.sh | 10 | 78 | 0 |
 | script/update-claude-code.sh | 10 | 106 | 1 |
