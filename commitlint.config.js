@@ -47,7 +47,7 @@ module.exports = {
   plugins: [
     {
       rules: {
-        'codex-release-type': (parsed) => releaseTypeRule(parsed),
+        'codex-release-type': releaseTypeRule,
       },
     },
   ],

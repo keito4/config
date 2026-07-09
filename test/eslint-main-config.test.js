@@ -172,7 +172,7 @@ describe('eslint.config.mjs — root ESLint configuration', () => {
       const templateMatch = template.match(/complexity:\s*\[.*?max:\s*(\d+)/s);
       expect(rootMatch).not.toBeNull();
       expect(templateMatch).not.toBeNull();
-      expect(rootMatch[1]).toBe(templateMatch[1]);
+      expect(rootMatch?.[1]).toBe(templateMatch?.[1]);
     });
 
     test('both files should use the same max-lines-per-function limit (100)', () => {

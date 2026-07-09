@@ -58,6 +58,10 @@ credentials/
 | **Linear**          | `.codex`            | `LINEAR_API_KEY`                              | Linear 課題操作           |
 | **Doppler**         | `.codex`            | `DOPPLER_TOKEN`                               | Secret 管理               |
 | **n8n**             | optional/manual     | `N8N_API_URL`, `N8N_API_KEY`                  | n8n ワークフロー自動化    |
+| **Sentry**          | local tooling       | `ELU_SENTRY_TOKEN`                            | ELU Sentry 操作           |
+| **Gemini API**      | local tooling       | `GEMINI_API_KEY`                              | Gemini API 利用           |
+| **Notion**          | local tooling       | `ELU_NOTION_API_KEY`, `OYKOT_NOTION_API_KEY`  | Notion integration token  |
+| **GitHub Packages** | local tooling       | `GITHUB_TOKEN`, `NODE_AUTH_TOKEN`             | npm/GitHub Packages 認証  |
 
 ### MCP環境変数の設定
 
@@ -77,7 +81,16 @@ credentials/
 - GitHub / GITHUB_COPILOT_MCP_TOKEN
 - N8N_API_URL / value
 - N8N_API_KEY / value
+- Sentry / ELU_SENTRY_TOKEN
+- Gemini / GEMINI_API_KEY
+- NOTION_SECRET / ELU_NOTION_API_KEY
+- NOTION_SECRET / OYKOT_NOTION_API_KEY
+- GITHUB_TOKEN / credential
 ```
+
+`NODE_AUTH_TOKEN` は `GITHUB_TOKEN` と同じ 1Password 参照から生成します。
+`OP_SERVICE_ACCOUNT_TOKEN` は 1Password 自身へアクセスするためのトークンなので、
+このテンプレートでは管理しません。
 
 ### 従来の方法
 

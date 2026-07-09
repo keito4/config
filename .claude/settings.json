@@ -274,6 +274,17 @@
         ]
       },
       {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -c 'if ((.tool_input.file_path // \"\") | test(\"/[.]claude/projects/[^/]+/memory/\")) then {\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"📝 メモリを更新しました。READMEの反映先チェックリストに従い、①NotionコンテキストDocの🔄最近の動き ②デイリーログ への反映も必要か確認し、必要ならその場で反映してください。\"}} else empty end'",
+            "timeout": 10,
+            "statusMessage": "メモリ更新を検知..."
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
