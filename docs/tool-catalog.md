@@ -34,7 +34,7 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | -------- | --------------- | -------------------------- |
 | Node.js  | 24.18.0         | JavaScript/TypeScript 実行 |
 | Python 3 | apt 管理        | スクリプト、AI ツール      |
-| pnpm     | 11.9.0          | パッケージマネージャ       |
+| pnpm     | 11.10.0         | パッケージマネージャ       |
 | npm      | see global.json | パッケージマネージャ       |
 | corepack | see global.json | パッケージマネージャ切替   |
 
@@ -44,7 +44,7 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 | ツール                            | バージョン管理             | 用途                |
 | --------------------------------- | -------------------------- | ------------------- |
-| Claude Code                       | native installer (2.1.195) | AI コーディング支援 |
+| Claude Code                       | native installer (2.1.201) | AI コーディング支援 |
 | Codex (`@openai/codex`)           | see global.json            | OpenAI Codex CLI    |
 | Gemini CLI (`@google/gemini-cli`) | see global.json            | Google Gemini CLI   |
 | Happy Coder                       | see global.json            | AI コーディング     |
@@ -66,7 +66,7 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | ツール          | バージョン      | 用途                                             |
 | --------------- | --------------- | ------------------------------------------------ |
 | shellcheck      | apt 管理        | シェルスクリプト検証                             |
-| GitHub CLI (gh) | 2.95.0          | GitHub 操作                                      |
+| GitHub CLI (gh) | 2.96.0          | GitHub 操作                                      |
 | Doppler CLI     | 3.76.0          | シークレット管理                                 |
 | similarity-ts   | オンデマンド    | コード類似度分析（初回実行時に自動インストール） |
 | eslint          | npm global      | JavaScript リンター                              |
