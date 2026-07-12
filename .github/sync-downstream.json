@@ -1,0 +1,61 @@
+{
+  "groups": {
+    "claude-config": [
+      { "source": ".claude/hooks/", "target": ".claude/hooks/" },
+      { "source": ".claude/rules/", "target": ".claude/rules/" },
+      { "source": ".claude/settings.json", "target": ".claude/settings.json" }
+    ],
+    "workflow-claude": [
+      {
+        "source": "templates/workflows/claude.yml",
+        "target": ".github/workflows/claude.yml"
+      }
+    ],
+    "workflow-quality-gate-fallback": [
+      {
+        "source": "templates/workflows/quality-gate-fallback.yml",
+        "target": ".github/workflows/quality-gate-fallback.yml"
+      }
+    ],
+    "workflow-dependabot-auto-merge": [
+      {
+        "source": "templates/workflows/dependabot-auto-merge.yml",
+        "target": ".github/workflows/dependabot-auto-merge.yml"
+      }
+    ],
+    "workflow-label-sync": [
+      {
+        "source": "templates/workflows/label-sync.yml",
+        "target": ".github/workflows/label-sync.yml"
+      }
+    ]
+  },
+  "repos": [
+    {
+      "name": "keito4/calendar_alerm",
+      "groups": ["claude-config", "workflow-claude", "workflow-quality-gate-fallback", "workflow-dependabot-auto-merge"]
+    },
+    {
+      "name": "keito4/effectuation",
+      "groups": ["claude-config", "workflow-claude", "workflow-quality-gate-fallback"]
+    },
+    {
+      "name": "keito4/intent-gate-android",
+      "groups": [
+        "claude-config",
+        "workflow-claude",
+        "workflow-quality-gate-fallback",
+        "workflow-dependabot-auto-merge",
+        "workflow-label-sync"
+      ]
+    },
+    {
+      "name": "keito4/ohana",
+      "groups": ["claude-config", "workflow-claude", "workflow-quality-gate-fallback", "workflow-dependabot-auto-merge"]
+    },
+    {
+      "name": "keito4/raycast-extensions",
+      "groups": ["claude-config"]
+    }
+  ]
+}
