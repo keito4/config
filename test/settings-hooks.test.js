@@ -131,6 +131,11 @@ describe('.claude/settings.json — hooks configuration', () => {
       expect(allCommands.some((cmd) => cmd.includes('block_config_edit.py'))).toBe(true);
     });
 
+    test('should reference block_managed_file_edit.py in Write/Edit PreToolUse hook', () => {
+      const allCommands = settings.hooks.PreToolUse.flatMap((e) => e.hooks.map((h) => h.command));
+      expect(allCommands.some((cmd) => cmd.includes('block_managed_file_edit.py'))).toBe(true);
+    });
+
     test('should reference pre_exit_plan_ai_review.py in ExitPlanMode hook', () => {
       const exitPlanHooks = settings.hooks.PreToolUse.filter((e) => e.matcher === 'ExitPlanMode');
       expect(exitPlanHooks.length).toBeGreaterThan(0);
