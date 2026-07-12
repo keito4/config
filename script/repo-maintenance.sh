@@ -357,8 +357,9 @@ check_downstream_sync() {
   changed="$(git diff --name-only HEAD~1..HEAD 2>/dev/null || true)"
 
   if grep -qE '^(templates/|\.github/workflows/|script/wait-ci-checks\.sh)' <<<"$changed"; then
-    output::warning "Downstream sync required"
-    echo "Repositories using config-base should run /repo-maintenance or receive a sync PR."
+    output::warning "Downstream sync pending"
+    echo "sync-downstream.yml creates sync PRs in downstream repositories after this change reaches main."
+    echo "Manifest: .github/sync-downstream.json (see docs/adr/0017-downstream-template-auto-sync.md)."
     if [[ -n "${CLAUDE_BRANCH:-}" ]]; then
       git checkout "$CLAUDE_BRANCH" 2>/dev/null || git checkout -b "$CLAUDE_BRANCH"
     fi

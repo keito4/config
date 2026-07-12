@@ -20,6 +20,16 @@
 
 テンプレート置き場は `templates/` のみです。`.github/workflows/` にはこのリポジトリで実行する実体ワークフローだけを置きます。
 
+### 下流リポジトリへの配布と追従
+
+| 役割           | 担当                                                                                     |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| 初期配置       | `script/setup-new-repo.sh`（新規リポジトリセットアップ時）                               |
+| 追従（継続）   | `.github/workflows/sync-downstream.yml`（main への push 契機で下流に同期 PR を自動作成） |
+| コンテナ組込み | config-base イメージ（`.claude/hooks` などを焼き込み）                                   |
+
+同期対象と対象リポジトリは [.github/sync-downstream.json](../.github/sync-downstream.json) で管理します。下流リポジトリ固有の変更を維持する場合は manifest の `exclude` にパスを追加してください。詳細は [ADR 0017](../docs/adr/0017-downstream-template-auto-sync.md) を参照。
+
 ### pre-commit（`pre-commit-config-*.yaml`）
 
 | テンプレート                       | いつ使う                                                                     |
