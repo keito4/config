@@ -122,8 +122,10 @@ describe('Claude workflow contracts', () => {
     const script = readWorkflow('script/repo-maintenance.sh');
 
     expect(command).toContain('script/repo-maintenance.sh $ARGUMENTS');
-    expect(command).toContain('Downstream sync required');
-    expect(script).toContain('Repositories using config-base should run /repo-maintenance or receive a sync PR.');
+    expect(command).toContain('Downstream sync pending');
+    expect(script).toContain(
+      'sync-downstream.yml creates sync PRs in downstream repositories after this change reaches main.',
+    );
     expect(script).toContain('script/wait-ci-checks\\.sh');
     expect(script).toContain('git checkout "$CLAUDE_BRANCH" 2>/dev/null || git checkout -b "$CLAUDE_BRANCH"');
   });

@@ -52,6 +52,18 @@ function expectCommitlintFailure(message, cwd) {
   }
 }
 
+function runReleaseTypeRule(repoDir, parsed) {
+  const previousCwd = process.cwd();
+  const config = require(configPath);
+  const rule = config.plugins[0].rules['codex-release-type'];
+  try {
+    process.chdir(repoDir);
+    return rule(parsed);
+  } finally {
+    process.chdir(previousCwd);
+  }
+}
+
 function runReleaseTypeRuleWithGitFailure(parsed) {
   let result;
   jest.isolateModules(() => {
@@ -141,6 +153,35 @@ describe('root commitlint configuration runtime behavior', () => {
     const tempDir = makeGitRepo('commitlint-japanese');
     try {
       expect(() => runCommitlint('docs: 日本語の説明を追加', tempDir)).not.toThrow();
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test('treats null commit type as non-release type when release-sensitive file is staged', () => {
+    // Exercises the `parsed.type || ''` branch (line 35) where parsed.type is falsy.
+    // '' is not in releaseTypeAllowList → should return [false, message].
+    const tempDir = makeGitRepo('commitlint-null-type');
+    try {
+      stageFile(tempDir, 'package.json', '{"name":"sample"}\n');
+
+      const [passes, message] = runReleaseTypeRule(tempDir, { type: null });
+      expect(passes).toBe(false);
+      expect(message).toContain('release-triggering type');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test('treats undefined commit type as non-release type when release-sensitive file is staged', () => {
+    // Exercises the `parsed.type || ''` branch where parsed.type is undefined.
+    const tempDir = makeGitRepo('commitlint-undef-type');
+    try {
+      stageFile(tempDir, 'package.json', '{"name":"sample"}\n');
+
+      const [passes, message] = runReleaseTypeRule(tempDir, { type: undefined });
+      expect(passes).toBe(false);
+      expect(message).toContain('release-triggering type');
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
