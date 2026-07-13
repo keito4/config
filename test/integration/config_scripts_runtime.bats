@@ -3,6 +3,9 @@
 load ../test_helper/test_helper
 
 @test "export.sh --check creates managed target directories" {
+  if ! command -v zsh >/dev/null 2>&1; then
+    skip "zsh is not installed"
+  fi
   local target="${TEST_TEMP_DIR}/export-target"
 
   run env REPO_PATH="$target" zsh "$REPO_ROOT/script/export.sh" --check
@@ -16,6 +19,9 @@ load ../test_helper/test_helper
 }
 
 @test "export.sh filters gitconfig during execution" {
+  if ! command -v zsh >/dev/null 2>&1; then
+    skip "zsh is not installed"
+  fi
   local target="${TEST_TEMP_DIR}/export-run"
   local home="${TEST_TEMP_DIR}/home"
   local bin="${TEST_TEMP_DIR}/bin"
@@ -47,6 +53,9 @@ EOF
 }
 
 @test "import.sh --check validates source without bootstrapping tools" {
+  if ! command -v zsh >/dev/null 2>&1; then
+    skip "zsh is not installed"
+  fi
   local source_repo="${TEST_TEMP_DIR}/import-source"
   local minimal_path="/usr/bin:/bin"
   mkdir -p "$source_repo/git" "$source_repo/npm" "$source_repo/.claude"
@@ -61,6 +70,9 @@ EOF
 }
 
 @test "credentials.sh list runs without contacting provider" {
+  if ! command -v zsh >/dev/null 2>&1; then
+    skip "zsh is not installed"
+  fi
   run zsh "$REPO_ROOT/script/credentials.sh" list
 
   [ "$status" -eq 0 ]
@@ -68,6 +80,9 @@ EOF
 }
 
 @test "credentials.sh rejects unsupported provider" {
+  if ! command -v zsh >/dev/null 2>&1; then
+    skip "zsh is not installed"
+  fi
   run env CREDENTIAL_PROVIDER=missing zsh "$REPO_ROOT/script/credentials.sh" list
 
   [ "$status" -eq 1 ]
