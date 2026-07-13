@@ -18,13 +18,13 @@ load ../test_helper/test_helper
   done
 }
 
-@test "root workflow count is consolidated to 14 files" {
+@test "root workflow count is consolidated to 15 files" {
   local workflows_dir="${REPO_ROOT}/.github/workflows"
   local count
 
   count=$(find "$workflows_dir" -maxdepth 1 -type f \( -name '*.yml' -o -name '*.yaml' \) | wc -l | tr -d ' ')
 
-  [ "$count" -eq 14 ]
+  [ "$count" -eq 15 ]
   [ ! -e "$workflows_dir/rebuild-docker-cache.yml" ]
 }
 

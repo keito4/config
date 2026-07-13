@@ -50,7 +50,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `.cursor/`           | Cursor editor settings                                      |
 | `.devcontainer/`     | DevContainer configuration and Dockerfile                   |
 | `.gemini/`           | Gemini AI agent configuration                               |
-| `.github/workflows/` | GitHub Actions CI/CD workflows (14 workflows)               |
+| `.github/workflows/` | GitHub Actions CI/CD workflows (15 workflows)               |
 | `.husky/`            | Git hooks (pre-commit, commit-msg)                          |
 | `.vscode/`           | VS Code workspace settings                                  |
 | `.zsh/`              | Zsh configuration (aliases, completions, functions, prompt) |
@@ -140,6 +140,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `quality-gate-fallback.yml` | CI Fallback                          |
 | `scheduled-maintenance.yml` | Scheduled Maintenance                |
 | `security.yml`              | Security Scans                       |
+| `sync-downstream.yml`       | Sync Downstream Repositories         |
 | `update-dev-tools.yml`      | Update Development Tools             |
 | `update-libraries.yml`      | Auto Update Libraries                |
 
