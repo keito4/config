@@ -24,6 +24,7 @@ in
 
     ".gitignore" = managedSource (configRoot + /git/gitignore);
     ".peco/config.json" = managedSource (configRoot + /dot/.peco/config.json);
+    ".tmux.conf" = managedSource (configRoot + /dot/tmux.conf);
     ".zshrc.devcontainer" = managedSource (configRoot + /dot/.zshrc.devcontainer);
 
     ".zsh/configs/aliases.zsh" = managedSource (configRoot + /.zsh/configs/aliases.zsh);
