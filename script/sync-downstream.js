@@ -39,18 +39,26 @@ function validateGroup(groupName, entries) {
     throw new Error(`manifest: group "${groupName}" must be a non-empty array`);
   }
   for (const entry of entries) {
-    if (typeof entry.source !== 'string' || typeof entry.target !== 'string') {
+    if (
+      entry === null ||
+      typeof entry !== 'object' ||
+      typeof entry.source !== 'string' ||
+      typeof entry.target !== 'string'
+    ) {
       throw new Error(`manifest: group "${groupName}" has an entry without source/target`);
     }
   }
 }
 
 /**
- * @param {object} repo - Candidate repo entry
+ * @param {unknown} repo - Candidate repo entry
  * @param {object} groups - Manifest groups keyed by name
- * @throws {Error} When the repo name or group opt-ins are invalid
+ * @throws {Error} When the repo entry is missing/malformed or its name/group opt-ins are invalid
  */
 function validateRepo(repo, groups) {
+  if (repo === null || typeof repo !== 'object') {
+    throw new Error(`manifest: invalid repo entry: ${JSON.stringify(repo)}`);
+  }
   if (typeof repo.name !== 'string' || !/^[\w.-]+\/[\w.-]+$/u.test(repo.name)) {
     throw new Error(`manifest: invalid repo name: ${JSON.stringify(repo.name)}`);
   }

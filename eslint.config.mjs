@@ -21,6 +21,8 @@ export default [
     rules: {
       'no-console': 'off',
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      // Forbid == / != so comparisons never rely on implicit type coercion.
+      eqeqeq: ['error', 'always'],
       // Complexity rules (Phase 1: warnings to prevent new technical debt)
       // See eslint/README.md for detailed documentation
       complexity: ['warn', { max: 15 }],
