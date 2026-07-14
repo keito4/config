@@ -17,6 +17,7 @@ readonly PLUGINS_KNOWN_MARKETPLACES_FALLBACK=(
     "claude-code-workflows:wshobson/agents"
     "claude-plugins-official:anthropics/claude-plugins-official"
     "intellectronica-skills:intellectronica/agent-skills"
+    "mattpocock:mattpocock/skills"
     "playwright-skill:lackeyjb/playwright-skill"
     "supabase-agent-skills:supabase/agent-skills"
 )

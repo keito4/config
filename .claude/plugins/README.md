@@ -111,6 +111,7 @@ make claude-plugins
 - **intellectronica/agent-skills** (`intellectronica-skills`) - ライブラリ・フレームワークの最新ドキュメント
 - **anthropics/skills** (`anthropic-agent-skills`) - Anthropic公式スキル
 - **lackeyjb/playwright-skill** (`playwright-skill`) - Playwright自動化スキル
+- **mattpocock/skills** (`mattpocock`) - 実務エンジニアリング向けスキル（grill-me / to-spec / to-tickets / tdd / improve-codebase-architecture ほか）
 
 ## 推奨プラグイン
 

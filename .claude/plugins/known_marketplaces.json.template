@@ -55,6 +55,14 @@
     "installLocation": "{{HOME}}/.claude/plugins/marketplaces/intellectronica-skills",
     "lastUpdated": "2025-01-01T00:00:00.000Z"
   },
+  "mattpocock": {
+    "source": {
+      "source": "github",
+      "repo": "mattpocock/skills"
+    },
+    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/mattpocock",
+    "lastUpdated": "2025-01-01T00:00:00.000Z"
+  },
   "playwright-skill": {
     "source": {
       "source": "github",
