@@ -21,7 +21,7 @@ assert_tsv_row() {
   assert_tsv_row docs script/README.md docs/README.md
   assert_tsv_row test script/audit-references.sh test/integration/core-scripts.bats
   assert_tsv_row code/ci templates/workflows/claude.yml templates/workflows/claude-health-check.yml
-  assert_tsv_row test templates/workflows/claude-health-check.yml test/template-workflows.test.js
+  assert_tsv_row test templates/workflows/claude-health-check.yml test/template-workflows-claude.test.js
 }
 
 @test "audit-references markdown includes zero code/test summary" {
