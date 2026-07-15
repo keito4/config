@@ -30,20 +30,18 @@ describe('Claude Code Hooks lifecycle', () => {
       expect(content).toContain('HUSKY=0');
     });
 
-    test('should block -n shorthand for --no-verify after git commit', () => {
-      expect(content).toContain('"-n"');
+    // -n / 終了コードの実際の挙動は test/hooks-block-git-no-verify.test.js が
+    // フックを起動して検証する（結合フラグ -nm 等は文字列検査では証明できないため）。
+    test('should block hooksPath override (core.hooksPath)', () => {
+      expect(content).toContain('core.hookspath');
     });
 
     test('should use shlex for safe command tokenization', () => {
       expect(content).toContain('shlex.split');
     });
 
-    test('should exit 2 when blocked flag detected', () => {
-      expect(content).toContain('sys.exit(2)');
-    });
-
-    test('should exit 0 for clean commands', () => {
-      expect(content).toContain('sys.exit(0)');
+    test('should propagate the hook exit code', () => {
+      expect(content).toContain('sys.exit(main())');
     });
 
     test('should suggest sanitized alternative command', () => {
