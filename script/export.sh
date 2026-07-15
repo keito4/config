@@ -71,17 +71,9 @@ if [[ -f ~/.mcp.json ]]; then
 	config::export_mcp ~/.mcp.json "$REPO_PATH/.mcp.json"
 fi
 
-# Codex configuration
-if [[ -d ~/.codex ]]; then
-	config::export_codex ~/.codex "$REPO_PATH/.codex"
-fi
-
-# Cursor configuration
-if [[ -d ~/.cursor ]]; then
-	config::export_cursor ~/.cursor "$REPO_PATH/.cursor"
-fi
-
-# Gemini configuration
-if [[ -d ~/.gemini ]]; then
-	config::export_gemini ~/.gemini "$REPO_PATH/.gemini"
-fi
+# Codex / Cursor / Gemini configuration
+for tool in codex cursor gemini; do
+	if [[ -d ~/.$tool ]]; then
+		"config::export_$tool" ~/.$tool "$REPO_PATH/.$tool"
+	fi
+done
