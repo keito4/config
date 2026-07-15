@@ -17,5 +17,7 @@ in
     ".local/bin/agent-collect-local-configs" = managedCommand (
       configRoot + /script/agent/collect-local-configs.sh
     );
+
+    ".local/bin/claude-lmstudio" = managedCommand (configRoot + /script/agent/claude-lmstudio.sh);
   };
 }

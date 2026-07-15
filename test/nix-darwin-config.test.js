@@ -200,4 +200,31 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(collectorScript).toContain('category\\tbytes\\tmtime\\tpath');
     expect(collectorScript).toContain('intentionally does not copy or print file contents');
   });
+
+  test('claude-lmstudio launcher is installed as an executable command', () => {
+    const agentCommandsModule = readRepoFile('nix/home/agent-commands.nix');
+    const launcherScript = readRepoFile('script/agent/claude-lmstudio.sh');
+    const launcherPath = path.join(repoPath, 'script/agent/claude-lmstudio.sh');
+
+    expect(agentCommandsModule).toContain('".local/bin/claude-lmstudio"');
+    expect(agentCommandsModule).toContain('configRoot + /script/agent/claude-lmstudio.sh');
+    expect(fs.statSync(launcherPath).mode & 0o111).toBeTruthy();
+
+    // Points Claude Code at the local LM Studio Anthropic-compatible endpoint.
+    expect(launcherScript).toContain('ANTHROPIC_BASE_URL');
+    expect(launcherScript).toContain('http://localhost:1234');
+    expect(launcherScript).toContain('exec claude --model');
+    // Default to an MLX build; GGUF fails Claude Code tool use on the llama.cpp grammar parser.
+    expect(launcherScript).toContain('qwen/qwen3-coder-next');
+    expect(launcherScript).toContain('MLX');
+
+    // LM Studio's JIT loader defaults to an 8k context, too small for Claude Code's
+    // system prompt, so the launcher must load the model with a usable window itself.
+    expect(launcherScript).toContain('LMSTUDIO_CONTEXT_LENGTH');
+    expect(launcherScript).toContain('--context-length');
+
+    // Loading alongside a stale small-context copy is not enough: LM Studio routes by
+    // model key and serves the stale copy, so the small copies must be unloaded first.
+    expect(launcherScript).toContain('lms unload');
+  });
 });
