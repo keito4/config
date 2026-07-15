@@ -38,6 +38,10 @@ SETTINGS_FILE="${CLAUDE_DIR}/settings.json"
 # shellcheck disable=SC2016  # jq に渡すJSONリテラル。$schema はシェル変数ではない
 CLAUDE_SHARED_SETTINGS_KEYS='["$schema","hooks","permissions","enabledPlugins","extraKnownMarketplaces","attribution"]'
 
+# 追加の CLAUDE_CONFIG_DIR に ~/.claude からリンクするコンテンツ。
+# hooks は settings.json 側がプロジェクト相対 (.claude/hooks/...) で解決するため対象外。
+CLAUDE_LINKED_CONTENT_DIRS=(commands agents skills)
+
 # settings.local.json のセットアップ
 # ホストに settings.local.json がない場合、デフォルトをコピー
 setup_settings_local() {
@@ -130,6 +134,51 @@ sync_settings_to_extra_config_dirs() {
     done < <(list_extra_config_dirs)
 }
 
+# commands / agents / skills を追加の CLAUDE_CONFIG_DIR にシンボリックリンクする
+#
+# なぜコピーではなくリンクか: これらは dir ごとに差分を持つ理由が現状なく、
+# コピーだと make claude-setup を忘れた端末で静かにドリフトする。
+# リンクなら ~/.claude に置いた時点で全 dir に反映され、ドリフトが原理的に起きない。
+#
+# なぜリポジトリからではなく ~/.claude から配るか: keito4/config は public のため
+# 個人情報を含むコマンド（例: 個人 Notion の ID を持つ /session-close）は追跡できない。
+# 正本を ~/.claude に置く方針は settings.json の同期（#977）と同じ。
+link_content_to_extra_config_dirs() {
+    local target_dir name source_path target_path
+    while IFS= read -r target_dir; do
+        [[ -n "$target_dir" ]] || continue
+
+        for name in "${CLAUDE_LINKED_CONTENT_DIRS[@]}"; do
+            source_path="${CLAUDE_DIR}/${name}"
+            target_path="${target_dir}/${name}"
+
+            if [[ ! -e "$source_path" ]]; then
+                log_info "  ${source_path} が無いため ${name} のリンクをスキップします"
+                continue
+            fi
+
+            if [[ -L "$target_path" ]]; then
+                if [[ "$(readlink "$target_path")" == "$source_path" ]]; then
+                    log_info "  ${target_path} は最新です"
+                    continue
+                fi
+                rm -f "$target_path"
+            elif [[ -e "$target_path" ]]; then
+                # 実体があるものを消すと中身を失う。手動退避を促して触らない。
+                log_warn "  ${target_path} は実体のためスキップします（退避してから再実行してください）"
+                continue
+            fi
+
+            mkdir -p "$target_dir"
+            if ln -s "$source_path" "$target_path"; then
+                log_success "  ${target_path} -> ${source_path} をリンクしました"
+            else
+                log_warn "  ${target_path} のリンクに失敗しました"
+            fi
+        done
+    done < <(list_extra_config_dirs)
+}
+
 main() {
     log_info "Claude Code セットアップを開始します..."
     log_info "環境: HOME=${HOME}"
@@ -151,6 +200,11 @@ main() {
     # 追加の CLAUDE_CONFIG_DIR（~/.claude-private 等）へ共有設定を同期
     log_info "追加の CLAUDE_CONFIG_DIR に共有設定を同期します..."
     sync_settings_to_extra_config_dirs
+
+    # commands / agents / skills を追加の CLAUDE_CONFIG_DIR にリンク
+    # claude CLI の有無に依存しないため、CLI チェックより前に実行する
+    log_info "追加の CLAUDE_CONFIG_DIR に commands/agents/skills をリンクします..."
+    link_content_to_extra_config_dirs
 
     # Claude CLI の存在確認
     if ! command -v claude &> /dev/null; then
