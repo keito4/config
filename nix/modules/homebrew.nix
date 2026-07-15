@@ -72,6 +72,7 @@
       "chatgpt"
       "claude"
       "cmux"
+      "typeless" # AI voice dictation
 
       # Browsers
       "arc"
