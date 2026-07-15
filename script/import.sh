@@ -93,20 +93,12 @@ if [[ -f "$REPO_PATH/.mcp.json" ]]; then
 	config::import_mcp "$REPO_PATH/.mcp.json" ~/.mcp.json
 fi
 
-# Codex configuration
-if [[ -d "$REPO_PATH/.codex" ]]; then
-	config::import_codex "$REPO_PATH/.codex" ~/.codex
-fi
-
-# Cursor configuration
-if [[ -d "$REPO_PATH/.cursor" ]]; then
-	config::import_cursor "$REPO_PATH/.cursor" ~/.cursor
-fi
-
-# Gemini configuration
-if [[ -d "$REPO_PATH/.gemini" ]]; then
-	config::import_gemini "$REPO_PATH/.gemini" ~/.gemini
-fi
+# Codex / Cursor / Gemini configuration
+for tool in codex cursor gemini; do
+	if [[ -d "$REPO_PATH/.$tool" ]]; then
+		"config::import_$tool" "$REPO_PATH/.$tool" ~/.$tool
+	fi
+done
 
 if devcontainer::is_active; then
 	devcontainer::bootstrap
