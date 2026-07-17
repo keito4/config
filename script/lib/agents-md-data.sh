@@ -58,7 +58,7 @@ EXTRA_TEST_LABEL_test_all="(unit + integration)"
 
 # format: filename|trigger|purpose
 HOOK_TABLE=(
-  "block_git_no_verify.py|Pre git commit/push|Block \`--no-verify\` and \`HUSKY=0\`"
+  "block_git_no_verify.py|Pre git commit/push|Block Quality Gate bypass (\`--no-verify\`, \`HUSKY=0\`, \`core.hooksPath\`, etc.)"
   "pre_git_quality_gates.py|Pre git commit/push|Auto-detect and run quality gates"
   "block_config_edit.py|Pre edit|Protect configuration files"
   "block_dangerous_commands.py|Pre Bash|Block destructive commands"
