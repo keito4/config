@@ -177,7 +177,7 @@ Linux bootstrap は `brew/LinuxBrewfile` を使用する。共通リスト生成
 | カテゴリ     | アプリ                                                   |
 | ------------ | -------------------------------------------------------- |
 | 開発         | Visual Studio Code, Cursor, TablePlus, OrbStack, Rancher |
-| AI           | ChatGPT, Claude                                          |
+| AI           | ChatGPT, Claude, Typeless（音声入力）                    |
 | 通信         | Slack, Discord, Zoom                                     |
 | 生産性       | Notion, Raycast, Alfred, BetterTouchTool, Kanary         |
 | セキュリティ | 1Password, 1Password CLI, Tailscale                      |
