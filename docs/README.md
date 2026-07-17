@@ -32,6 +32,12 @@
 | [using-config-base-image.md](./using-config-base-image.md) | `ghcr.io/keito4/config-base` イメージの使用方法 |
 | [tool-catalog.md](./tool-catalog.md)                       | 環境×ツールのマトリクス一覧                     |
 
+### 週次振り返り
+
+| ドキュメント                         | 説明                                    |
+| ------------------------------------ | --------------------------------------- |
+| [retrospectives/](./retrospectives/) | KPT 形式の週次振り返り（`YYYY-Www.md`） |
+
 ### サービス連携・シークレット管理
 
 | ドキュメント                                       | 説明                                                    |
