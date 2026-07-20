@@ -27,12 +27,14 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(darwinHost).toContain('com.google.inputmethod.Japanese.Roman');
   });
 
-  test('home-manager imports cmux without Karabiner', () => {
+  test('home-manager imports cmux and input source helpers without Karabiner', () => {
     const homeDefault = readRepoFile('nix/home/default.nix');
 
     expect(homeDefault).toContain('./dotfiles.nix');
     expect(homeDefault).toContain('./agent-commands.nix');
+    expect(homeDefault).toContain('./input-source.nix');
     expect(homeDefault).toContain('./cmux.nix');
+    expect(homeDefault).not.toContain('./tmux.nix');
     expect(homeDefault).not.toContain('./karabiner.nix');
   });
 
@@ -58,12 +60,25 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(homebrewModule).not.toContain('"tailscale"');
   });
 
-  test('cmux terminal config leaves IME shortcuts unbound', () => {
+  test('skhd binds IME shortcuts without Karabiner', () => {
+    const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
+
+    expect(darwinHost).toContain('services.skhd = {');
+    expect(darwinHost).toContain('enable = true;');
+    expect(darwinHost).toContain('ctrl + shift - j');
+    expect(darwinHost).toContain('ctrl + shift - 0x29');
+    expect(darwinHost).toContain('/Users/keito/.local/bin/send-ime-key kana');
+    expect(darwinHost).toContain('/Users/keito/.local/bin/send-ime-key eisuu');
+  });
+
+  test('cmux terminal config leaves IME shortcuts to skhd', () => {
     const cmuxModule = readRepoFile('nix/home/cmux.nix');
 
     expect(cmuxModule).toContain('home.file.".config/cmux/config"');
     expect(cmuxModule).toContain('force = true;');
     expect(cmuxModule).toContain('text = "";');
+    expect(cmuxModule).not.toContain('keybind = ctrl+shift+j');
+    expect(cmuxModule).not.toContain('keybind = ctrl+shift+semicolon');
     expect(cmuxModule).not.toContain('C-j');
     expect(cmuxModule).not.toContain('C-Semicolon');
   });
@@ -97,6 +112,35 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(cmuxModule).toContain('split-divider-color = #3e4451');
   });
 
+  test('input source helper exposes macOS input source selection commands', () => {
+    const inputSourceModule = readRepoFile('nix/home/input-source.nix');
+    const inputSourceWrapper = readRepoFile('script/macos/agent-select-input-source.sh');
+    const inputSourceSwift = readRepoFile('script/macos/select-input-source.swift');
+
+    expect(fs.existsSync(path.join(repoPath, 'nix/home/tmux.nix'))).toBe(false);
+    expect(inputSourceModule).toContain('".local/share/input-source/select-input-source.swift"');
+    expect(inputSourceModule).toContain('".local/bin/select-input-source"');
+    expect(inputSourceModule).toContain('".local/bin/agent-select-input-source"');
+    expect(inputSourceWrapper).toContain('XDG_DATA_HOME');
+    expect(inputSourceWrapper).toContain('/input-source/select-input-source.swift');
+    expect(inputSourceWrapper).not.toContain('.config/karabiner');
+    expect(inputSourceSwift).toContain('TISSelectInputSource(source)');
+    expect(inputSourceSwift).not.toContain('TISEnableInputSource');
+  });
+
+  test('send-ime-key emits physical kana/eisuu keys for reliable IME switching', () => {
+    const inputSourceModule = readRepoFile('nix/home/input-source.nix');
+    const sendKeyWrapper = readRepoFile('script/macos/send-ime-key.sh');
+    const sendKeySwift = readRepoFile('script/macos/send-ime-key.swift');
+
+    expect(inputSourceModule).toContain('".local/share/input-source/send-ime-key.swift"');
+    expect(inputSourceModule).toContain('".local/bin/send-ime-key"');
+    expect(sendKeyWrapper).toContain('/input-source/send-ime-key.swift');
+    expect(sendKeySwift).toContain('return 104'); // かな
+    expect(sendKeySwift).toContain('return 102'); // 英数
+    expect(sendKeySwift).toContain('.cghidEventTap');
+  });
+
   test('keyboard remapping is documented through Kanary without home-manager Karabiner state', () => {
     const adr = readRepoFile('docs/adr/0016-use-kanary-for-keyboard-remapping.md');
     const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
@@ -120,8 +164,6 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     [
       'dot/aerospace.toml',
       'dot/config/act/actrc',
-      'dot/config/agent-deck/config.toml',
-      'dot/config/codespaces-secrets/repos.txt',
       'dot/config/graphite/aliases',
       'git/gitignore',
       'dot/.peco/config.json',
@@ -137,9 +179,14 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(dotfilesModule).toContain('managedSource');
     expect(dotfilesModule).toContain('".aerospace.toml"');
     expect(dotfilesModule).toContain('".config/act/actrc"');
-    expect(dotfilesModule).toContain('".config/agent-deck/config.toml"');
-    expect(dotfilesModule).toContain('".config/codespaces-secrets/repos.txt"');
     expect(dotfilesModule).toContain('".config/graphite/aliases"');
+
+    // 組織情報を含む設定は private-config（非公開リポジトリ）の out-of-store symlink で管理する
+    expect(dotfilesModule).toContain('mkOutOfStoreSymlink');
+    expect(dotfilesModule).toContain('keito4/private-config');
+    expect(dotfilesModule).toContain('".config/agent-deck/config.toml" = privateConfig');
+    expect(dotfilesModule).toContain('".config/codespaces-secrets/repos.txt" = privateConfig');
+    expect(dotfilesModule).toContain('".config/devcontainer-env-keys.txt" = privateConfig');
     expect(dotfilesModule).toContain('".gitignore"');
     expect(dotfilesModule).toContain('".peco/config.json"');
     expect(dotfilesModule).toContain('".zsh/configs/virtual/go.zsh"');
@@ -153,28 +200,22 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(dotfilesModule).not.toContain('.env.secret"');
   });
 
-  test('devcontainer env loader exports approved local credential keys', () => {
+  test('devcontainer env loader reads approved credential keys from private allowlist', () => {
     const zshModule = readRepoFile('nix/home/zsh.nix');
     const devcontainerEnvLoader = readRepoFile('.zsh/configs/pre/devcontainer-env.zsh');
 
-    [
-      'SUPABASE_ACCESS_TOKEN',
-      'VERCEL_TOKEN',
-      'LINEAR_API_KEY',
-      'DOPPLER_TOKEN',
-      'ELU_SENTRY_TOKEN',
-      'GEMINI_API_KEY',
-      'ELU_NOTION_API_KEY',
-      'OYKOT_NOTION_API_KEY',
-      'GITHUB_TOKEN',
-      'NODE_AUTH_TOKEN',
-    ].forEach((envKey) => {
-      expect(zshModule).toContain(envKey);
-      expect(devcontainerEnvLoader).toContain(envKey);
-    });
+    [zshModule, devcontainerEnvLoader].forEach((loader) => {
+      // 許可キーはインライン列挙せず private-config 管理の外部ファイルから読む
+      expect(loader).toContain('devcontainer-env-keys.txt');
+      expect(loader).toContain('.devcontainer.env');
 
-    expect(zshModule).not.toContain('OP_SERVICE_ACCOUNT_TOKEN');
-    expect(devcontainerEnvLoader).not.toContain('OP_SERVICE_ACCOUNT_TOKEN');
+      // 組織名を含むキーや 1Password サービストークンを公開リポジトリに残さない
+      ['ELU_SENTRY_TOKEN', 'ELU_NOTION_API_KEY', 'OYKOT_NOTION_API_KEY', 'OP_SERVICE_ACCOUNT_TOKEN'].forEach(
+        (envKey) => {
+          expect(loader).not.toContain(envKey);
+        },
+      );
+    });
   });
 
   test('agent local config collector is installed as a safe command', () => {

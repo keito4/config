@@ -131,6 +131,36 @@
   # Security
   security.pam.services.sudo_local.touchIdAuth = true;
 
+  services.skhd = {
+    enable = true;
+    skhdConfig = ''
+      ctrl + shift - j    : /Users/keito/.local/bin/send-ime-key kana
+      ctrl + shift - 0x29 : /Users/keito/.local/bin/send-ime-key eisuu
+    '';
+  };
+
+  # Agent Deck Web UI (headless) — http://127.0.0.1:8420
+  # loopback バインドのみ。外部公開する場合は tailscale serve を経由させること
+  launchd.user.agents.agent-deck-web = {
+    serviceConfig = {
+      ProgramArguments = [
+        "/opt/homebrew/bin/agent-deck"
+        "web"
+        "--no-tui"
+        "--listen"
+        "127.0.0.1:8420"
+      ];
+      RunAtLoad = true;
+      KeepAlive = true;
+      StandardOutPath = "/Users/keito/Library/Logs/agent-deck-web.log";
+      StandardErrorPath = "/Users/keito/Library/Logs/agent-deck-web.err.log";
+      EnvironmentVariables = {
+        # claude/codex (~/.local/bin, ~/.bin)・node/gh (nix profile)・agent-deck (homebrew) を解決できる PATH
+        PATH = "/Users/keito/.local/bin:/Users/keito/.bin:/opt/homebrew/bin:/etc/profiles/per-user/keito/bin:/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin";
+      };
+    };
+  };
+
   # Shells
   programs.zsh.enable = true;
 }

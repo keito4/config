@@ -7,6 +7,7 @@
     ./zsh.nix
     ./dotfiles.nix
     ./agent-commands.nix
+    ./input-source.nix
     ./cmux.nix
   ];
 
