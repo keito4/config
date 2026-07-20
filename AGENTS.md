@@ -118,11 +118,12 @@ Development infrastructure template repository providing DevContainer images, CI
 
 ## Skills
 
-| Skill           | Description                                                                                                                                                       |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ci-check`      | PR作成後にCIの結果を確認し、失敗している場合は修正する。PR作成完了後に自動的にこのスキルを適用してCIの状態を監視し、失敗時は修正を行うこと。                      |
-| `codex-review`  | PR作成後にOpenAI Codexによるコードレビューを実行する。Codex CLIがインストール済みの場合、PR作成完了後に自動的にこのスキルを適用してレビューを実行すること。       |
-| `gemini-review` | PR作成後にGoogle Gemini CLIによるコードレビューを実行する。Gemini CLIがインストール済みの場合、PR作成完了後に自動的にこのスキルを適用してレビューを実行すること。 |
+| Skill                    | Description                                                                                                                                                       |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci-check`               | PR作成後にCIの結果を確認し、失敗している場合は修正する。PR作成完了後に自動的にこのスキルを適用してCIの状態を監視し、失敗時は修正を行うこと。                      |
+| `codex-review`           | PR作成後にOpenAI Codexによるコードレビューを実行する。Codex CLIがインストール済みの場合、PR作成完了後に自動的にこのスキルを適用してレビューを実行すること。       |
+| `gemini-review`          | PR作成後にGoogle Gemini CLIによるコードレビューを実行する。Gemini CLIがインストール済みの場合、PR作成完了後に自動的にこのスキルを適用してレビューを実行すること。 |
+| `n8n-workflow-pr-review` | keito4-org/n8n_custom_node の n8n ワークフロー/テンプレートPRをレビューする。ワークフロー同期PR（workflow-sync/\*）の退行判定、資格情報のMAS...                   |
 
 ## CI/CD Workflows
 
@@ -148,14 +149,13 @@ Development infrastructure template repository providing DevContainer images, CI
 
 The following scripts are auto-detected and run before git commit/push:
 
-| Script         | Command                            | Purpose                    |
-| -------------- | ---------------------------------- | -------------------------- | ----------------------- |
-| `format:check` | `prettier --check .`               | Code formatting validation |
-| `lint`         | `eslint . --ext .js`               | Code quality validation    |
-| `test`         | `jest --runInBand`                 | Unit test execution        |
-| `shellcheck`   | `find script -name '\*.sh' -type f | xargs -r shellcheck -x`    | Shell script validation |
-
-Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + coverage), `test:all` (unit + integration)
+| Script                                                                                                                  | Command                            | Purpose                    |
+| ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | -------------------------- | ----------------------- |
+| `format:check`                                                                                                          | `prettier --check .`               | Code formatting validation |
+| `lint`                                                                                                                  | `eslint . --ext .js`               | Code quality validation    |
+| `test`                                                                                                                  | `jest --runInBand`                 | Unit test execution        |
+| `shellcheck`                                                                                                            | `find script -name '\*.sh' -type f | xargs -r shellcheck -x`    | Shell script validation |
+| Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + coverage), `test:all` (unit + integration) |
 
 ## Hooks
 
@@ -165,6 +165,7 @@ Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + cov
 | `block_dangerous_commands.py` | Pre Bash            | Block destructive commands                                                   |
 | `block_git_no_verify.py`      | Pre git commit/push | Block Quality Gate bypass (`--no-verify`, `HUSKY=0`, `core.hooksPath`, etc.) |
 | `block_inline_secrets.py`     | Pre Bash            | Block commands embedding literal credentials                                 |
+| `block_managed_file_edit.py`  | Unknown             | block_managed_file_edit                                                      |
 | `common.py`                   | —                   | Shared utility library (imported by other hooks)                             |
 | `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes                                         |
 | `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint                                                         |
