@@ -1,7 +1,8 @@
-# Label Sync Workflow
-#
-# GitHub ラベルを YAML ファイルで IaC 管理し、自動同期するワークフロー
-# labels.yml を変更して push するだけで、リポジトリのラベルが自動更新される
+# Managed by keito4/config — do not edit here.
+# Source: https://github.com/keito4/config/blob/main/.github/workflows/label-sync.yml
+# Local changes are overwritten by sync PRs from sync-downstream.yml.
+# To keep repository-specific changes, add this path to the exclude list in
+# keito4/config:.github/sync-downstream.json instead.
 #
 # 使い方:
 #   1. .github/workflows/label-sync.yml にコピーして配置
@@ -27,16 +28,6 @@ concurrency:
 
 jobs:
   sync:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Sync labels
-        uses: EndBug/label-sync@52074158190acb45f3077f9099fea818aa43f97a # v2
-        with:
-          config-file: .github/labels.yml
-          # 既存ラベルを保持（false = labels.yml にないラベルを削除しない）
-          delete-other-labels: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+    uses: keito4/config/.github/workflows/label-sync.yml@main
+    with:
+      config-file: .github/labels.yml

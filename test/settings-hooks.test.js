@@ -131,6 +131,11 @@ describe('.claude/settings.json — hooks configuration', () => {
       expect(allCommands.some((cmd) => cmd.includes('block_config_edit.py'))).toBe(true);
     });
 
+    test('should reference block_managed_file_edit.py in Write/Edit PreToolUse hook', () => {
+      const allCommands = settings.hooks.PreToolUse.flatMap((e) => e.hooks.map((h) => h.command));
+      expect(allCommands.some((cmd) => cmd.includes('block_managed_file_edit.py'))).toBe(true);
+    });
+
     test('should reference pre_exit_plan_ai_review.py in ExitPlanMode hook', () => {
       const exitPlanHooks = settings.hooks.PreToolUse.filter((e) => e.matcher === 'ExitPlanMode');
       expect(exitPlanHooks.length).toBeGreaterThan(0);
@@ -165,6 +170,35 @@ describe('.claude/settings.json — hooks configuration', () => {
     test('should reference stop_test_verification.py', () => {
       const allCommands = settings.hooks.Stop.flatMap((e) => e.hooks.map((h) => h.command));
       expect(allCommands.some((cmd) => cmd.includes('stop_test_verification.py'))).toBe(true);
+    });
+  });
+
+  describe('DevContainer settings parity', () => {
+    // .claude/settings.json（相対パス）と .devcontainer/claude-settings.json（絶対パス）は
+    // 同じ hooks を二重管理している。片方だけへの hook 追加＝ドリフトを検出する。
+    function referencedHookScripts(settingsObject) {
+      const scripts = new Set();
+      const events = Object.values(settingsObject.hooks || {});
+      for (const entries of events) {
+        for (const entry of entries) {
+          for (const hook of entry.hooks) {
+            for (const match of hook.command.matchAll(/hooks\/(\w+\.py)/g)) {
+              scripts.add(match[1]);
+            }
+          }
+        }
+      }
+      return scripts;
+    }
+
+    test('repo settings and devcontainer settings reference the same hook scripts', () => {
+      const devcontainerSettings = JSON.parse(
+        fs.readFileSync(path.join(repoPath, '.devcontainer', 'claude-settings.json'), 'utf8'),
+      );
+      const repoScripts = referencedHookScripts(settings);
+      const devcontainerScripts = referencedHookScripts(devcontainerSettings);
+
+      expect([...repoScripts].sort()).toEqual([...devcontainerScripts].sort());
     });
   });
 

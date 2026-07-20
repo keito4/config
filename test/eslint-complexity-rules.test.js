@@ -85,7 +85,7 @@ describe('eslint/complexity-rules.mjs', () => {
     test('should use warn severity for all rules (Phase 1 strategy)', () => {
       const warnMatches = content.match(/'warn'/g);
       expect(warnMatches).not.toBeNull();
-      expect(warnMatches.length).toBeGreaterThanOrEqual(5);
+      expect(warnMatches?.length ?? 0).toBeGreaterThanOrEqual(5);
     });
 
     test('should not use error severity for any rule (Phase 1)', () => {

@@ -132,6 +132,35 @@ describe('root commitlint configuration runtime behavior', () => {
     }
   });
 
+  test('treats null commit type as non-release type when release-sensitive file is staged', () => {
+    // Exercises the `parsed.type || ''` branch (line 35) where parsed.type is falsy.
+    // '' is not in releaseTypeAllowList → should return [false, message].
+    const tempDir = makeGitRepo('commitlint-null-type');
+    try {
+      stageFile(tempDir, 'package.json', '{"name":"sample"}\n');
+
+      const [passes, message] = runReleaseTypeRule(tempDir, { type: null });
+      expect(passes).toBe(false);
+      expect(message).toContain('release-triggering type');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test('treats undefined commit type as non-release type when release-sensitive file is staged', () => {
+    // Exercises the `parsed.type || ''` branch where parsed.type is undefined.
+    const tempDir = makeGitRepo('commitlint-undef-type');
+    try {
+      stageFile(tempDir, 'package.json', '{"name":"sample"}\n');
+
+      const [passes, message] = runReleaseTypeRule(tempDir, { type: undefined });
+      expect(passes).toBe(false);
+      expect(message).toContain('release-triggering type');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
   test('getStagedFiles falls back to [] when git cannot discover a repository (catch branch)', () => {
     // Create tempDir in os.tmpdir() so git auto-discovery finds no .git ancestor.
     // getStagedFiles() → git diff throws (no repo) → catch returns [] → [true].

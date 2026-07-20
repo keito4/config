@@ -8,6 +8,7 @@
     ./dotfiles.nix
     ./agent-commands.nix
     ./input-source.nix
+    ./kanary.nix
     ./cmux.nix
   ];
 

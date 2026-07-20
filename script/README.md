@@ -4,18 +4,42 @@ This directory contains utility scripts for managing configuration, credentials,
 
 ## Quick Reference
 
-| Script                | Purpose                                                  | Used By                |
-| --------------------- | -------------------------------------------------------- | ---------------------- |
-| `setup-claude.sh`     | Claude Code CLI setup                                    | Makefile, DevContainer |
-| `credentials.sh`      | 1Password credential management                          | Makefile               |
-| `update-libraries.sh` | Refresh `npm/global.json` (Dependabot owns package.json) | package.json           |
-| `version.sh`          | Semantic versioning                                      | Makefile               |
-| `update-agents-md.sh` | AGENTS.md 自動生成セクション更新                         | repo-maintenance       |
-| `repo-maintenance.sh` | Repository maintenance executable workflow               | `/repo-maintenance`    |
-| `setup-ci.sh`         | CI/CD workflow setup                                     | `/setup-ci`            |
-| `setup-new-repo.sh`   | New repository bootstrap                                 | `/setup-new-repo`      |
+| Script                           | Purpose                                                  | Used By                |
+| -------------------------------- | -------------------------------------------------------- | ---------------------- |
+| `setup-claude.sh`                | Claude Code CLI setup                                    | Makefile, DevContainer |
+| `credentials.sh`                 | 1Password credential management                          | Makefile               |
+| `update-libraries.sh`            | Refresh `npm/global.json` (Dependabot owns package.json) | package.json           |
+| `version.sh`                     | Semantic versioning                                      | Makefile               |
+| `update-agents-md.sh`            | AGENTS.md 自動生成セクション更新                         | repo-maintenance       |
+| `repo-maintenance.sh`            | Repository maintenance executable workflow               | `/repo-maintenance`    |
+| `setup-ci.sh`                    | CI/CD workflow setup                                     | `/setup-ci`            |
+| `setup-new-repo.sh`              | New repository bootstrap                                 | `/setup-new-repo`      |
+| `macos/setup-bettertouchtool.js` | BetterTouchTool gesture setup for AeroSpace/Raycast      | Local macOS setup      |
 
 ## Configuration Management
+
+### macos/setup-bettertouchtool.js
+
+Adds the managed BetterTouchTool gesture entry points for the macOS desktop
+setup. The script is append-only: it adds missing `CODEX-BTT-*` triggers and
+preserves existing BetterTouchTool triggers.
+
+**Usage**:
+
+```bash
+osascript -l JavaScript ./script/macos/setup-bettertouchtool.js
+```
+
+**Managed gestures**:
+
+| Gesture                           | Action                             |
+| --------------------------------- | ---------------------------------- |
+| 3 finger swipe left/right         | AeroSpace workspace next/previous  |
+| 3 finger swipe down               | `Cmd+W`                            |
+| 3 finger tap                      | AeroSpace workspace back-and-forth |
+| 3 finger click                    | Middle click                       |
+| 4 finger swipe left/right/up/down | AeroSpace focus movement           |
+| 4 finger tap                      | Open Raycast                       |
 
 ### export.sh
 
@@ -253,12 +277,6 @@ Verifies that DevContainer setup completed successfully.
 
 **Used by**: DevContainer validation
 
-### fix-container-plugins.sh
-
-Fixes container plugin permission and path issues.
-
-**Used by**: DevContainer troubleshooting
-
 ### container-health.sh
 
 Comprehensive DevContainer health check.
@@ -301,12 +319,6 @@ Creates a GitHub Codespace with configurable options.
 | `-c, --devcontainer` | devcontainer.json path      | .devcontainer/codespaces/devcontainer.json |
 
 **Machine sizes**: `basicLinux32gb`, `standardLinux32gb`, `premiumLinux`, `largePremiumLinux`
-
-### setup-lsp.sh
-
-Sets up Language Server Protocol servers for various languages.
-
-**Usage**: `./script/setup-lsp.sh`
 
 ### update-agents-md.sh
 

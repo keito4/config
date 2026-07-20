@@ -247,6 +247,16 @@ check_workflow_templates() {
   fi
 }
 
+extract_actionlint_flags_block() {
+  local ci_yml="${1:?CI workflow file required}"
+  awk '
+    /^[[:space:]]+actionlint_flags:/ { in_flags = 1; print; next }
+    in_flags && /^[[:space:]]+[A-Za-z0-9_-]+:/ { exit }
+    in_flags && /^[^[:space:]]/ { exit }
+    in_flags { print }
+  ' "$ci_yml"
+}
+
 check_workflow_template_lint_coverage() {
   local ci_yml=".github/workflows/ci.yml"
   local content actionlint_flags_block
@@ -258,34 +268,29 @@ check_workflow_template_lint_coverage() {
 
   if [[ "$content" != *"Collect workflow files"* ]]; then
     output::warning "ci.yml: Workflow Lint が存在するファイル収集方式ではありません"
-    lint_issues=1
+    lint_issues=$((lint_issues + 1))
   fi
 
   if [[ "$content" != *".context/actionlint-files.txt"* ]]; then
     output::warning "ci.yml: actionlint 対象ファイルリストを .context に保存していません"
-    lint_issues=1
+    lint_issues=$((lint_issues + 1))
   fi
 
   if [[ "$content" != *"find .github/workflows/templates"* || "$content" != *"find templates/workflows"* ]]; then
     output::warning "ci.yml: workflow template の actionlint 対象収集が不足しています"
-    lint_issues=1
+    lint_issues=$((lint_issues + 1))
   fi
 
   if [[ "$content" != *"-name '*.yaml'"* ]]; then
     output::warning "ci.yml: .yaml workflow が actionlint 対象から漏れています"
-    lint_issues=1
+    lint_issues=$((lint_issues + 1))
   fi
 
-  actionlint_flags_block="$(awk '
-    /^[[:space:]]+actionlint_flags:/ { in_flags = 1; print; next }
-    in_flags && /^[[:space:]]+[A-Za-z0-9_-]+:/ { exit }
-    in_flags && /^[^[:space:]]/ { exit }
-    in_flags { print }
-  ' "$ci_yml")"
+  actionlint_flags_block="$(extract_actionlint_flags_block "$ci_yml")"
 
   if grep -qE 'templates/workflows/.*\*' <<<"$actionlint_flags_block"; then
     output::warning "ci.yml: actionlint_flags に静的 template glob が残っています"
-    lint_issues=1
+    lint_issues=$((lint_issues + 1))
   fi
 
   if [[ "$lint_issues" -eq 0 ]]; then
@@ -316,9 +321,10 @@ check_dependency_peer_compatibility() {
 }
 
 check_managed_templates() {
+  # label-sync.yml は reusable workflow の caller スタブ配布に移行済み（ADR 0018）。
+  # スタブを config 自身の実体ワークフローへ上書きしないよう、ここには含めない。
   local managed_template_files=(
     "templates/workflows/dependabot-auto-merge.yml:.github/workflows/dependabot-auto-merge.yml"
-    "templates/workflows/label-sync.yml:.github/workflows/label-sync.yml"
   )
   local item source target
 
@@ -351,8 +357,9 @@ check_downstream_sync() {
   changed="$(git diff --name-only HEAD~1..HEAD 2>/dev/null || true)"
 
   if grep -qE '^(templates/|\.github/workflows/|script/wait-ci-checks\.sh)' <<<"$changed"; then
-    output::warning "Downstream sync required"
-    echo "Repositories using config-base should run /repo-maintenance or receive a sync PR."
+    output::warning "Downstream sync pending"
+    echo "sync-downstream.yml creates sync PRs in downstream repositories after this change reaches main."
+    echo "Manifest: .github/sync-downstream.json (see docs/adr/0017-downstream-template-auto-sync.md)."
     if [[ -n "${CLAUDE_BRANCH:-}" ]]; then
       git checkout "$CLAUDE_BRANCH" 2>/dev/null || git checkout -b "$CLAUDE_BRANCH"
     fi

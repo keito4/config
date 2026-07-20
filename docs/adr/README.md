@@ -21,6 +21,9 @@
 | [0014](0014-manage-cmux-karabiner-with-home-manager.md)         | Manage cmux and Karabiner Configuration with Home Manager    | Superseded by 0016 |
 | [0015](0015-manage-portable-user-dotfiles-with-home-manager.md) | Manage Portable User Dotfiles with Home Manager              | Accepted           |
 | [0016](0016-use-kanary-for-keyboard-remapping.md)               | Use Kanary and skhd for Keyboard Remapping                   | Accepted           |
+| [0017](0017-manage-bettertouchtool-gestures.md)                 | Manage BetterTouchTool Gesture Setup Through GitHub          | Accepted           |
+| [0018](0018-reusable-workflow-distribution.md)                  | Reusable Workflow Distribution                               | Accepted           |
+| [0019](0019-downstream-template-auto-sync.md)                   | Downstream Template Auto-Sync                                | Accepted           |
 
 ## ADR テンプレート
 

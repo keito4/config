@@ -8,32 +8,6 @@ function readWorkflow(relativePath) {
   return fs.readFileSync(path.join(repoPath, relativePath), 'utf8');
 }
 
-function runRequiredWorkflowScript(workflows) {
-  const contextDir = path.join(repoPath, '.context');
-  fs.mkdirSync(contextDir, { recursive: true });
-  const tempRoot = fs.mkdtempSync(path.join(contextDir, 'required-workflow-test-'));
-
-  try {
-    const workflowsDir = path.join(tempRoot, '.github', 'workflows');
-    fs.mkdirSync(workflowsDir, { recursive: true });
-    for (const [filename, content] of Object.entries(workflows)) {
-      fs.writeFileSync(path.join(workflowsDir, filename), content);
-    }
-
-    const scriptPath = path.join(repoPath, 'script', 'repo-maintenance.sh');
-    try {
-      return execFileSync('bash', [scriptPath, '--check-required-workflows'], {
-        cwd: tempRoot,
-        encoding: 'utf8',
-      });
-    } catch (error) {
-      return `${error.stdout || ''}${error.stderr || ''}`;
-    }
-  } finally {
-    fs.rmSync(tempRoot, { recursive: true, force: true });
-  }
-}
-
 function runUpdateAgentsScriptWithUntrackedDirectory() {
   const contextDir = path.join(repoPath, '.context');
   fs.mkdirSync(contextDir, { recursive: true });
@@ -170,8 +144,10 @@ describe('Claude workflow contracts', () => {
     const script = readWorkflow('script/repo-maintenance.sh');
 
     expect(command).toContain('script/repo-maintenance.sh $ARGUMENTS');
-    expect(command).toContain('Downstream sync required');
-    expect(script).toContain('Repositories using config-base should run /repo-maintenance or receive a sync PR.');
+    expect(command).toContain('Downstream sync pending');
+    expect(script).toContain(
+      'sync-downstream.yml creates sync PRs in downstream repositories after this change reaches main.',
+    );
     expect(script).toContain('script/wait-ci-checks\\.sh');
     expect(script).toContain('git checkout "$CLAUDE_BRANCH" 2>/dev/null || git checkout -b "$CLAUDE_BRANCH"');
   });
@@ -205,24 +181,25 @@ describe('Claude workflow contracts', () => {
     expect(script).toContain('Private repo: Dependency Review は optional / skipped を許容');
   });
 
-  test('repo-maintenance validates dependabot and label-sync safety contracts', () => {
+  test('repo-maintenance validates dependabot safety contracts', () => {
     const script = readWorkflow('script/repo-maintenance.sh');
 
     expect(script).toContain('templates/workflows/dependabot-auto-merge.yml');
-    expect(script).toContain('templates/workflows/label-sync.yml');
     expect(script).toContain('gh label create "dependabot-minor"');
     expect(script).toContain('gh label create "needs-review"');
     expect(script).toContain('gh label create "breaking-change"');
   });
 
-  test('repo-maintenance syncs managed dependabot, label-sync, and label templates', () => {
+  test('repo-maintenance syncs managed dependabot and label templates', () => {
     const script = readWorkflow('script/repo-maintenance.sh');
 
     expect(script).toContain('managed_template_files');
     expect(script).toContain(
       'templates/workflows/dependabot-auto-merge.yml:.github/workflows/dependabot-auto-merge.yml',
     );
-    expect(script).toContain('templates/workflows/label-sync.yml:.github/workflows/label-sync.yml');
+    // label-sync.yml is a reusable-workflow caller stub (ADR 0018); copying it
+    // over the runnable workflow would break this repository.
+    expect(script).not.toContain('templates/workflows/label-sync.yml:.github/workflows/label-sync.yml');
     expect(script).toContain('gh label create "dependabot-minor"');
     expect(script).toContain('gh label create "needs-review"');
     expect(script).toContain('gh label create "breaking-change"');
@@ -322,174 +299,5 @@ describe('Claude workflow contracts', () => {
     expect(script).toContain('pull_request');
     expect(script).toContain('/^  generate-summary:/');
     expect(script).toContain('/^  [A-Za-z0-9_-]+:/');
-  });
-
-  test('repo-maintenance flags .yaml required workflows without push or pull_request', () => {
-    const output = runRequiredWorkflowScript({
-      'security-summary.yaml': `
-name: Security Summary
-on:
-  schedule:
-    - cron: '0 0 * * 1'
-  workflow_dispatch:
-
-jobs:
-  generate-summary:
-    runs-on: ubuntu-latest
-    steps:
-      - run: npm audit --audit-level=high
-`,
-    });
-
-    expect(output).toContain('security-summary.yaml: Required Workflow 候補ですが push / pull_request');
-    expect(output).toContain('security-summary.yaml: Slack 通知付き generate-summary は job-level if');
-  });
-
-  test('repo-maintenance detects security summary by filename without name key', () => {
-    const output = runRequiredWorkflowScript({
-      'security-summary.yml': `
-on:
-  workflow_dispatch:
-
-jobs:
-  generate-summary:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo summary
-`,
-    });
-
-    expect(output).toContain('security-summary.yml: Required Workflow 候補ですが push / pull_request');
-    expect(output).toContain('security-summary.yml: Slack 通知付き generate-summary は job-level if');
-  });
-
-  test('repo-maintenance continues after unnamed unrelated workflow files', () => {
-    const output = runRequiredWorkflowScript({
-      'aaa.yml': `
-on:
-  workflow_dispatch:
-
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo unrelated
-`,
-      'security-summary.yml': `
-name: Security Summary
-on:
-  workflow_dispatch:
-
-jobs:
-  generate-summary:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo summary
-`,
-    });
-
-    expect(output).toContain('security-summary.yml: Required Workflow 候補ですが push / pull_request');
-    expect(output).toContain('security-summary.yml: Slack 通知付き generate-summary は job-level if');
-  });
-
-  test('repo-maintenance only treats push and pull_request under on as triggers', () => {
-    const output = runRequiredWorkflowScript({
-      'required.yml': `
-name: Required Workflow
-on:
-  schedule:
-    - cron: '0 0 * * 1'
-
-jobs:
-  push:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo ok
-`,
-    });
-
-    expect(output).toContain('required.yml: Required Workflow 候補ですが push / pull_request');
-  });
-
-  test('repo-maintenance accepts guarded security summary required workflow', () => {
-    const output = runRequiredWorkflowScript({
-      'security-summary.yml': `
-name: Security Summary
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-  schedule:
-    - cron: '0 0 * * 1'
-  workflow_dispatch:
-
-jobs:
-  dependency-audit:
-    runs-on: ubuntu-latest
-    steps:
-      - run: npm audit --audit-level=high
-  generate-summary:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo summary
-`,
-    });
-
-    expect(output.trim()).toBe('');
-  });
-
-  test('repo-maintenance accepts block sequence event syntax', () => {
-    const output = runRequiredWorkflowScript({
-      'required.yml': `
-name: Required Workflow
-on:
-  - push
-  - pull_request
-
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo ok
-`,
-    });
-
-    expect(output.trim()).toBe('');
-  });
-
-  test('repo-maintenance does not treat pull_request_target as pull_request', () => {
-    const output = runRequiredWorkflowScript({
-      'required.yml': `
-name: Required Workflow
-on: [pull_request_target, pull_request_review]
-
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo ok
-`,
-    });
-
-    expect(output).toContain('required.yml: Required Workflow 候補ですが push / pull_request');
-  });
-
-  test('repo-maintenance accepts single-quoted on key', () => {
-    const output = runRequiredWorkflowScript({
-      'required.yml': `
-name: Required Workflow
-'on': [push]
-
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo ok
-`,
-    });
-
-    expect(output.trim()).toBe('');
   });
 });

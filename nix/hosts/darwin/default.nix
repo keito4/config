@@ -52,19 +52,26 @@
         autohide = true;
         show-recents = false;
         mru-spaces = false;
-        persistent-apps = [
-          "/Applications/Google Chrome.app"
-          "/Applications/Arc.app"
-          "/Applications/Cursor.app"
-          "/Applications/Visual Studio Code.app"
-          "/Applications/Codex.app"
-          "/Applications/cmux.app"
-          "/System/Applications/Utilities/Terminal.app"
-          "/Applications/Slack.app"
-          "/Applications/1Password.app"
-          "/Applications/Raycast.app"
-        ];
+        persistent-apps = [ ];
         persistent-others = [ ];
+      };
+      # Menu bar
+      controlcenter = {
+        AirDrop = false;
+        BatteryShowPercentage = true;
+        Bluetooth = false;
+        Display = false;
+        FocusModes = false;
+        NowPlaying = false;
+        Sound = false;
+      };
+      menuExtraClock = {
+        Show24Hour = true;
+        ShowAMPM = false;
+        ShowDate = 1;
+        ShowDayOfMonth = true;
+        ShowDayOfWeek = true;
+        ShowSeconds = false;
       };
       # Finder
       finder = {
@@ -78,6 +85,20 @@
         KeyRepeat = 2;
       };
       CustomUserPreferences = {
+        "com.jordanbaird.Ice" = {
+          AutoRehide = true;
+          EnableAlwaysHiddenSection = false;
+          HideApplicationMenus = true;
+          ShowIceIcon = true;
+          ShowOnClick = true;
+          ShowOnHover = false;
+          ShowOnScroll = true;
+          ShowSectionDividers = false;
+          UseIceBar = false;
+        };
+        "com.apple.Spotlight" = {
+          "NSStatusItem VisibleCC Item-0" = false;
+        };
         "com.apple.HIToolbox" = {
           AppleEnabledInputSources = [
             {
@@ -122,6 +143,42 @@
     keyboard = {
       enableKeyMapping = true;
       remapCapsLockToControl = true;
+    };
+  };
+
+  launchd.user.agents = {
+    bettertouchtool = {
+      serviceConfig = {
+        ProgramArguments = [
+          "/usr/bin/open"
+          "-g"
+          "-a"
+          "BetterTouchTool"
+        ];
+        RunAtLoad = true;
+      };
+    };
+    ice = {
+      serviceConfig = {
+        ProgramArguments = [
+          "/usr/bin/open"
+          "-g"
+          "-a"
+          "Ice"
+        ];
+        RunAtLoad = true;
+      };
+    };
+    raycast = {
+      serviceConfig = {
+        ProgramArguments = [
+          "/usr/bin/open"
+          "-g"
+          "-a"
+          "Raycast"
+        ];
+        RunAtLoad = true;
+      };
     };
   };
 
