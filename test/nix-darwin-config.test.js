@@ -247,6 +247,20 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(kanaryModule).toContain('https://kanary.download/download');
   });
 
+  test('Kanary Caps Lock to Control is enforced from home-manager', () => {
+    const homeDefault = readRepoFile('nix/home/default.nix');
+    const kanaryHome = readRepoFile('nix/home/kanary.nix');
+    const enforceScript = readRepoFile('script/macos/kanary-enforce-caps-control.sh');
+    const adr = readRepoFile('docs/adr/0016-use-kanary-for-keyboard-remapping.md');
+
+    expect(homeDefault).toContain('./kanary.nix');
+    expect(kanaryHome).toContain('.local/bin/kanary-enforce-caps-control');
+    expect(kanaryHome).toContain('home.activation.enforceKanaryCapsControl');
+    expect(enforceScript).toContain('download.kanary.settings');
+    expect(enforceScript).toContain('capsLockRemappedToControl');
+    expect(adr).toContain('kanary-enforce-caps-control');
+  });
+
   test('portable user dotfiles are managed without credential state', () => {
     const dotfilesModule = readRepoFile('nix/home/dotfiles.nix');
 

@@ -89,3 +89,97 @@ load ../test_helper/test_helper
   grep -q 'if \[\[ ! -f' "${REPO_ROOT}/script/setup-claude.sh"
   grep -q 'log_warn' "${REPO_ROOT}/script/setup-claude.sh"
 }
+
+# ---------------------------------------------------------------------------
+# commands / agents / skills の追加 CLAUDE_CONFIG_DIR へのリンク
+# 実際にスクリプトを偽 HOME で起動し、リンクが張られたかを検証する
+# ---------------------------------------------------------------------------
+
+# 偽 HOME を用意して setup-claude.sh を実行する
+# claude CLI はスタブに差し替え、プラグイン導入で外部に触れないようにする
+run_setup_in_fake_home() {
+  local fake_home="$1"
+  mkdir -p "${fake_home}/.claude" "${fake_home}/.stub-bin"
+  cat > "${fake_home}/.stub-bin/claude" <<'STUB'
+#!/usr/bin/env bash
+exit 0
+STUB
+  chmod +x "${fake_home}/.stub-bin/claude"
+
+  HOME="$fake_home" \
+  PATH="${fake_home}/.stub-bin:${PATH}" \
+    run bash "${REPO_ROOT}/script/setup-claude.sh"
+}
+
+@test "setup-claude.sh links commands/agents/skills into extra config dirs" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"/{commands,agents,skills} "${fake_home}/.claude-private"
+  echo "canonical" > "${fake_home}/.claude/commands/session-close.md"
+
+  run_setup_in_fake_home "$fake_home"
+
+  local name
+  for name in commands agents skills; do
+    [ -L "${fake_home}/.claude-private/${name}" ]
+    [ "$(readlink "${fake_home}/.claude-private/${name}")" = "${fake_home}/.claude/${name}" ]
+  done
+
+  # リンク越しに正本のファイルが読めること（宣言ではなく実体で確認）
+  [ "$(cat "${fake_home}/.claude-private/commands/session-close.md")" = "canonical" ]
+}
+
+@test "setup-claude.sh links content into every extra config dir" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private" "${fake_home}/.claude-elu"
+
+  run_setup_in_fake_home "$fake_home"
+
+  [ -L "${fake_home}/.claude-private/commands" ]
+  [ -L "${fake_home}/.claude-elu/commands" ]
+}
+
+@test "setup-claude.sh content linking is idempotent" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private"
+
+  run_setup_in_fake_home "$fake_home"
+  [ -L "${fake_home}/.claude-private/commands" ]
+
+  run_setup_in_fake_home "$fake_home"
+  [ "$status" -eq 0 ]
+  [ -L "${fake_home}/.claude-private/commands" ]
+  [ "$(readlink "${fake_home}/.claude-private/commands")" = "${fake_home}/.claude/commands" ]
+}
+
+@test "setup-claude.sh does not clobber an existing real directory" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private/commands"
+  echo "dir-specific" > "${fake_home}/.claude-private/commands/local-only.md"
+
+  run_setup_in_fake_home "$fake_home"
+
+  # 実体ディレクトリは温存され、中身が消えていないこと
+  [ ! -L "${fake_home}/.claude-private/commands" ]
+  [ "$(cat "${fake_home}/.claude-private/commands/local-only.md")" = "dir-specific" ]
+}
+
+@test "setup-claude.sh replaces a symlink that points elsewhere" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private" "${fake_home}/stale"
+  ln -s "${fake_home}/stale" "${fake_home}/.claude-private/commands"
+
+  run_setup_in_fake_home "$fake_home"
+
+  [ "$(readlink "${fake_home}/.claude-private/commands")" = "${fake_home}/.claude/commands" ]
+}
+
+@test "setup-claude.sh skips content missing from the canonical dir" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private"
+
+  run_setup_in_fake_home "$fake_home"
+
+  # ~/.claude に skills が無いなら壊れたリンクを作らない
+  [ ! -e "${fake_home}/.claude-private/skills" ]
+  [ ! -L "${fake_home}/.claude-private/skills" ]
+}

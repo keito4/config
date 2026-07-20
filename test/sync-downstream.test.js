@@ -70,10 +70,34 @@ describe('validateManifest', () => {
     expect(() => validateManifest(manifest)).toThrow(/without source\/target/u);
   });
 
+  test('rejects a null group entry', () => {
+    const manifest = validManifest();
+    manifest.groups['claude-config'] = [null];
+    expect(() => validateManifest(manifest)).toThrow(/without source\/target/u);
+  });
+
+  test('rejects a non-object group entry', () => {
+    const manifest = validManifest();
+    manifest.groups['claude-config'] = ['.claude/hooks/'];
+    expect(() => validateManifest(manifest)).toThrow(/without source\/target/u);
+  });
+
   test('rejects an invalid repo name', () => {
     const manifest = validManifest();
     manifest.repos[0].name = 'not-a-repo';
     expect(() => validateManifest(manifest)).toThrow(/invalid repo name/u);
+  });
+
+  test('rejects a null repo entry', () => {
+    const manifest = validManifest();
+    manifest.repos = [null];
+    expect(() => validateManifest(manifest)).toThrow(/invalid repo entry/u);
+  });
+
+  test('rejects a non-object repo entry', () => {
+    const manifest = validManifest();
+    manifest.repos = ['keito4/example'];
+    expect(() => validateManifest(manifest)).toThrow(/invalid repo entry/u);
   });
 
   test('rejects a repo without groups', () => {
