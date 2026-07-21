@@ -51,8 +51,17 @@ Stop using Karabiner Elements for local keyboard remapping.
   - Per-app default input modes where useful.
 - Use nix-darwin's `services.skhd` for terminal-friendly IME shortcuts without
   Karabiner:
-  - `Ctrl+Shift+J` selects Google Japanese Input hiragana.
-  - `Ctrl+Shift+;` selects Google Japanese Input alphanumeric.
+  - `Ctrl+Shift+J` emits the physical かな key to switch to Japanese hiragana.
+  - `Ctrl+Shift+;` emits the physical 英数 key to switch to alphanumeric.
+- Drive these shortcuts by emitting the physical かな/英数 keys (`send-ime-key`,
+  CGEvent keycodes 104/102) rather than calling `TISSelectInputSource` on an
+  input mode. Selecting a mode (`base` <-> `Roman`) of the already-active Google
+  Japanese input method only updates the menu-bar indicator; it does not reliably
+  notify the running IME to change its conversion mode, so the tooltip shows
+  Hiragana while typing still produces alphanumeric. The physical keys are
+  handled by macOS at the HID level and switch the IME reliably — the same
+  mechanism Kanary's Command taps use. `select-input-source` (TISSelectInputSource)
+  is kept for programmatic input-source queries and selection by agents.
 
 ## Consequences
 
@@ -81,3 +90,15 @@ user-level hotkey daemon, so they work in cmux terminals even when the foregroun
 process is Claude Code, Codex, zsh, or another TUI instead of tmux. This still
 avoids Karabiner and its DriverKit extension, but skhd must be allowed in macOS
 Accessibility settings before it can observe keyboard events.
+
+Because the shortcuts now inject synthetic HID events (`send-ime-key`), the
+injected events are only delivered when the posting process is permitted in macOS
+Accessibility. skhd (the parent) is already granted, and the spawned helper is
+expected to run under skhd's responsibility; verify after `darwin-rebuild switch`
+by pressing `Ctrl+Shift+J` and confirming typed characters — not just the menu-bar
+indicator — become Japanese. Note the switch cannot be validated from a plain
+terminal, because a shell that lacks Accessibility silently drops the injected
+events. If the shortcuts do not switch after a rebuild, the fallback is to bind
+`Ctrl+Shift+J` / `Ctrl+Shift+;` as Kanary app hotkeys that emit かな / 英数, since
+Kanary already holds the required permission and uses the same key-injection
+mechanism as its Command taps.

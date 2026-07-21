@@ -168,9 +168,8 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(darwinHost).toContain('enable = true;');
     expect(darwinHost).toContain('ctrl + shift - j');
     expect(darwinHost).toContain('ctrl + shift - 0x29');
-    expect(darwinHost).toContain('/Users/keito/.local/bin/select-input-source');
-    expect(darwinHost).toContain('com.google.inputmethod.Japanese.base');
-    expect(darwinHost).toContain('com.google.inputmethod.Japanese.Roman');
+    expect(darwinHost).toContain('/Users/keito/.local/bin/send-ime-key kana');
+    expect(darwinHost).toContain('/Users/keito/.local/bin/send-ime-key eisuu');
   });
 
   test('cmux terminal config leaves IME shortcuts to skhd', () => {
@@ -228,6 +227,19 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(inputSourceWrapper).not.toContain('.config/karabiner');
     expect(inputSourceSwift).toContain('TISSelectInputSource(source)');
     expect(inputSourceSwift).not.toContain('TISEnableInputSource');
+  });
+
+  test('send-ime-key emits physical kana/eisuu keys for reliable IME switching', () => {
+    const inputSourceModule = readRepoFile('nix/home/input-source.nix');
+    const sendKeyWrapper = readRepoFile('script/macos/send-ime-key.sh');
+    const sendKeySwift = readRepoFile('script/macos/send-ime-key.swift');
+
+    expect(inputSourceModule).toContain('".local/share/input-source/send-ime-key.swift"');
+    expect(inputSourceModule).toContain('".local/bin/send-ime-key"');
+    expect(sendKeyWrapper).toContain('/input-source/send-ime-key.swift');
+    expect(sendKeySwift).toContain('return 104'); // かな
+    expect(sendKeySwift).toContain('return 102'); // 英数
+    expect(sendKeySwift).toContain('.cghidEventTap');
   });
 
   test('keyboard remapping is documented through Kanary without home-manager Karabiner state', () => {
@@ -288,6 +300,13 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(dotfilesModule).toContain('".config/agent-deck/config.toml"');
     expect(dotfilesModule).toContain('".config/codespaces-secrets/repos.txt"');
     expect(dotfilesModule).toContain('".config/graphite/aliases"');
+
+    // 組織情報を含む設定は private-config（非公開リポジトリ）の out-of-store symlink で管理する
+    expect(dotfilesModule).toContain('mkOutOfStoreSymlink');
+    expect(dotfilesModule).toContain('keito4/private-config');
+    expect(dotfilesModule).toContain('".config/agent-deck/config.toml" = privateConfig');
+    expect(dotfilesModule).toContain('".config/codespaces-secrets/repos.txt" = privateConfig');
+    expect(dotfilesModule).toContain('".config/devcontainer-env-keys.txt" = privateConfig');
     expect(dotfilesModule).toContain('".gitignore"');
     expect(dotfilesModule).toContain('".peco/config.json"');
     expect(dotfilesModule).toContain('".zsh/configs/virtual/go.zsh"');
@@ -299,6 +318,24 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(dotfilesModule).not.toContain('.npmrc');
     expect(dotfilesModule).not.toContain('.ssh');
     expect(dotfilesModule).not.toContain('.env.secret"');
+  });
+
+  test('devcontainer env loader reads approved credential keys from private allowlist', () => {
+    const zshModule = readRepoFile('nix/home/zsh.nix');
+    const devcontainerEnvLoader = readRepoFile('.zsh/configs/pre/devcontainer-env.zsh');
+
+    [zshModule, devcontainerEnvLoader].forEach((loader) => {
+      // 許可キーはインライン列挙せず private-config 管理の外部ファイルから読む
+      expect(loader).toContain('devcontainer-env-keys.txt');
+      expect(loader).toContain('.devcontainer.env');
+
+      // 組織名を含むキーや 1Password サービストークンを公開リポジトリに残さない
+      ['ELU_SENTRY_TOKEN', 'ELU_NOTION_API_KEY', 'OYKOT_NOTION_API_KEY', 'OP_SERVICE_ACCOUNT_TOKEN'].forEach(
+        (envKey) => {
+          expect(loader).not.toContain(envKey);
+        },
+      );
+    });
   });
 
   test('agent local config collector is installed as a safe command', () => {
@@ -323,5 +360,32 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(collectorScript).toContain('credentials*.json');
     expect(collectorScript).toContain('category\\tbytes\\tmtime\\tpath');
     expect(collectorScript).toContain('intentionally does not copy or print file contents');
+  });
+
+  test('claude-lmstudio launcher is installed as an executable command', () => {
+    const agentCommandsModule = readRepoFile('nix/home/agent-commands.nix');
+    const launcherScript = readRepoFile('script/agent/claude-lmstudio.sh');
+    const launcherPath = path.join(repoPath, 'script/agent/claude-lmstudio.sh');
+
+    expect(agentCommandsModule).toContain('".local/bin/claude-lmstudio"');
+    expect(agentCommandsModule).toContain('configRoot + /script/agent/claude-lmstudio.sh');
+    expect(fs.statSync(launcherPath).mode & 0o111).toBeTruthy();
+
+    // Points Claude Code at the local LM Studio Anthropic-compatible endpoint.
+    expect(launcherScript).toContain('ANTHROPIC_BASE_URL');
+    expect(launcherScript).toContain('http://localhost:1234');
+    expect(launcherScript).toContain('exec claude --model');
+    // Default to an MLX build; GGUF fails Claude Code tool use on the llama.cpp grammar parser.
+    expect(launcherScript).toContain('qwen/qwen3-coder-next');
+    expect(launcherScript).toContain('MLX');
+
+    // LM Studio's JIT loader defaults to an 8k context, too small for Claude Code's
+    // system prompt, so the launcher must load the model with a usable window itself.
+    expect(launcherScript).toContain('LMSTUDIO_CONTEXT_LENGTH');
+    expect(launcherScript).toContain('--context-length');
+
+    // Loading alongside a stale small-context copy is not enough: LM Studio routes by
+    // model key and serves the stale copy, so the small copies must be unloaded first.
+    expect(launcherScript).toContain('lms unload');
   });
 });
