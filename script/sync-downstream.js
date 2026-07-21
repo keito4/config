@@ -53,7 +53,8 @@ function validateGroup(groupName, entries) {
 /**
  * @param {unknown} repo - Candidate repo entry
  * @param {object} groups - Manifest groups keyed by name
- * @throws {Error} When the repo entry is missing/malformed or its name/group opt-ins are invalid
+ * @throws {Error} When the repo entry is missing/malformed, its name/group opt-ins are
+ *   invalid, or its optional "exclude" list is not an array of strings
  */
 function validateRepo(repo, groups) {
   if (repo === null || typeof repo !== 'object') {
@@ -69,6 +70,12 @@ function validateRepo(repo, groups) {
     if (!Object.hasOwn(groups, group)) {
       throw new Error(`manifest: repo ${repo.name} references unknown group "${group}"`);
     }
+  }
+  if (
+    repo.exclude !== undefined &&
+    (!Array.isArray(repo.exclude) || repo.exclude.some((item) => typeof item !== 'string'))
+  ) {
+    throw new Error(`manifest: repo ${repo.name} "exclude" must be an array of strings`);
   }
 }
 

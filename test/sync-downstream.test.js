@@ -111,6 +111,24 @@ describe('validateManifest', () => {
     manifest.repos[0].groups = ['does-not-exist'];
     expect(() => validateManifest(manifest)).toThrow(/unknown group/u);
   });
+
+  test('accepts a repo with a valid exclude list', () => {
+    const manifest = validManifest();
+    manifest.repos[0].exclude = ['.claude/hooks/common.py'];
+    expect(() => validateManifest(manifest)).not.toThrow();
+  });
+
+  test('rejects a repo whose exclude list is not an array', () => {
+    const manifest = validManifest();
+    manifest.repos[0].exclude = '.claude/hooks/common.py';
+    expect(() => validateManifest(manifest)).toThrow(/"exclude" must be an array of strings/u);
+  });
+
+  test('rejects a repo whose exclude list contains a non-string entry', () => {
+    const manifest = validManifest();
+    manifest.repos[0].exclude = [42];
+    expect(() => validateManifest(manifest)).toThrow(/"exclude" must be an array of strings/u);
+  });
 });
 
 describe('checked-in manifest (.github/sync-downstream.json)', () => {
