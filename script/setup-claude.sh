@@ -33,6 +33,10 @@ SETTINGS_LOCAL_FILE="${CLAUDE_DIR}/settings.local.json"
 DEFAULT_SETTINGS_LOCAL="${REPO_ROOT}/.devcontainer/claude-settings.local.json"
 SETTINGS_FILE="${CLAUDE_DIR}/settings.json"
 
+# 個人/組織情報を含むスキルの正本を置く非公開リポジトリ。
+# 端末ごとにパスが変わりうるため上書き可能にする。
+PRIVATE_CONFIG_DIR="${PRIVATE_CONFIG_DIR:-${HOME}/develop/github.com/keito4/private-config}"
+
 # 複数の CLAUDE_CONFIG_DIR に共有設定を配るためのキー。
 # ここに無いキー（model / theme / tui 等）は各 dir 固有として保持される。
 # shellcheck disable=SC2016  # jq に渡すJSONリテラル。$schema はシェル変数ではない
@@ -179,6 +183,48 @@ link_content_to_extra_config_dirs() {
     done < <(list_extra_config_dirs)
 }
 
+# private-config の個人スキルを ~/.claude/skills/<name>/SKILL.md として展開する。
+#
+# なぜ必要か: 組織メンバーのメール・Slack ID・内部 Notion ID を含むスキル（例 oykot-tasks）は
+# public な keito4/config には置けず、keito4/private-config が正本になる。setup-claude.sh は
+# これまで public リポジトリ→~/.claude しか同期しなかったため、private-config のスキルは
+# 新端末で materialize されず、OYKOT 作業の config-dir（既定=~/.claude）で呼べなかった。
+#
+# なぜ symlink か: private-config を正本にドリフトなく反映するため（settings 同期 #977 と同方針）。
+# Claude Code はスキルを <name>/SKILL.md ディレクトリ形式で読むので、フラットな
+# private-config/.claude/skills/<name>.md を <name>/SKILL.md にリンクする。private-config が
+# 正本であるため、既存の実体コピーや古いリンクは置き換える（追加 config-dir のケースと異なり
+# ここでは正本が明確なのでドリフト除去を優先する）。
+link_private_skills() {
+    local src_dir="${PRIVATE_CONFIG_DIR}/.claude/skills"
+    if [[ ! -d "$src_dir" ]]; then
+        log_info "private-config のスキルが見つからないためスキップします (${src_dir})"
+        return
+    fi
+
+    local skills_dir="${CLAUDE_DIR}/skills"
+    local md name target
+    shopt -s nullglob
+    for md in "$src_dir"/*.md; do
+        name="$(basename "$md" .md)"
+        target="${skills_dir}/${name}/SKILL.md"
+
+        if [[ -L "$target" ]] && [[ "$(readlink "$target")" == "$md" ]]; then
+            log_info "  スキル ${name} は最新です"
+            continue
+        fi
+
+        mkdir -p "${skills_dir}/${name}"
+        rm -f "$target"
+        if ln -s "$md" "$target"; then
+            log_success "  スキル ${name} -> ${md} をリンクしました"
+        else
+            log_warn "  スキル ${name} のリンクに失敗しました"
+        fi
+    done
+    shopt -u nullglob
+}
+
 main() {
     log_info "Claude Code セットアップを開始します..."
     log_info "環境: HOME=${HOME}"
@@ -200,6 +246,10 @@ main() {
     # 追加の CLAUDE_CONFIG_DIR（~/.claude-private 等）へ共有設定を同期
     log_info "追加の CLAUDE_CONFIG_DIR に共有設定を同期します..."
     sync_settings_to_extra_config_dirs
+
+    # private-config の個人スキルを ~/.claude/skills に展開（extra dir へのリンク前に実行）
+    log_info "private-config の個人スキルを ~/.claude/skills に展開します..."
+    link_private_skills
 
     # commands / agents / skills を追加の CLAUDE_CONFIG_DIR にリンク
     # claude CLI の有無に依存しないため、CLI チェックより前に実行する
