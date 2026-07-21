@@ -149,12 +149,12 @@ Development infrastructure template repository providing DevContainer images, CI
 
 The following scripts are auto-detected and run before git commit/push:
 
-| Script                                                                                                                  | Command                            | Purpose                    |
+| Script | Command | Purpose |
 | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | -------------------------- | ----------------------- |
-| `format:check`                                                                                                          | `prettier --check .`               | Code formatting validation |
-| `lint`                                                                                                                  | `eslint . --ext .js`               | Code quality validation    |
-| `test`                                                                                                                  | `jest --runInBand`                 | Unit test execution        |
-| `shellcheck`                                                                                                            | `find script -name '\*.sh' -type f | xargs -r shellcheck -x`    | Shell script validation |
+| `format:check` | `prettier --check .` | Code formatting validation |
+| `lint` | `eslint . --ext .js` | Code quality validation |
+| `test` | `jest --runInBand` | Unit test execution |
+| `shellcheck` | `find script -name '\*.sh' -type f | xargs -r shellcheck -x` | Shell script validation |
 | Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + coverage), `test:all` (unit + integration) |
 
 ## Hooks
