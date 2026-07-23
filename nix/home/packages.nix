@@ -17,6 +17,7 @@
     awscli2
     aws-sam-cli
     azure-cli
+    google-cloud-sdk
     kubernetes-helm
     sops
     terraform

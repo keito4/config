@@ -19,7 +19,9 @@
   # result Caps Lock -> Control only takes effect when Kanary's own
   # `capsLockRemappedToControl` is true. Re-assert it on every activation.
   # The helper is idempotent and a silent no-op once the setting is correct.
-  home.activation.enforceKanaryCapsControl = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  # linkGeneration の後に実行する（初回 activation ではリンク生成前だと
+  # ~/.local/bin/kanary-enforce-caps-control がまだ存在しない）
+  home.activation.enforceKanaryCapsControl = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     $DRY_RUN_CMD "${config.home.homeDirectory}/.local/bin/kanary-enforce-caps-control" || true
   '';
 }

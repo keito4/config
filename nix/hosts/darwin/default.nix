@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  pkgs,
+  username,
+  determinateNix,
+  ...
+}:
 
 {
   imports = [
@@ -7,29 +12,37 @@
   ];
 
   # Nix settings
-  nix = {
-    settings = {
-      experimental-features = [
-        "nix-command"
-        "flakes"
-      ];
-      # Trusted users for remote builds
-      trusted-users = [
-        "root"
-        "keito"
-      ];
-    };
-    # Garbage collection
-    gc = {
-      automatic = true;
-      interval = {
-        Weekday = 0;
-        Hour = 2;
-        Minute = 0;
+  # Determinate Nix 環境では nix-darwin による Nix 管理を無効化する
+  # （experimental-features や GC は Determinate 側が管理）
+  nix =
+    if determinateNix then
+      {
+        enable = false;
+      }
+    else
+      {
+        settings = {
+          experimental-features = [
+            "nix-command"
+            "flakes"
+          ];
+          # Trusted users for remote builds
+          trusted-users = [
+            "root"
+            username
+          ];
+        };
+        # Garbage collection
+        gc = {
+          automatic = true;
+          interval = {
+            Weekday = 0;
+            Hour = 2;
+            Minute = 0;
+          };
+          options = "--delete-older-than 30d";
+        };
       };
-      options = "--delete-older-than 30d";
-    };
-  };
 
   # System packages (available to all users)
   environment.systemPackages = with pkgs; [
@@ -44,7 +57,7 @@
     stateVersion = 6;
 
     # Primary user (required for homebrew, system.defaults, etc.)
-    primaryUser = "keito";
+    primaryUser = username;
 
     defaults = {
       # Dock
@@ -191,8 +204,8 @@
   services.skhd = {
     enable = true;
     skhdConfig = ''
-      ctrl + shift - j    : /Users/keito/.local/bin/send-ime-key kana
-      ctrl + shift - 0x29 : /Users/keito/.local/bin/send-ime-key eisuu
+      ctrl + shift - j    : /Users/${username}/.local/bin/send-ime-key kana
+      ctrl + shift - 0x29 : /Users/${username}/.local/bin/send-ime-key eisuu
     '';
   };
 
@@ -209,11 +222,11 @@
       ];
       RunAtLoad = true;
       KeepAlive = true;
-      StandardOutPath = "/Users/keito/Library/Logs/agent-deck-web.log";
-      StandardErrorPath = "/Users/keito/Library/Logs/agent-deck-web.err.log";
+      StandardOutPath = "/Users/${username}/Library/Logs/agent-deck-web.log";
+      StandardErrorPath = "/Users/${username}/Library/Logs/agent-deck-web.err.log";
       EnvironmentVariables = {
         # claude/codex (~/.local/bin, ~/.bin)・node/gh (nix profile)・agent-deck (homebrew) を解決できる PATH
-        PATH = "/Users/keito/.local/bin:/Users/keito/.bin:/opt/homebrew/bin:/etc/profiles/per-user/keito/bin:/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin";
+        PATH = "/Users/${username}/.local/bin:/Users/${username}/.bin:/opt/homebrew/bin:/etc/profiles/per-user/${username}/bin:/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin";
       };
     };
   };
