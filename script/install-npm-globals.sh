@@ -21,6 +21,15 @@ if [[ ! -f "$GLOBAL_JSON" ]]; then
     exit 1
 fi
 
+# Nix 管理の npm (macOS) は prefix が読み取り専用の Nix store を指すため
+# npm install -g できない。CLI ツールは nix/home/packages.nix 側で管理する。
+npm_prefix="$(npm config get prefix 2>/dev/null || echo "")"
+if [[ "$npm_prefix" == /nix/store/* ]]; then
+    warning "npm prefix が読み取り専用の Nix store を指しています: ${npm_prefix}"
+    warning "この環境では npm グローバルは管理対象外のためスキップします (nix/home/packages.nix を参照)"
+    exit 0
+fi
+
 # インストールするパッケージリスト（Node.js feature でリセットされるもの）
 PACKAGES=(
     "happy"

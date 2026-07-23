@@ -57,6 +57,8 @@ Imports configuration settings from the home directory back to the repository.
 
 **Check mode**: `./script/import.sh --check`
 
+**Repository clone**: `./script/import.sh --with-repos` — GitHub の全リポジトリを ghq で一括クローンする（デフォルトはスキップ）
+
 ## Credential Management
 
 ### credentials.sh
@@ -291,6 +293,8 @@ Installs global npm packages defined in `npm/global.json`.
 Uses npm's legacy peer dependency resolver for global CLI packages to match DevContainer builds.
 
 **Used by**: DevContainer postCreateCommand
+
+**Note**: npm prefix が読み取り専用の Nix store を指す環境（macOS の nix 管理 npm）ではスキップされる。CLI ツールは `nix/home/packages.nix` で管理する。
 
 ### create-codespace.sh
 
