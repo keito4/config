@@ -196,12 +196,34 @@
   # Security
   security.pam.services.sudo_local.touchIdAuth = true;
 
-  services.skhd = {
-    enable = true;
-    skhdConfig = ''
-      ctrl + shift - j    : /Users/${username}/.local/bin/send-ime-key kana
-      ctrl + shift - 0x29 : /Users/${username}/.local/bin/send-ime-key eisuu
-    '';
+  # skhd: services.skhd は nix store パスのバイナリを launchd に登録するため、
+  # skhd 更新のたびに TCC (アクセシビリティ) 許可の再付与が必要になる。
+  # activation で /usr/local/bin/skhd に実体コピーした安定パスから起動することで、
+  # 許可対象のパスを固定する。
+  environment.etc."skhdrc".text = ''
+    ctrl + shift - j    : /Users/${username}/.local/bin/send-ime-key kana
+    ctrl + shift - 0x29 : /Users/${username}/.local/bin/send-ime-key eisuu
+  '';
+
+  system.activationScripts.postActivation.text = ''
+    if ! cmp -s "${pkgs.skhd}/bin/skhd" /usr/local/bin/skhd; then
+      mkdir -p /usr/local/bin
+      install -m 755 "${pkgs.skhd}/bin/skhd" /usr/local/bin/skhd
+      echo "installed skhd to /usr/local/bin/skhd"
+    fi
+  '';
+
+  launchd.user.agents.skhd = {
+    serviceConfig = {
+      ProgramArguments = [
+        "/usr/local/bin/skhd"
+        "-c"
+        "/etc/skhdrc"
+      ];
+      KeepAlive = true;
+      RunAtLoad = true;
+      ProcessType = "Interactive";
+    };
   };
 
   # Agent Deck Web UI (headless) — http://127.0.0.1:8420
