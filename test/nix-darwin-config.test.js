@@ -164,8 +164,12 @@ describe('nix-darwin and home-manager macOS configuration', () => {
   test('skhd binds IME shortcuts without Karabiner', () => {
     const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
 
-    expect(darwinHost).toContain('services.skhd = {');
-    expect(darwinHost).toContain('enable = true;');
+    // TCC 許可を安定させるため、nix store 直参照ではなく
+    // /usr/local/bin/skhd (activation でコピーした安定パス) から起動する
+    expect(darwinHost).toContain('environment.etc."skhdrc".text');
+    expect(darwinHost).toContain('install -m 755 "${pkgs.skhd}/bin/skhd" /usr/local/bin/skhd');
+    expect(darwinHost).toContain('launchd.user.agents.skhd');
+    expect(darwinHost).toContain('"/usr/local/bin/skhd"');
     expect(darwinHost).toContain('ctrl + shift - j');
     expect(darwinHost).toContain('ctrl + shift - 0x29');
     expect(darwinHost).toContain('/Users/${username}/.local/bin/send-ime-key kana');

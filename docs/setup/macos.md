@@ -104,15 +104,21 @@ make credentials
 初回起動時に macOS の許可が必要:
 
 - **Kanary**: Gatekeeper の確認、アクセシビリティ / 入力監視
-- **skhd**: アクセシビリティ (許可しないと IME ショートカットが動かない)
-- **Xcode**: 初回起動時のライセンス同意
+- **skhd**: アクセシビリティ (許可しないと IME ショートカットが動かない)。
+  許可対象は `/usr/local/bin/skhd` (activation がコピーする安定パス)。
+  ファイル選択ダイアログでは Cmd+Shift+G でパスを直接入力する。
+  許可後は `launchctl kickstart -k gui/$(id -u)/org.nixos.skhd` で再起動する
+- **Xcode**: 初回起動時のライセンス同意 (`sudo xcodebuild -license accept` でも可)
 
 ## トラブルシューティング
 
-| 症状                                                     | 原因 / 対処                                                                   |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `error: Determinate detected, aborting activation`       | flake のホスト定義に `determinateNix = true` を指定する                       |
-| `error: Kanary.app is required for keyboard remapping.`  | 手順 4 の Kanary をインストールする                                           |
-| `Refusing to load formula ... from untrusted tap`        | preActivation が自動で `brew trust` する。手動なら `brew trust <tap>`         |
-| `typeset: -g: invalid option` でスクリプトやテストが失敗 | macOS 標準 bash 3.2 が原因。brew の `bash` (Brewfile 管理) が入っているか確認 |
-| `warning: $HOME ... is not owned by you`                 | sudo 実行時の無害な警告                                                       |
+| 症状                                                          | 原因 / 対処                                                                                                                                                                                         |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `error: Determinate detected, aborting activation`            | flake のホスト定義に `determinateNix = true` を指定する                                                                                                                                             |
+| `error: Kanary.app is required for keyboard remapping.`       | 手順 4 の Kanary をインストールする                                                                                                                                                                 |
+| `Refusing to load formula ... from untrusted tap`             | preActivation が自動で `brew trust` する。手動なら `brew trust <tap>`                                                                                                                               |
+| `typeset: -g: invalid option` でスクリプトやテストが失敗      | macOS 標準 bash 3.2 が原因。brew の `bash` (Brewfile 管理) が入っているか確認                                                                                                                       |
+| `warning: $HOME ... is not owned by you`                      | sudo 実行時の無害な警告                                                                                                                                                                             |
+| 日本語 IME を選択できるのに変換されない (入力が ASCII のまま) | Google 日本語入力の Converter / Renderer の launchd エージェントがログイン後のインストールで未ロード。ログアウト → ログイン (または再起動) で解消                                                   |
+| 入力ソースに ことえり / ABC など不要な項目が復活する          | TIS API やその場の無効化は macOS に差し戻される。`defaults write com.apple.HIToolbox AppleEnabledInputSources` で希望のリストを書き込み、ログインし直す (nix 設定の CustomUserPreferences と同内容) |
+| `op` / `make credentials` が `account is not signed in`       | 1Password アプリで 設定 → 開発者 → CLI 統合を有効化し、アプリを再起動する。それでも失敗するシェルでは同一シェル内で `eval "$(op signin --account my.1password.com)"` を実行してから使う             |
