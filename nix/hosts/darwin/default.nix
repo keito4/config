@@ -115,11 +115,6 @@
         "com.apple.HIToolbox" = {
           AppleEnabledInputSources = [
             {
-              InputSourceKind = "Keyboard Layout";
-              "KeyboardLayout ID" = 252;
-              "KeyboardLayout Name" = "ABC";
-            }
-            {
               "Bundle ID" = "com.google.inputmethod.Japanese";
               InputSourceKind = "Keyboard Input Method";
             }
