@@ -168,8 +168,8 @@ describe('nix-darwin and home-manager macOS configuration', () => {
     expect(darwinHost).toContain('enable = true;');
     expect(darwinHost).toContain('ctrl + shift - j');
     expect(darwinHost).toContain('ctrl + shift - 0x29');
-    expect(darwinHost).toContain('/Users/keito/.local/bin/send-ime-key kana');
-    expect(darwinHost).toContain('/Users/keito/.local/bin/send-ime-key eisuu');
+    expect(darwinHost).toContain('/Users/${username}/.local/bin/send-ime-key kana');
+    expect(darwinHost).toContain('/Users/${username}/.local/bin/send-ime-key eisuu');
   });
 
   test('cmux terminal config leaves IME shortcuts to skhd', () => {
