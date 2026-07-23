@@ -366,7 +366,8 @@
     "sentry@claude-plugins-official": true,
     "postgres-best-practices@supabase-agent-skills": true,
     "agent-browser@agent-browser": true,
-    "context7@intellectronica-skills": true
+    "context7@intellectronica-skills": true,
+    "mattpocock-skills@mattpocock": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
@@ -397,6 +398,12 @@
       "source": {
         "source": "git",
         "url": "https://github.com/supabase/agent-skills.git"
+      }
+    },
+    "mattpocock": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/mattpocock/skills.git"
       }
     }
   }

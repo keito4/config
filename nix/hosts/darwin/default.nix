@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  pkgs,
+  username,
+  determinateNix,
+  ...
+}:
 
 {
   imports = [
@@ -7,29 +12,37 @@
   ];
 
   # Nix settings
-  nix = {
-    settings = {
-      experimental-features = [
-        "nix-command"
-        "flakes"
-      ];
-      # Trusted users for remote builds
-      trusted-users = [
-        "root"
-        "keito"
-      ];
-    };
-    # Garbage collection
-    gc = {
-      automatic = true;
-      interval = {
-        Weekday = 0;
-        Hour = 2;
-        Minute = 0;
+  # Determinate Nix 環境では nix-darwin による Nix 管理を無効化する
+  # （experimental-features や GC は Determinate 側が管理）
+  nix =
+    if determinateNix then
+      {
+        enable = false;
+      }
+    else
+      {
+        settings = {
+          experimental-features = [
+            "nix-command"
+            "flakes"
+          ];
+          # Trusted users for remote builds
+          trusted-users = [
+            "root"
+            username
+          ];
+        };
+        # Garbage collection
+        gc = {
+          automatic = true;
+          interval = {
+            Weekday = 0;
+            Hour = 2;
+            Minute = 0;
+          };
+          options = "--delete-older-than 30d";
+        };
       };
-      options = "--delete-older-than 30d";
-    };
-  };
 
   # System packages (available to all users)
   environment.systemPackages = with pkgs; [
@@ -44,7 +57,7 @@
     stateVersion = 6;
 
     # Primary user (required for homebrew, system.defaults, etc.)
-    primaryUser = "keito";
+    primaryUser = username;
 
     defaults = {
       # Dock
@@ -101,11 +114,6 @@
         };
         "com.apple.HIToolbox" = {
           AppleEnabledInputSources = [
-            {
-              InputSourceKind = "Keyboard Layout";
-              "KeyboardLayout ID" = 252;
-              "KeyboardLayout Name" = "ABC";
-            }
             {
               "Bundle ID" = "com.google.inputmethod.Japanese";
               InputSourceKind = "Keyboard Input Method";
@@ -188,12 +196,34 @@
   # Security
   security.pam.services.sudo_local.touchIdAuth = true;
 
-  services.skhd = {
-    enable = true;
-    skhdConfig = ''
-      ctrl + shift - j    : /Users/keito/.local/bin/send-ime-key kana
-      ctrl + shift - 0x29 : /Users/keito/.local/bin/send-ime-key eisuu
-    '';
+  # skhd: services.skhd は nix store パスのバイナリを launchd に登録するため、
+  # skhd 更新のたびに TCC (アクセシビリティ) 許可の再付与が必要になる。
+  # activation で /usr/local/bin/skhd に実体コピーした安定パスから起動することで、
+  # 許可対象のパスを固定する。
+  environment.etc."skhdrc".text = ''
+    ctrl + shift - j    : /Users/${username}/.local/bin/send-ime-key kana
+    ctrl + shift - 0x29 : /Users/${username}/.local/bin/send-ime-key eisuu
+  '';
+
+  system.activationScripts.postActivation.text = ''
+    if ! cmp -s "${pkgs.skhd}/bin/skhd" /usr/local/bin/skhd; then
+      mkdir -p /usr/local/bin
+      install -m 755 "${pkgs.skhd}/bin/skhd" /usr/local/bin/skhd
+      echo "installed skhd to /usr/local/bin/skhd"
+    fi
+  '';
+
+  launchd.user.agents.skhd = {
+    serviceConfig = {
+      ProgramArguments = [
+        "/usr/local/bin/skhd"
+        "-c"
+        "/etc/skhdrc"
+      ];
+      KeepAlive = true;
+      RunAtLoad = true;
+      ProcessType = "Interactive";
+    };
   };
 
   # Agent Deck Web UI (headless) — http://127.0.0.1:8420
@@ -209,11 +239,11 @@
       ];
       RunAtLoad = true;
       KeepAlive = true;
-      StandardOutPath = "/Users/keito/Library/Logs/agent-deck-web.log";
-      StandardErrorPath = "/Users/keito/Library/Logs/agent-deck-web.err.log";
+      StandardOutPath = "/Users/${username}/Library/Logs/agent-deck-web.log";
+      StandardErrorPath = "/Users/${username}/Library/Logs/agent-deck-web.err.log";
       EnvironmentVariables = {
         # claude/codex (~/.local/bin, ~/.bin)・node/gh (nix profile)・agent-deck (homebrew) を解決できる PATH
-        PATH = "/Users/keito/.local/bin:/Users/keito/.bin:/opt/homebrew/bin:/etc/profiles/per-user/keito/bin:/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin";
+        PATH = "/Users/${username}/.local/bin:/Users/${username}/.bin:/opt/homebrew/bin:/etc/profiles/per-user/${username}/bin:/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin";
       };
     };
   };

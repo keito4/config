@@ -106,8 +106,11 @@ exit 0
 STUB
   chmod +x "${fake_home}/.stub-bin/claude"
 
+  # 既定では実在の private-config に触れないよう、存在しないパスへ向ける。
+  # 個別テストは PRIVATE_CONFIG_DIR を設定して上書きできる。
   HOME="$fake_home" \
   PATH="${fake_home}/.stub-bin:${PATH}" \
+  PRIVATE_CONFIG_DIR="${PRIVATE_CONFIG_DIR:-${fake_home}/no-private-config}" \
     run bash "${REPO_ROOT}/script/setup-claude.sh"
 }
 
@@ -182,4 +185,46 @@ STUB
   # ~/.claude に skills が無いなら壊れたリンクを作らない
   [ ! -e "${fake_home}/.claude-private/skills" ]
   [ ! -L "${fake_home}/.claude-private/skills" ]
+}
+
+# ---------------------------------------------------------------------------
+# private-config の個人スキルを ~/.claude/skills/<name>/SKILL.md に展開する
+# ---------------------------------------------------------------------------
+
+@test "setup-claude.sh materializes private-config skills as SKILL.md symlinks" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  local private="${TEST_TEMP_DIR}/private-config"
+  mkdir -p "${fake_home}/.claude" "${private}/.claude/skills"
+  printf -- '---\nname: oykot-tasks\n---\nbody\n' > "${private}/.claude/skills/oykot-tasks.md"
+
+  PRIVATE_CONFIG_DIR="$private" run_setup_in_fake_home "$fake_home"
+
+  # <name>/SKILL.md が正本ファイルへの symlink になっていること
+  [ -L "${fake_home}/.claude/skills/oykot-tasks/SKILL.md" ]
+  [ "$(readlink "${fake_home}/.claude/skills/oykot-tasks/SKILL.md")" = "${private}/.claude/skills/oykot-tasks.md" ]
+  # リンク越しに正本の内容が読めること（宣言ではなく実体で確認）
+  [ "$(cat "${fake_home}/.claude/skills/oykot-tasks/SKILL.md")" = "$(cat "${private}/.claude/skills/oykot-tasks.md")" ]
+}
+
+@test "setup-claude.sh replaces an existing real SKILL.md copy with a symlink to private-config" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  local private="${TEST_TEMP_DIR}/private-config"
+  mkdir -p "${fake_home}/.claude/skills/oykot-tasks" "${private}/.claude/skills"
+  echo "canonical" > "${private}/.claude/skills/oykot-tasks.md"
+  echo "stale copy" > "${fake_home}/.claude/skills/oykot-tasks/SKILL.md"
+
+  PRIVATE_CONFIG_DIR="$private" run_setup_in_fake_home "$fake_home"
+
+  [ -L "${fake_home}/.claude/skills/oykot-tasks/SKILL.md" ]
+  [ "$(cat "${fake_home}/.claude/skills/oykot-tasks/SKILL.md")" = "canonical" ]
+}
+
+@test "setup-claude.sh skips private skills when private-config is absent" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+
+  PRIVATE_CONFIG_DIR="${TEST_TEMP_DIR}/does-not-exist" run_setup_in_fake_home "$fake_home"
+
+  [ "$status" -eq 0 ]
+  [ ! -e "${fake_home}/.claude/skills/oykot-tasks" ]
 }

@@ -65,6 +65,7 @@ Use the setup guides instead of copying snippets from this README:
 - [Mobile: Android](docs/setup/mobile-android.md)
 - [Mobile: Flutter](docs/setup/mobile-flutter.md)
 - [Windows](docs/setup/windows.md)
+- [macOS 新規マシン](docs/setup/macos.md)
 
 ## Security
 

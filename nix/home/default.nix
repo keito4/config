@@ -1,4 +1,9 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  username,
+  ...
+}:
 
 {
   imports = [
@@ -14,8 +19,8 @@
 
   home = {
     stateVersion = "24.11";
-    username = "keito";
-    homeDirectory = lib.mkForce "/Users/keito";
+    inherit username;
+    homeDirectory = lib.mkForce "/Users/${username}";
   };
 
   # Let home-manager manage itself

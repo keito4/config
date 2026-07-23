@@ -14,6 +14,8 @@ on:
       - '**.sh'
       - '**.bats'
       - '.takt/**'
+      - '**.nix'
+      - 'nix/**'
       - '.github/actions/**'
       - '.github/workflows/**'
       - '.github/actionlint.yaml'
@@ -35,6 +37,8 @@ on:
       - '**.sh'
       - '**.bats'
       - '.takt/**'
+      - '**.nix'
+      - 'nix/**'
       - '.github/actions/**'
       - '.github/workflows/**'
       - '.github/actionlint.yaml'
@@ -64,6 +68,7 @@ jobs:
       scripts: ${{ steps.filter.outputs.scripts }}
       workflows: ${{ steps.filter.outputs.workflows }}
       dependencies: ${{ steps.filter.outputs.dependencies }}
+      nix: ${{ steps.filter.outputs.nix }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
@@ -95,6 +100,9 @@ jobs:
             dependencies:
               - 'package.json'
               - 'package-lock.json'
+            nix:
+              - '**.nix'
+              - 'nix/**'
 
   lint:
     name: Lint & Format
@@ -261,6 +269,35 @@ jobs:
       - name: Check workflow templates match actual workflows
         run: npm run workflow:sync:check
 
+  nix-eval:
+    name: Nix Config Eval
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: changes
+    if: needs.changes.outputs.nix == 'true'
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+
+      # 評価はプラットフォーム非依存なので Linux ランナーで aarch64-darwin の
+      # darwinConfigurations を検証できる（ビルドはしない）
+      # ホストは flake から動的に列挙する（ホスト追加時に CI 修正を不要にする）
+      - name: Evaluate darwin configurations
+        working-directory: nix
+        run: |
+          hosts=$(nix eval --json .#darwinConfigurations --apply builtins.attrNames | jq -r '.[]')
+          if [ -z "$hosts" ]; then
+            echo "::error::darwinConfigurations にホストが見つかりません"
+            exit 1
+          fi
+          for host in $hosts; do
+            echo "Evaluating darwinConfigurations.${host}..."
+            nix eval --raw ".#darwinConfigurations.\"${host}\".system.drvPath"
+            echo
+          done
+
   pr-size-check:
     name: PR Size Check
     runs-on: ubuntu-latest
@@ -284,7 +321,7 @@ jobs:
     name: Quality Gate
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [changes, lint, test, integration-test, actionlint, workflow-template-sync]
+    needs: [changes, lint, test, integration-test, actionlint, workflow-template-sync, nix-eval]
     if: always()
     steps:
       - name: Check job results
@@ -294,6 +331,7 @@ jobs:
           INTEGRATION_RESULT: ${{ needs.integration-test.result }}
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
           WORKFLOW_TEMPLATE_SYNC_RESULT: ${{ needs.workflow-template-sync.result }}
+          NIX_EVAL_RESULT: ${{ needs.nix-eval.result }}
         run: |
           echo "## Quality Gate Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -304,6 +342,7 @@ jobs:
           echo "| Integration Tests | $INTEGRATION_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| Workflow Lint | $ACTIONLINT_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| Workflow Template Sync | $WORKFLOW_TEMPLATE_SYNC_RESULT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Nix Config Eval | $NIX_EVAL_RESULT |" >> $GITHUB_STEP_SUMMARY
 
       - name: Verify all checks passed
         env:
@@ -312,6 +351,7 @@ jobs:
           INTEGRATION_RESULT: ${{ needs.integration-test.result }}
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
           WORKFLOW_TEMPLATE_SYNC_RESULT: ${{ needs.workflow-template-sync.result }}
+          NIX_EVAL_RESULT: ${{ needs.nix-eval.result }}
         run: |
           # skipped は成功扱い（該当ファイルの変更がない場合）
           function check_result() {
@@ -338,6 +378,10 @@ jobs:
           fi
           if ! check_result "$WORKFLOW_TEMPLATE_SYNC_RESULT"; then
             echo "::error::Workflow Template Sync failed"
+            FAILED=true
+          fi
+          if ! check_result "$NIX_EVAL_RESULT"; then
+            echo "::error::Nix Config Eval failed"
             FAILED=true
           fi
 
