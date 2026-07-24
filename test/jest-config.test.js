@@ -40,6 +40,12 @@ describe('Jest configuration runtime behavior', () => {
     expect(baseJestConfig.modulePathIgnorePatterns).toContain('<rootDir>/.context/worktrees/');
   });
 
+  test('excludes ESM config modules covered by subprocess runtime tests', () => {
+    expect(baseJestConfig.collectCoverageFrom).toEqual(
+      expect.arrayContaining(['!eslint.config.mjs', '!eslint/complexity-rules.mjs']),
+    );
+  });
+
   test('runs a matching test file in the Node environment', () => {
     const tempDir = makeTempDir('jest-runtime');
     try {

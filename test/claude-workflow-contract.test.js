@@ -3,6 +3,15 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const repoPath = path.resolve(__dirname, '..');
+const inheritedGitEnvKeys = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_PREFIX'];
+
+function cleanGitEnv(extra = {}) {
+  const env = { ...process.env, ...extra };
+  for (const key of inheritedGitEnvKeys) {
+    delete env[key];
+  }
+  return env;
+}
 
 function readWorkflow(relativePath) {
   return fs.readFileSync(path.join(repoPath, relativePath), 'utf8');
@@ -26,14 +35,15 @@ function runUpdateAgentsScriptWithUntrackedDirectory() {
     fs.writeFileSync(path.join(tempRoot, 'docs', 'README.md'), '# Docs\n');
     fs.mkdirSync(path.join(tempRoot, 'next'), { recursive: true });
 
-    execFileSync('git', ['init'], { cwd: tempRoot, stdio: 'ignore' });
+    execFileSync('git', ['init'], { cwd: tempRoot, env: cleanGitEnv(), stdio: 'ignore' });
     execFileSync('git', ['add', 'AGENTS.md', 'package.json', 'docs/README.md'], {
       cwd: tempRoot,
+      env: cleanGitEnv(),
       stdio: 'ignore',
     });
 
     const scriptPath = path.join(repoPath, 'script', 'update-agents-md.sh');
-    execFileSync('bash', [scriptPath], { cwd: tempRoot, encoding: 'utf8' });
+    execFileSync('bash', [scriptPath], { cwd: tempRoot, env: cleanGitEnv(), encoding: 'utf8' });
 
     return fs.readFileSync(path.join(tempRoot, 'AGENTS.md'), 'utf8');
   } finally {
@@ -43,10 +53,6 @@ function runUpdateAgentsScriptWithUntrackedDirectory() {
 
 describe('Claude workflow contracts', () => {
   const issueWorkflows = ['.github/workflows/claude.yml', 'templates/workflows/claude.yml'];
-  const maintenanceWorkflows = [
-    '.github/workflows/scheduled-maintenance.yml',
-    'templates/workflows/scheduled-maintenance.yml',
-  ];
 
   test.each(issueWorkflows)('%s creates PRs in a post-Claude Actions step', (workflowPath) => {
     const workflow = readWorkflow(workflowPath);
@@ -75,34 +81,6 @@ describe('Claude workflow contracts', () => {
     expect(workflow).toContain("core.setOutput('is_draft', pull.draft ? 'true' : 'false')");
     expect(workflow).toContain("if: steps.pr_draft.outputs.is_draft != 'true'");
     expect(workflow).toContain('name: Skip draft PR');
-  });
-
-  test.each(maintenanceWorkflows)('%s creates maintenance PRs in a post-Claude Actions step', (workflowPath) => {
-    const workflow = readWorkflow(workflowPath);
-
-    expect(workflow).toContain('name: Create maintenance pull request');
-    expect(workflow).toContain('CLAUDE_BRANCH: maintenance/${{ github.run_id }}-${{ github.run_attempt }}');
-    expect(workflow).toContain('name: Validate maintenance token');
-    expect(workflow.indexOf('name: Validate maintenance token')).toBeLessThan(
-      workflow.indexOf('name: Checkout repository'),
-    );
-    expect(workflow).toContain('token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}');
-    expect(workflow).toContain('github_token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}');
-    expect(workflow).toContain('name: Prepare maintenance branch');
-    expect(workflow).toContain('git checkout -b "$CLAUDE_BRANCH"');
-    expect(workflow).toContain('Use branch `${{ env.CLAUDE_BRANCH }}`');
-    expect(workflow).toContain('GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}');
-    expect(workflow).toContain('if: env.CLAUDE_BRANCH !=');
-    expect(workflow).toContain('gh pr create');
-    expect(workflow).toContain('git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH"');
-    expect(workflow).not.toContain('steps.maintenance.outputs.branch_name');
-    expect(workflow).toContain('Bash(gh pr create:*)');
-    expect(workflow).toContain('Bash(gh api:*)');
-    expect(workflow).toContain('script/check-trivyignore-review.sh');
-    expect(workflow).toContain('Bash(script/check-trivyignore-review.sh:*)');
-    expect(workflow).toContain("/repo-maintenance --mode ${{ inputs.mode || 'full' }} --create-pr");
-    expect(workflow).not.toContain('github_token: ${{ github.token }}');
-    expect(workflow).not.toContain('"allowedTools"');
   });
 
   test('Claude Code Review uses the shared CI wait script', () => {

@@ -1,0 +1,56 @@
+name: repo-maintenance
+description: Run repository maintenance through TAKT while keeping shell checks deterministic.
+initial_step: maintain
+max_steps: 6
+
+personas:
+  maintainer: ../facets/personas/repo-maintenance-maintainer.md
+  reviewer: ../facets/personas/repo-maintenance-reviewer.md
+
+steps:
+  - name: maintain
+    persona: maintainer
+    edit: true
+    required_permission_mode: edit
+    rules:
+      - condition: Maintenance completed
+        next: review
+      - condition: Cannot proceed
+        next: ABORT
+    instruction: |
+      Run scheduled repository maintenance.
+
+      The command quality gate is the source of truth. Do not bypass it. If it
+      fails, inspect the failure, make the smallest necessary fix, and let the
+      command gate run again.
+    quality_gates:
+      - type: command
+        name: run-repo-maintenance
+        command: bash script/run-takt-repo-maintenance.sh
+        timeout_ms: 1800000
+    output_contracts:
+      report:
+        - name: repo-maintenance-summary.md
+          format: |
+            # Repository Maintenance Summary
+
+            ## What Ran
+
+            ## Changes
+
+            ## Pull Request
+
+            ## Manual Attention
+
+  - name: review
+    persona: reviewer
+    edit: false
+    rules:
+      - condition: Approved
+        next: COMPLETE
+      - condition: Needs fix
+        next: maintain
+    instruction: |
+      Review the repository maintenance result from the previous step and the
+      generated report. Approve only when the maintenance command completed or
+      when the remaining blocker is explicitly documented for a human.

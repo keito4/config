@@ -25,14 +25,13 @@ concurrency:
 jobs:
   maintenance:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       CLAUDE_BRANCH: maintenance/${{ github.run_id }}-${{ github.run_attempt }}
     permissions:
       contents: write
       pull-requests: write
       issues: write
-      id-token: write
     steps:
       - name: Validate maintenance token
         env:
@@ -43,44 +42,60 @@ jobs:
             exit 1
           fi
 
+      - name: Validate TAKT authentication
+        env:
+          TAKT_ANTHROPIC_API_KEY: ${{ secrets.TAKT_ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$TAKT_ANTHROPIC_API_KEY" ]; then
+            echo "TAKT_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY is required for scheduled TAKT maintenance."
+            exit 1
+          fi
+
       - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 1
-          token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}
+          persist-credentials: false
+          token: ${{ github.token }}
+
+      # This managed config-repository workflow depends on .takt/**,
+      # script/repo-maintenance.sh, script/run-takt-repo-maintenance.sh,
+      # script/check-trivyignore-review.sh, and the setup-node-ci action.
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node-ci
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
 
       - name: Prepare maintenance branch
         run: git checkout -b "$CLAUDE_BRANCH"
 
+      - name: Configure Git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - name: Review Trivy ignore entries
         run: script/check-trivyignore-review.sh
 
-      - name: Run scheduled maintenance
-        id: maintenance
-        uses: anthropics/claude-code-action@44423bdec74b97d67543eb16c110546762c110b2 # v1.0.181
+      - name: Write TAKT maintenance context
         env:
-          CLAUDE_BRANCH: ${{ env.CLAUDE_BRANCH }}
-        with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}
-          prompt: |
-            Run `script/check-trivyignore-review.sh` first and include any due `.trivyignore` entries in the final summary.
+          REPO_MAINTENANCE_MODE: ${{ inputs.mode || 'full' }}
+        run: |
+          mkdir -p .context
+          printf '%s\n' "$REPO_MAINTENANCE_MODE" > .context/takt-maintenance-mode
 
-            /repo-maintenance --mode ${{ inputs.mode || 'full' }} --create-pr
-
-            Use branch `${{ env.CLAUDE_BRANCH }}` for maintenance commits and pushes.
-
-            After completing maintenance, summarize:
-            - What was checked
-            - What was updated
-            - What needs manual attention
-
-            If `script/repo-maintenance.sh --create-pr` creates a pull request, do not create another one.
-            If the script only pushes the branch, this workflow creates the pull request from the Claude branch after Claude finishes.
-
-            If no updates are needed, do NOT create an issue.
-          claude_args: |
-            --allowedTools "Bash(gh api:*),Bash(gh repo view:*),Bash(gh issue create:*),Bash(gh issue list:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr checks:*),Bash(gh run view:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(node:*),Bash(git:*),Bash(curl:*),Bash(jq:*),Bash(script/check-trivyignore-review.sh:*)"
+      - name: Run scheduled maintenance with TAKT
+        id: maintenance
+        env:
+          REPO_MAINTENANCE_MODE: ${{ inputs.mode || 'full' }}
+          TAKT_ANTHROPIC_API_KEY: ${{ secrets.TAKT_ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY }}
+        run: |
+          ./node_modules/.bin/takt --pipeline \
+            --skip-git \
+            --quiet \
+            --workflow .takt/workflows/repo-maintenance.yml \
+            --task "Run scheduled repository maintenance in ${REPO_MAINTENANCE_MODE} mode."
 
       - name: Create maintenance pull request
         if: env.CLAUDE_BRANCH != ''
@@ -90,14 +105,18 @@ jobs:
           MODE: ${{ inputs.mode || 'full' }}
         run: |
           if [ -z "$CLAUDE_BRANCH" ]; then
-            echo "Claude did not create a branch. Skipping PR creation."
+            echo "Maintenance branch is empty. Skipping PR creation."
             exit 0
           fi
 
-          if ! git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH" >/dev/null; then
-            echo "Claude branch $CLAUDE_BRANCH was not pushed. Skipping PR creation."
+          git add -A -- . ':!.context'
+          if git diff --cached --quiet; then
+            echo "No committable maintenance changes. Skipping PR creation."
             exit 0
           fi
+
+          git commit -m "chore: scheduled maintenance"
+          git -c http.https://github.com/.extraheader="AUTHORIZATION: bearer $GH_TOKEN" push -u origin "$CLAUDE_BRANCH"
 
           EXISTING_PR=$(gh pr list --head "$CLAUDE_BRANCH" --state open --json number --jq '.[0].number // empty')
           if [ -n "$EXISTING_PR" ]; then
@@ -119,7 +138,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          EXISTING=$(gh issue list --label "maintenance" --state open --json number --jq 'length')
+          LABEL_ARGS=()
+          if gh label list --json name --jq '.[].name' | grep -Fxq "maintenance"; then
+            LABEL_ARGS=(--label "maintenance")
+          fi
+
+          EXISTING=$(gh issue list --state open --search "fix: Scheduled Maintenance failed in:title" --json number --jq 'length')
           if [ "$EXISTING" -gt 0 ]; then
             echo "Open maintenance issue already exists. Skipping."
             exit 0
@@ -127,7 +151,7 @@ jobs:
 
           gh issue create \
             --title "fix: Scheduled Maintenance failed" \
-            --label "maintenance,bug" \
+            "${LABEL_ARGS[@]}" \
             --body "## Scheduled Maintenance Failure
 
           The scheduled maintenance workflow failed.
@@ -137,6 +161,7 @@ jobs:
 
           Please check the workflow logs and re-run manually if needed.
           If this failed during token validation, configure \`CLAUDE_PR_GITHUB_TOKEN\` or \`CLAUDE_PAT\` in repository Actions secrets.
+          If this failed with \`Invalid API key\`, rotate the configured \`TAKT_ANTHROPIC_API_KEY\` or \`ANTHROPIC_API_KEY\` repository secret.
 
           ---
           *Auto-generated by [scheduled-maintenance.yml](.github/workflows/scheduled-maintenance.yml)*"

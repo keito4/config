@@ -64,7 +64,6 @@ jobs:
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
 
       # minor: ラベル付与（手動マージ）+ 自動承認試行
       # GITHUB_TOKEN は既定で PR 承認不可のため continue-on-error: true で失敗しても CI をブロックしない
@@ -77,7 +76,6 @@ jobs:
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
 
       - name: Auto-approve minor updates
         if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-minor'
@@ -87,7 +85,6 @@ jobs:
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
 
       # major: ラベル付与してレビュー必須
       - name: Label major updates for review
@@ -99,4 +96,3 @@ jobs:
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}

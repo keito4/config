@@ -7,6 +7,8 @@ argument-hint: '[--mode full|quick|check-only] [--skip CATEGORY] [--create-pr] [
 # Repository Maintenance Workflow
 
 The executable source of truth is `script/repo-maintenance.sh`.
+Scheduled maintenance wraps this script with TAKT, but the deterministic checks
+and update behavior stay in the script.
 
 Run the script with the user-provided arguments:
 
