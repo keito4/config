@@ -174,6 +174,7 @@ The following scripts are auto-detected and run before git commit/push:
 | `post_pr_ci_watch.py`         | Post PR creation    | Monitor PR CI status                                                         |
 | `pre_exit_plan_ai_review.py`  | Pre ExitPlanMode    | AI review before plan exit                                                   |
 | `pre_git_quality_gates.py`    | Pre git commit/push | Auto-detect and run quality gates                                            |
+| `prompt_task_reminder.py`     | UserPromptSubmit    | Require task registration (TaskCreate) before starting work                  |
 | `stop_test_verification.py`   | Stop                | Verify test results on session end                                           |
 
 ## Development Standards

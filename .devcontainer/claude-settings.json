@@ -395,6 +395,17 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/vscode/.claude/hooks/prompt_task_reminder.py"
+          }
+        ]
+      }
     ]
   }
 }

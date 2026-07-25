@@ -114,9 +114,18 @@ STUB
     run bash "${REPO_ROOT}/script/setup-claude.sh"
 }
 
+# 追加 config dir は settings.json / .claude.json を持つものだけが対象になる。
+# フィクスチャも初期化済みにしないと list_extra_config_dirs から除外される。
+init_extra_config_dir() {
+  local dir="$1"
+  mkdir -p "$dir"
+  echo '{}' > "${dir}/settings.json"
+}
+
 @test "setup-claude.sh links commands/agents/skills into extra config dirs" {
   local fake_home="${TEST_TEMP_DIR}/home"
-  mkdir -p "${fake_home}/.claude"/{commands,agents,skills} "${fake_home}/.claude-private"
+  mkdir -p "${fake_home}/.claude"/{commands,agents,skills}
+  init_extra_config_dir "${fake_home}/.claude-private"
   echo "canonical" > "${fake_home}/.claude/commands/session-close.md"
 
   run_setup_in_fake_home "$fake_home"
@@ -133,7 +142,9 @@ STUB
 
 @test "setup-claude.sh links content into every extra config dir" {
   local fake_home="${TEST_TEMP_DIR}/home"
-  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private" "${fake_home}/.claude-elu"
+  mkdir -p "${fake_home}/.claude/commands"
+  init_extra_config_dir "${fake_home}/.claude-private"
+  init_extra_config_dir "${fake_home}/.claude-elu"
 
   run_setup_in_fake_home "$fake_home"
 
@@ -143,7 +154,8 @@ STUB
 
 @test "setup-claude.sh content linking is idempotent" {
   local fake_home="${TEST_TEMP_DIR}/home"
-  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private"
+  mkdir -p "${fake_home}/.claude/commands"
+  init_extra_config_dir "${fake_home}/.claude-private"
 
   run_setup_in_fake_home "$fake_home"
   [ -L "${fake_home}/.claude-private/commands" ]
@@ -156,7 +168,9 @@ STUB
 
 @test "setup-claude.sh does not clobber an existing real directory" {
   local fake_home="${TEST_TEMP_DIR}/home"
-  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private/commands"
+  mkdir -p "${fake_home}/.claude/commands"
+  init_extra_config_dir "${fake_home}/.claude-private"
+  mkdir -p "${fake_home}/.claude-private/commands"
   echo "dir-specific" > "${fake_home}/.claude-private/commands/local-only.md"
 
   run_setup_in_fake_home "$fake_home"
@@ -168,7 +182,8 @@ STUB
 
 @test "setup-claude.sh replaces a symlink that points elsewhere" {
   local fake_home="${TEST_TEMP_DIR}/home"
-  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private" "${fake_home}/stale"
+  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/stale"
+  init_extra_config_dir "${fake_home}/.claude-private"
   ln -s "${fake_home}/stale" "${fake_home}/.claude-private/commands"
 
   run_setup_in_fake_home "$fake_home"
@@ -178,13 +193,31 @@ STUB
 
 @test "setup-claude.sh skips content missing from the canonical dir" {
   local fake_home="${TEST_TEMP_DIR}/home"
-  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private"
+  mkdir -p "${fake_home}/.claude/commands"
+  init_extra_config_dir "${fake_home}/.claude-private"
 
   run_setup_in_fake_home "$fake_home"
 
   # ~/.claude に skills が無いなら壊れたリンクを作らない
   [ ! -e "${fake_home}/.claude-private/skills" ]
   [ ! -L "${fake_home}/.claude-private/skills" ]
+}
+
+@test "setup-claude.sh ignores ~/.claude-* dirs that are not config dirs" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-worklog"
+  echo '{"permissions":{"allow":[]}}' > "${fake_home}/.claude/settings.json"
+  init_extra_config_dir "${fake_home}/.claude-private"
+
+  run_setup_in_fake_home "$fake_home"
+
+  # 初期化済みの config dir には従来どおり同期される（この判定が空振りしないことの担保）
+  [ -L "${fake_home}/.claude-private/commands" ]
+  grep -q "permissions" "${fake_home}/.claude-private/settings.json"
+
+  # hook 置き場のような ~/.claude-* を config dir と誤認して汚さない
+  [ ! -e "${fake_home}/.claude-worklog/settings.json" ]
+  [ ! -e "${fake_home}/.claude-worklog/commands" ]
 }
 
 # ---------------------------------------------------------------------------

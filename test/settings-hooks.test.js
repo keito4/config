@@ -49,6 +49,12 @@ describe('.claude/settings.json — hooks configuration', () => {
       expect(Array.isArray(settings.hooks.Stop)).toBe(true);
       expect(settings.hooks.Stop.length).toBeGreaterThan(0);
     });
+
+    test('should define UserPromptSubmit hooks', () => {
+      expect(settings.hooks).toHaveProperty('UserPromptSubmit');
+      expect(Array.isArray(settings.hooks.UserPromptSubmit)).toBe(true);
+      expect(settings.hooks.UserPromptSubmit.length).toBeGreaterThan(0);
+    });
   });
 
   describe('Hook entry structure', () => {
@@ -173,6 +179,24 @@ describe('.claude/settings.json — hooks configuration', () => {
     });
   });
 
+  describe('UserPromptSubmit hooks', () => {
+    // 依頼を受けた時点でタスクを登録させる導線。設定から外れると登録がモデル任せに戻る。
+    test('should reference prompt_task_reminder.py', () => {
+      const allCommands = settings.hooks.UserPromptSubmit.flatMap((e) => e.hooks.map((h) => h.command));
+      expect(allCommands.some((cmd) => cmd.includes('prompt_task_reminder.py'))).toBe(true);
+    });
+
+    // UserPromptSubmit は stdout がそのままコンテキストへ注入されるため、
+    // 未配置リポジトリでフォールバックメッセージを出さない（|| true で黙る）必要がある。
+    test('should stay silent when the hook script is absent', () => {
+      const entry = settings.hooks.UserPromptSubmit.flatMap((e) => e.hooks).find((h) =>
+        h.command.includes('prompt_task_reminder.py'),
+      );
+      expect(entry.command).toContain('|| true');
+      expect(entry.command).not.toContain('echo "[hooks]');
+    });
+  });
+
   describe('DevContainer settings parity', () => {
     // .claude/settings.json（相対パス）と .devcontainer/claude-settings.json（絶対パス）は
     // 同じ hooks を二重管理している。片方だけへの hook 追加＝ドリフトを検出する。
@@ -221,6 +245,7 @@ describe('.claude/settings.json — hooks configuration', () => {
         ...(settings.hooks.PreToolUse || []),
         ...(settings.hooks.PostToolUse || []),
         ...(settings.hooks.Stop || []),
+        ...(settings.hooks.UserPromptSubmit || []),
       ].flatMap((e) => e.hooks.map((h) => h.command));
 
       const scriptNames = extractScriptNames(allCommands);
