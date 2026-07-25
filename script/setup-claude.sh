@@ -66,6 +66,45 @@ setup_settings_local() {
     fi
 }
 
+# ~/.claude/settings.json をホスト所有の実体ファイルとして用意する。
+#
+# なぜ symlink にしないか: このファイルには Claude Code がプラグイン導入状態を、
+# agent-deck が hooks（agent-deck hook-handler）を書き戻す。リポジトリの追跡ファイルへ
+# symlink すると、その端末固有の状態がコミット対象になり、ADR 0019 の downstream 同期や
+# このリポジトリ自身の CI（GitHub Actions 上の Claude Code）にも流れる。CI には
+# agent-deck が無いため、SessionStart hook が毎回失敗する。
+#
+# リポジトリのベースラインは「初回の種」としてだけ配り、以後は上書きしない。
+seed_user_settings() {
+    local baseline="${REPO_ROOT}/.claude/settings.json"
+
+    if [[ -L "$SETTINGS_FILE" ]]; then
+        # 旧構成（追跡ファイルへの symlink）からの移行。リンク先の内容を保ったまま実体化する。
+        local tmp
+        tmp="$(mktemp)"
+        cp "$SETTINGS_FILE" "$tmp"
+        rm -f "$SETTINGS_FILE"
+        mv "$tmp" "$SETTINGS_FILE"
+        chmod 644 "$SETTINGS_FILE"
+        log_success "${SETTINGS_FILE} を symlink から実体に置き換えました"
+        return
+    fi
+
+    if [[ -e "$SETTINGS_FILE" ]]; then
+        log_info "${SETTINGS_FILE} は既に存在します（上書きしません）"
+        return
+    fi
+
+    if [[ ! -f "$baseline" ]]; then
+        log_warn "ベースラインの settings.json が見つかりません: ${baseline}"
+        return
+    fi
+
+    mkdir -p "$CLAUDE_DIR"
+    cp "$baseline" "$SETTINGS_FILE"
+    log_success "${SETTINGS_FILE} をリポジトリのベースラインから作成しました"
+}
+
 # 追加の CLAUDE_CONFIG_DIR を列挙する
 # Agent Deck の config.toml が group ごとに config_dir を切り替えるため、
 # ~/.claude 以外の dir が存在しうる（例: ~/.claude-private, ~/.claude-elu）。
@@ -291,6 +330,9 @@ main() {
 
     # settings.local.json のセットアップ
     setup_settings_local
+
+    # ~/.claude/settings.json をホスト所有の実体として用意（extra dir への同期元になる）
+    seed_user_settings
 
     # 追加の CLAUDE_CONFIG_DIR（~/.claude-private 等）へ共有設定を同期
     log_info "追加の CLAUDE_CONFIG_DIR に共有設定を同期します..."

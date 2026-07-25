@@ -222,6 +222,45 @@ init_extra_config_dir() {
 }
 
 # ---------------------------------------------------------------------------
+# ~/.claude/settings.json はホスト所有（symlink にしない）
+# ---------------------------------------------------------------------------
+
+@test "setup-claude.sh seeds ~/.claude/settings.json from the repository baseline" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+
+  run_setup_in_fake_home "$fake_home"
+
+  [ -f "${fake_home}/.claude/settings.json" ]
+  [ ! -L "${fake_home}/.claude/settings.json" ]
+  cmp -s "${fake_home}/.claude/settings.json" "${REPO_ROOT}/.claude/settings.json"
+}
+
+@test "setup-claude.sh replaces a settings.json symlink with a real file, keeping its content" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+  echo '{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"agent-deck hook-handler"}]}]}}' \
+    > "${fake_home}/host-settings.json"
+  ln -s "${fake_home}/host-settings.json" "${fake_home}/.claude/settings.json"
+
+  run_setup_in_fake_home "$fake_home"
+
+  # ホスト固有の hook を追跡ファイルへ書き戻させないため、実体に切り離す
+  [ ! -L "${fake_home}/.claude/settings.json" ]
+  grep -q "agent-deck hook-handler" "${fake_home}/.claude/settings.json"
+}
+
+@test "setup-claude.sh does not overwrite an existing settings.json" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+  echo '{"permissions":{"allow":["Bash(host-only:*)"]}}' > "${fake_home}/.claude/settings.json"
+
+  run_setup_in_fake_home "$fake_home"
+
+  grep -q "host-only" "${fake_home}/.claude/settings.json"
+}
+
+# ---------------------------------------------------------------------------
 # リポジトリ／private-config のスキルを ~/.claude/skills に展開する
 # ---------------------------------------------------------------------------
 

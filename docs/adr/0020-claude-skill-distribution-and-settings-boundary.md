@@ -26,9 +26,12 @@ Claude Code のアセットについて、この端末の実態と リポジト�
    `~/.claude/settings.json` はこのリポジトリの `.claude/settings.json` への symlink であり、
    Claude Code はここに `enabledPlugins` / `extraKnownMarketplaces` を、agent-deck は
    `hooks` に `agent-deck hook-handler` を書き戻す。一方で同じファイルは
-   ADR 0019 の downstream 同期でそのまま 8リポジトリに配布される。ホスト固有の状態を
-   コミットすると、downstream 側では 25個のプラグインが有効化され、存在しない
-   `agent-deck` を毎セッション実行して失敗する。
+   ADR 0019 の downstream 同期でそのまま 8リポジトリに配布され、さらに
+   **このリポジトリ自身の CI（`claude-code-review.yml` 上の Claude Code）にも読まれる**。
+   実際、agent-deck の hooks を含んだ状態でコミットしたところ、`claude-review` ジョブが
+   2回とも 1ターン・cost 0・約175秒で `is_error` となり失敗した（runner に `agent-deck`
+   が無く SessionStart hook が解決できない）。`enabledPlugins` も同様に、downstream 側で
+   25個のプラグインを有効化してしまう。
 
 ## Decision
 
@@ -46,11 +49,19 @@ Claude Code のアセットについて、この端末の実態と リポジト�
 3. **個人情報を含むスキルは private-config が正本、それ以外は公開 config が正本。**
    どちらにも無いスキルは「存在しない」ものとして扱う（端末ローカルの実体は復元されない）。
 
-4. **`.claude/settings.json` はホストの正本のままにし、downstream 配布時に無害化する。**
-   symlink 構成は変えず、`script/sync-downstream.js` が配布時に
-   `enabledPlugins` / `extraKnownMarketplaces` と `agent-deck` を呼ぶ hook を除去する。
+4. **`~/.claude/settings.json` はホスト所有の実体ファイルにする。**
+   追跡ファイルへの symlink をやめ、`setup-claude.sh` の `seed_user_settings` が
+   リポジトリのベースラインを「初回の種」としてだけ配る（既存ファイルは上書きしない。
+   旧構成の symlink は内容を保ったまま実体へ切り離す）。これにより、Claude Code や
+   agent-deck の書き戻しがリポジトリを汚さなくなる。
+
+5. **追跡する `.claude/settings.json` には端末固有の hook を入れない。**
+   このファイルは downstream 8リポジトリと自身の CI の両方で読まれるため、
+   `agent-deck` のようにホストにしか無いコマンドを呼ぶ hook は置かない。
    プラグインの宣言的な正本は `.claude/plugins/plugins.txt` であり、
-   `enabledPlugins` は Claude Code の実行時記録として扱う。
+   `enabledPlugins` は Claude Code の実行時記録として扱う。二重の防御として
+   `script/sync-downstream.js` が配布時に `enabledPlugins` /
+   `extraKnownMarketplaces` と `agent-deck` を呼ぶ hook を除去する。
 
 ## Consequences
 
@@ -61,18 +72,21 @@ Claude Code のアセットについて、この端末の実態と リポジト�
   端末ローカルにしか無いスキルという状態が構造的に発生しなくなる。
 - downstream は移植可能な hooks / permissions だけを受け取る。ホストのプラグイン構成や
   agent-deck 連携が他リポジトリや CI の Claude セッションに漏れない。
+- プラグインを増減させても working tree が dirty にならない。
 
 ### Negative
 
-- `~/.claude/settings.json` は引き続きリポジトリの追跡ファイルへの symlink なので、
-  プラグインを増減させるたびに working tree が dirty になる。
+- `~/.claude/settings.json` が実体になるため、リポジトリのベースライン更新
+  （新しい Quality Gate hook 等）は自動では反映されない。ホスト側の hooks には
+  agent-deck の登録が混ざるため、機械的な上書きはできない。
 - スキルを追加するときはディレクトリを切る必要がある（フラットな `.md` は無視される）。
 - private-config のスキルを `~/.claude/skills` に展開する際、同名の実体コピーは
   リンクに置き換えられる（正本が明確なためドリフト除去を優先する）。
 
 ### Mitigation
 
-- dirty になった `settings.json` は、プラグイン構成を変えたタイミングで
-  `plugins.txt` と併せてレビューしてコミットする。
-- 配布時の無害化は `test/sync-downstream.test.js` が固定し、
-  スキル展開の両形式は `test/integration/setup_claude.bats` が固定する。
+- ベースラインに hooks を足したときは、`~/.claude/settings.json` にも手で反映する
+  （`.claude/hooks/` 側の実体はリポジトリ参照なので、追加が必要なのは登録だけ）。
+- 有効なプラグインを増やしたときは `plugins.txt` に宣言を足す。新端末の復元経路はこちら。
+- 配布時の無害化は `test/sync-downstream.test.js` が、スキル展開と
+  `~/.claude/settings.json` の扱いは `test/integration/setup_claude.bats` が固定する。
