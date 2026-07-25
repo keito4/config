@@ -80,6 +80,9 @@ list_extra_config_dirs() {
     local dir
     for dir in "${HOME}"/.claude-*; do
         [[ -d "$dir" ]] || continue
+        # 初期化済みの実 config_dir のみ対象にする（settings.json か .claude.json を持つ）。
+        # hook 置き場等（例: ~/.claude-worklog）に無用な settings.json を生成しないため。
+        [[ -f "$dir/settings.json" || -f "$dir/.claude.json" ]] || continue
         printf '%s\n' "$dir"
     done
 }
