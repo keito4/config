@@ -340,6 +340,17 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { [ -f .claude/hooks/prompt_task_reminder.py ] && python3 .claude/hooks/prompt_task_reminder.py || true; }'"
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {
