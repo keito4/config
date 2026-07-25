@@ -186,43 +186,89 @@ link_content_to_extra_config_dirs() {
     done < <(list_extra_config_dirs)
 }
 
-# private-config の個人スキルを ~/.claude/skills/<name>/SKILL.md として展開する。
+# リポジトリ / private-config のスキルを ~/.claude/skills に展開する。
 #
-# なぜ必要か: 組織メンバーのメール・Slack ID・内部 Notion ID を含むスキル（例 oykot-tasks）は
-# public な keito4/config には置けず、keito4/private-config が正本になる。setup-claude.sh は
-# これまで public リポジトリ→~/.claude しか同期しなかったため、private-config のスキルは
-# 新端末で materialize されず、OYKOT 作業の config-dir（既定=~/.claude）で呼べなかった。
+# なぜ必要か:
+#   1. Claude Code はスキルを <name>/SKILL.md ディレクトリ形式でしか読まない。
+#      commands / agents のようにディレクトリごとリンクすると、npx skills add で
+#      入るホスト固有のスキルと同居できないため、スキル単位でリンクする。
+#   2. 組織メンバーのメール・Slack ID・内部 Notion ID を含むスキル（例 oykot-tasks）は
+#      public な keito4/config には置けず、keito4/private-config が正本になる。
+#      新端末では private-config のスキルが materialize されず呼べなかった。
 #
-# なぜ symlink か: private-config を正本にドリフトなく反映するため（settings 同期 #977 と同方針）。
-# Claude Code はスキルを <name>/SKILL.md ディレクトリ形式で読むので、フラットな
-# private-config/.claude/skills/<name>.md を <name>/SKILL.md にリンクする。private-config が
-# 正本であるため、既存の実体コピーや古いリンクは置き換える（追加 config-dir のケースと異なり
-# ここでは正本が明確なのでドリフト除去を優先する）。
-link_private_skills() {
-    local src_dir="${PRIVATE_CONFIG_DIR}/.claude/skills"
+# なぜ symlink か: 正本にドリフトなく追随するため（settings 同期 #977 と同方針）。
+# 正本が明確なので、既存の実体コピーや古いリンクは置き換える（追加 config-dir の
+# ケースと異なり、ここではドリフト除去を優先する）。
+#
+# 正本側には 1ファイルのスキル（<name>.md）と、スクリプト等を伴うスキル
+# （<name>/SKILL.md + <name>/scripts/...）の2形式がある。後者は SKILL.md だけ
+# リンクすると補助ファイルが見えないため、ディレクトリごとリンクする。
+
+# 単一ファイルのスキル: <name>.md -> ~/.claude/skills/<name>/SKILL.md
+link_skill_file() {
+    local md="$1" skills_dir="$2"
+    local name target
+    name="$(basename "$md" .md)"
+    target="${skills_dir}/${name}/SKILL.md"
+
+    if [[ -L "$target" ]] && [[ "$(readlink "$target")" == "$md" ]]; then
+        log_info "  スキル ${name} は最新です"
+        return
+    fi
+
+    mkdir -p "${skills_dir}/${name}"
+    rm -f "$target"
+    if ln -s "$md" "$target"; then
+        log_success "  スキル ${name} -> ${md} をリンクしました"
+    else
+        log_warn "  スキル ${name} のリンクに失敗しました"
+    fi
+}
+
+# 補助ファイルを伴うスキル: <name>/ -> ~/.claude/skills/<name>
+link_skill_dir() {
+    local src="$1" skills_dir="$2"
+    local name target
+    name="$(basename "$src")"
+    target="${skills_dir}/${name}"
+
+    if [[ -L "$target" ]] && [[ "$(readlink "$target")" == "$src" ]]; then
+        log_info "  スキル ${name} は最新です"
+        return
+    fi
+
+    if [[ -d "$target" ]] && [[ ! -L "$target" ]]; then
+        log_warn "  スキル ${name} の実体コピーを private-config へのリンクに置き換えます"
+    fi
+
+    mkdir -p "$skills_dir"
+    rm -rf "$target"
+    if ln -s "$src" "$target"; then
+        log_success "  スキル ${name} -> ${src} をリンクしました"
+    else
+        log_warn "  スキル ${name} のリンクに失敗しました"
+    fi
+}
+
+link_skills_from_dir() {
+    local src_dir="$1"
     if [[ ! -d "$src_dir" ]]; then
-        log_info "private-config のスキルが見つからないためスキップします (${src_dir})"
+        log_info "スキルの正本が見つからないためスキップします (${src_dir})"
         return
     fi
 
     local skills_dir="${CLAUDE_DIR}/skills"
-    local md name target
+    local entry
     shopt -s nullglob
-    for md in "$src_dir"/*.md; do
-        name="$(basename "$md" .md)"
-        target="${skills_dir}/${name}/SKILL.md"
+    for entry in "$src_dir"/*; do
+        # symlink のエントリは npx skills add でホストに入れた実体への参照であり、
+        # リポジトリが正本ではないため配布対象にしない。
+        [[ -L "$entry" ]] && continue
 
-        if [[ -L "$target" ]] && [[ "$(readlink "$target")" == "$md" ]]; then
-            log_info "  スキル ${name} は最新です"
-            continue
-        fi
-
-        mkdir -p "${skills_dir}/${name}"
-        rm -f "$target"
-        if ln -s "$md" "$target"; then
-            log_success "  スキル ${name} -> ${md} をリンクしました"
-        else
-            log_warn "  スキル ${name} のリンクに失敗しました"
+        if [[ -f "$entry" ]] && [[ "$entry" == *.md ]] && [[ "$(basename "$entry")" != "README.md" ]]; then
+            link_skill_file "$entry" "$skills_dir"
+        elif [[ -d "$entry" ]] && [[ -f "${entry}/SKILL.md" ]]; then
+            link_skill_dir "$entry" "$skills_dir"
         fi
     done
     shopt -u nullglob
@@ -250,9 +296,12 @@ main() {
     log_info "追加の CLAUDE_CONFIG_DIR に共有設定を同期します..."
     sync_settings_to_extra_config_dirs
 
-    # private-config の個人スキルを ~/.claude/skills に展開（extra dir へのリンク前に実行）
+    # スキルを ~/.claude/skills に展開（extra dir へのリンク前に実行）。
+    # 名前が衝突した場合は private-config を勝たせるため、リポジトリを先に処理する。
+    log_info "リポジトリのスキルを ~/.claude/skills に展開します..."
+    link_skills_from_dir "${REPO_ROOT}/.claude/skills"
     log_info "private-config の個人スキルを ~/.claude/skills に展開します..."
-    link_private_skills
+    link_skills_from_dir "${PRIVATE_CONFIG_DIR}/.claude/skills"
 
     # commands / agents / skills を追加の CLAUDE_CONFIG_DIR にリンク
     # claude CLI の有無に依存しないため、CLI チェックより前に実行する
