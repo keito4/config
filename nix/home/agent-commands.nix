@@ -14,6 +14,8 @@ in
       force = true;
     };
 
+    ".local/bin/ada" = managedCommand (configRoot + /script/agent/agent-deck-attach.sh);
+
     ".local/bin/agent-collect-local-configs" = managedCommand (
       configRoot + /script/agent/collect-local-configs.sh
     );
