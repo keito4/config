@@ -107,6 +107,11 @@ Initializes Claude Code CLI configuration, syncs settings, and installs plugins.
 
 **Makefile target**: `make claude-setup`
 
+**Note**: `link_private_skills` により、`keito4/private-config`（組織情報を含むスキルの正本）の
+`.claude/skills/<name>.md` を `~/.claude/skills/<name>/SKILL.md` へ symlink する。
+配置先は `PRIVATE_CONFIG_DIR` 環境変数で上書き可能（デフォルト:
+`~/develop/github.com/keito4/private-config`）。
+
 ### setup-claude-build.sh
 
 Build-time setup for Claude Code in DevContainer images.
@@ -390,15 +395,15 @@ Analyzes project dependencies for security vulnerabilities and updates.
 
 Shared library functions used by multiple scripts:
 
-| File                 | Purpose                                                    |
-| -------------------- | ---------------------------------------------------------- |
-| `output.sh`          | Colored output utilities (print_info, print_success, etc.) |
-| `config.sh`          | Configuration loading utilities                            |
-| `platform.sh`        | Platform detection (macOS, Linux, etc.)                    |
-| `devcontainer.sh`    | DevContainer-specific utilities                            |
-| `claude_plugins.sh`  | Claude plugin management utilities                         |
-| `project-detect.sh`  | Shared project type and package manager detection          |
-| `brew_categories.py` | Homebrew package categorization                            |
+| File                 | Purpose                                                                        |
+| -------------------- | ------------------------------------------------------------------------------ |
+| `output.sh`          | Colored output utilities (print_info, print_success, etc.); requires bash 4.0+ |
+| `config.sh`          | Configuration loading utilities                                                |
+| `platform.sh`        | Platform detection (macOS, Linux, etc.)                                        |
+| `devcontainer.sh`    | DevContainer-specific utilities                                                |
+| `claude_plugins.sh`  | Claude plugin management utilities                                             |
+| `project-detect.sh`  | Shared project type and package manager detection                              |
+| `brew_categories.py` | Homebrew package categorization                                                |
 
 ## Credential Providers (credentials/providers/)
 

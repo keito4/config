@@ -1,4 +1,5 @@
 ---
+name: n8n-workflow-pr-review
 description: keito4-org/n8n_custom_node の n8n ワークフロー/テンプレートPRをレビューする。ワークフロー同期PR（workflow-sync/*）の退行判定、資格情報のMASKED破損チェック、typeVersion・.item/.first() の意味論判定、lockfile起因のCI失敗の切り分けを行う。n8nのPRレビュー・マージ可否判断を依頼されたときに使う。
 ---
 

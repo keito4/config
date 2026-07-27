@@ -179,7 +179,25 @@ collect_claude_dir_table() {
 }
 
 collect_agents() { collect_claude_dir_table ".claude/agents" "Agent"; }
-collect_skills() { collect_claude_dir_table ".claude/skills" "Skill"; }
+
+# スキルは <name>/SKILL.md 形式のみを対象にする（Claude Code がこの形式でしか読まない）。
+# symlink のディレクトリは npx skills add でホストに入れた実体への参照であり、
+# リポジトリの一覧には含めない。
+collect_skills() {
+  local dir=".claude/skills"
+  [[ ! -d "$dir" ]] && return 0
+  local out=""
+  table_header out "Skill" "Description"
+  local f base desc
+  for f in "$dir"/*/SKILL.md; do
+    [[ ! -f "$f" ]] && continue
+    [[ -L "$(dirname "$f")" ]] && continue
+    base=$(basename "$(dirname "$f")")
+    desc=$(_truncate_desc "$(_extract_desc "$f")")
+    emit out "\`$base\`" "${desc:-(no description)}"
+  done
+  echo -n "$out"
+}
 
 collect_workflows() {
   local out=""

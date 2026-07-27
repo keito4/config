@@ -20,6 +20,7 @@ describe('Claude Code Hooks integrity', () => {
     'post_pr_ci_watch.py',
     'pre_exit_plan_ai_review.py',
     'pre_git_quality_gates.py',
+    'prompt_task_reminder.py',
     'stop_test_verification.py',
   ];
 

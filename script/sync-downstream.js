@@ -22,6 +22,56 @@ const DEFAULT_MANIFEST = path.join(repoRoot, '.github', 'sync-downstream.json');
 const IGNORED_PATTERNS = [/(^|\/)__pycache__(\/|$)/u, /\.pyc$/u];
 
 /**
+ * `.claude/settings.json` はこのリポジトリでは二役を持つ:
+ * ホストの `~/.claude/settings.json`（Claude Code がプラグイン導入状態を書き戻す）と、
+ * downstream に配る共通ベースライン。前者に属するものを配ると、downstream 側では
+ * 25個のプラグインが有効化され、存在しない `agent-deck` を毎セッション叩いて失敗する。
+ * 配布時にホスト固有のものだけを落とす。
+ */
+const SETTINGS_TARGET = '.claude/settings.json';
+const HOST_ONLY_SETTINGS_KEYS = ['enabledPlugins', 'extraKnownMarketplaces'];
+const HOST_ONLY_HOOK_COMMAND = /^\s*agent-deck\b/u;
+
+/**
+ * @param {object} hooks - settings.json の hooks（イベント名 -> マッチャ配列）
+ * @returns {object} ホスト固有のコマンドを除いた hooks（空になったものは削除）
+ */
+function pruneHostOnlyHooks(hooks) {
+  const pruned = {};
+  for (const [event, matchers] of Object.entries(hooks)) {
+    const kept = matchers
+      .map((matcher) => ({
+        ...matcher,
+        hooks: (matcher.hooks ?? []).filter((hook) => !HOST_ONLY_HOOK_COMMAND.test(hook.command ?? '')),
+      }))
+      .filter((matcher) => matcher.hooks.length > 0);
+    if (kept.length > 0) {
+      pruned[event] = kept;
+    }
+  }
+  return pruned;
+}
+
+/**
+ * @param {string} sourcePath - Posix-style path relative to the config root
+ * @param {Buffer} content - Source file content
+ * @returns {Buffer} Content to write downstream (unchanged for non-settings files)
+ */
+function sanitizeForDownstream(sourcePath, content) {
+  if (sourcePath !== SETTINGS_TARGET) {
+    return content;
+  }
+  const settings = JSON.parse(content.toString('utf8'));
+  for (const key of HOST_ONLY_SETTINGS_KEYS) {
+    delete settings[key];
+  }
+  if (settings.hooks !== undefined) {
+    settings.hooks = pruneHostOnlyHooks(settings.hooks);
+  }
+  return Buffer.from(`${JSON.stringify(settings, null, 2)}\n`);
+}
+
+/**
  * @param {string} relativePath - Posix-style path relative to the config root
  * @returns {boolean} Whether the file must never be synced downstream
  */
@@ -170,7 +220,7 @@ function syncFiles(configRoot, targetRoot, resolved, options = {}) {
         result.excluded.push(file.target);
         continue;
       }
-      const sourceContent = fs.readFileSync(path.join(configRoot, file.source));
+      const sourceContent = sanitizeForDownstream(file.source, fs.readFileSync(path.join(configRoot, file.source)));
       const targetPath = path.join(targetRoot, file.target);
       if (fs.existsSync(targetPath) && sourceContent.equals(fs.readFileSync(targetPath))) {
         result.unchanged.push(file.target);
@@ -237,6 +287,7 @@ module.exports = {
   validateManifest,
   resolveFilesForRepo,
   listSourceFiles,
+  sanitizeForDownstream,
   syncFiles,
   parseArgs,
 };

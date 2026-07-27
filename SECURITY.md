@@ -82,18 +82,29 @@ git config --global gpg.format ssh
 
 ### 依存関係の脆弱性
 
-#### npm 内蔵 undici (HIGH)
+#### npm 内蔵 undici (HIGH) — 解決済み
 
-`npm@11.17.0` は `undici@6.26.0` を内部にバンドル（`inBundle: true`）しています。`npm audit` で HIGH 脆弱性が検出されます：
+`npm@11.17.0` は `undici@6.26.0` を内部にバンドル（`inBundle: true`）していたため `npm audit` で HIGH 脆弱性
+（GHSA-vxpw-j846-p89q, GHSA-p88m-4jfj-68fv）が検出されていましたが、`npm@11.18.0` で `undici@6.27.0`
+（パッチ適用済み）にバンドルが更新され解消しました。`overrides` の `"npm": "^11.17.0"` は 11.18.0 系も許容するため、
+今後 `npm install` すればこの修正が自動的に取り込まれます。
 
-- GHSA-vxpw-j846-p89q: WebSocket DoS via fragment count bypass
-- GHSA-p88m-4jfj-68fv: HTTP header injection via Set-Cookie
+#### semantic-release 経由の npm 内蔵 tar / brace-expansion (MODERATE / HIGH)
 
-これは npm パッケージのバンドル依存であり、`overrides` による上書きは不可能です。
+`semantic-release@25.0.8` は `@semantic-release/npm` 経由で npm CLI を依存に持ち、npm CLI が内部にバンドルする
+`tar` と `brace-expansion` に既知の DoS 脆弱性があります：
 
-- 対応: npm が `undici >= 6.27.0` を内包するバージョンをリリースするまで待機
+- GHSA-r292-9mhp-454m (tar, moderate): 細工した長いパスの tar 展開でスタックオーバーフロー DoS
+- GHSA-mh99-v99m-4gvg (brace-expansion, high): 非拡張の展開パターンで OOM DoS
+
+いずれも npm パッケージのバンドル依存 (`node_modules/npm/node_modules/*`) であり、`overrides` による上書きは
+効かない（npm の bundleDependencies はトップレベル overrides の対象外）。`npm audit fix` が提案する修正は
+`semantic-release@15.9.3`（メジャーダウングレード）であり、リリースパイプラインの破壊的変更を伴うため採用しない。
+
+- 対応: npm CLI がバンドル tar / brace-expansion を更新するまで監視・待機（`SECURITY.md` 更新のたびに再確認）
 - 監視: `npm audit --audit-level=high` で確認（CI は `--audit-level=critical` を使用）
-- 影響範囲: npm CLI の内部 HTTP クライアントのみ。プロダクションアプリには直接影響しない
+- 影響範囲: `semantic-release` 実行時（リリース CI ジョブ内）の npm CLI 内部処理のみ。プロダクションアプリには
+  直接影響しない
 
 #### Trivy で検出されるコンテナ脆弱性
 

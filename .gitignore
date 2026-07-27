@@ -74,13 +74,30 @@ report.log
 .context/takt-*/
 
 # Agent skills (installed via npx skills add)
+# リポジトリ内の .claude/skills/<name> は .agents/skills への symlink になるため追跡しない。
+# 追跡される正本は skills.txt（インストール宣言）と skills-lock.json（ハッシュ固定）。
 .agents/skills/
 .claude/skills/vercel-*
 .claude/skills/web-design-*
+.claude/skills/freee-api-skill
 .codex/skills/
 .codex/prompts/
 .cursor/skills/
 .github/skills/
+
+# Codex profile snapshots (codex -p <name> reads $CODEX_HOME/<name>.config.toml)
+# 端末ローカルの状態（hooks の trusted_hash 等）を含むため追跡しない。
+.codex/*.config.toml
+
+# MCP tool artifacts
+.playwright-mcp/
+
+# Shared intermediate artifacts (.context/)
+# 作業中の下書きが public リポジトリに紛れ込まないよう既定で無視し、
+# 追跡する成果物だけを明示的に許可する。
+.context/*
+!.context/code-complexity-baseline.json
+!.context/complexity-report.md
 
 # MCP local overrides (use .mcp.local.json for personal settings)
 .mcp.local.json

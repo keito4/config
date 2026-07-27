@@ -114,9 +114,18 @@ STUB
     run bash "${REPO_ROOT}/script/setup-claude.sh"
 }
 
+# 追加 config dir は settings.json / .claude.json を持つものだけが対象になる。
+# フィクスチャも初期化済みにしないと list_extra_config_dirs から除外される。
+init_extra_config_dir() {
+  local dir="$1"
+  mkdir -p "$dir"
+  echo '{}' > "${dir}/settings.json"
+}
+
 @test "setup-claude.sh links commands/agents/skills into extra config dirs" {
   local fake_home="${TEST_TEMP_DIR}/home"
-  mkdir -p "${fake_home}/.claude"/{commands,agents,skills} "${fake_home}/.claude-private"
+  mkdir -p "${fake_home}/.claude"/{commands,agents,skills}
+  init_extra_config_dir "${fake_home}/.claude-private"
   echo "canonical" > "${fake_home}/.claude/commands/session-close.md"
 
   run_setup_in_fake_home "$fake_home"
@@ -133,7 +142,9 @@ STUB
 
 @test "setup-claude.sh links content into every extra config dir" {
   local fake_home="${TEST_TEMP_DIR}/home"
-  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private" "${fake_home}/.claude-elu"
+  mkdir -p "${fake_home}/.claude/commands"
+  init_extra_config_dir "${fake_home}/.claude-private"
+  init_extra_config_dir "${fake_home}/.claude-elu"
 
   run_setup_in_fake_home "$fake_home"
 
@@ -143,7 +154,8 @@ STUB
 
 @test "setup-claude.sh content linking is idempotent" {
   local fake_home="${TEST_TEMP_DIR}/home"
-  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private"
+  mkdir -p "${fake_home}/.claude/commands"
+  init_extra_config_dir "${fake_home}/.claude-private"
 
   run_setup_in_fake_home "$fake_home"
   [ -L "${fake_home}/.claude-private/commands" ]
@@ -156,7 +168,9 @@ STUB
 
 @test "setup-claude.sh does not clobber an existing real directory" {
   local fake_home="${TEST_TEMP_DIR}/home"
-  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private/commands"
+  mkdir -p "${fake_home}/.claude/commands"
+  init_extra_config_dir "${fake_home}/.claude-private"
+  mkdir -p "${fake_home}/.claude-private/commands"
   echo "dir-specific" > "${fake_home}/.claude-private/commands/local-only.md"
 
   run_setup_in_fake_home "$fake_home"
@@ -168,7 +182,8 @@ STUB
 
 @test "setup-claude.sh replaces a symlink that points elsewhere" {
   local fake_home="${TEST_TEMP_DIR}/home"
-  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private" "${fake_home}/stale"
+  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/stale"
+  init_extra_config_dir "${fake_home}/.claude-private"
   ln -s "${fake_home}/stale" "${fake_home}/.claude-private/commands"
 
   run_setup_in_fake_home "$fake_home"
@@ -178,18 +193,98 @@ STUB
 
 @test "setup-claude.sh skips content missing from the canonical dir" {
   local fake_home="${TEST_TEMP_DIR}/home"
-  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-private"
+  mkdir -p "${fake_home}/.claude/commands"
+  init_extra_config_dir "${fake_home}/.claude-private"
 
   run_setup_in_fake_home "$fake_home"
 
-  # ~/.claude に skills が無いなら壊れたリンクを作らない
-  [ ! -e "${fake_home}/.claude-private/skills" ]
-  [ ! -L "${fake_home}/.claude-private/skills" ]
+  # ~/.claude に agents が無いなら壊れたリンクを作らない
+  # （skills はリポジトリのスキル展開で必ず作られるため、判定に使えない）
+  [ ! -e "${fake_home}/.claude-private/agents" ]
+  [ ! -L "${fake_home}/.claude-private/agents" ]
+}
+
+@test "setup-claude.sh ignores ~/.claude-* dirs that are not config dirs" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude/commands" "${fake_home}/.claude-worklog"
+  echo '{"permissions":{"allow":[]}}' > "${fake_home}/.claude/settings.json"
+  init_extra_config_dir "${fake_home}/.claude-private"
+
+  run_setup_in_fake_home "$fake_home"
+
+  # 初期化済みの config dir には従来どおり同期される（この判定が空振りしないことの担保）
+  [ -L "${fake_home}/.claude-private/commands" ]
+  grep -q "permissions" "${fake_home}/.claude-private/settings.json"
+
+  # hook 置き場のような ~/.claude-* を config dir と誤認して汚さない
+  [ ! -e "${fake_home}/.claude-worklog/settings.json" ]
+  [ ! -e "${fake_home}/.claude-worklog/commands" ]
 }
 
 # ---------------------------------------------------------------------------
-# private-config の個人スキルを ~/.claude/skills/<name>/SKILL.md に展開する
+# ~/.claude/settings.json はホスト所有（symlink にしない）
 # ---------------------------------------------------------------------------
+
+@test "setup-claude.sh seeds ~/.claude/settings.json from the repository baseline" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+
+  run_setup_in_fake_home "$fake_home"
+
+  [ -f "${fake_home}/.claude/settings.json" ]
+  [ ! -L "${fake_home}/.claude/settings.json" ]
+  cmp -s "${fake_home}/.claude/settings.json" "${REPO_ROOT}/.claude/settings.json"
+}
+
+@test "setup-claude.sh replaces a settings.json symlink with a real file, keeping its content" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+  echo '{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"agent-deck hook-handler"}]}]}}' \
+    > "${fake_home}/host-settings.json"
+  ln -s "${fake_home}/host-settings.json" "${fake_home}/.claude/settings.json"
+
+  run_setup_in_fake_home "$fake_home"
+
+  # ホスト固有の hook を追跡ファイルへ書き戻させないため、実体に切り離す
+  [ ! -L "${fake_home}/.claude/settings.json" ]
+  grep -q "agent-deck hook-handler" "${fake_home}/.claude/settings.json"
+}
+
+@test "setup-claude.sh does not overwrite an existing settings.json" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+  echo '{"permissions":{"allow":["Bash(host-only:*)"]}}' > "${fake_home}/.claude/settings.json"
+
+  run_setup_in_fake_home "$fake_home"
+
+  grep -q "host-only" "${fake_home}/.claude/settings.json"
+}
+
+# ---------------------------------------------------------------------------
+# リポジトリ／private-config のスキルを ~/.claude/skills に展開する
+# ---------------------------------------------------------------------------
+
+@test "setup-claude.sh links repository skills into ~/.claude/skills" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+
+  run_setup_in_fake_home "$fake_home"
+
+  # リポジトリのスキルは <name>/SKILL.md 形式で、~/.claude 側にリンクされる
+  [ -L "${fake_home}/.claude/skills/ci-check" ]
+  # リンク越しにリポジトリの正本が読めること（宣言ではなく実体で確認）
+  [ "$(cat "${fake_home}/.claude/skills/ci-check/SKILL.md")" = "$(cat "${REPO_ROOT}/.claude/skills/ci-check/SKILL.md")" ]
+}
+
+@test "setup-claude.sh does not treat README.md or skills.txt as skills" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+
+  run_setup_in_fake_home "$fake_home"
+
+  [ ! -e "${fake_home}/.claude/skills/README" ]
+  [ ! -e "${fake_home}/.claude/skills/skills" ]
+}
 
 @test "setup-claude.sh materializes private-config skills as SKILL.md symlinks" {
   local fake_home="${TEST_TEMP_DIR}/home"
@@ -217,6 +312,62 @@ STUB
 
   [ -L "${fake_home}/.claude/skills/oykot-tasks/SKILL.md" ]
   [ "$(cat "${fake_home}/.claude/skills/oykot-tasks/SKILL.md")" = "canonical" ]
+}
+
+@test "setup-claude.sh materializes directory-form private skills as a symlinked directory" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  local private="${TEST_TEMP_DIR}/private-config"
+  mkdir -p "${fake_home}/.claude" "${private}/.claude/skills/review-queue/scripts"
+  printf -- '---\nname: review-queue\n---\nbody\n' > "${private}/.claude/skills/review-queue/SKILL.md"
+  echo "scan" > "${private}/.claude/skills/review-queue/scripts/scan.sh"
+
+  PRIVATE_CONFIG_DIR="$private" run_setup_in_fake_home "$fake_home"
+
+  # SKILL.md 以外の補助ファイルも一緒に見える必要があるため、ディレクトリごとリンクする
+  [ -L "${fake_home}/.claude/skills/review-queue" ]
+  [ "$(readlink "${fake_home}/.claude/skills/review-queue")" = "${private}/.claude/skills/review-queue" ]
+  [ "$(cat "${fake_home}/.claude/skills/review-queue/scripts/scan.sh")" = "scan" ]
+}
+
+@test "setup-claude.sh replaces a real directory copy of a private skill with a symlink" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  local private="${TEST_TEMP_DIR}/private-config"
+  mkdir -p "${fake_home}/.claude/skills/review-queue" "${private}/.claude/skills/review-queue"
+  echo "canonical" > "${private}/.claude/skills/review-queue/SKILL.md"
+  echo "stale copy" > "${fake_home}/.claude/skills/review-queue/SKILL.md"
+
+  PRIVATE_CONFIG_DIR="$private" run_setup_in_fake_home "$fake_home"
+
+  [ -L "${fake_home}/.claude/skills/review-queue" ]
+  [ "$(cat "${fake_home}/.claude/skills/review-queue/SKILL.md")" = "canonical" ]
+}
+
+@test "setup-claude.sh private skill linking is idempotent for both forms" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  local private="${TEST_TEMP_DIR}/private-config"
+  mkdir -p "${fake_home}/.claude" "${private}/.claude/skills/review-queue"
+  echo "flat" > "${private}/.claude/skills/oykot-tasks.md"
+  echo "dir" > "${private}/.claude/skills/review-queue/SKILL.md"
+
+  PRIVATE_CONFIG_DIR="$private" run_setup_in_fake_home "$fake_home"
+  PRIVATE_CONFIG_DIR="$private" run_setup_in_fake_home "$fake_home"
+
+  [ "$status" -eq 0 ]
+  [ -L "${fake_home}/.claude/skills/oykot-tasks/SKILL.md" ]
+  [ -L "${fake_home}/.claude/skills/review-queue" ]
+  [ "$(cat "${fake_home}/.claude/skills/review-queue/SKILL.md")" = "dir" ]
+}
+
+@test "setup-claude.sh ignores private-config directories without SKILL.md" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  local private="${TEST_TEMP_DIR}/private-config"
+  mkdir -p "${fake_home}/.claude" "${private}/.claude/skills/scheduled-notes"
+  echo "not a skill" > "${private}/.claude/skills/scheduled-notes/README.md"
+
+  PRIVATE_CONFIG_DIR="$private" run_setup_in_fake_home "$fake_home"
+
+  [ "$status" -eq 0 ]
+  [ ! -e "${fake_home}/.claude/skills/scheduled-notes" ]
 }
 
 @test "setup-claude.sh skips private skills when private-config is absent" {
