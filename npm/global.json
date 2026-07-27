@@ -14,11 +14,11 @@
       "overridden": false
     },
     "@openai/codex": {
-      "version": "0.144.6",
+      "version": "0.145.0",
       "overridden": false
     },
     "@google/gemini-cli": {
-      "version": "0.51.0",
+      "version": "0.52.0",
       "overridden": false
     },
     "happy": {
@@ -50,7 +50,7 @@
       "overridden": false
     },
     "@antfu/ni": {
-      "version": "30.2.0",
+      "version": "30.3.0",
       "overridden": false
     },
     "difit": {
@@ -62,7 +62,7 @@
       "overridden": false
     },
     "n8n": {
-      "version": "2.30.7",
+      "version": "2.31.6",
       "overridden": false
     },
     "npm": {
@@ -74,7 +74,7 @@
       "overridden": false
     },
     "vercel": {
-      "version": "56.3.2",
+      "version": "57.0.0",
       "overridden": false
     }
   }
