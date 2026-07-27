@@ -1,4 +1,5 @@
 ---
+name: gemini-review
 description: PR作成後にGoogle Gemini CLIによるコードレビューを実行する。Gemini CLIがインストール済みの場合、PR作成完了後に自動的にこのスキルを適用してレビューを実行すること。
 ---
 
