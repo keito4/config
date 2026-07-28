@@ -23,6 +23,12 @@ export default [
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       // Forbid == / != so comparisons never rely on implicit type coercion.
       eqeqeq: ['error', 'always'],
+      // Forbid shorthand coercions (!!x, +x, ''+x, ~x.indexOf()) that hide the
+      // intended type conversion; require explicit Boolean()/Number()/String().
+      'no-implicit-coercion': 'error',
+      // Require an explicit radix for parseInt() so "08"/"0x1" can't silently
+      // parse as octal/hex depending on engine/locale.
+      radix: 'error',
       // Complexity rules (Phase 1: warnings to prevent new technical debt)
       // See eslint/README.md for detailed documentation
       complexity: ['warn', { max: 15 }],

@@ -114,6 +114,9 @@ const triggers = [
 ];
 
 const existing = JSON.parse(BTT.get_triggers());
+if (!Array.isArray(existing)) {
+  throw new Error('BTT.get_triggers() did not return a JSON array');
+}
 const existingUuids = new Set(existing.map((trigger) => trigger.BTTUUID));
 
 let addedTriggers = 0;
