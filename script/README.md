@@ -144,6 +144,30 @@ Updates Claude Code CLI to the latest version.
 
 **Claude command**: `/update-claude-code`
 
+### fix-mcp-token-exposure.sh
+
+Rewrites MCP server definitions in `.claude.json` so that API tokens travel through the
+environment instead of the command line. Tokens embedded in `argv` are readable by any
+process of the same user via `ps`.
+
+**Usage**:
+
+```bash
+./script/fix-mcp-token-exposure.sh                 # 既定スコープと ~/.claude-private を修正
+./script/fix-mcp-token-exposure.sh --check         # 検査のみ (書き込みなし・claude CLI 不要)
+./script/fix-mcp-token-exposure.sh --print linear  # 生成される定義を確認
+```
+
+**Managed servers**: `linear`, `supabase`, `sentry-elu`
+
+**Notes**:
+
+- 既定スコープの状態ファイルは `~/.claude/.claude.json` ではなく `~/.claude.json`（旧レイアウト）。
+  `~/.claude/.claude.json` だけ直しても既定セッションには反映されない。
+- MCP はセッション起動時に spawn されるため、反映には対象セッションの再起動が必要。
+- `mcp-remote` は `--header` 値の `${VAR}` を `process.env` から展開する。ヘッダの解析は
+  `^([A-Za-z0-9_-]+):\s*(.*)$` なので、コロン直後にスペースを置かない形式で渡す。
+
 ## Quality & CI Scripts
 
 ### repo-maintenance.sh
