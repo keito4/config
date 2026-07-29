@@ -32,6 +32,33 @@ describe('nix-darwin and home-manager input method configuration', () => {
     expect(darwinHost).toContain('/Users/${username}/.local/bin/send-ime-key eisuu');
   });
 
+  test('skhd copy is signed with a stable identity so the accessibility grant survives updates', () => {
+    const darwinHost = readRepoFile('nix/hosts/darwin/default.nix');
+    const setupScript = readRepoFile('script/macos/setup-skhd-signing.sh');
+
+    // nixpkgs の skhd は ad-hoc 署名なので TCC が cdhash で許可を紐付ける。
+    // 更新でコピーの中身が変わると許可が失効し、しかも ad-hoc バイナリは
+    // launchd 起動時に許可が適用されない。固定 identity で署名して回避する。
+    expect(darwinHost).toContain('skhdSigningIdentity=skhd-local-signing');
+    expect(darwinHost).toContain('/usr/bin/codesign --force --sign "$skhdSigningIdentity"');
+    expect(darwinHost).toContain('--identifier org.nixos.skhd');
+
+    // identity が未作成でも activation を壊さないこと (署名を飛ばすだけ)
+    expect(darwinHost).toContain('/usr/bin/security find-identity -v -p codesigning');
+    expect(darwinHost).toContain('run script/macos/setup-skhd-signing.sh');
+
+    // 署名するとコピーは元バイナリと一致しなくなるため、cmp ではなく
+    // 元バイナリのハッシュを控えて入れ替え要否を判定する
+    expect(darwinHost).toContain('skhdStampFile=/usr/local/bin/.skhd.nix-source-hash');
+    expect(darwinHost).not.toContain('cmp -s "${pkgs.skhd}/bin/skhd" /usr/local/bin/skhd');
+
+    // セットアップ側は System キーチェーンに入れる (root の activation から使うため)
+    expect(setupScript).toContain('IDENTITY="skhd-local-signing"');
+    expect(setupScript).toContain('KEYCHAIN="/Library/Keychains/System.keychain"');
+    expect(setupScript).toContain('extendedKeyUsage       = critical,codeSigning');
+    expect(setupScript).toContain('add-trusted-cert');
+  });
+
   test('input source helper exposes macOS input source selection commands', () => {
     const inputSourceModule = readRepoFile('nix/home/input-source.nix');
     const inputSourceWrapper = readRepoFile('script/macos/agent-select-input-source.sh');
