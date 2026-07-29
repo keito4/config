@@ -200,16 +200,44 @@
   # skhd 更新のたびに TCC (アクセシビリティ) 許可の再付与が必要になる。
   # activation で /usr/local/bin/skhd に実体コピーした安定パスから起動することで、
   # 許可対象のパスを固定する。
+  #
+  # ただしパスの固定だけでは足りない。nixpkgs の skhd は ad-hoc (linker-signed)
+  # なので TCC は cdhash で許可を紐付けており、コピーの中身が変わると許可が失効する。
+  # しかも ad-hoc バイナリは同定が不安定で、システム設定で許可を付け直しても
+  # launchd が直接起動したプロセスには適用されない (ターミナルから手動起動した
+  # ときだけ親の許可を継承して動く)。
+  # そこでコピー後に固定の自己署名 identity で署名し、TCC が designated
+  # requirement で紐付けるようにする。identity の作成は管理者認証を伴うため
+  # script/macos/setup-skhd-signing.sh を本人が一度実行する。未作成のうちは
+  # 署名を飛ばすだけで、従来どおりの動作を壊さない。
   environment.etc."skhdrc".text = ''
     ctrl + shift - j    : /Users/${username}/.local/bin/send-ime-key kana
     ctrl + shift - 0x29 : /Users/${username}/.local/bin/send-ime-key eisuu
   '';
 
   system.activationScripts.postActivation.text = ''
-    if ! cmp -s "${pkgs.skhd}/bin/skhd" /usr/local/bin/skhd; then
+    skhdSigningIdentity=skhd-local-signing
+
+    # 署名済みのコピーは中身が元バイナリと一致しないため、cmp ではなく
+    # 「元バイナリと同じ内容から作られた署名か」を cdhash 相当で判定できない。
+    # ここでは元バイナリのハッシュを控えておき、それが変わったときだけ入れ替える。
+    skhdStampFile=/usr/local/bin/.skhd.nix-source-hash
+    skhdWant=$(/usr/bin/shasum -a 256 "${pkgs.skhd}/bin/skhd" | cut -d' ' -f1)
+    skhdHave=$(cat "$skhdStampFile" 2>/dev/null || echo none)
+
+    if [ "$skhdWant" != "$skhdHave" ] || [ ! -x /usr/local/bin/skhd ]; then
       mkdir -p /usr/local/bin
       install -m 755 "${pkgs.skhd}/bin/skhd" /usr/local/bin/skhd
       echo "installed skhd to /usr/local/bin/skhd"
+
+      if /usr/bin/security find-identity -v -p codesigning /Library/Keychains/System.keychain 2>/dev/null | grep -q "$skhdSigningIdentity"; then
+        /usr/bin/codesign --force --sign "$skhdSigningIdentity" --identifier org.nixos.skhd --timestamp=none /usr/local/bin/skhd
+        echo "signed skhd with $skhdSigningIdentity"
+      else
+        echo "skhd: signing identity '$skhdSigningIdentity' not found; run script/macos/setup-skhd-signing.sh to keep the accessibility grant across updates"
+      fi
+
+      printf '%s\n' "$skhdWant" > "$skhdStampFile"
     fi
   '';
 
