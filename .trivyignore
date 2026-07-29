@@ -140,6 +140,18 @@ CVE-2026-45988
 CVE-2026-46043
 CVE-2026-46135
 
+# CVE-2026-53215: kernel: net: mvpp2: refill RX buffers before XDP or skb use
+# Severity: CRITICAL
+# Affected: linux-libc-dev 6.8.0-136.136 (Ubuntu 24.04 base image)
+# Fixed in: no fix available yet
+# Reason: Kernel header package from base image
+#   (mcr.microsoft.com/devcontainers/base:2.0-ubuntu-24.04) pulled in as a
+#   transitive dependency of build-essential; cannot remove or update independently
+# Expected resolution: Wait for Ubuntu to release patched linux-libc-dev package
+# Tracking: https://ubuntu.com/security/CVE-2026-53215
+# Review date: 2026-08-28
+CVE-2026-53215
+
 # CVE-2026-33186: gRPC-Go authorization bypass via missing leading slash in :path
 # Severity: CRITICAL
 # Affected: google.golang.org/grpc v1.79.2 (usr/bin/gh), v1.75.1 (usr/local/bin/op)
