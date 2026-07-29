@@ -67,6 +67,12 @@ report.log
 # Claude config directory (Codespaces)
 .claude-data/
 
+# TAKT generated runtime state
+.takt/runs/
+.takt/tasks/
+.takt/tasks.yaml
+.context/takt-*/
+
 # Agent skills (installed via npx skills add)
 # リポジトリ内の .claude/skills/<name> は .agents/skills への symlink になるため追跡しない。
 # 追跡される正本は skills.txt（インストール宣言）と skills-lock.json（ハッシュ固定）。

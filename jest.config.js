@@ -12,6 +12,8 @@ module.exports = {
     '!templates/**/*',
     '!**/*.test.js',
     '!**/*.spec.js',
+    '!eslint.config.mjs',
+    '!eslint/complexity-rules.mjs',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],

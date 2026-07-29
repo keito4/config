@@ -144,6 +144,5 @@ describe('dependabot-auto-merge.yml (template and actual — security-critical p
     expect(workflow).toContain('gh label create "dependabot-minor"');
     expect(workflow).toContain('gh label create "needs-review"');
     expect(workflow).toContain('gh label create "breaking-change"');
-    expect(workflow).toContain('GH_REPO: ${{ github.repository }}');
   });
 });

@@ -13,8 +13,7 @@ on:
       - '**.yaml'
       - '**.sh'
       - '**.bats'
-      - '**.nix'
-      - 'nix/**'
+      - '.takt/**'
       - '.github/actions/**'
       - '.github/workflows/**'
       - '.github/actionlint.yaml'
@@ -35,8 +34,7 @@ on:
       - '**.yaml'
       - '**.sh'
       - '**.bats'
-      - '**.nix'
-      - 'nix/**'
+      - '.takt/**'
       - '.github/actions/**'
       - '.github/workflows/**'
       - '.github/actionlint.yaml'
@@ -66,11 +64,10 @@ jobs:
       scripts: ${{ steps.filter.outputs.scripts }}
       workflows: ${{ steps.filter.outputs.workflows }}
       dependencies: ${{ steps.filter.outputs.dependencies }}
-      nix: ${{ steps.filter.outputs.nix }}
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
-      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4
+      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         id: filter
         with:
           filters: |
@@ -90,6 +87,7 @@ jobs:
               - '.github/actions/**'
               - '.github/workflows/**'
               - '.github/actionlint.yaml'
+              - '.takt/**'
               - '.github/labels.yml'
               - 'templates/workflows/**'
               - 'templates/github/labels.yml'
@@ -97,9 +95,6 @@ jobs:
             dependencies:
               - 'package.json'
               - 'package-lock.json'
-            nix:
-              - '**.nix'
-              - 'nix/**'
 
   lint:
     name: Lint & Format
@@ -108,7 +103,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true' || needs.changes.outputs.scripts == 'true' || needs.changes.outputs.dependencies == 'true' || needs.changes.outputs.workflows == 'true'
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - uses: ./.github/actions/setup-node-ci
 
@@ -135,7 +130,7 @@ jobs:
       actions: write
       checks: write
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - uses: ./.github/actions/setup-node-ci
 
@@ -195,7 +190,7 @@ jobs:
       contents: read
       actions: write
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - uses: ./.github/actions/setup-node-ci
 
@@ -225,7 +220,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - name: Collect workflow files
         id: workflow-files
@@ -259,41 +254,12 @@ jobs:
     needs: changes
     if: needs.changes.outputs.workflows == 'true' || needs.changes.outputs.scripts == 'true'
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - uses: ./.github/actions/setup-node-ci
 
       - name: Check workflow templates match actual workflows
         run: npm run workflow:sync:check
-
-  nix-eval:
-    name: Nix Config Eval
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: changes
-    if: needs.changes.outputs.nix == 'true'
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
-
-      # 評価はプラットフォーム非依存なので Linux ランナーで aarch64-darwin の
-      # darwinConfigurations を検証できる（ビルドはしない）
-      # ホストは flake から動的に列挙する（ホスト追加時に CI 修正を不要にする）
-      - name: Evaluate darwin configurations
-        working-directory: nix
-        run: |
-          hosts=$(nix eval --json .#darwinConfigurations --apply builtins.attrNames | jq -r '.[]')
-          if [ -z "$hosts" ]; then
-            echo "::error::darwinConfigurations にホストが見つかりません"
-            exit 1
-          fi
-          for host in $hosts; do
-            echo "Evaluating darwinConfigurations.${host}..."
-            nix eval --raw ".#darwinConfigurations.\"${host}\".system.drvPath"
-            echo
-          done
 
   pr-size-check:
     name: PR Size Check
@@ -306,7 +272,7 @@ jobs:
       pull-requests: read
     continue-on-error: true
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - name: Check PR Size
         uses: ./.github/actions/pr-size-check
@@ -318,7 +284,7 @@ jobs:
     name: Quality Gate
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [changes, lint, test, integration-test, actionlint, workflow-template-sync, nix-eval]
+    needs: [changes, lint, test, integration-test, actionlint, workflow-template-sync]
     if: always()
     steps:
       - name: Check job results
@@ -328,7 +294,6 @@ jobs:
           INTEGRATION_RESULT: ${{ needs.integration-test.result }}
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
           WORKFLOW_TEMPLATE_SYNC_RESULT: ${{ needs.workflow-template-sync.result }}
-          NIX_EVAL_RESULT: ${{ needs.nix-eval.result }}
         run: |
           echo "## Quality Gate Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -339,7 +304,6 @@ jobs:
           echo "| Integration Tests | $INTEGRATION_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| Workflow Lint | $ACTIONLINT_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| Workflow Template Sync | $WORKFLOW_TEMPLATE_SYNC_RESULT |" >> $GITHUB_STEP_SUMMARY
-          echo "| Nix Config Eval | $NIX_EVAL_RESULT |" >> $GITHUB_STEP_SUMMARY
 
       - name: Verify all checks passed
         env:
@@ -348,7 +312,6 @@ jobs:
           INTEGRATION_RESULT: ${{ needs.integration-test.result }}
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
           WORKFLOW_TEMPLATE_SYNC_RESULT: ${{ needs.workflow-template-sync.result }}
-          NIX_EVAL_RESULT: ${{ needs.nix-eval.result }}
         run: |
           # skipped は成功扱い（該当ファイルの変更がない場合）
           function check_result() {
@@ -377,10 +340,6 @@ jobs:
             echo "::error::Workflow Template Sync failed"
             FAILED=true
           fi
-          if ! check_result "$NIX_EVAL_RESULT"; then
-            echo "::error::Nix Config Eval failed"
-            FAILED=true
-          fi
 
           if [ "$FAILED" = true ]; then
             echo "::error::Quality gate failed - one or more jobs did not succeed"
@@ -395,7 +354,7 @@ jobs:
     if: failure() && github.ref == 'refs/heads/main'
     steps:
       - name: Send Slack notification
-        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         with:
           channel-id: ${{ vars.SLACK_CI_CHANNEL_ID }}
           payload-template-file-path: '.github/slack-ci-failure.json'
