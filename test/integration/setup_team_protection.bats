@@ -68,7 +68,13 @@ EOF
 }
 
 @test "fails with installation guidance when gh CLI is missing" {
-  local minimal_path="/usr/bin:/bin"
+  # gh だけを取り除いた PATH を作る。/usr/bin:/bin だけにすると macOS では
+  # bash 3.2 が使われ、lib/output.sh の bash 4.0+ チェックで先に落ちてしまい
+  # gh 不在時の分岐まで到達できない。
+  mkdir -p "${TEST_TEMP_DIR}/bin"
+  ln -sf "$(command -v bash)" "${TEST_TEMP_DIR}/bin/bash"
+  local minimal_path="${TEST_TEMP_DIR}/bin:/usr/bin:/bin"
+
   if PATH="$minimal_path" command -v gh >/dev/null 2>&1; then
     skip "gh is available in the minimal PATH"
   fi
