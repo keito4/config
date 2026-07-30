@@ -12,17 +12,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DOCKERFILE="${PROJECT_ROOT}/.devcontainer/Dockerfile"
 
-# カラー出力
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
-
-log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
-log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+# shellcheck source=script/lib/output.sh
+source "$SCRIPT_DIR/lib/output.sh"
 
 log_info "Claude Code バージョン更新を開始します..."
 
@@ -56,7 +47,7 @@ update_dockerfile_version() {
 # 最新バージョンを取得
 latest_version=$(get_latest_version)
 if [[ -z "${latest_version}" ]]; then
-    log_error "最新バージョンの取得に失敗しました"
+    error "最新バージョンの取得に失敗しました"
     exit 1
 fi
 log_info "最新バージョン: ${latest_version}"
@@ -85,7 +76,7 @@ if command -v claude &> /dev/null; then
             new_version=$(claude --version 2>/dev/null | head -1 || echo "unknown")
             log_success "Claude Code を再インストールしました (${new_version})"
         else
-            log_error "Claude Code の更新に失敗しました"
+            error "Claude Code の更新に失敗しました"
             exit 1
         fi
     fi
