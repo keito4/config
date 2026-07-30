@@ -43,11 +43,12 @@ DevContainer ビルド時に `npx skills add` でインストールされるス�
 
 PR 作成後等に自動トリガーされるスキル。
 
-| スキル          | トリガー                           | 説明                               |
-| --------------- | ---------------------------------- | ---------------------------------- |
-| `ci-check`      | PR 作成後                          | CI 結果監視、失敗時修正            |
-| `codex-review`  | PR 作成後（Codex CLI 利用可能時）  | OpenAI Codex によるコードレビュー  |
-| `gemini-review` | PR 作成後（Gemini CLI 利用可能時） | Google Gemini によるコードレビュー |
+| スキル          | トリガー                           | 説明                                                              |
+| --------------- | ---------------------------------- | ----------------------------------------------------------------- |
+| `ci-check`      | PR 作成後                          | CI 結果監視、失敗時修正                                           |
+| `codex-review`  | PR 作成後（Codex CLI 利用可能時）  | OpenAI Codex によるコードレビュー                                 |
+| `gemini-review` | PR 作成後（Gemini CLI 利用可能時） | Google Gemini によるコードレビュー                                |
+| `weekly-ingest` | 週次 Routine / 手動実行            | 非 API サイトの週次データ取り込み + しきい値チェック + Slack 通知 |
 
 ---
 
@@ -127,6 +128,7 @@ PR 作成後等に自動トリガーされるスキル。
 | `block_dangerous_commands.py` | PreToolUse  | 危険コマンド実行を防止                              |
 | `block_git_no_verify.py`      | PreToolUse  | `--no-verify` / `HUSKY=0` をブロック                |
 | `block_inline_secrets.py`     | PreToolUse  | インライン埋め込み認証情報を検出してブロック        |
+| `block_managed_file_edit.py`  | PreToolUse  | keito4/config 管理ファイルの直接編集をブロック      |
 | `common.py`                   | —           | 共有ユーティリティライブラリ（他フックから import） |
 | `post_commit_adr_reminder.py` | PostToolUse | commit 後にアーキテクチャ変更検出 → ADR リマインド  |
 | `post_edit_auto_lint.py`      | PostToolUse | ファイル編集後に自動フォーマット＋リント            |

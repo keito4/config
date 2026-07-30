@@ -37,35 +37,36 @@ Development infrastructure template repository providing DevContainer images, CI
 
 ## Project Structure
 
-| Directory            | Purpose                                                     |
-| -------------------- | ----------------------------------------------------------- |
-| `.claude/agents/`    | Claude Code specialized agents                              |
-| `.claude/commands/`  | Claude Code slash commands                                  |
-| `.claude/hooks/`     | Pre/post hook scripts for quality enforcement               |
-| `.claude/plugins/`   | Claude Code plugin configuration                            |
-| `.claude/rules/`     | Claude Code rules for development standards                 |
-| `.claude/skills/`    | Claude Code skill definitions                               |
-| `.codex/`            | Codex AI agent configuration                                |
-| `.context/`          | Shared intermediate artifacts (complexity reports etc.)     |
-| `.cursor/`           | Cursor editor settings                                      |
-| `.devcontainer/`     | DevContainer configuration and Dockerfile                   |
-| `.gemini/`           | Gemini AI agent configuration                               |
-| `.github/workflows/` | GitHub Actions CI/CD workflows (15 workflows)               |
-| `.husky/`            | Git hooks (pre-commit, commit-msg)                          |
-| `.vscode/`           | VS Code workspace settings                                  |
-| `.zsh/`              | Zsh configuration (aliases, completions, functions, prompt) |
-| `brew/`              | Homebrew package management (Linux only)                    |
-| `credentials/`       | Credential templates and filtering documentation            |
-| `docs/`              | Documentation and ADRs                                      |
-| `dot/`               | Dotfiles (DevContainer .zshrc, peco)                        |
-| `eslint/`            | ESLint configuration and plugins                            |
-| `git/`               | Git hooks and configuration                                 |
-| `nix/`               | nix-darwin + home-manager (macOS environment)               |
-| `npm/`               | npm global configuration and library management             |
-| `script/`            | Utility shell scripts                                       |
-| `templates/`         | Workflow, testing, ESLint, Biome, and policy templates      |
-| `test/`              | Test suites (Jest unit, BATS integration)                   |
-| `vscode/`            | VS Code extensions list                                     |
+| Directory            | Purpose                                                          |
+| -------------------- | ---------------------------------------------------------------- |
+| `.claude/agents/`    | Claude Code specialized agents                                   |
+| `.claude/commands/`  | Claude Code slash commands                                       |
+| `.claude/hooks/`     | Pre/post hook scripts for quality enforcement                    |
+| `.claude/plugins/`   | Claude Code plugin configuration                                 |
+| `.claude/rules/`     | Claude Code rules for development standards                      |
+| `.claude/skills/`    | Claude Code skill definitions                                    |
+| `.codex/`            | Codex AI agent configuration                                     |
+| `.context/`          | Shared intermediate artifacts (complexity reports etc.)          |
+| `.cursor/`           | Cursor editor settings                                           |
+| `.devcontainer/`     | DevContainer configuration and Dockerfile                        |
+| `.gemini/`           | Gemini AI agent configuration                                    |
+| `.github/workflows/` | GitHub Actions CI/CD workflows (15 workflows)                    |
+| `.husky/`            | Git hooks (pre-commit, commit-msg)                               |
+| `.vscode/`           | VS Code workspace settings                                       |
+| `.zsh/`              | Zsh configuration (aliases, completions, functions, prompt)      |
+| `automation/`        | Weekly ingest adapters and threshold rules (weekly-ingest skill) |
+| `brew/`              | Homebrew package management (Linux only)                         |
+| `credentials/`       | Credential templates and filtering documentation                 |
+| `docs/`              | Documentation and ADRs                                           |
+| `dot/`               | Dotfiles (DevContainer .zshrc, peco)                             |
+| `eslint/`            | ESLint configuration and plugins                                 |
+| `git/`               | Git hooks and configuration                                      |
+| `nix/`               | nix-darwin + home-manager (macOS environment)                    |
+| `npm/`               | npm global configuration and library management                  |
+| `script/`            | Utility shell scripts                                            |
+| `templates/`         | Workflow, testing, ESLint, Biome, and policy templates           |
+| `test/`              | Test suites (Jest unit, BATS integration)                        |
+| `vscode/`            | VS Code extensions list                                          |
 
 ## Available Commands
 
@@ -118,11 +119,12 @@ Development infrastructure template repository providing DevContainer images, CI
 
 ## Skills
 
-| Skill           | Description                                                                                                                                                       |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ci-check`      | PR作成後にCIの結果を確認し、失敗している場合は修正する。PR作成完了後に自動的にこのスキルを適用してCIの状態を監視し、失敗時は修正を行うこと。                      |
-| `codex-review`  | PR作成後にOpenAI Codexによるコードレビューを実行する。Codex CLIがインストール済みの場合、PR作成完了後に自動的にこのスキルを適用してレビューを実行すること。       |
-| `gemini-review` | PR作成後にGoogle Gemini CLIによるコードレビューを実行する。Gemini CLIがインストール済みの場合、PR作成完了後に自動的にこのスキルを適用してレビューを実行すること。 |
+| Skill           | Description                                                                                                                                                            |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci-check`      | PR作成後にCIの結果を確認し、失敗している場合は修正する。PR作成完了後に自動的にこのスキルを適用してCIの状態を監視し、失敗時は修正を行うこと。                           |
+| `codex-review`  | PR作成後にOpenAI Codexによるコードレビューを実行する。Codex CLIがインストール済みの場合、PR作成完了後に自動的にこのスキルを適用してレビューを実行すること。            |
+| `gemini-review` | PR作成後にGoogle Gemini CLIによるコードレビューを実行する。Gemini CLIがインストール済みの場合、PR作成完了後に自動的にこのスキルを適用してレビューを実行すること。      |
+| `weekly-ingest` | API非提供のサイト・アプリから Playwright によるブラウザ自動操作で週次データ取り込み（口座残高など）を行い、しきい値判定と Slack 通知まで実行する。週次 Routine また... |
 
 ## CI/CD Workflows
 
@@ -148,14 +150,13 @@ Development infrastructure template repository providing DevContainer images, CI
 
 The following scripts are auto-detected and run before git commit/push:
 
-| Script | Command | Purpose |
-| -------------- | ---------------------------------- | -------------------------- | ----------------------- |
-| `format:check` | `prettier --check .` | Code formatting validation |
-| `lint` | `eslint . --ext .js` | Code quality validation |
-| `test` | `jest --runInBand` | Unit test execution |
-| `shellcheck` | `find script -name '\*.sh' -type f | xargs -r shellcheck -x` | Shell script validation |
-
-Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + coverage), `test:all` (unit + integration)
+| Script                                                                                                                  | Command                           | Purpose                    |
+| ----------------------------------------------------------------------------------------------------------------------- | --------------------------------- | -------------------------- |
+| `format:check`                                                                                                          | `prettier --check .`              | Code formatting validation |
+| `lint`                                                                                                                  | `eslint . --ext .js`              | Code quality validation    |
+| `test`                                                                                                                  | `jest --runInBand`                | Unit test execution        |
+| `shellcheck`                                                                                                            | `find script -name '*.sh' -type f | xargs -r shellcheck -x`    | Shell script validation |
+| Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + coverage), `test:all` (unit + integration) |
 
 ## Hooks
 
@@ -165,6 +166,7 @@ Additional test commands: `test:integration` (BATS), `test:coverage` (Jest + cov
 | `block_dangerous_commands.py` | Pre Bash            | Block destructive commands                                                   |
 | `block_git_no_verify.py`      | Pre git commit/push | Block Quality Gate bypass (`--no-verify`, `HUSKY=0`, `core.hooksPath`, etc.) |
 | `block_inline_secrets.py`     | Pre Bash            | Block commands embedding literal credentials                                 |
+| `block_managed_file_edit.py`  | Pre edit            | Block direct edits to files managed by keito4/config (sync-downstream)       |
 | `common.py`                   | —                   | Shared utility library (imported by other hooks)                             |
 | `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes                                         |
 | `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint                                                         |
