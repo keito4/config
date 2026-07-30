@@ -3,6 +3,15 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const repoPath = path.resolve(__dirname, '..');
+const inheritedGitEnvKeys = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_PREFIX'];
+
+function cleanGitEnv(extra = {}) {
+  const env = { ...process.env, ...extra };
+  for (const key of inheritedGitEnvKeys) {
+    delete env[key];
+  }
+  return env;
+}
 
 function readRepoFile(relativePath) {
   return fs.readFileSync(path.join(repoPath, relativePath), 'utf8');
@@ -31,7 +40,7 @@ function runRepoMaintenanceScript(args, options = {}) {
     try {
       const stdout = execFileSync('bash', [scriptPath, ...args], {
         cwd: tempRoot,
-        env: { ...process.env, ...env, PATH: `${binDir}:${process.env.PATH}` },
+        env: cleanGitEnv({ ...env, PATH: `${binDir}:${process.env.PATH}` }),
         encoding: 'utf8',
       });
       return { status: 0, output: stdout };
@@ -86,6 +95,25 @@ function scheduledMaintenanceWorkflow() {
     '      - name: Use token',
     '        env:',
     '          CLAUDE_PR_GITHUB_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN }}',
+    '          TAKT_ANTHROPIC_API_KEY: ${{ secrets.TAKT_ANTHROPIC_API_KEY }}',
+    '      - name: Post failure issue',
+    '        env:',
+    '          GH_REPO: ${{ github.repository }}',
+    '        run: gh issue create --title failed --body failed',
+    '',
+  ].join('\n');
+}
+
+function scheduledMaintenanceFallbackOnlyWorkflow() {
+  return [
+    'name: Scheduled Maintenance',
+    'jobs:',
+    '  maintenance:',
+    '    steps:',
+    '      - name: Use fallback token',
+    '        env:',
+    '          CLAUDE_PR_GITHUB_TOKEN: ${{ secrets.CLAUDE_PAT }}',
+    '          TAKT_ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}',
     '      - name: Post failure issue',
     '        env:',
     '          GH_REPO: ${{ github.repository }}',
@@ -110,16 +138,16 @@ function runCreatePrWithClaudeBranch() {
     fs.writeFileSync(path.join(binDir, 'gh'), buildGhStub({ prLog }));
     fs.chmodSync(path.join(binDir, 'gh'), 0o755);
 
-    execFileSync('git', ['init', '--bare', remote], { stdio: 'ignore' });
-    execFileSync('git', ['init'], { cwd: worktree, stdio: 'ignore' });
-    execFileSync('git', ['config', 'user.name', 'Test User'], { cwd: worktree });
-    execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: worktree });
+    execFileSync('git', ['init', '--bare', remote], { env: cleanGitEnv(), stdio: 'ignore' });
+    execFileSync('git', ['init'], { cwd: worktree, env: cleanGitEnv(), stdio: 'ignore' });
+    execFileSync('git', ['config', 'user.name', 'Test User'], { cwd: worktree, env: cleanGitEnv() });
+    execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: worktree, env: cleanGitEnv() });
     fs.writeFileSync(path.join(worktree, 'README.md'), 'initial\n');
-    execFileSync('git', ['add', 'README.md'], { cwd: worktree });
-    execFileSync('git', ['commit', '-m', 'chore: initial'], { cwd: worktree, stdio: 'ignore' });
-    execFileSync('git', ['branch', '-M', 'main'], { cwd: worktree });
-    execFileSync('git', ['remote', 'add', 'origin', remote], { cwd: worktree });
-    execFileSync('git', ['push', '-u', 'origin', 'main'], { cwd: worktree, stdio: 'ignore' });
+    execFileSync('git', ['add', 'README.md'], { cwd: worktree, env: cleanGitEnv() });
+    execFileSync('git', ['commit', '-m', 'chore: initial'], { cwd: worktree, env: cleanGitEnv(), stdio: 'ignore' });
+    execFileSync('git', ['branch', '-M', 'main'], { cwd: worktree, env: cleanGitEnv() });
+    execFileSync('git', ['remote', 'add', 'origin', remote], { cwd: worktree, env: cleanGitEnv() });
+    execFileSync('git', ['push', '-u', 'origin', 'main'], { cwd: worktree, env: cleanGitEnv(), stdio: 'ignore' });
     fs.writeFileSync(path.join(worktree, 'README.md'), 'updated\n');
 
     const scriptPath = path.join(repoPath, 'script', 'repo-maintenance.sh');
@@ -139,13 +167,17 @@ function runCreatePrWithClaudeBranch() {
       ],
       {
         cwd: worktree,
-        env: { ...process.env, CLAUDE_BRANCH: 'maintenance/test-branch', PATH: `${binDir}:${process.env.PATH}` },
+        env: cleanGitEnv({ CLAUDE_BRANCH: 'maintenance/test-branch', PATH: `${binDir}:${process.env.PATH}` }),
         encoding: 'utf8',
       },
     );
 
     return {
-      branch: execFileSync('git', ['branch', '--show-current'], { cwd: worktree, encoding: 'utf8' }).trim(),
+      branch: execFileSync('git', ['branch', '--show-current'], {
+        cwd: worktree,
+        env: cleanGitEnv(),
+        encoding: 'utf8',
+      }).trim(),
       prArgs: fs.readFileSync(prLog, 'utf8'),
     };
   } finally {
@@ -225,7 +257,19 @@ describe('repo-maintenance GitHub Actions PR creation settings', () => {
 
     expect(result.status).toBe(1);
     expect(result.output).toContain('requires CLAUDE_PR_GITHUB_TOKEN or CLAUDE_PAT secret');
+    expect(result.output).toContain('requires TAKT_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY secret');
     expect(result.output).toContain('https://github.com/owner/repo/settings/secrets/actions');
+  });
+
+  test('checks scheduled maintenance fallback-only secret references', () => {
+    const result = runRepoMaintenanceScript(['--check-scheduled-maintenance'], {
+      files: { '.github/workflows/scheduled-maintenance.yml': scheduledMaintenanceFallbackOnlyWorkflow() },
+      secrets: [],
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.output).toContain('requires CLAUDE_PR_GITHUB_TOKEN or CLAUDE_PAT secret');
+    expect(result.output).toContain('requires TAKT_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY secret');
   });
 
   test('accepts scheduled maintenance when required secret is present', () => {
@@ -233,7 +277,7 @@ describe('repo-maintenance GitHub Actions PR creation settings', () => {
       files: {
         '.github/workflows/scheduled-maintenance.yml': readRepoFile('templates/workflows/scheduled-maintenance.yml'),
       },
-      secrets: ['CLAUDE_PAT'],
+      secrets: ['CLAUDE_PAT', 'ANTHROPIC_API_KEY'],
     });
 
     expect(result.status).toBe(0);

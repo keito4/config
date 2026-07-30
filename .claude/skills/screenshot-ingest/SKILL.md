@@ -1,4 +1,5 @@
 ---
+name: screenshot-ingest
 description: スマホアプリでしか見られないデータ（口座残高・スクリーンタイムなど）を、Slack に投稿されたスクリーンショットから読み取って週次で取り込み、しきい値判定と Slack 通知まで実行する。週次 Routine または /screenshot-ingest 実行時に適用すること。
 ---
 
@@ -53,4 +54,4 @@ Claude Code Remote の Routine として 2 本登録する:
 
 ## 新しいアプリの追加
 
-`automation/screenshots/_example.yaml` をコピーして項目を埋める。スキーマ詳細は [automation/README.md](../../automation/README.md) を参照。
+`automation/screenshots/_example.yaml` をコピーして項目を埋める。スキーマ詳細は [automation/README.md](../../../automation/README.md) を参照。

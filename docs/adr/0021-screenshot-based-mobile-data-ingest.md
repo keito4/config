@@ -1,4 +1,4 @@
-# ADR 0020: Screenshot-Based Mobile Data Ingest
+# ADR 0021: Screenshot-Based Mobile Data Ingest
 
 ## Status
 
@@ -7,7 +7,7 @@ Accepted
 ## Context
 
 ADR 外だが既存の週次取り込み基盤として `weekly-ingest` スキル
-（`.claude/skills/weekly-ingest.md` + `automation/adapters/`）があり、これは
+（`.claude/skills/weekly-ingest/SKILL.md` + `automation/adapters/`）があり、これは
 Playwright によるブラウザ自動操作を前提とする。そのため Web 版が存在しない
 スマホ専用アプリ（銀行・証券アプリの残高、iOS スクリーンタイムなど）の
 データはクラウドから到達できず、個人 KPI（週次やり切り率・集中時間確保率）

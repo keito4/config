@@ -20,10 +20,18 @@ fi
 
 REPO_PATH="${REPO_PATH:-$(pwd)}"
 
-if [[ "${1:-}" == "--check" ]]; then
-	echo "Import source checked: $REPO_PATH"
-	exit 0
-fi
+WITH_REPOS=false
+for arg in "$@"; do
+	case "$arg" in
+	--check)
+		echo "Import source checked: $REPO_PATH"
+		exit 0
+		;;
+	--with-repos)
+		WITH_REPOS=true
+		;;
+	esac
+done
 
 if ! type brew >/dev/null 2>&1; then
 	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/null
@@ -110,6 +118,13 @@ if type jq >/dev/null 2>&1 && type npm >/dev/null 2>&1; then
 fi
 
 # Clone repositories using ghq
-if type gh >/dev/null 2>&1 && type ghq >/dev/null 2>&1; then
-	gh api user/repos --paginate | jq -r '.[].ssh_url' | xargs -L1 ghq get
+# 全リポジトリの一括クローンは重い副作用のためオプトイン (--with-repos)
+if [[ "$WITH_REPOS" == true ]]; then
+	if type gh >/dev/null 2>&1 && type ghq >/dev/null 2>&1; then
+		gh api user/repos --paginate | jq -r '.[].ssh_url' | xargs -L1 ghq get
+	else
+		echo "⚠️  --with-repos には gh と ghq が必要です"
+	fi
+else
+	echo "リポジトリの一括クローンはスキップしました (--with-repos で有効化)"
 fi

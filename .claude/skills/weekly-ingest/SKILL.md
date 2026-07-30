@@ -1,4 +1,5 @@
 ---
+name: weekly-ingest
 description: API非提供のサイト・アプリから Playwright によるブラウザ自動操作で週次データ取り込み（口座残高など）を行い、しきい値判定と Slack 通知まで実行する。週次 Routine または /weekly-ingest 実行時に適用すること。
 ---
 
@@ -52,4 +53,4 @@ n8n の Schedule Trigger から起動する構成でもよい。
 
 ## 新しいサイトの追加
 
-`automation/adapters/_example.yaml` をコピーして項目を埋める。スキーマ詳細は [automation/README.md](../../automation/README.md) を参照。
+`automation/adapters/_example.yaml` をコピーして項目を埋める。スキーマ詳細は [automation/README.md](../../../automation/README.md) を参照。

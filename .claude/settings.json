@@ -340,6 +340,17 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { [ -f .claude/hooks/prompt_task_reminder.py ] && python3 .claude/hooks/prompt_task_reminder.py || true; }'"
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {
@@ -366,7 +377,8 @@
     "sentry@claude-plugins-official": true,
     "postgres-best-practices@supabase-agent-skills": true,
     "agent-browser@agent-browser": true,
-    "context7@intellectronica-skills": true
+    "context7@intellectronica-skills": true,
+    "mattpocock-skills@mattpocock": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
@@ -397,6 +409,12 @@
       "source": {
         "source": "git",
         "url": "https://github.com/supabase/agent-skills.git"
+      }
+    },
+    "mattpocock": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/mattpocock/skills.git"
       }
     }
   }

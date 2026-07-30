@@ -1,7 +1,7 @@
 # automation/
 
-`weekly-ingest` スキル（[.claude/skills/weekly-ingest.md](../.claude/skills/weekly-ingest.md)）と
-`screenshot-ingest` スキル（[.claude/skills/screenshot-ingest.md](../.claude/skills/screenshot-ingest.md)）が使用する定義ファイル置き場。
+`weekly-ingest` スキル（[.claude/skills/weekly-ingest/SKILL.md](../.claude/skills/weekly-ingest/SKILL.md)）と
+`screenshot-ingest` スキル（[.claude/skills/screenshot-ingest/SKILL.md](../.claude/skills/screenshot-ingest/SKILL.md)）が使用する定義ファイル置き場。
 API が提供されていないサイト・アプリからの週次データ取り込みと、しきい値チェックを宣言的に管理する。
 
 ## 構成

@@ -34,3 +34,6 @@ vercel-labs/agent-browser
 # ライブラリ・フレームワークの最新ドキュメント取得
 # Plugin 併用: context7@intellectronica-skills
 intellectronica/agent-skills
+
+# === freee ===
+freee/freee-mcp

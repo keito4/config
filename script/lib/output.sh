@@ -12,6 +12,16 @@
 if [[ -n "${OUTPUT_LIB_SOURCED:-}" ]]; then
     return
 fi
+
+# macOS 標準の bash 3.2 は typeset -g をサポートせず、
+# 「typeset: -g: invalid option」という分かりにくいエラーで失敗する。
+# 先に明示的なメッセージで落とす (zsh では BASH_VERSION が空なのでスキップ)。
+if [[ -n "${BASH_VERSION:-}" && "${BASH_VERSINFO[0]}" -lt 4 ]]; then
+    echo "エラー: このライブラリは bash 4.0 以降が必要です (現在: ${BASH_VERSION})" >&2
+    echo "macOS の場合: brew install bash を実行し、PATH に /opt/homebrew/bin を追加してください" >&2
+    return 1 2>/dev/null || exit 1
+fi
+
 typeset -g OUTPUT_LIB_SOURCED=1
 
 # Color definitions

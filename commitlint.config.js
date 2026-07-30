@@ -34,7 +34,7 @@ const releaseTypeRule = (parsed) => {
 
   const isReleaseType = releaseTypeAllowList.has(parsed.type || '');
   if (isReleaseType) {
-    return [true];
+    return [true, `Changes in ${touched.join(', ')} will trigger a semantic-release.`];
   }
   return [
     false,

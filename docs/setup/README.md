@@ -28,6 +28,7 @@
 | [mobile-android.md](./mobile-android.md)             | モバイル (Android)    |
 | [desktop-extension-ts.md](./desktop-extension-ts.md) | デスクトップ拡張 (TS) |
 | [windows.md](./windows.md)                           | Windows ネイティブ    |
+| [macos.md](./macos.md)                               | macOS 新規マシン      |
 
 ---
 

@@ -6,3 +6,9 @@ CLAUDE.md
 
 # Auto-generated context files
 .context/
+
+# GitHub Actions Claude Code runtime directory (ephemeral, not tracked)
+.claude-pr/
+
+# Playwright MCP session artifacts
+.playwright-mcp/

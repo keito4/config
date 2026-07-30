@@ -8,7 +8,7 @@ let
   # 組織情報を含む設定は keito4/private-config（別リポジトリ・非公開）で管理し、
   # ローカルチェックアウトを out-of-store symlink で参照する（編集は rebuild 不要で即反映）
   privateConfig = path: {
-    source = config.lib.file.mkOutOfStoreSymlink "/Users/keito/develop/github.com/keito4/private-config/${path}";
+    source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/develop/github.com/keito4/private-config/${path}";
     force = true;
   };
 in

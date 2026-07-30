@@ -39,16 +39,24 @@ DevContainer ビルド時に `npx skills add` でインストールされるス�
 
 ---
 
-## C. 自動適用スキル（`.claude/skills/*.md`）
+## C. リポジトリ定義スキル（`.claude/skills/<name>/SKILL.md`）
 
 PR 作成後等に自動トリガーされるスキル。
 
-| スキル          | トリガー                           | 説明                                                              |
-| --------------- | ---------------------------------- | ----------------------------------------------------------------- |
-| `ci-check`      | PR 作成後                          | CI 結果監視、失敗時修正                                           |
-| `codex-review`  | PR 作成後（Codex CLI 利用可能時）  | OpenAI Codex によるコードレビュー                                 |
-| `gemini-review` | PR 作成後（Gemini CLI 利用可能時） | Google Gemini によるコードレビュー                                |
-| `weekly-ingest` | 週次 Routine / 手動実行            | 非 API サイトの週次データ取り込み + しきい値チェック + Slack 通知 |
+| スキル                   | トリガー                           | 説明                                                               |
+| ------------------------ | ---------------------------------- | ------------------------------------------------------------------ |
+| `ci-check`               | PR 作成後                          | CI 結果監視、失敗時修正                                            |
+| `codex-review`           | PR 作成後（Codex CLI 利用可能時）  | OpenAI Codex によるコードレビュー                                  |
+| `gemini-review`          | PR 作成後（Gemini CLI 利用可能時） | Google Gemini によるコードレビュー                                 |
+| `n8n-workflow-pr-review` | n8n のPRレビュー依頼時             | ワークフロー同期PRの退行判定                                       |
+| `screenshot-ingest`      | 週次 Routine / 手動実行            | スマホ専用データのスクショ読み取り + しきい値チェック + Slack 通知 |
+| `weekly-ingest`          | 週次 Routine / 手動実行            | 非 API サイトの週次データ取り込み + しきい値チェック + Slack 通知  |
+
+**Claude Code は `<name>/SKILL.md` 形式のディレクトリしかスキルとして読まない。**
+フラットな `<name>.md` は無視されるため、新しいスキルは必ずディレクトリで追加すること。
+`script/setup-claude.sh` がこれらを `~/.claude/skills/<name>` に symlink し、
+`~/.claude` 以外の CLAUDE_CONFIG_DIR（`~/.claude-elu` 等）にも波及させる。
+個人情報を含むスキルは keito4/private-config の `.claude/skills/` が正本（同じ仕組みで展開される）。
 
 ---
 

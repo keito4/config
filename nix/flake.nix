@@ -24,29 +24,49 @@
     }:
     let
       system = "aarch64-darwin";
-      username = "keito";
-      hostname = "keitonoMacBook-Pro";
       configRoot = ../.;
+
+      mkDarwin =
+        {
+          hostname,
+          username,
+          # Determinate Nix はデーモンを自前管理するため nix-darwin の Nix 管理と衝突する
+          determinateNix ? false,
+        }:
+        nix-darwin.lib.darwinSystem {
+          inherit system;
+          specialArgs = {
+            inherit username determinateNix;
+          };
+          modules = [
+            ./hosts/darwin
+
+            home-manager.darwinModules.home-manager
+            {
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                backupFileExtension = "before-home-manager";
+                extraSpecialArgs = {
+                  inherit configRoot username;
+                };
+                users.${username} = import ./home;
+              };
+            }
+          ];
+        };
     in
     {
-      darwinConfigurations.${hostname} = nix-darwin.lib.darwinSystem {
-        inherit system;
-        modules = [
-          ./hosts/darwin
-
-          home-manager.darwinModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              backupFileExtension = "before-home-manager";
-              extraSpecialArgs = {
-                inherit configRoot;
-              };
-              users.${username} = import ./home;
-            };
-          }
-        ];
+      darwinConfigurations = {
+        "keitonoMacBook-Pro" = mkDarwin {
+          hostname = "keitonoMacBook-Pro";
+          username = "keito";
+        };
+        "oykotnoMacBook-Air" = mkDarwin {
+          hostname = "oykotnoMacBook-Air";
+          username = "oykot";
+          determinateNix = true;
+        };
       };
 
       # nix fmt

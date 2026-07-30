@@ -72,5 +72,6 @@ HOOK_TABLE=(
   "post_pr_ci_watch.py|Post PR creation|Monitor PR CI status"
   "post_commit_adr_reminder.py|Post git commit|Remind ADR for architectural changes"
   "pre_exit_plan_ai_review.py|Pre ExitPlanMode|AI review before plan exit"
+  "prompt_task_reminder.py|UserPromptSubmit|Require task registration (TaskCreate) before starting work"
   "stop_test_verification.py|Stop|Verify test results on session end"
 )

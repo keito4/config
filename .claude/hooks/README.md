@@ -228,6 +228,22 @@ Hooksは、Claude Codeの特定のイベント（ツール実行前後、タス�
 - テストが失敗した場合: 失敗ログの末尾30行を `additionalContext` で返し修正を促す
 - タイムアウト: 5分
 
+### 13. `prompt_task_reminder.py`
+
+**目的**: 依頼を受けた直後にタスクを登録させ、着手前に作業計画を可視化する
+
+**トリガー**: `UserPromptSubmit`（プロンプト送信時）
+
+**動作**:
+
+- 「着手前に `TaskCreate` でタスクを作成し、`TaskUpdate` で `in_progress` / `completed` へ更新する」指示を `additionalContext` として注入
+- 質問だけで完結する依頼・3ステップ未満の些末な作業は対象外である旨も併せて指示（過剰なタスク作成の防止）
+- 空プロンプト、および stdin が壊れている場合は何も出力しない（フェイルオープン）
+- ブロックはしない。`UserPromptSubmit` で `exit 2` するとプロンプト自体が破棄され依頼が失われるため
+
+**注意**: このフックは `stdout` がそのままコンテキストへ注入される。スクリプト未配置のリポジトリでは
+フォールバックメッセージを出さず `|| true` で黙る設定にしてある（`.claude/settings.json` 参照）。
+
 ## Hooksの設定方法
 
 ### ステップ1: settings.local.json に設定を追加

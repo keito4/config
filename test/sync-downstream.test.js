@@ -17,6 +17,7 @@ const {
   validateManifest,
   resolveFilesForRepo,
   listSourceFiles,
+  sanitizeForDownstream,
   syncFiles,
   parseArgs,
 } = require('../script/sync-downstream');
@@ -110,6 +111,24 @@ describe('validateManifest', () => {
     const manifest = validManifest();
     manifest.repos[0].groups = ['does-not-exist'];
     expect(() => validateManifest(manifest)).toThrow(/unknown group/u);
+  });
+
+  test('accepts a repo with a valid exclude list', () => {
+    const manifest = validManifest();
+    manifest.repos[0].exclude = ['.claude/hooks/common.py'];
+    expect(() => validateManifest(manifest)).not.toThrow();
+  });
+
+  test('rejects a repo whose exclude list is not an array', () => {
+    const manifest = validManifest();
+    manifest.repos[0].exclude = '.claude/hooks/common.py';
+    expect(() => validateManifest(manifest)).toThrow(/"exclude" must be an array of strings/u);
+  });
+
+  test('rejects a repo whose exclude list contains a non-string entry', () => {
+    const manifest = validManifest();
+    manifest.repos[0].exclude = [42];
+    expect(() => validateManifest(manifest)).toThrow(/"exclude" must be an array of strings/u);
   });
 });
 
@@ -209,6 +228,24 @@ describe('syncFiles', () => {
     expect(result.unchanged).toEqual(['.github/workflows/a.yml']);
   });
 
+  test('sanitizes .claude/settings.json before writing it downstream', () => {
+    writeFile(
+      configRoot,
+      '.claude/settings.json',
+      JSON.stringify({
+        enabledPlugins: { 'commit-commands@claude-plugins-official': true },
+        hooks: { SessionStart: [{ hooks: [{ type: 'command', command: 'agent-deck hook-handler' }] }] },
+        permissions: { allow: ['WebSearch'] },
+      }),
+    );
+    const resolved = resolvedFor([{ source: '.claude/settings.json', target: '.claude/settings.json' }]);
+
+    syncFiles(configRoot, targetRoot, resolved);
+
+    const written = JSON.parse(fs.readFileSync(path.join(targetRoot, '.claude/settings.json'), 'utf8'));
+    expect(written).toEqual({ hooks: {}, permissions: { allow: ['WebSearch'] } });
+  });
+
   test('overwrites a locally modified file', () => {
     writeFile(configRoot, 'templates/a.yml', 'name: upstream\n');
     writeFile(targetRoot, '.github/workflows/a.yml', 'name: local-change\n');
@@ -252,6 +289,59 @@ describe('syncFiles', () => {
 
     expect(result.copied).toEqual(['.github/workflows/a.yml']);
     expect(fs.existsSync(path.join(targetRoot, '.github/workflows/a.yml'))).toBe(false);
+  });
+});
+
+describe('sanitizeForDownstream', () => {
+  const settings = () => ({
+    $schema: 'https://json.schemastore.org/claude-code-settings.json',
+    enabledPlugins: { 'commit-commands@claude-plugins-official': true },
+    extraKnownMarketplaces: { mattpocock: { source: { source: 'git', url: 'https://example.com' } } },
+    permissions: { allow: ['WebSearch'] },
+    hooks: {
+      SessionStart: [{ hooks: [{ type: 'command', command: 'agent-deck hook-handler', async: true }] }],
+      Stop: [
+        {
+          matcher: '',
+          hooks: [
+            { type: 'command', command: 'python3 .claude/hooks/stop_test_verification.py' },
+            { type: 'command', command: 'agent-deck hook-handler' },
+          ],
+        },
+      ],
+    },
+  });
+
+  test('leaves files other than .claude/settings.json untouched', () => {
+    const content = Buffer.from('name: a\n');
+
+    expect(sanitizeForDownstream('templates/workflows/claude.yml', content)).toBe(content);
+  });
+
+  test('drops host-only plugin state', () => {
+    const result = JSON.parse(sanitizeForDownstream('.claude/settings.json', Buffer.from(JSON.stringify(settings()))));
+
+    expect(result.enabledPlugins).toBeUndefined();
+    expect(result.extraKnownMarketplaces).toBeUndefined();
+    expect(result.permissions).toEqual({ allow: ['WebSearch'] });
+  });
+
+  test('drops hooks that call host-only commands but keeps the rest', () => {
+    const result = JSON.parse(sanitizeForDownstream('.claude/settings.json', Buffer.from(JSON.stringify(settings()))));
+
+    // agent-deck は downstream に存在しないため、実行するとセッションごとにエラーになる
+    expect(result.hooks.SessionStart).toBeUndefined();
+    expect(result.hooks.Stop[0].hooks).toEqual([
+      { type: 'command', command: 'python3 .claude/hooks/stop_test_verification.py' },
+    ]);
+  });
+
+  test('is stable so repeated syncs report unchanged', () => {
+    const once = sanitizeForDownstream('.claude/settings.json', Buffer.from(JSON.stringify(settings())));
+    const twice = sanitizeForDownstream('.claude/settings.json', once);
+
+    expect(twice.equals(once)).toBe(true);
+    expect(once.toString().endsWith('}\n')).toBe(true);
   });
 });
 

@@ -57,6 +57,8 @@ Imports configuration settings from the home directory back to the repository.
 
 **Check mode**: `./script/import.sh --check`
 
+**Repository clone**: `./script/import.sh --with-repos` — GitHub の全リポジトリを ghq で一括クローンする（デフォルトはスキップ）
+
 ## Credential Management
 
 ### credentials.sh
@@ -105,6 +107,11 @@ Initializes Claude Code CLI configuration, syncs settings, and installs plugins.
 
 **Makefile target**: `make claude-setup`
 
+**Note**: `link_private_skills` により、`keito4/private-config`（組織情報を含むスキルの正本）の
+`.claude/skills/<name>.md` を `~/.claude/skills/<name>/SKILL.md` へ symlink する。
+配置先は `PRIVATE_CONFIG_DIR` 環境変数で上書き可能（デフォルト:
+`~/develop/github.com/keito4/private-config`）。
+
 ### setup-claude-build.sh
 
 Build-time setup for Claude Code in DevContainer images.
@@ -136,6 +143,30 @@ Updates Claude Code CLI to the latest version.
 **Usage**: `npm run update:claude` or `./script/update-claude-code.sh`
 
 **Claude command**: `/update-claude-code`
+
+### fix-mcp-token-exposure.sh
+
+Rewrites MCP server definitions in `.claude.json` so that API tokens travel through the
+environment instead of the command line. Tokens embedded in `argv` are readable by any
+process of the same user via `ps`.
+
+**Usage**:
+
+```bash
+./script/fix-mcp-token-exposure.sh                 # 既定スコープと ~/.claude-private を修正
+./script/fix-mcp-token-exposure.sh --check         # 検査のみ (書き込みなし・claude CLI 不要)
+./script/fix-mcp-token-exposure.sh --print linear  # 生成される定義を確認
+```
+
+**Managed servers**: `linear`, `supabase`, `sentry-elu`
+
+**Notes**:
+
+- 既定スコープの状態ファイルは `~/.claude/.claude.json` ではなく `~/.claude.json`（旧レイアウト）。
+  `~/.claude/.claude.json` だけ直しても既定セッションには反映されない。
+- MCP はセッション起動時に spawn されるため、反映には対象セッションの再起動が必要。
+- `mcp-remote` は `--header` 値の `${VAR}` を `process.env` から展開する。ヘッダの解析は
+  `^([A-Za-z0-9_-]+):\s*(.*)$` なので、コロン直後にスペースを置かない形式で渡す。
 
 ## Quality & CI Scripts
 
@@ -292,6 +323,8 @@ Uses npm's legacy peer dependency resolver for global CLI packages to match DevC
 
 **Used by**: DevContainer postCreateCommand
 
+**Note**: npm prefix が読み取り専用の Nix store を指す環境（macOS の nix 管理 npm）ではスキップされる。CLI ツールは `nix/home/packages.nix` で管理する。
+
 ### create-codespace.sh
 
 Creates a GitHub Codespace with configurable options.
@@ -386,15 +419,15 @@ Analyzes project dependencies for security vulnerabilities and updates.
 
 Shared library functions used by multiple scripts:
 
-| File                 | Purpose                                                    |
-| -------------------- | ---------------------------------------------------------- |
-| `output.sh`          | Colored output utilities (print_info, print_success, etc.) |
-| `config.sh`          | Configuration loading utilities                            |
-| `platform.sh`        | Platform detection (macOS, Linux, etc.)                    |
-| `devcontainer.sh`    | DevContainer-specific utilities                            |
-| `claude_plugins.sh`  | Claude plugin management utilities                         |
-| `project-detect.sh`  | Shared project type and package manager detection          |
-| `brew_categories.py` | Homebrew package categorization                            |
+| File                 | Purpose                                                                        |
+| -------------------- | ------------------------------------------------------------------------------ |
+| `output.sh`          | Colored output utilities (print_info, print_success, etc.); requires bash 4.0+ |
+| `config.sh`          | Configuration loading utilities                                                |
+| `platform.sh`        | Platform detection (macOS, Linux, etc.)                                        |
+| `devcontainer.sh`    | DevContainer-specific utilities                                                |
+| `claude_plugins.sh`  | Claude plugin management utilities                                             |
+| `project-detect.sh`  | Shared project type and package manager detection                              |
+| `brew_categories.py` | Homebrew package categorization                                                |
 
 ## Credential Providers (credentials/providers/)
 

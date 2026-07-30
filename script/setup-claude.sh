@@ -33,6 +33,10 @@ SETTINGS_LOCAL_FILE="${CLAUDE_DIR}/settings.local.json"
 DEFAULT_SETTINGS_LOCAL="${REPO_ROOT}/.devcontainer/claude-settings.local.json"
 SETTINGS_FILE="${CLAUDE_DIR}/settings.json"
 
+# 個人/組織情報を含むスキルの正本を置く非公開リポジトリ。
+# 端末ごとにパスが変わりうるため上書き可能にする。
+PRIVATE_CONFIG_DIR="${PRIVATE_CONFIG_DIR:-${HOME}/develop/github.com/keito4/private-config}"
+
 # 複数の CLAUDE_CONFIG_DIR に共有設定を配るためのキー。
 # ここに無いキー（model / theme / tui 等）は各 dir 固有として保持される。
 # shellcheck disable=SC2016  # jq に渡すJSONリテラル。$schema はシェル変数ではない
@@ -62,6 +66,45 @@ setup_settings_local() {
     fi
 }
 
+# ~/.claude/settings.json をホスト所有の実体ファイルとして用意する。
+#
+# なぜ symlink にしないか: このファイルには Claude Code がプラグイン導入状態を、
+# agent-deck が hooks（agent-deck hook-handler）を書き戻す。リポジトリの追跡ファイルへ
+# symlink すると、その端末固有の状態がコミット対象になり、ADR 0019 の downstream 同期や
+# このリポジトリ自身の CI（GitHub Actions 上の Claude Code）にも流れる。CI には
+# agent-deck が無いため、SessionStart hook が毎回失敗する。
+#
+# リポジトリのベースラインは「初回の種」としてだけ配り、以後は上書きしない。
+seed_user_settings() {
+    local baseline="${REPO_ROOT}/.claude/settings.json"
+
+    if [[ -L "$SETTINGS_FILE" ]]; then
+        # 旧構成（追跡ファイルへの symlink）からの移行。リンク先の内容を保ったまま実体化する。
+        local tmp
+        tmp="$(mktemp)"
+        cp "$SETTINGS_FILE" "$tmp"
+        rm -f "$SETTINGS_FILE"
+        mv "$tmp" "$SETTINGS_FILE"
+        chmod 644 "$SETTINGS_FILE"
+        log_success "${SETTINGS_FILE} を symlink から実体に置き換えました"
+        return
+    fi
+
+    if [[ -e "$SETTINGS_FILE" ]]; then
+        log_info "${SETTINGS_FILE} は既に存在します（上書きしません）"
+        return
+    fi
+
+    if [[ ! -f "$baseline" ]]; then
+        log_warn "ベースラインの settings.json が見つかりません: ${baseline}"
+        return
+    fi
+
+    mkdir -p "$CLAUDE_DIR"
+    cp "$baseline" "$SETTINGS_FILE"
+    log_success "${SETTINGS_FILE} をリポジトリのベースラインから作成しました"
+}
+
 # 追加の CLAUDE_CONFIG_DIR を列挙する
 # Agent Deck の config.toml が group ごとに config_dir を切り替えるため、
 # ~/.claude 以外の dir が存在しうる（例: ~/.claude-private, ~/.claude-elu）。
@@ -76,6 +119,9 @@ list_extra_config_dirs() {
     local dir
     for dir in "${HOME}"/.claude-*; do
         [[ -d "$dir" ]] || continue
+        # 初期化済みの実 config_dir のみ対象にする（settings.json か .claude.json を持つ）。
+        # hook 置き場等（例: ~/.claude-worklog）に無用な settings.json を生成しないため。
+        [[ -f "$dir/settings.json" || -f "$dir/.claude.json" ]] || continue
         printf '%s\n' "$dir"
     done
 }
@@ -179,6 +225,94 @@ link_content_to_extra_config_dirs() {
     done < <(list_extra_config_dirs)
 }
 
+# リポジトリ / private-config のスキルを ~/.claude/skills に展開する。
+#
+# なぜ必要か:
+#   1. Claude Code はスキルを <name>/SKILL.md ディレクトリ形式でしか読まない。
+#      commands / agents のようにディレクトリごとリンクすると、npx skills add で
+#      入るホスト固有のスキルと同居できないため、スキル単位でリンクする。
+#   2. 組織メンバーのメール・Slack ID・内部 Notion ID を含むスキル（例 oykot-tasks）は
+#      public な keito4/config には置けず、keito4/private-config が正本になる。
+#      新端末では private-config のスキルが materialize されず呼べなかった。
+#
+# なぜ symlink か: 正本にドリフトなく追随するため（settings 同期 #977 と同方針）。
+# 正本が明確なので、既存の実体コピーや古いリンクは置き換える（追加 config-dir の
+# ケースと異なり、ここではドリフト除去を優先する）。
+#
+# 正本側には 1ファイルのスキル（<name>.md）と、スクリプト等を伴うスキル
+# （<name>/SKILL.md + <name>/scripts/...）の2形式がある。後者は SKILL.md だけ
+# リンクすると補助ファイルが見えないため、ディレクトリごとリンクする。
+
+# 単一ファイルのスキル: <name>.md -> ~/.claude/skills/<name>/SKILL.md
+link_skill_file() {
+    local md="$1" skills_dir="$2"
+    local name target
+    name="$(basename "$md" .md)"
+    target="${skills_dir}/${name}/SKILL.md"
+
+    if [[ -L "$target" ]] && [[ "$(readlink "$target")" == "$md" ]]; then
+        log_info "  スキル ${name} は最新です"
+        return
+    fi
+
+    mkdir -p "${skills_dir}/${name}"
+    rm -f "$target"
+    if ln -s "$md" "$target"; then
+        log_success "  スキル ${name} -> ${md} をリンクしました"
+    else
+        log_warn "  スキル ${name} のリンクに失敗しました"
+    fi
+}
+
+# 補助ファイルを伴うスキル: <name>/ -> ~/.claude/skills/<name>
+link_skill_dir() {
+    local src="$1" skills_dir="$2"
+    local name target
+    name="$(basename "$src")"
+    target="${skills_dir}/${name}"
+
+    if [[ -L "$target" ]] && [[ "$(readlink "$target")" == "$src" ]]; then
+        log_info "  スキル ${name} は最新です"
+        return
+    fi
+
+    if [[ -d "$target" ]] && [[ ! -L "$target" ]]; then
+        log_warn "  スキル ${name} の実体コピーを private-config へのリンクに置き換えます"
+    fi
+
+    mkdir -p "$skills_dir"
+    rm -rf "$target"
+    if ln -s "$src" "$target"; then
+        log_success "  スキル ${name} -> ${src} をリンクしました"
+    else
+        log_warn "  スキル ${name} のリンクに失敗しました"
+    fi
+}
+
+link_skills_from_dir() {
+    local src_dir="$1"
+    if [[ ! -d "$src_dir" ]]; then
+        log_info "スキルの正本が見つからないためスキップします (${src_dir})"
+        return
+    fi
+
+    local skills_dir="${CLAUDE_DIR}/skills"
+    local entry
+    shopt -s nullglob
+    for entry in "$src_dir"/*; do
+        # symlink のエントリは npx skills add でホストに入れた実体への参照であり、
+        # リポジトリが正本ではないため配布対象にしない。
+        [[ -L "$entry" ]] && continue
+
+        if [[ -f "$entry" ]] && [[ "$entry" == *.md ]] && [[ "$(basename "$entry")" != "README.md" ]]; then
+            link_skill_file "$entry" "$skills_dir"
+        elif [[ -d "$entry" ]] && [[ -f "${entry}/SKILL.md" ]]; then
+            link_skill_dir "$entry" "$skills_dir"
+        fi
+    done
+    shopt -u nullglob
+}
+
 main() {
     log_info "Claude Code セットアップを開始します..."
     log_info "環境: HOME=${HOME}"
@@ -197,9 +331,19 @@ main() {
     # settings.local.json のセットアップ
     setup_settings_local
 
+    # ~/.claude/settings.json をホスト所有の実体として用意（extra dir への同期元になる）
+    seed_user_settings
+
     # 追加の CLAUDE_CONFIG_DIR（~/.claude-private 等）へ共有設定を同期
     log_info "追加の CLAUDE_CONFIG_DIR に共有設定を同期します..."
     sync_settings_to_extra_config_dirs
+
+    # スキルを ~/.claude/skills に展開（extra dir へのリンク前に実行）。
+    # 名前が衝突した場合は private-config を勝たせるため、リポジトリを先に処理する。
+    log_info "リポジトリのスキルを ~/.claude/skills に展開します..."
+    link_skills_from_dir "${REPO_ROOT}/.claude/skills"
+    log_info "private-config の個人スキルを ~/.claude/skills に展開します..."
+    link_skills_from_dir "${PRIVATE_CONFIG_DIR}/.claude/skills"
 
     # commands / agents / skills を追加の CLAUDE_CONFIG_DIR にリンク
     # claude CLI の有無に依存しないため、CLI チェックより前に実行する

@@ -1,4 +1,5 @@
 ---
+name: codex-review
 description: PR作成後にOpenAI Codexによるコードレビューを実行する。Codex CLIがインストール済みの場合、PR作成完了後に自動的にこのスキルを適用してレビューを実行すること。
 ---
 
