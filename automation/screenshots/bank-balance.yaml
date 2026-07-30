@@ -1,0 +1,13 @@
+source: bank-balance
+enabled: false # 利用中のアプリ名・metrics を確定させたら true にする
+app: （利用中の銀行・証券・ポイントアプリ名に置き換える）
+metrics:
+  - name: balance
+    unit: JPY
+    description: 普通預金残高
+capture_hint: 残高が表示されるホーム画面をスクリーンショットする（口座番号は写り込んでも記録されない）
+notion_page: ''
+notes: |
+  口座番号・氏名などの識別子は読み取り対象外。ログ・通知には残高数値のみを
+  記録し、識別子は *** でマスクする。
+  複数口座を取り込む場合はこのファイルを口座ごとに分ける（source を一意にする）。

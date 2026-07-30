@@ -1,14 +1,16 @@
 # automation/
 
-`weekly-ingest` スキル（[.claude/skills/weekly-ingest.md](../.claude/skills/weekly-ingest.md)）が使用する定義ファイル置き場。
+`weekly-ingest` スキル（[.claude/skills/weekly-ingest.md](../.claude/skills/weekly-ingest.md)）と
+`screenshot-ingest` スキル（[.claude/skills/screenshot-ingest.md](../.claude/skills/screenshot-ingest.md)）が使用する定義ファイル置き場。
 API が提供されていないサイト・アプリからの週次データ取り込みと、しきい値チェックを宣言的に管理する。
 
 ## 構成
 
-| パス              | 役割                                                       |
-| ----------------- | ---------------------------------------------------------- |
-| `adapters/*.yaml` | サイトごとの取得定義（`_` 始まりはテンプレートとして無視） |
-| `rules.yaml`      | しきい値判定ルール                                         |
+| パス                 | 役割                                                                               |
+| -------------------- | ---------------------------------------------------------------------------------- |
+| `adapters/*.yaml`    | ブラウザ自動操作（weekly-ingest）のサイトごとの取得定義（`_` 始まりは無視）        |
+| `screenshots/*.yaml` | スクショ読み取り（screenshot-ingest）のアプリごとの取得定義（`_` 始まりは無視）    |
+| `rules.yaml`         | しきい値判定ルール（両スキル共用。`site` にはアダプタの `site` / `source` を指定） |
 
 ## アダプタスキーマ
 
@@ -29,6 +31,25 @@ steps: # ログイン〜取得までの手順（自然言語。Playwright 実行
   - ホーム画面に表示される「普通預金残高」を取得する
 notes: |
   レイアウト変更時の復旧に役立つ情報（対象要素の特徴など）を書いておく。
+```
+
+## スクショ定義スキーマ（screenshots/）
+
+Web 版がなくブラウザで到達できないスマホ専用アプリ向け。ユーザーが Slack の
+インボックスチャンネルに投稿したスクリーンショットから値を読み取る。
+
+```yaml
+source: example-app # 一意な識別子（kebab-case）
+enabled: false # true にすると週次取り込みの対象になる
+app: サンプル銀行アプリ # スマホアプリ名（画像の判別に使う）
+metrics:
+  - name: balance
+    unit: JPY
+    description: 普通預金残高
+capture_hint: ホーム画面の残高表示が写るようにスクリーンショットを撮る
+notion_page: '' # 任意。取り込み結果を1行追記する Notion ページ URL
+notes: |
+  画像判別・読み取りのヒント（画面の特徴、値の表示位置など）を書いておく。
 ```
 
 ## ルールスキーマ（rules.yaml）

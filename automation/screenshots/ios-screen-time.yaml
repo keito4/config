@@ -1,0 +1,17 @@
+source: ios-screen-time
+enabled: true
+app: iOS 設定 > スクリーンタイム
+metrics:
+  - name: daily_avg_screen_time
+    unit: minutes
+    description: 1日あたりの平均スクリーンタイム（週表示の「1日平均」）
+  - name: top_category_time
+    unit: minutes
+    description: 最も使用時間の長いカテゴリの1日平均時間（SNS など浪費時間の代理指標）
+capture_hint: 設定 > スクリーンタイム のトップ画面を「週」表示にしてスクリーンショットを撮る（1日平均とカテゴリ内訳が写るように）
+notion_page: ''
+notes: |
+  KPI2（週5h集中時間確保率）の計測設計の入力データ。スクリーンタイムは
+  集中時間そのものではなく浪費時間側の代理指標として使う。
+  グラフ上部の「1日平均」の時間表示と、下部の「よく使われたもの」の
+  カテゴリ別時間を読み取る。
