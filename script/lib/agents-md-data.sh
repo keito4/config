@@ -27,7 +27,7 @@ declare -A CLAUDE_SUB_PURPOSE=(
 CLAUDE_SUB_ORDER=(agents commands hooks plugins rules skills)
 
 declare -A REG_DIR_PURPOSE=(
-  [automation]="Weekly ingest adapters and threshold rules (weekly-ingest skill)"
+  [automation]="Weekly and screenshot ingest adapters, definitions, and threshold rules"
   [brew]="Homebrew package management (Linux only)"
   [credentials]="Credential templates and filtering documentation"
   [docs]="Documentation and ADRs"
@@ -64,9 +64,9 @@ HOOK_TABLE=(
   "block_git_no_verify.py|Pre git commit/push|Block Quality Gate bypass (\`--no-verify\`, \`HUSKY=0\`, \`core.hooksPath\`, etc.)"
   "pre_git_quality_gates.py|Pre git commit/push|Auto-detect and run quality gates"
   "block_config_edit.py|Pre edit|Protect configuration files"
+  "block_managed_file_edit.py|Pre edit|Block editing of downstream sync-managed files"
   "block_dangerous_commands.py|Pre Bash|Block destructive commands"
   "block_inline_secrets.py|Pre Bash|Block commands embedding literal credentials"
-  "block_managed_file_edit.py|Pre edit|Block direct edits to files managed by keito4/config (sync-downstream)"
   "common.py|—|Shared utility library (imported by other hooks)"
   "post_edit_auto_lint.py|Post edit|Auto-format and lint"
   "post_git_push_ci.py|Post git push|Monitor CI status"

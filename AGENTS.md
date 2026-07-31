@@ -56,7 +56,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `.takt/`             | TAKT workflow automation for scheduled agent tasks               |
 | `.vscode/`           | VS Code workspace settings                                       |
 | `.zsh/`              | Zsh configuration (aliases, completions, functions, prompt)      |
-| `automation/`        | Weekly ingest adapters and threshold rules (weekly-ingest skill) |
+| `automation/`        | Weekly and screenshot ingest adapters, definitions, and threshold rules |
 | `brew/`              | Homebrew package management (Linux only)                         |
 | `credentials/`       | Credential templates and filtering documentation                 |
 | `docs/`              | Documentation and ADRs                                           |
@@ -170,7 +170,7 @@ The following scripts are auto-detected and run before git commit/push:
 | `block_dangerous_commands.py` | Pre Bash            | Block destructive commands                                                   |
 | `block_git_no_verify.py`      | Pre git commit/push | Block Quality Gate bypass (`--no-verify`, `HUSKY=0`, `core.hooksPath`, etc.) |
 | `block_inline_secrets.py`     | Pre Bash            | Block commands embedding literal credentials                                 |
-| `block_managed_file_edit.py`  | Pre edit            | Block direct edits to files managed by keito4/config (sync-downstream)       |
+| `block_managed_file_edit.py`  | Pre edit            | Block editing of downstream sync-managed files                               |
 | `common.py`                   | —                   | Shared utility library (imported by other hooks)                             |
 | `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes                                         |
 | `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint                                                         |
