@@ -45,6 +45,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `.claude/plugins/`   | Claude Code plugin configuration                            |
 | `.claude/rules/`     | Claude Code rules for development standards                 |
 | `.claude/skills/`    | Claude Code skill definitions                               |
+| `.claude-plugin/`    | Claude Code LSP plugin configuration                        |
 | `.codex/`            | Codex AI agent configuration                                |
 | `.context/`          | Shared intermediate artifacts (complexity reports etc.)     |
 | `.cursor/`           | Cursor editor settings                                      |
@@ -52,6 +53,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `.gemini/`           | Gemini AI agent configuration                               |
 | `.github/workflows/` | GitHub Actions CI/CD workflows (15 workflows)               |
 | `.husky/`            | Git hooks (pre-commit, commit-msg)                          |
+| `.takt/`             | TAKT workflow automation for scheduled agent tasks          |
 | `.vscode/`           | VS Code workspace settings                                  |
 | `.zsh/`              | Zsh configuration (aliases, completions, functions, prompt) |
 | `brew/`              | Homebrew package management (Linux only)                    |
@@ -165,7 +167,7 @@ The following scripts are auto-detected and run before git commit/push:
 | `block_dangerous_commands.py` | Pre Bash            | Block destructive commands                                                   |
 | `block_git_no_verify.py`      | Pre git commit/push | Block Quality Gate bypass (`--no-verify`, `HUSKY=0`, `core.hooksPath`, etc.) |
 | `block_inline_secrets.py`     | Pre Bash            | Block commands embedding literal credentials                                 |
-| `block_managed_file_edit.py`  | Unknown             | block_managed_file_edit                                                      |
+| `block_managed_file_edit.py`  | Pre edit            | Block editing of downstream sync-managed files                               |
 | `common.py`                   | —                   | Shared utility library (imported by other hooks)                             |
 | `post_commit_adr_reminder.py` | Post git commit     | Remind ADR for architectural changes                                         |
 | `post_edit_auto_lint.py`      | Post edit           | Auto-format and lint                                                         |

@@ -4,12 +4,14 @@
 # shellcheck disable=SC2034 # all variables are sourced and consumed externally
 
 declare -A DOT_DIR_PURPOSE=(
+  [.claude-plugin]="Claude Code LSP plugin configuration"
   [.codex]="Codex AI agent configuration"
   [.context]="Shared intermediate artifacts (complexity reports etc.)"
   [.cursor]="Cursor editor settings"
   [.devcontainer]="DevContainer configuration and Dockerfile"
   [.gemini]="Gemini AI agent configuration"
   [.husky]="Git hooks (pre-commit, commit-msg)"
+  [.takt]="TAKT workflow automation for scheduled agent tasks"
   [.vscode]="VS Code workspace settings"
   [.zsh]="Zsh configuration (aliases, completions, functions, prompt)"
 )
@@ -61,6 +63,7 @@ HOOK_TABLE=(
   "block_git_no_verify.py|Pre git commit/push|Block Quality Gate bypass (\`--no-verify\`, \`HUSKY=0\`, \`core.hooksPath\`, etc.)"
   "pre_git_quality_gates.py|Pre git commit/push|Auto-detect and run quality gates"
   "block_config_edit.py|Pre edit|Protect configuration files"
+  "block_managed_file_edit.py|Pre edit|Block editing of downstream sync-managed files"
   "block_dangerous_commands.py|Pre Bash|Block destructive commands"
   "block_inline_secrets.py|Pre Bash|Block commands embedding literal credentials"
   "common.py|—|Shared utility library (imported by other hooks)"
