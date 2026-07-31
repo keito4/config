@@ -45,6 +45,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `.claude/plugins/`   | Claude Code plugin configuration                                 |
 | `.claude/rules/`     | Claude Code rules for development standards                      |
 | `.claude/skills/`    | Claude Code skill definitions                                    |
+| `.claude-plugin/`    | Claude Code LSP plugin configuration                             |
 | `.codex/`            | Codex AI agent configuration                                     |
 | `.context/`          | Shared intermediate artifacts (complexity reports etc.)          |
 | `.cursor/`           | Cursor editor settings                                           |
@@ -52,6 +53,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `.gemini/`           | Gemini AI agent configuration                                    |
 | `.github/workflows/` | GitHub Actions CI/CD workflows (15 workflows)                    |
 | `.husky/`            | Git hooks (pre-commit, commit-msg)                               |
+| `.takt/`             | TAKT workflow automation for scheduled agent tasks               |
 | `.vscode/`           | VS Code workspace settings                                       |
 | `.zsh/`              | Zsh configuration (aliases, completions, functions, prompt)      |
 | `automation/`        | Weekly ingest adapters and threshold rules (weekly-ingest skill) |

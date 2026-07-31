@@ -4,12 +4,14 @@
 # shellcheck disable=SC2034 # all variables are sourced and consumed externally
 
 declare -A DOT_DIR_PURPOSE=(
+  [.claude-plugin]="Claude Code LSP plugin configuration"
   [.codex]="Codex AI agent configuration"
   [.context]="Shared intermediate artifacts (complexity reports etc.)"
   [.cursor]="Cursor editor settings"
   [.devcontainer]="DevContainer configuration and Dockerfile"
   [.gemini]="Gemini AI agent configuration"
   [.husky]="Git hooks (pre-commit, commit-msg)"
+  [.takt]="TAKT workflow automation for scheduled agent tasks"
   [.vscode]="VS Code workspace settings"
   [.zsh]="Zsh configuration (aliases, completions, functions, prompt)"
 )
