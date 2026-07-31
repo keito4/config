@@ -27,7 +27,7 @@ declare -A CLAUDE_SUB_PURPOSE=(
 CLAUDE_SUB_ORDER=(agents commands hooks plugins rules skills)
 
 declare -A REG_DIR_PURPOSE=(
-  [automation]="Weekly and screenshot ingest adapters, definitions, and threshold rules"
+  [automation]="Weekly and screenshot ingest adapters and threshold rules"
   [brew]="Homebrew package management (Linux only)"
   [credentials]="Credential templates and filtering documentation"
   [docs]="Documentation and ADRs"

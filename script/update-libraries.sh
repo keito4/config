@@ -2,24 +2,14 @@
 
 set -euo pipefail
 
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
 REPO_PATH="${REPO_PATH:-$(cd "$(dirname "$0")/.." && pwd)}"
 cd "$REPO_PATH"
 
+# shellcheck source=script/lib/output.sh
+source "$(dirname "$0")/lib/output.sh"
+
 log() {
   printf "${BLUE}==> %s${NC}\n" "$1"
-}
-
-log_success() {
-  printf "${GREEN}✓ %s${NC}\n" "$1"
-}
-
-log_warn() {
-  printf "${YELLOW}⚠ %s${NC}\n" "$1"
 }
 
 # npm devDependencies / GitHub Actions / Docker base image updates are managed by Dependabot.
