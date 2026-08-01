@@ -148,8 +148,8 @@ jobs:
           fi
 
           if ! git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH" >/dev/null; then
-            echo "Claude branch $CLAUDE_BRANCH was not pushed."
-            exit 1
+            echo "Claude branch $CLAUDE_BRANCH was not pushed (no code changes). Skipping PR creation."
+            exit 0
           fi
 
           EXISTING_PR=$(gh pr list --head "$CLAUDE_BRANCH" --state open --json number --jq '.[0].number // empty')
