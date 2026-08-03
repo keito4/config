@@ -128,6 +128,19 @@ run_validate() {
   ' "${fake_home}/.claude.json" "$workspace"
 }
 
+@test "trust-claude-workspace refuses to overwrite a malformed ~/.claude.json" {
+  local fake_home="${TEST_TEMP_DIR}/home-malformed"
+  local workspace="${TEST_TEMP_DIR}/workspace-malformed"
+  mkdir -p "$fake_home" "$workspace"
+  printf '%s' '{"numStartups":7,' > "${fake_home}/.claude.json"
+
+  run env HOME="$fake_home" "${REPO_ROOT}/script/trust-claude-workspace.sh" "$workspace"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"could not parse"* ]]
+  [ "$(cat "${fake_home}/.claude.json")" = '{"numStartups":7,' ]
+}
+
 @test "trust-claude-workspace preserves unrelated ~/.claude.json content" {
   local fake_home="${TEST_TEMP_DIR}/home-existing"
   local workspace="${TEST_TEMP_DIR}/workspace-existing"

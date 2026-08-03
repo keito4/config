@@ -20,8 +20,10 @@ let config = {};
 if (fs.existsSync(configPath)) {
   try {
     config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-  } catch {
-    config = {};
+  } catch (error) {
+    // Overwriting here would discard the whole Claude Code config, so refuse.
+    console.error(`error: could not parse ${configPath}: ${error.message}`);
+    process.exit(1);
   }
 }
 
