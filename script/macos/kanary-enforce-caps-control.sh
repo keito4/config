@@ -23,6 +23,15 @@ set -euo pipefail
 DOMAIN="download.kanary.settings"
 PLIST="${HOME}/Library/Preferences/${DOMAIN}.plist"
 
+# `darwin-rebuild switch` の home-manager activation は PATH を nix store だけに
+# 差し替えて実行する (/usr/bin も /bin も含まれない)。そのままだと
+# plutil / defaults / pgrep / osascript / open / python3 がすべて名前解決できず、
+# read_caps が unknown を返してこの helper が毎回サイレントにスキップされる。
+# さらに base64 が GNU coreutils 側に解決されると macOS 固有の -D が使えない。
+# このスクリプトは macOS 専用なので、標準パスを先頭に置いて system 版を使わせる。
+PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+export PATH
+
 log() { printf 'kanary: %s\n' "$*"; }
 
 # Kanary never launched yet -> nothing to enforce.
