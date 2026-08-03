@@ -42,15 +42,6 @@ jobs:
             exit 1
           fi
 
-      - name: Validate TAKT authentication
-        env:
-          TAKT_ANTHROPIC_API_KEY: ${{ secrets.TAKT_ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY }}
-        run: |
-          if [ -z "$TAKT_ANTHROPIC_API_KEY" ]; then
-            echo "TAKT_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY is required for scheduled TAKT maintenance."
-            exit 1
-          fi
-
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
@@ -60,7 +51,14 @@ jobs:
 
       # This managed config-repository workflow depends on .takt/**,
       # script/repo-maintenance.sh, script/run-takt-repo-maintenance.sh,
-      # script/check-trivyignore-review.sh, and the setup-node-ci action.
+      # script/check-trivyignore-review.sh, script/validate-takt-auth.sh,
+      # script/trust-claude-workspace.sh, and the setup-node-ci action.
+      - name: Validate TAKT authentication
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          TAKT_ANTHROPIC_API_KEY: ${{ secrets.TAKT_ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY }}
+        run: script/validate-takt-auth.sh
+
       - name: Setup Node.js
         uses: ./.github/actions/setup-node-ci
 
@@ -78,6 +76,9 @@ jobs:
       - name: Review Trivy ignore entries
         run: script/check-trivyignore-review.sh
 
+      - name: Trust workspace for Claude Code
+        run: script/trust-claude-workspace.sh
+
       - name: Write TAKT maintenance context
         env:
           REPO_MAINTENANCE_MODE: ${{ inputs.mode || 'full' }}
@@ -89,8 +90,16 @@ jobs:
         id: maintenance
         env:
           REPO_MAINTENANCE_MODE: ${{ inputs.mode || 'full' }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           TAKT_ANTHROPIC_API_KEY: ${{ secrets.TAKT_ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY }}
         run: |
+          # Claude Code prefers ANTHROPIC_API_KEY over the OAuth token, and TAKT
+          # exports TAKT_ANTHROPIC_API_KEY as ANTHROPIC_API_KEY. Drop the key so
+          # the credential verified in "Validate TAKT authentication" is used.
+          if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+            unset TAKT_ANTHROPIC_API_KEY ANTHROPIC_API_KEY
+          fi
+
           ./node_modules/.bin/takt --pipeline \
             --skip-git \
             --quiet \
@@ -161,6 +170,7 @@ jobs:
 
           Please check the workflow logs and re-run manually if needed.
           If this failed during token validation, configure \`CLAUDE_PR_GITHUB_TOKEN\` or \`CLAUDE_PAT\` in repository Actions secrets.
+          If \`Validate TAKT authentication\` reported a rejected credential, rotate the credential it named: \`CLAUDE_CODE_OAUTH_TOKEN\` (preferred, via \`claude setup-token\`) or \`TAKT_ANTHROPIC_API_KEY\` / \`ANTHROPIC_API_KEY\`.
           If this failed with \`Invalid API key\`, rotate the configured \`TAKT_ANTHROPIC_API_KEY\` or \`ANTHROPIC_API_KEY\` repository secret.
 
           ---

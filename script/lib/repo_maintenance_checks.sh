@@ -5,11 +5,11 @@ check_scheduled_maintenance_configuration() {
   local workflow=".github/workflows/scheduled-maintenance.yml"
   local repo secrets issue_count=0
   local has_pr_token=false has_legacy_pat=false
-  local has_takt_key=false has_anthropic_key=false
+  local has_takt_key=false has_anthropic_key=false has_oauth_token=false
 
   [[ -f "$workflow" ]] || return 0
 
-  if grep -qE "CLAUDE_PR_GITHUB_TOKEN|CLAUDE_PAT|TAKT_ANTHROPIC_API_KEY|ANTHROPIC_API_KEY" "$workflow"; then
+  if grep -qE "CLAUDE_PR_GITHUB_TOKEN|CLAUDE_PAT|CLAUDE_CODE_OAUTH_TOKEN|TAKT_ANTHROPIC_API_KEY|ANTHROPIC_API_KEY" "$workflow"; then
     if command -v gh >/dev/null 2>&1; then
       repo="$(gh repo view --json nameWithOwner --jq '.nameWithOwner' 2>/dev/null || true)"
       if [[ -n "$repo" && "$repo" != "null" ]]; then
@@ -25,11 +25,12 @@ check_scheduled_maintenance_configuration() {
             issue_count=$((issue_count + 1))
           fi
         fi
-        if grep -qE "TAKT_ANTHROPIC_API_KEY|ANTHROPIC_API_KEY" "$workflow"; then
+        if grep -qE "CLAUDE_CODE_OAUTH_TOKEN|TAKT_ANTHROPIC_API_KEY|ANTHROPIC_API_KEY" "$workflow"; then
+          grep -Fxq "CLAUDE_CODE_OAUTH_TOKEN" <<<"$secrets" && has_oauth_token=true
           grep -Fxq "TAKT_ANTHROPIC_API_KEY" <<<"$secrets" && has_takt_key=true
           grep -Fxq "ANTHROPIC_API_KEY" <<<"$secrets" && has_anthropic_key=true
-          if [[ "$has_takt_key" != "true" && "$has_anthropic_key" != "true" ]]; then
-            output::warning "scheduled-maintenance.yml requires TAKT_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY secret"
+          if [[ "$has_oauth_token" != "true" && "$has_takt_key" != "true" && "$has_anthropic_key" != "true" ]]; then
+            output::warning "scheduled-maintenance.yml requires CLAUDE_CODE_OAUTH_TOKEN, TAKT_ANTHROPIC_API_KEY, or ANTHROPIC_API_KEY secret"
             echo "Settings: https://github.com/$repo/settings/secrets/actions"
             issue_count=$((issue_count + 1))
           fi

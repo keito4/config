@@ -257,7 +257,9 @@ describe('repo-maintenance GitHub Actions PR creation settings', () => {
 
     expect(result.status).toBe(1);
     expect(result.output).toContain('requires CLAUDE_PR_GITHUB_TOKEN or CLAUDE_PAT secret');
-    expect(result.output).toContain('requires TAKT_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY secret');
+    expect(result.output).toContain(
+      'requires CLAUDE_CODE_OAUTH_TOKEN, TAKT_ANTHROPIC_API_KEY, or ANTHROPIC_API_KEY secret',
+    );
     expect(result.output).toContain('https://github.com/owner/repo/settings/secrets/actions');
   });
 
@@ -269,7 +271,9 @@ describe('repo-maintenance GitHub Actions PR creation settings', () => {
 
     expect(result.status).toBe(1);
     expect(result.output).toContain('requires CLAUDE_PR_GITHUB_TOKEN or CLAUDE_PAT secret');
-    expect(result.output).toContain('requires TAKT_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY secret');
+    expect(result.output).toContain(
+      'requires CLAUDE_CODE_OAUTH_TOKEN, TAKT_ANTHROPIC_API_KEY, or ANTHROPIC_API_KEY secret',
+    );
   });
 
   test('accepts scheduled maintenance when required secret is present', () => {
@@ -278,6 +282,18 @@ describe('repo-maintenance GitHub Actions PR creation settings', () => {
         '.github/workflows/scheduled-maintenance.yml': readRepoFile('templates/workflows/scheduled-maintenance.yml'),
       },
       secrets: ['CLAUDE_PAT', 'ANTHROPIC_API_KEY'],
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.output).toContain('Scheduled Maintenance configuration ok');
+  });
+
+  test('accepts scheduled maintenance when only the OAuth token is present', () => {
+    const result = runRepoMaintenanceScript(['--check-scheduled-maintenance'], {
+      files: {
+        '.github/workflows/scheduled-maintenance.yml': readRepoFile('templates/workflows/scheduled-maintenance.yml'),
+      },
+      secrets: ['CLAUDE_PAT', 'CLAUDE_CODE_OAUTH_TOKEN'],
     });
 
     expect(result.status).toBe(0);

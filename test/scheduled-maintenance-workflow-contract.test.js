@@ -30,6 +30,9 @@ describe('Scheduled maintenance workflow contracts', () => {
       'timeout-minutes: 45',
       'name: Validate maintenance token',
       'name: Validate TAKT authentication',
+      'run: script/validate-takt-auth.sh',
+      'name: Trust workspace for Claude Code',
+      'run: script/trust-claude-workspace.sh',
       'token: ${{ github.token }}',
       'persist-credentials: false',
       'This managed config-repository workflow depends on .takt/**',
@@ -45,7 +48,9 @@ describe('Scheduled maintenance workflow contracts', () => {
       '--quiet',
       '--workflow .takt/workflows/repo-maintenance.yml',
       "REPO_MAINTENANCE_MODE: ${{ inputs.mode || 'full' }}",
+      'CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}',
       'TAKT_ANTHROPIC_API_KEY: ${{ secrets.TAKT_ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY }}',
+      'unset TAKT_ANTHROPIC_API_KEY ANTHROPIC_API_KEY',
       'GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}',
       'if: env.CLAUDE_BRANCH !=',
       "git add -A -- . ':!.context'",
@@ -76,6 +81,13 @@ describe('Scheduled maintenance workflow contracts', () => {
     );
     expect(workflow.indexOf('name: Run scheduled maintenance with TAKT')).toBeLessThan(
       workflow.indexOf('name: Create maintenance pull request'),
+    );
+    // Invalid credentials must fail before the multi-minute TAKT run starts.
+    expect(workflow.indexOf('name: Validate TAKT authentication')).toBeLessThan(
+      workflow.indexOf('name: Run scheduled maintenance with TAKT'),
+    );
+    expect(workflow.indexOf('name: Trust workspace for Claude Code')).toBeLessThan(
+      workflow.indexOf('name: Run scheduled maintenance with TAKT'),
     );
     const taktStep = workflow.slice(
       workflow.indexOf('name: Run scheduled maintenance with TAKT'),

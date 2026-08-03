@@ -53,10 +53,28 @@ Configure project TAKT files in `.takt/`:
   not created. If queued TAKT tasks are introduced later, configure their shared
   clone directory under `.context/` in the runtime environment.
 
-Scheduled maintenance uses `TAKT_ANTHROPIC_API_KEY` first and falls back to
-`ANTHROPIC_API_KEY`. The existing maintenance PR token
-`CLAUDE_PR_GITHUB_TOKEN` or legacy `CLAUDE_PAT` remains separate and is used
-only by the deterministic GitHub Actions PR creation step.
+Scheduled maintenance resolves Anthropic credentials in this order:
+`CLAUDE_CODE_OAUTH_TOKEN`, then `TAKT_ANTHROPIC_API_KEY`, then
+`ANTHROPIC_API_KEY`. TAKT's `claude-sdk` provider inherits `process.env` and
+only overrides `ANTHROPIC_API_KEY` when an explicit key is configured, so the
+OAuth token reaches the Claude CLI unchanged. Because the CLI prefers
+`ANTHROPIC_API_KEY` over the OAuth token, the TAKT step unsets the API key
+variables when an OAuth token is present, so the credential that was verified
+is the credential that is used.
+
+`script/validate-takt-auth.sh` probes the resolved credential against the
+Anthropic API before the multi-minute TAKT run. It fails the job only on an
+unambiguous rejection (HTTP 401/403) and warns on any other outcome, so an
+expired secret is reported in seconds while transient API problems do not block
+maintenance.
+
+`script/trust-claude-workspace.sh` records the checkout path as trusted in
+`~/.claude.json`. Without it, headless Claude Code discards every
+`permissions.allow` entry in `.claude/settings.json`.
+
+The existing maintenance PR token `CLAUDE_PR_GITHUB_TOKEN` or legacy
+`CLAUDE_PAT` remains separate and is used only by the deterministic GitHub
+Actions PR creation step.
 
 ## Consequences
 
@@ -71,9 +89,12 @@ The workflow commit step excludes `.context/` so TAKT reports, dependency
 diagnostics, and other agent-readable intermediate artifacts are not committed
 as maintenance changes.
 
-Maintainers must configure `TAKT_ANTHROPIC_API_KEY` or `ANTHROPIC_API_KEY` for
-scheduled maintenance. `CLAUDE_CODE_OAUTH_TOKEN` alone is not sufficient for
-the TAKT SDK provider.
+Maintainers must configure `CLAUDE_CODE_OAUTH_TOKEN`, `TAKT_ANTHROPIC_API_KEY`,
+or `ANTHROPIC_API_KEY` for scheduled maintenance. An earlier revision of this
+ADR stated that `CLAUDE_CODE_OAUTH_TOKEN` alone was insufficient for the TAKT
+SDK provider; that is no longer the case, and the OAuth token is now the
+preferred credential because it can be refreshed with `claude setup-token`
+without provisioning a separate API key.
 
 Workflow template synchronization and contract tests must treat the scheduled
 maintenance workflow as TAKT-backed rather than Claude Code Action-backed.
