@@ -114,7 +114,7 @@ jobs:
       - name: Run Claude Code
         id: claude
         if: steps.pr_draft.outputs.is_draft != 'true' && steps.claude-auth.outputs.available == 'true'
-        uses: anthropics/claude-code-action@a92e7c70a4da9793dc164451d829089dc057a464 # v1
+        uses: anthropics/claude-code-action@be7b93b1907a4abad570368f3c74b6fe3807510b # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
