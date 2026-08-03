@@ -60,18 +60,29 @@ keyUsage               = critical,digitalSignature
 extendedKeyUsage       = critical,codeSigning
 CNF
 
-openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+# macOS の Security framework は OpenSSL 3.x が既定で使う PKCS12 の
+# AES-256-CBC + SHA-256 MAC を検証できず「MAC verification failed」になる。
+# Homebrew の openssl が PATH で優先されうるので、既定のアルゴリズムが
+# macOS 互換な system の LibreSSL を明示的に使う。
+OPENSSL=/usr/bin/openssl
+
+"$OPENSSL" req -x509 -newkey rsa:2048 -nodes -days 3650 \
     -config "$WORKDIR/openssl.cnf" \
     -keyout "$WORKDIR/key.pem" -out "$WORKDIR/cert.pem" 2>/dev/null
 
-openssl pkcs12 -export -inkey "$WORKDIR/key.pem" -in "$WORKDIR/cert.pem" \
-    -out "$WORKDIR/bundle.p12" -passout pass: 2>/dev/null
+# `security import` は空パスワードの PKCS12 を受け付けず、常に MAC verification
+# failed になる。p12 は WORKDIR ごと EXIT trap で消える一時ファイルなので、
+# 使い捨てのランダムパスワードを付ける。
+P12_PASSWORD="$("$OPENSSL" rand -hex 16)"
+
+"$OPENSSL" pkcs12 -export -inkey "$WORKDIR/key.pem" -in "$WORKDIR/cert.pem" \
+    -out "$WORKDIR/bundle.p12" -passout "pass:$P12_PASSWORD" 2>/dev/null
 
 echo "[2/4] System キーチェーンに取り込みます"
 # root の activation から codesign が秘密鍵を使えるよう、System キーチェーンに入れる。
 # -A は「どのアプリからも使用可」の意味で、これが無いと codesign 実行時に
 # 対話プロンプトが出て activation が止まる。
-security import "$WORKDIR/bundle.p12" -k "$KEYCHAIN" -P "" -A \
+security import "$WORKDIR/bundle.p12" -k "$KEYCHAIN" -P "$P12_PASSWORD" -A \
     -T /usr/bin/codesign -T /usr/bin/security >/dev/null
 
 echo "[3/4] 証明書を code signing 用として信頼します"
