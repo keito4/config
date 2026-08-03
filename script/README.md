@@ -12,6 +12,8 @@ This directory contains utility scripts for managing configuration, credentials,
 | `version.sh`                     | Semantic versioning                                      | Makefile               |
 | `update-agents-md.sh`            | AGENTS.md 自動生成セクション更新                         | repo-maintenance       |
 | `repo-maintenance.sh`            | Repository maintenance executable workflow               | `/repo-maintenance`    |
+| `validate-takt-auth.sh`          | Fail fast on rejected Anthropic credentials              | scheduled-maintenance  |
+| `trust-claude-workspace.sh`      | Trust a workspace in `~/.claude.json` for headless runs  | scheduled-maintenance  |
 | `setup-ci.sh`                    | CI/CD workflow setup                                     | `/setup-ci`            |
 | `setup-new-repo.sh`              | New repository bootstrap                                 | `/setup-new-repo`      |
 | `macos/setup-bettertouchtool.js` | BetterTouchTool gesture setup for AeroSpace/Raycast      | Local macOS setup      |
