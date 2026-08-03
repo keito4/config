@@ -59,6 +59,30 @@ describe('nix-darwin and home-manager input method configuration', () => {
     expect(setupScript).toContain('add-trusted-cert');
   });
 
+  test('PKCS12 is generated so that macOS security import can verify its MAC', () => {
+    const setupScript = readRepoFile('script/macos/setup-skhd-signing.sh');
+
+    // macOS の Security framework は OpenSSL 3.x 既定の AES-256-CBC + SHA-256 MAC を
+    // 検証できず "MAC verification failed" になる。Homebrew の openssl が PATH で
+    // 優先されうるため、既定が macOS 互換な system の LibreSSL を明示的に使う。
+    // 否定形だけだと同じ行の未修飾 `openssl` しか弾けず、`/opt/homebrew/bin/openssl`
+    // のような別の絶対パスや行継続を使った回帰をすり抜ける。各呼び出しが
+    // `"$OPENSSL"` を通ることを正に検証する。
+    expect(setupScript).toContain('OPENSSL=/usr/bin/openssl');
+    expect(setupScript).toContain('"$OPENSSL" req');
+    expect(setupScript).toContain('"$OPENSSL" pkcs12');
+    expect(setupScript).toContain('"$OPENSSL" rand');
+    expect(setupScript.match(/(^|[^"])\bopenssl (req|pkcs12|rand)\b/gm)).toBeNull();
+
+    // `security import` は空パスワードの PKCS12 を受け付けず常に MAC verification
+    // failed になるため、使い捨てのランダムパスワードを付ける。
+    expect(setupScript).toContain('P12_PASSWORD="$("$OPENSSL" rand -hex 16)"');
+    expect(setupScript).toContain('-passout "pass:$P12_PASSWORD"');
+    expect(setupScript).toContain('-P "$P12_PASSWORD"');
+    expect(setupScript).not.toContain('-passout pass: ');
+    expect(setupScript).not.toContain('-P "" ');
+  });
+
   test('input source helper exposes macOS input source selection commands', () => {
     const inputSourceModule = readRepoFile('nix/home/input-source.nix');
     const inputSourceWrapper = readRepoFile('script/macos/agent-select-input-source.sh');
