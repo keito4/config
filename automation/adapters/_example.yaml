@@ -1,0 +1,18 @@
+# weekly-ingest アダプタのテンプレート。コピーして <site>.yaml として保存する。
+# `_` 始まりのファイルは実行対象にならない。
+site: example-bank
+enabled: false
+url: https://example.com/login
+auth:
+  secret: EXAMPLE_BANK
+  totp_secret: EXAMPLE_BANK_TOTP
+metrics:
+  - name: balance
+    unit: JPY
+    description: 普通預金残高
+steps:
+  - ログインページを開く
+  - ユーザー ID とパスワードを入力してログインする
+  - ホーム画面に表示される「普通預金残高」を取得する
+notes: |
+  レイアウト変更時の復旧に役立つ情報（対象要素の特徴など）を書いておく。

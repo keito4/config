@@ -25,6 +25,7 @@
 | [0018](0018-reusable-workflow-distribution.md)                  | Reusable Workflow Distribution                                    | Accepted           |
 | [0019](0019-downstream-template-auto-sync.md)                   | Downstream Template Auto-Sync                                     | Accepted           |
 | [0020](0020-claude-skill-distribution-and-settings-boundary.md) | Claude スキルの配布形式と settings.json のホスト／downstream 境界 | Accepted           |
+| [0021](0021-screenshot-based-mobile-data-ingest.md)             | スマホ専用データのスクショ経由週次取り込み                        | Accepted           |
 
 ## ADR テンプレート
 
