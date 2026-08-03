@@ -65,8 +65,14 @@ describe('nix-darwin and home-manager input method configuration', () => {
     // macOS の Security framework は OpenSSL 3.x 既定の AES-256-CBC + SHA-256 MAC を
     // 検証できず "MAC verification failed" になる。Homebrew の openssl が PATH で
     // 優先されうるため、既定が macOS 互換な system の LibreSSL を明示的に使う。
+    // 否定形だけだと同じ行の未修飾 `openssl` しか弾けず、`/opt/homebrew/bin/openssl`
+    // のような別の絶対パスや行継続を使った回帰をすり抜ける。各呼び出しが
+    // `"$OPENSSL"` を通ることを正に検証する。
     expect(setupScript).toContain('OPENSSL=/usr/bin/openssl');
-    expect(setupScript).not.toMatch(/^\s*openssl (req|pkcs12|rand)\b/m);
+    expect(setupScript).toContain('"$OPENSSL" req');
+    expect(setupScript).toContain('"$OPENSSL" pkcs12');
+    expect(setupScript).toContain('"$OPENSSL" rand');
+    expect(setupScript.match(/(^|[^"])\bopenssl (req|pkcs12|rand)\b/gm)).toBeNull();
 
     // `security import` は空パスワードの PKCS12 を受け付けず常に MAC verification
     // failed になるため、使い捨てのランダムパスワードを付ける。
