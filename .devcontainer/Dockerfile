@@ -33,7 +33,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-ARG GH_CLI_VERSION=2.96.0
+ARG GH_CLI_VERSION=2.97.0
 
 # Install GitHub CLI (gh)
 # https://cli.github.com/
@@ -53,7 +53,7 @@ RUN DOPPLER_VERSION="${DOPPLER_CLI_VERSION}" \
  && dpkg -i /tmp/doppler.deb \
  && rm /tmp/doppler.deb
 
-ARG OP_CLI_VERSION=2.35.0
+ARG OP_CLI_VERSION=2.38.1
 
 # Install 1Password CLI (op)
 # https://developer.1password.com/docs/cli/get-started/
@@ -68,7 +68,7 @@ RUN OP_VERSION="${OP_CLI_VERSION}" \
 
 # Install Node.js
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG NODE_VERSION=24.18.0
+ARG NODE_VERSION=24.18.1
 RUN NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/arm64/arm64/') \
  && wget -q https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz \
  && tar -xJf node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz -C /usr/local --strip-components=1 \
@@ -77,7 +77,7 @@ RUN NODE_ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/armhf/armv7l/;s/
 
 # Install pnpm
 # Version is managed by .github/workflows/update-dev-tools.yml
-ARG PNPM_VERSION=11.17.0
+ARG PNPM_VERSION=11.18.0
 RUN npm install -g pnpm@${PNPM_VERSION}
 
 USER vscode
