@@ -63,9 +63,13 @@ describe('Claude workflow contracts', () => {
     expect(workflow).toContain('name: Create pull request from Claude branch');
     expect(workflow).toContain('GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || github.token }}');
     expect(workflow).toContain('gh pr create');
+    expect(workflow).toContain('PR_ASSIGNEE: ${{ vars.CLAUDE_PR_ASSIGNEE }}');
+    expect(workflow).toContain('ASSIGNEE_ARGS=(--assignee "$PR_ASSIGNEE")');
+    expect(workflow).toContain('"${ASSIGNEE_ARGS[@]}"');
     expect(workflow).toContain('git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH"');
-    expect(workflow).toContain('Claude branch $CLAUDE_BRANCH was not pushed.');
-    expect(workflow).not.toContain('Claude branch $CLAUDE_BRANCH was not pushed. Skipping PR creation.');
+    // 変更なしタスク（ブランチ未push）は正常終了として扱う（false failure 防止）
+    expect(workflow).toContain('Claude branch $CLAUDE_BRANCH was not pushed (no code changes). Skipping PR creation.');
+    expect(workflow).not.toMatch(/was not pushed\."\n\s*exit 1/);
     expect(workflow).not.toMatch(/Bash\(gh pr create:\*\)/);
     expect(workflow).not.toContain('github_token: ${{ github.token }}');
     expect(workflow).not.toContain('"allowedTools"');

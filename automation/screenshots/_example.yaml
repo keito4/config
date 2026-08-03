@@ -1,0 +1,13 @@
+# screenshot-ingest 定義のテンプレート。コピーして <source>.yaml として保存する。
+# `_` 始まりのファイルは実行対象にならない。
+source: example-app # 一意な識別子（kebab-case）
+enabled: false # true にすると週次取り込みの対象になる
+app: サンプル銀行アプリ # スマホアプリ名（画像の判別に使う）
+metrics:
+  - name: balance # 読み取る値の名前
+    unit: JPY
+    description: 普通預金残高
+capture_hint: ホーム画面の残高表示が写るようにスクリーンショットを撮る
+notion_page: '' # 任意。取り込み結果を1行追記する Notion ページ URL
+notes: |
+  画像判別・読み取りのヒント（画面の特徴、値の表示位置など）を書いておく。

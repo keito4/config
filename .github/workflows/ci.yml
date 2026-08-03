@@ -65,9 +65,9 @@ jobs:
       workflows: ${{ steps.filter.outputs.workflows }}
       dependencies: ${{ steps.filter.outputs.dependencies }}
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
 
-      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
+      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4
         id: filter
         with:
           filters: |
@@ -103,7 +103,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true' || needs.changes.outputs.scripts == 'true' || needs.changes.outputs.dependencies == 'true' || needs.changes.outputs.workflows == 'true'
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
 
       - uses: ./.github/actions/setup-node-ci
 
@@ -130,7 +130,7 @@ jobs:
       actions: write
       checks: write
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
 
       - uses: ./.github/actions/setup-node-ci
 
@@ -190,7 +190,7 @@ jobs:
       contents: read
       actions: write
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
 
       - uses: ./.github/actions/setup-node-ci
 
@@ -220,7 +220,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
 
       - name: Collect workflow files
         id: workflow-files
@@ -241,7 +241,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Run actionlint
-        uses: reviewdog/action-actionlint@6fb7acc99f4a1008869fa8a0f09cfca740837d9d # v1.72.0
+        uses: reviewdog/action-actionlint@50842263c20a7c46bd0065b9e624d3c569db061e # v1.73.0
         with:
           reporter: github-pr-review
           fail_level: error
@@ -254,7 +254,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.workflows == 'true' || needs.changes.outputs.scripts == 'true'
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
 
       - uses: ./.github/actions/setup-node-ci
 
@@ -272,7 +272,7 @@ jobs:
       pull-requests: read
     continue-on-error: true
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
 
       - name: Check PR Size
         uses: ./.github/actions/pr-size-check
@@ -354,7 +354,7 @@ jobs:
     if: failure() && github.ref == 'refs/heads/main'
     steps:
       - name: Send Slack notification
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
           channel-id: ${{ vars.SLACK_CI_CHANNEL_ID }}
           payload-template-file-path: '.github/slack-ci-failure.json'

@@ -75,14 +75,31 @@ jobs:
 
       - name: Checkout repository
         if: steps.pr_draft.outputs.is_draft != 'true'
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
 
+      - name: Check Claude authentication
+        id: claude-auth
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_FEDERATION_RULE_ID: ${{ secrets.ANTHROPIC_FEDERATION_RULE_ID }}
+          ANTHROPIC_ORGANIZATION_ID: ${{ secrets.ANTHROPIC_ORGANIZATION_ID }}
+        run: |
+          if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] ||
+             [ -n "$ANTHROPIC_API_KEY" ] ||
+             { [ -n "$ANTHROPIC_FEDERATION_RULE_ID" ] && [ -n "$ANTHROPIC_ORGANIZATION_ID" ]; }; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping Claude Code because no Claude authentication secret is configured."
+          fi
+
       - name: Run Claude Code
         id: claude
-        if: steps.pr_draft.outputs.is_draft != 'true'
-        uses: anthropics/claude-code-action@a92e7c70a4da9793dc164451d829089dc057a464 # v1
+        if: steps.pr_draft.outputs.is_draft != 'true' && steps.claude-auth.outputs.available == 'true'
+        uses: anthropics/claude-code-action@be7b93b1907a4abad570368f3c74b6fe3807510b # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
@@ -109,6 +126,7 @@ jobs:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
+          PR_ASSIGNEE: ${{ vars.CLAUDE_PR_ASSIGNEE }}
         run: |
           if [ -z "$CLAUDE_BRANCH" ]; then
             echo "Claude did not create a branch. Skipping PR creation."
@@ -116,8 +134,8 @@ jobs:
           fi
 
           if ! git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH" >/dev/null; then
-            echo "Claude branch $CLAUDE_BRANCH was not pushed."
-            exit 1
+            echo "Claude branch $CLAUDE_BRANCH was not pushed (no code changes). Skipping PR creation."
+            exit 0
           fi
 
           EXISTING_PR=$(gh pr list --head "$CLAUDE_BRANCH" --state open --json number --jq '.[0].number // empty')
@@ -133,8 +151,14 @@ jobs:
 
           BODY=$(printf "Closes #%s\n\nCreated automatically from Claude Code branch \`%s\`." "$ISSUE_NUMBER" "$CLAUDE_BRANCH")
 
+          ASSIGNEE_ARGS=()
+          if [ -n "$PR_ASSIGNEE" ]; then
+            ASSIGNEE_ARGS=(--assignee "$PR_ASSIGNEE")
+          fi
+
           gh pr create \
             --head "$CLAUDE_BRANCH" \
             --base "$DEFAULT_BRANCH" \
             --title "$TITLE" \
-            --body "$BODY"
+            --body "$BODY" \
+            "${ASSIGNEE_ARGS[@]}"

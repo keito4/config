@@ -1,0 +1,9 @@
+# weekly-ingest のしきい値判定ルール。スキーマは automation/README.md を参照。
+# 例:
+# rules:
+#   - site: example-bank
+#     metric: balance
+#     condition: '< 100000'
+#     severity: alert
+#     message: 残高が 10 万円を下回りました
+rules: []
