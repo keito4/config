@@ -29,6 +29,8 @@ jobs:
         if: steps.check.outcome == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}
+          # このジョブは checkout しないため gh はリポジトリを git から解決できない。
+          GH_REPO: ${{ github.repository }}
         run: |
           EXISTING=$(gh issue list --label "claude-health" --state open --json number --jq 'length')
           if [ "$EXISTING" -gt 0 ]; then

@@ -145,4 +145,17 @@ describe('dependabot-auto-merge.yml (template and actual — security-critical p
     expect(workflow).toContain('gh label create "needs-review"');
     expect(workflow).toContain('gh label create "breaking-change"');
   });
+
+  // このジョブは actions/checkout を実行しないため、gh はリポジトリを git から
+  // 解決できない。`gh pr edit "$PR_URL"` は URL から特定できるが `gh label create`
+  // は引数を持たず、"failed to run git: fatal: not a git repository" で落ちる。
+  test.each(workflowPaths)('%s: gives gh a repository without a checkout', (wfPath) => {
+    const workflow = readWorkflow(wfPath);
+
+    expect(workflow).not.toContain('actions/checkout');
+
+    for (const step of workflow.split(/^ {6}- /m).filter((s) => s.includes('gh label create'))) {
+      expect(step).toContain('GH_REPO: ${{ github.repository }}');
+    }
+  });
 });

@@ -117,6 +117,35 @@ check_self_cancelling_workflows() {
   output::success "Workflow self-cancellation guards ok"
 }
 
+# checkout を実行しないジョブでは gh がリポジトリを git から解決できない。
+# `gh pr edit "$PR_URL"` は URL 引数から特定できるため通ってしまい、引数を持たない
+# `gh label create` だけが "fatal: not a git repository" で落ちるので気付きにくい。
+check_gh_repo_context() {
+  local workflow issue_count=0 stripped
+
+  for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
+    [[ -f "$workflow" ]] || continue
+
+    stripped="$(sed 's/^[[:space:]]*#.*$//' "$workflow")"
+
+    # checkout していればリポジトリは解決できる。
+    grep -q "actions/checkout" <<<"$stripped" && continue
+    grep -qE "\bgh (label|issue|release|run|workflow|pr (create|list|status))\b" <<<"$stripped" || continue
+    grep -qE "GH_REPO:|--repo " <<<"$stripped" && continue
+
+    output::warning "$(basename "$workflow"): gh has no repository to resolve without a checkout"
+    echo "Add the repository to the step environment:"
+    echo "  GH_REPO: \${{ github.repository }}"
+    issue_count=$((issue_count + 1))
+  done
+
+  if [[ "$issue_count" -gt 0 ]]; then
+    return 1
+  fi
+
+  output::success "gh repository context ok"
+}
+
 check_artifact_retention() {
   local workflow issue_count=0
 

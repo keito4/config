@@ -19,11 +19,12 @@ CHECK_SCHEDULED_MAINTENANCE_ONLY=false
 CHECK_ARTIFACT_RETENTION_ONLY=false
 CHECK_CLAUDE_ACTION_CREDENTIALS_ONLY=false
 CHECK_SELF_CANCELLING_WORKFLOWS_ONLY=false
+CHECK_GH_REPO_CONTEXT_ONLY=false
 CONTEXT_DIR="${CONTEXT_DIR:-.context}"
 
 usage() {
   cat <<'EOF'
-Usage: script/repo-maintenance.sh [--mode full|quick|check-only] [--skip CATEGORY] [--create-pr] [--check-required-workflows] [--check-actions-pr-settings] [--check-scheduled-maintenance] [--check-artifact-retention] [--check-claude-action-credentials] [--check-self-cancelling-workflows]
+Usage: script/repo-maintenance.sh [--mode full|quick|check-only] [--skip CATEGORY] [--create-pr] [--check-required-workflows] [--check-actions-pr-settings] [--check-scheduled-maintenance] [--check-artifact-retention] [--check-claude-action-credentials] [--check-self-cancelling-workflows] [--check-gh-repo-context]
 EOF
 }
 
@@ -68,6 +69,11 @@ while [[ $# -gt 0 ]]; do
       ;;
     --check-self-cancelling-workflows)
       CHECK_SELF_CANCELLING_WORKFLOWS_ONLY=true
+      MODE="check-only"
+      shift
+      ;;
+    --check-gh-repo-context)
+      CHECK_GH_REPO_CONTEXT_ONLY=true
       MODE="check-only"
       shift
       ;;
@@ -451,6 +457,11 @@ if [[ "$CHECK_SELF_CANCELLING_WORKFLOWS_ONLY" == "true" ]]; then
   exit $?
 fi
 
+if [[ "$CHECK_GH_REPO_CONTEXT_ONLY" == "true" ]]; then
+  check_gh_repo_context
+  exit $?
+fi
+
 cat <<EOF
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Repository Maintenance
@@ -473,6 +484,7 @@ if ! has_skip "setup"; then
   check_artifact_retention || true
   check_claude_action_credentials || true
   check_self_cancelling_workflows || true
+  check_gh_repo_context || true
   check_workflow_templates
   check_workflow_template_lint_coverage
   check_managed_templates

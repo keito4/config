@@ -205,3 +205,71 @@ describe('check_self_cancelling_workflows', () => {
     expect(result.status).not.toBe(0);
   });
 });
+
+// keito4/config PR #1066: dependabot-auto ジョブは actions/checkout を実行しないため、
+// `gh label create` がリポジトリを git から解決できず
+// "failed to run git: fatal: not a git repository" で落ちていた。
+// URL 引数を取る `gh pr edit "$PR_URL"` は同じジョブでも通るので気付きにくい。
+describe('check_gh_repo_context', () => {
+  const FLAG = '--check-gh-repo-context';
+
+  function ghWorkflow({ command, checkout = false, env = [] }) {
+    return [
+      'name: Dependabot Auto-merge',
+      'jobs:',
+      '  dependabot-auto:',
+      '    steps:',
+      ...(checkout ? ['      - uses: actions/checkout@abc123 # v7.0.1'] : []),
+      '      - name: Label updates',
+      `        run: ${command}`,
+      ...(env.length ? ['        env:', ...env.map((line) => `          ${line}`)] : []),
+      '',
+    ].join('\n');
+  }
+
+  test('flags a repo-scoped gh command in a workflow that never checks out', () => {
+    const result = runCheck(FLAG, {
+      'dependabot-auto-merge.yml': ghWorkflow({ command: 'gh label create "dependabot-minor" --force' }),
+    });
+
+    expect(result.status).not.toBe(0);
+    expect(result.output).toContain('dependabot-auto-merge.yml');
+    expect(result.output).toContain('GH_REPO');
+  });
+
+  test('accepts the same command once GH_REPO is provided', () => {
+    const result = runCheck(FLAG, {
+      'dependabot-auto-merge.yml': ghWorkflow({
+        command: 'gh label create "dependabot-minor" --force',
+        env: ['GH_REPO: ${{ github.repository }}'],
+      }),
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.output).toContain('gh repository context ok');
+  });
+
+  test('accepts an explicit --repo argument', () => {
+    const result = runCheck(FLAG, {
+      'health.yml': ghWorkflow({ command: 'gh issue create --repo "$GITHUB_REPOSITORY" --title x' }),
+    });
+
+    expect(result.status).toBe(0);
+  });
+
+  test('accepts a workflow that checks the repository out', () => {
+    const result = runCheck(FLAG, {
+      'ci.yml': ghWorkflow({ command: 'gh label create "x" --force', checkout: true }),
+    });
+
+    expect(result.status).toBe(0);
+  });
+
+  test('ignores gh subcommands that take a pull request URL', () => {
+    const result = runCheck(FLAG, {
+      'dependabot-auto-merge.yml': ghWorkflow({ command: 'gh pr edit "$PR_URL" --add-label "x"' }),
+    });
+
+    expect(result.status).toBe(0);
+  });
+});
