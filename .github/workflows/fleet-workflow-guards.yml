@@ -1,0 +1,55 @@
+# Fleet Workflow Guards
+#
+# repo-maintenance のワークフロー検査を、直近いじったリポジトリ全体に対して実行する。
+# 検査は bash と awk だけで動き、対象リポジトリのワークフロー YAML を読むだけなので、
+# 各リポジトリへスクリプトを配布せずここから一括で走らせられる。検査を直せば次回の
+# 実行から全リポジトリへ反映される。
+#
+# 走査は読み取りのみ。対象リポジトリへ Issue や PR は作らない。
+name: Fleet Workflow Guards
+
+on:
+  schedule:
+    - cron: '0 22 * * 0' # 毎週月曜 07:00 JST
+  workflow_dispatch:
+    inputs:
+      days:
+        description: '対象とする最終 push からの日数'
+        required: false
+        default: '90'
+      repos:
+        description: '走査するリポジトリ名（空白区切り）。空なら自動検出'
+        required: false
+        default: ''
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    name: Scan repositories
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout config
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      # 他リポジトリを読むため PAT が要る。GITHUB_TOKEN は自リポジトリしか見えない。
+      - name: Run workflow guards across repositories
+        env:
+          GH_TOKEN: ${{ secrets.CLAUDE_PAT }}
+          FLEET_DAYS: ${{ inputs.days || '90' }}
+          FLEET_REPOS: ${{ inputs.repos || '' }}
+        run: |
+          args=(--days "$FLEET_DAYS")
+          if [ -n "$FLEET_REPOS" ]; then
+            args+=(--repos "$FLEET_REPOS")
+          fi
+          script/fleet-workflow-guards.sh "${args[@]}"

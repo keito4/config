@@ -12,6 +12,7 @@ This directory contains utility scripts for managing configuration, credentials,
 | `version.sh`                     | Semantic versioning                                      | Makefile               |
 | `update-agents-md.sh`            | AGENTS.md 自動生成セクション更新                         | repo-maintenance       |
 | `repo-maintenance.sh`            | Repository maintenance executable workflow               | `/repo-maintenance`    |
+| `fleet-workflow-guards.sh`       | Workflow guards across every recently pushed repository  | fleet-workflow-guards  |
 | `validate-takt-auth.sh`          | Fail fast on rejected Anthropic credentials              | scheduled-maintenance  |
 | `trust-claude-workspace.sh`      | Trust a workspace in `~/.claude.json` for headless runs  | scheduled-maintenance  |
 | `setup-ci.sh`                    | CI/CD workflow setup                                     | `/setup-ci`            |
@@ -194,6 +195,28 @@ The workflow guards (`--check-claude-action-credentials`, `--check-self-cancelli
 `--check-gh-repo-context`, `--check-artifact-retention`) scan `.github/workflows/`,
 `.github/workflows/templates/`, and `templates/workflows/`. `ci.yml` runs all four in its
 Workflow Lint job so regressions fail the pull request.
+
+### fleet-workflow-guards.sh
+
+Runs the repo-maintenance workflow guards across several repositories at once.
+The guards only read workflow YAML, so they run unchanged against any checkout;
+keeping them here means a fix to a guard reaches every repository on the next
+run without distributing this script downstream.
+
+The scan is read-only. It never opens issues or pull requests in the scanned
+repositories.
+
+**Usage**:
+
+```bash
+./script/fleet-workflow-guards.sh                       # 直近90日に push されたリポジトリ
+./script/fleet-workflow-guards.sh --days 30
+./script/fleet-workflow-guards.sh --repos "config ohana"
+```
+
+Requires `gh` authenticated with a token that can read the target repositories.
+`.github/workflows/fleet-workflow-guards.yml` runs it weekly with `CLAUDE_PAT`
+and writes the per-repository result to the job summary.
 
 ### setup-ci.sh
 
