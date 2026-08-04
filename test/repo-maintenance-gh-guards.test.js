@@ -111,6 +111,47 @@ describe('check_gh_repo_context', () => {
     },
   );
 
+  // シェルの行継続の先にある --repo も同じコマンドの一部。
+  // keito4/calendar_alerm の release-please.yml が実際にこの書き方で、
+  // 誤検知すると正常動作しているワークフローを CI が拒否する。
+  test('accepts a repository flag on a shell line continuation', () => {
+    const workflow = [
+      'name: Release Please',
+      'jobs:',
+      '  trigger-cd:',
+      '    steps:',
+      '      - name: Trigger CD workflow',
+      '        run: |',
+      '          gh workflow run cd.yml \\',
+      '            --repo "$GITHUB_REPOSITORY" \\',
+      '            --field "tag=$TAG_NAME"',
+      '',
+    ].join('\n');
+
+    const result = runCheck(FLAG, { 'release-please.yml': workflow });
+
+    expect(result.status).toBe(0);
+  });
+
+  // 継続行があっても、リポジトリ指定が無ければ検出する。
+  test('still flags a continued command that never names a repository', () => {
+    const workflow = [
+      'name: Release Please',
+      'jobs:',
+      '  trigger-cd:',
+      '    steps:',
+      '      - name: Trigger CD workflow',
+      '        run: |',
+      '          gh workflow run cd.yml \\',
+      '            --field "tag=$TAG_NAME"',
+      '',
+    ].join('\n');
+
+    const result = runCheck(FLAG, { 'release-please.yml': workflow });
+
+    expect(result.status).not.toBe(0);
+  });
+
   test('ignores gh subcommands that take a pull request URL', () => {
     const result = runCheck(FLAG, {
       'dependabot-auto-merge.yml': ghWorkflow({ command: 'gh pr edit "$PR_URL" --add-label "x"' }),

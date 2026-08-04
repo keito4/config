@@ -183,22 +183,39 @@ check_gh_repo_context() {
     [[ -n "$workflow" ]] || continue
 
     # ジョブ単位で判定する。あるジョブの checkout や GH_REPO は別ジョブの gh を設定しない。
-    # --repo は同じコマンド行にある場合だけ有効とみなす。
+    # 行継続は 1 つの論理行に結合してから見る。--repo が継続行にある書き方は普通で、
+    # 同一行しか見ないと正常動作しているワークフローを誤検知する。
     if ! awk '
       function flush() {
         if (in_job && bad_cmd && !has_checkout && !has_gh_repo) bad = 1
         bad_cmd = 0; has_checkout = 0; has_gh_repo = 0
       }
-      { line = $0; sub(/^[[:space:]]*#.*$/, "", line) }
-      /^jobs:[[:space:]]*$/ { in_jobs = 1; next }
-      in_jobs && /^  [A-Za-z0-9_-]+:/ { flush(); in_job = 1; next }
-      in_job && line ~ /actions\/checkout/ { has_checkout = 1 }
-      in_job && line ~ /^[[:space:]]*GH_REPO:/ { has_gh_repo = 1 }
-      in_job && line ~ /(^|[^A-Za-z0-9_-])gh[[:space:]]+((label|issue|release|run|workflow)|pr[[:space:]]+(create|list|status))([^A-Za-z0-9_-]|$)/ {
-        # gh は -R / --repo= も受け付ける。落とすと正当なワークフローを止める。
-        if (line !~ /(--repo[[:space:]=]|-R[[:space:]])/) bad_cmd = 1
+      function eval_line(l) {
+        if (!in_job) return
+        if (l ~ /actions\/checkout/) has_checkout = 1
+        if (l ~ /^[[:space:]]*GH_REPO:/) has_gh_repo = 1
+        if (l ~ /(^|[^A-Za-z0-9_-])gh[[:space:]]+((label|issue|release|run|workflow)|pr[[:space:]]+(create|list|status))([^A-Za-z0-9_-]|$)/) {
+          # gh は -R / --repo= も受け付ける。落とすと正当なワークフローを止める。
+          if (l !~ /(--repo[[:space:]=]|-R[[:space:]])/) bad_cmd = 1
+        }
       }
-      END { flush(); exit bad ? 1 : 0 }
+      { line = $0; sub(/^[[:space:]]*#.*$/, "", line) }
+      pending == "" && /^jobs:[[:space:]]*$/ { in_jobs = 1; next }
+      pending == "" && in_jobs && /^  [A-Za-z0-9_-]+:/ { flush(); in_job = 1; next }
+      {
+        if (pending != "") { line = pending " " line; pending = "" }
+        if (line ~ /\\[[:space:]]*$/) {
+          sub(/\\[[:space:]]*$/, "", line)
+          pending = line
+          next
+        }
+        eval_line(line)
+      }
+      END {
+        if (pending != "") eval_line(pending)
+        flush()
+        exit bad ? 1 : 0
+      }
     ' "$workflow"; then
       output::warning "$(basename "$workflow"): gh has no repository to resolve without a checkout"
       echo "Add the repository to the step environment:"
