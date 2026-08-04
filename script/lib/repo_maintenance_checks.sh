@@ -153,6 +153,9 @@ check_self_cancelling_workflows() {
     stripped="$(sed 's/^[[:space:]]*#.*$//' "$workflow")"
 
     grep -qE "^[[:space:]]*cancel-in-progress:[[:space:]]*true[[:space:]]*$" <<<"$stripped" || continue
+    # group が sha / run_id を含むなら、自分が起こす push は別グループに属するため
+    # 自分自身をキャンセルできない。
+    grep -qE "^[[:space:]]*group:.*(github\.sha|github\.run_id)" <<<"$stripped" && continue
     # on: push / on: [push, ...] の短縮形も push トリガーなので workflow_has_event で判定する。
     workflow_has_event "$workflow" "push" || continue
     grep -qE "git push|peter-evans/create-pull-request|softprops/action-gh-release|googleapis/release-please" <<<"$stripped" || continue
@@ -192,7 +195,8 @@ check_gh_repo_context() {
       in_job && line ~ /actions\/checkout/ { has_checkout = 1 }
       in_job && line ~ /^[[:space:]]*GH_REPO:/ { has_gh_repo = 1 }
       in_job && line ~ /(^|[^A-Za-z0-9_-])gh[[:space:]]+((label|issue|release|run|workflow)|pr[[:space:]]+(create|list|status))([^A-Za-z0-9_-]|$)/ {
-        if (line !~ /--repo[[:space:]]/) bad_cmd = 1
+        # gh は -R / --repo= も受け付ける。落とすと正当なワークフローを止める。
+        if (line !~ /(--repo[[:space:]=]|-R[[:space:]])/) bad_cmd = 1
       }
       END { flush(); exit bad ? 1 : 0 }
     ' "$workflow"; then
