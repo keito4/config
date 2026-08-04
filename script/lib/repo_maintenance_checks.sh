@@ -57,6 +57,66 @@ check_scheduled_maintenance_configuration() {
   output::success "Scheduled Maintenance configuration ok"
 }
 
+# Claude CLI は ANTHROPIC_API_KEY を CLAUDE_CODE_OAUTH_TOKEN より優先する（ADR 0013）。
+# 両方を無条件に claude-code-action へ渡すと、失効した API キーが有効な OAuth トークンを
+# 握り潰す。失敗は無言（is_error:true / num_turns:1 / total_cost_usd:0 / エラー本文なし）で、
+# 約 180 秒リトライしてから終わるため気付きにくい。
+check_claude_action_credentials() {
+  local workflow issue_count=0 stripped
+
+  for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
+    [[ -f "$workflow" ]] || continue
+
+    # 行頭コメントを落とす。注意書きの中の文字列を実設定と誤認しないため。
+    stripped="$(sed 's/^[[:space:]]*#.*$//' "$workflow")"
+
+    grep -q "anthropics/claude-code-action" <<<"$stripped" || continue
+    grep -q "claude_code_oauth_token:" <<<"$stripped" || continue
+
+    if grep -qE "^[[:space:]]*anthropic_api_key:" <<<"$stripped" \
+      && ! grep -qE "^[[:space:]]*anthropic_api_key:.*CLAUDE_CODE_OAUTH_TOKEN" <<<"$stripped"; then
+      output::warning "$(basename "$workflow"): anthropic_api_key overrides CLAUDE_CODE_OAUTH_TOKEN"
+      echo "Pass the API key only when the OAuth token is empty:"
+      echo "  anthropic_api_key: \${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}"
+      issue_count=$((issue_count + 1))
+    fi
+  done
+
+  if [[ "$issue_count" -gt 0 ]]; then
+    return 1
+  fi
+
+  output::success "Claude Actions credential precedence ok"
+}
+
+# push で起動するワークフローが自分でコミットや Release を publish すると、その push が
+# 起こす新規実行に cancel-in-progress: true で自分自身をキャンセルされる。
+# keito4/intent-gate-android では v1.2.49 の APK 添付と Firebase 配信が失われた。
+check_self_cancelling_workflows() {
+  local workflow issue_count=0 stripped
+
+  for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
+    [[ -f "$workflow" ]] || continue
+
+    stripped="$(sed 's/^[[:space:]]*#.*$//' "$workflow")"
+
+    grep -qE "^[[:space:]]*cancel-in-progress:[[:space:]]*true[[:space:]]*$" <<<"$stripped" || continue
+    grep -qE "^[[:space:]]*push:" <<<"$stripped" || continue
+    grep -qE "git push|peter-evans/create-pull-request|softprops/action-gh-release|googleapis/release-please" <<<"$stripped" || continue
+
+    output::warning "$(basename "$workflow"): cancel-in-progress cancels this workflow's own push"
+    echo "Scope the cancellation to pull requests so pushes to the default branch run to completion:"
+    echo "  cancel-in-progress: \${{ github.event_name == 'pull_request' }}"
+    issue_count=$((issue_count + 1))
+  done
+
+  if [[ "$issue_count" -gt 0 ]]; then
+    return 1
+  fi
+
+  output::success "Workflow self-cancellation guards ok"
+}
+
 check_artifact_retention() {
   local workflow issue_count=0
 
