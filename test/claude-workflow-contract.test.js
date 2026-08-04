@@ -280,17 +280,30 @@ describe('Claude workflow contracts', () => {
   test('repo-maintenance detects required workflow trigger incompatibility', () => {
     const command = readWorkflow('.claude/commands/repo-maintenance.md');
     const script = readWorkflow('script/repo-maintenance.sh');
+    // workflow_has_event は複数の検査が共有するため lib 側に置いている。
+    const checks = readWorkflow('script/lib/repo_maintenance_checks.sh');
 
     expect(command).toContain('Required Workflow Trigger Compatibility Check');
     expect(script).toContain('security-summary.yml');
     expect(script).toContain('security-summary.yaml');
     expect(script).toContain('.github/workflows/*.yaml');
     expect(script).toContain("github\\.event_name == '\\''schedule'\\''");
-    expect(script).toContain('/^on:[[:space:]]*');
-    expect(script).toContain('/^"on":[[:space:]]*');
-    expect(script).toContain('/^\\047on\\047:[[:space:]]*');
+    expect(checks).toContain('/^on:[[:space:]]*');
+    expect(checks).toContain('/^"on":[[:space:]]*');
+    expect(checks).toContain('/^\\047on\\047:[[:space:]]*');
     expect(script).toContain('pull_request');
     expect(script).toContain('/^  generate-summary:/');
     expect(script).toContain('/^  [A-Za-z0-9_-]+:/');
+  });
+
+  // on: push / on: [push] / on:\n  push: / on:\n  - push はいずれも push トリガー。
+  // スカラー形式を取りこぼすと、必須ワークフロー検査も自己キャンセル検査もすり抜ける。
+  test('workflow_has_event recognizes every valid trigger form', () => {
+    const checks = readWorkflow('script/lib/repo_maintenance_checks.sh');
+
+    expect(checks).toContain('/^on:[[:space:]]*\\[/');
+    expect(checks).toContain('/^on:[[:space:]]*[A-Za-z_]/');
+    expect(checks).toContain('/^on:[[:space:]]*$/');
+    expect(checks).toContain('"^[[:space:]]*-[[:space:]]*" event');
   });
 });

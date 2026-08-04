@@ -17,11 +17,14 @@ CHECK_REQUIRED_WORKFLOWS_ONLY=false
 CHECK_ACTIONS_PR_SETTINGS_ONLY=false
 CHECK_SCHEDULED_MAINTENANCE_ONLY=false
 CHECK_ARTIFACT_RETENTION_ONLY=false
+CHECK_CLAUDE_ACTION_CREDENTIALS_ONLY=false
+CHECK_SELF_CANCELLING_WORKFLOWS_ONLY=false
+CHECK_GH_REPO_CONTEXT_ONLY=false
 CONTEXT_DIR="${CONTEXT_DIR:-.context}"
 
 usage() {
   cat <<'EOF'
-Usage: script/repo-maintenance.sh [--mode full|quick|check-only] [--skip CATEGORY] [--create-pr] [--check-required-workflows] [--check-actions-pr-settings] [--check-scheduled-maintenance] [--check-artifact-retention]
+Usage: script/repo-maintenance.sh [--mode full|quick|check-only] [--skip CATEGORY] [--create-pr] [--check-required-workflows] [--check-actions-pr-settings] [--check-scheduled-maintenance] [--check-artifact-retention] [--check-claude-action-credentials] [--check-self-cancelling-workflows] [--check-gh-repo-context]
 EOF
 }
 
@@ -59,6 +62,21 @@ while [[ $# -gt 0 ]]; do
       MODE="check-only"
       shift
       ;;
+    --check-claude-action-credentials)
+      CHECK_CLAUDE_ACTION_CREDENTIALS_ONLY=true
+      MODE="check-only"
+      shift
+      ;;
+    --check-self-cancelling-workflows)
+      CHECK_SELF_CANCELLING_WORKFLOWS_ONLY=true
+      MODE="check-only"
+      shift
+      ;;
+    --check-gh-repo-context)
+      CHECK_GH_REPO_CONTEXT_ONLY=true
+      MODE="check-only"
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -87,33 +105,6 @@ run_if_exists() {
 
   output::info "$description"
   "$@"
-}
-
-workflow_has_event() {
-  local workflow="${1:?Workflow required}"
-  local event="${2:?Event required}"
-
-  awk -v event="$event" '
-    function has_event(line) {
-      return line ~ "(^|[^A-Za-z0-9_-])" event "([^A-Za-z0-9_-]|$)"
-    }
-    /^on:[[:space:]]*\[/ || /^"on":[[:space:]]*\[/ || /^\047on\047:[[:space:]]*\[/ {
-      if (has_event($0)) found = 1
-      next
-    }
-    /^on:[[:space:]]*$/ || /^"on":[[:space:]]*$/ || /^\047on\047:[[:space:]]*$/ {
-      in_on = 1
-      next
-    }
-    in_on && /^[^[:space:]#][^:]*:/ {
-      in_on = 0
-    }
-    in_on {
-      if ($0 ~ "^[[:space:]]*-[[:space:]]*" event "([[:space:]#]|$)") found = 1
-      if ($0 ~ "^[[:space:]]*" event ":[[:space:]]*") found = 1
-    }
-    END { exit found ? 0 : 1 }
-  ' "$workflow"
 }
 
 workflow_is_required_candidate() {
@@ -429,6 +420,21 @@ if [[ "$CHECK_ARTIFACT_RETENTION_ONLY" == "true" ]]; then
   exit $?
 fi
 
+if [[ "$CHECK_CLAUDE_ACTION_CREDENTIALS_ONLY" == "true" ]]; then
+  check_claude_action_credentials
+  exit $?
+fi
+
+if [[ "$CHECK_SELF_CANCELLING_WORKFLOWS_ONLY" == "true" ]]; then
+  check_self_cancelling_workflows
+  exit $?
+fi
+
+if [[ "$CHECK_GH_REPO_CONTEXT_ONLY" == "true" ]]; then
+  check_gh_repo_context
+  exit $?
+fi
+
 cat <<EOF
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Repository Maintenance
@@ -449,6 +455,9 @@ if ! has_skip "setup"; then
   fi
   check_scheduled_maintenance_configuration || true
   check_artifact_retention || true
+  check_claude_action_credentials || true
+  check_self_cancelling_workflows || true
+  check_gh_repo_context || true
   check_workflow_templates
   check_workflow_template_lint_coverage
   check_managed_templates

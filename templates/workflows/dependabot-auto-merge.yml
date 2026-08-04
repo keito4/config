@@ -76,6 +76,9 @@ jobs:
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # このジョブは checkout しないため gh はリポジトリを git から解決できない。
+          # gh label create は URL 引数を取らないので GH_REPO が無いと失敗する。
+          GH_REPO: ${{ github.repository }}
 
       - name: Auto-approve minor updates
         if: github.actor == 'dependabot[bot]' && steps.metadata.outputs.update-type == 'version-update:semver-minor'
@@ -96,3 +99,4 @@ jobs:
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}

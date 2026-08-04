@@ -1,7 +1,7 @@
 ---
 description: Comprehensive repository maintenance - run all health checks and updates
 allowed-tools: Read, Bash(script/repo-maintenance.sh:*), Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(pnpm:*), Bash(jq:*), Skill
-argument-hint: '[--mode full|quick|check-only] [--skip CATEGORY] [--create-pr] [--check-actions-pr-settings] [--check-scheduled-maintenance] [--check-artifact-retention]'
+argument-hint: '[--mode full|quick|check-only] [--skip CATEGORY] [--create-pr] [--check-actions-pr-settings] [--check-scheduled-maintenance] [--check-artifact-retention] [--check-claude-action-credentials] [--check-self-cancelling-workflows] [--check-gh-repo-context]'
 ---
 
 # Repository Maintenance Workflow
@@ -35,6 +35,9 @@ Repository state guard runs before updates. Archived repositories switch to `che
 - Automated issue and maintenance PR creation expects `default_workflow_permissions=write` and `can_approve_pull_request_reviews=true`.
 - Scheduled Maintenance configuration is checked with `script/repo-maintenance.sh --check-scheduled-maintenance`.
 - Artifact retention is checked with `script/repo-maintenance.sh --check-artifact-retention` and should be 30 days or less.
+- Claude Actions credential precedence is checked with `script/repo-maintenance.sh --check-claude-action-credentials`. Passing `anthropic_api_key` unconditionally next to `claude_code_oauth_token` lets a stale API key shadow the OAuth token, and the run fails silently after roughly three minutes.
+- Workflow self-cancellation is checked with `script/repo-maintenance.sh --check-self-cancelling-workflows`. A push-triggered workflow that pushes commits or publishes a release must not use `cancel-in-progress: true`, or it cancels its own run before the release finishes.
+- `gh` repository context is checked with `script/repo-maintenance.sh --check-gh-repo-context`. A job without `actions/checkout` must pass `GH_REPO` or `--repo`, because `gh` otherwise resolves the repository from git and fails with `not a git repository`.
 - Managed workflow templates are checked against `templates/workflows/` with `npm run workflow:sync:check`.
 - Workflow Lint coverage checks verify `.github/workflows/`, `.github/workflows/templates/`, and `templates/workflows/` are collected without static unmatched globs.
 

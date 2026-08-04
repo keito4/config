@@ -185,6 +185,9 @@ Runs repository maintenance checks and managed updates. This is the executable s
 ./script/repo-maintenance.sh --check-actions-pr-settings
 ./script/repo-maintenance.sh --check-scheduled-maintenance
 ./script/repo-maintenance.sh --check-artifact-retention
+./script/repo-maintenance.sh --check-claude-action-credentials
+./script/repo-maintenance.sh --check-self-cancelling-workflows
+./script/repo-maintenance.sh --check-gh-repo-context
 ```
 
 ### setup-ci.sh
