@@ -38,6 +38,8 @@ Repository state guard runs before updates. Archived repositories switch to `che
 - Claude Actions credential precedence is checked with `script/repo-maintenance.sh --check-claude-action-credentials`. Passing `anthropic_api_key` unconditionally next to `claude_code_oauth_token` lets a stale API key shadow the OAuth token, and the run fails silently after roughly three minutes.
 - Workflow self-cancellation is checked with `script/repo-maintenance.sh --check-self-cancelling-workflows`. A push-triggered workflow that pushes commits or publishes a release must not use `cancel-in-progress: true`, or it cancels its own run before the release finishes.
 - `gh` repository context is checked with `script/repo-maintenance.sh --check-gh-repo-context`. A job without `actions/checkout` must pass `GH_REPO` or `--repo`, because `gh` otherwise resolves the repository from git and fails with `not a git repository`.
+- The four workflow guards above scan `.github/workflows/`, `.github/workflows/templates/`, and `templates/workflows/`. Templates are in scope because this repository distributes them to downstream repositories.
+- `ci.yml` runs the same guards in its Workflow Lint job, so a pull request that reintroduces one of these defects fails instead of only warning at the next scheduled maintenance run.
 - Managed workflow templates are checked against `templates/workflows/` with `npm run workflow:sync:check`.
 - Workflow Lint coverage checks verify `.github/workflows/`, `.github/workflows/templates/`, and `templates/workflows/` are collected without static unmatched globs.
 

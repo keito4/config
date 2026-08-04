@@ -247,6 +247,20 @@ jobs:
           fail_level: error
           actionlint_flags: ${{ steps.workflow-files.outputs.files }}
 
+      # actionlint が拾わない、CI が緑のまま実害だけが出る不具合を PR で止める。
+      # 週次メンテナンスの警告だけでは退行を含む PR がマージできてしまう。
+      - name: Run workflow guards
+        run: |
+          guard_status=0
+          for check in \
+            --check-claude-action-credentials \
+            --check-self-cancelling-workflows \
+            --check-gh-repo-context \
+            --check-artifact-retention; do
+            script/repo-maintenance.sh "$check" || guard_status=1
+          done
+          exit "$guard_status"
+
   workflow-template-sync:
     name: Workflow Template Sync
     runs-on: ubuntu-latest
