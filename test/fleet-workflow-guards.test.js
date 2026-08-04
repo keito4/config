@@ -94,7 +94,47 @@ const GH_CONTEXT_VIOLATION = [
   '',
 ].join('\n');
 
+// check_artifact_retention は output::warning ではなく素の "file: message" を出す。
+// ⚠ 行だけを拾う実装だと、非ゼロ終了しているのに違反が消えて clean と報告される。
+const ARTIFACT_RETENTION_VIOLATION = [
+  'name: CI',
+  'jobs:',
+  '  build:',
+  '    steps:',
+  '      - uses: actions/checkout@abc123 # v7.0.1',
+  '      - uses: actions/upload-artifact@abc123 # v4',
+  '        with:',
+  '          name: coverage',
+  '',
+].join('\n');
+
 describe('script/fleet-workflow-guards.sh', () => {
+  test('detects a guard whose diagnostics are not warning-formatted', () => {
+    const result = runFleet(['--repos', 'alpha'], {
+      workflows: { alpha: { '.github/workflows/ci.yml': ARTIFACT_RETENTION_VIOLATION } },
+    });
+
+    expect(result.status).not.toBe(0);
+    expect(result.output).not.toContain('No workflow guard violations');
+    expect(result.output).toContain('alpha');
+  });
+
+  test('rejects a repository name that would escape the work directory', () => {
+    const result = runFleet(['--repos', '../escape'], { workflows: {} });
+
+    expect(result.status).not.toBe(0);
+    expect(result.output).toMatch(/invalid|不正/i);
+  });
+
+  test.each([['0'], ['-5'], ['abc']])('rejects an invalid --days value (%s)', (days) => {
+    const result = runFleet(['--days', days, '--repos', 'alpha'], {
+      workflows: { alpha: { '.github/workflows/ci.yml': CLEAN_WORKFLOW } },
+    });
+
+    expect(result.status).not.toBe(0);
+    expect(result.output).toMatch(/invalid|不正/i);
+  });
+
   test('reports no violations when every repository is clean', () => {
     const result = runFleet(['--repos', 'alpha bravo'], {
       workflows: {

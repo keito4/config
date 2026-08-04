@@ -59,6 +59,22 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+validate_inputs() {
+  local repo
+
+  if [[ ! "$DAYS" =~ ^[1-9][0-9]*$ ]]; then
+    # 検証しないと date が失敗して cutoff が空になり、全リポジトリへ黙って広がる。
+    output::fatal "invalid --days: $DAYS (expected a positive integer)"
+  fi
+
+  for repo in $REPOS; do
+    # rm -rf する先を作るので、作業ディレクトリの外を指す名前は受け付けない。
+    if [[ ! "$repo" =~ ^[A-Za-z0-9._-]+$ || "$repo" == .* ]]; then
+      output::fatal "invalid repository name: $repo"
+    fi
+  done
+}
+
 discover_repos() {
   local cutoff
   # 直近いじったリポジトリだけを対象にする。アーカイブ済みは除外する。
@@ -74,19 +90,31 @@ discover_repos() {
 # チェックアウトへ入れないときは 2 を返す。ここを握り潰すと、走査できていないのに
 # 「違反なし」と報告してしまう。
 scan_repo() {
-  local dest="$1" guard output
+  local dest="$1" guard output guard_status
 
   [[ -d "$dest" ]] || return 2
 
   for guard in "${GUARDS[@]}"; do
-    # 検査は違反があると非ゼロを返す。1 つ落ちても残りを続け、まとめて直せるようにする。
-    output="$(cd "$dest" || exit 1; "$SCRIPT_DIR/repo-maintenance.sh" "$guard" 2>&1)" || true
-    grep -E '^(⚠|.*\[1;33m)' <<<"$output" || true
+    # 終了ステータスを正とする。検査によっては output::warning ではなく素の
+    # "file: message" を出すため、⚠ 行だけを拾うと違反が消える。依存不足などの
+    # 違反以外の失敗も、黙って clean にせずここで拾う。
+    # 1 つ落ちても残りを続け、まとめて直せるようにする。
+    guard_status=0
+    output="$(cd "$dest" || exit 1; "$SCRIPT_DIR/repo-maintenance.sh" "$guard" 2>&1)" || guard_status=$?
+    [[ "$guard_status" -eq 0 ]] && continue
+
+    if [[ -n "$output" ]]; then
+      printf '%s\n' "$output"
+    else
+      printf '%s: failed with no output\n' "$guard"
+    fi
   done
 }
 
 main() {
   local repos repo dest violations=0 summary=""
+
+  validate_inputs
 
   if [[ -n "$REPOS" ]]; then
     read -r -a repos <<<"$REPOS"
