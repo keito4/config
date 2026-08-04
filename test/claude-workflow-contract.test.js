@@ -116,9 +116,20 @@ describe('Claude workflow contracts', () => {
     expect(workflow).toContain('ANTHROPIC_ORGANIZATION_ID: ${{ secrets.ANTHROPIC_ORGANIZATION_ID }}');
     expect(workflow).toContain('available=false');
     expect(workflow).toContain("if: steps.claude-auth.outputs.available == 'true'");
-    expect(workflow).toContain('anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}');
     expect(workflow).toContain('anthropic_federation_rule_id: ${{ secrets.ANTHROPIC_FEDERATION_RULE_ID }}');
     expect(workflow).toContain('anthropic_organization_id: ${{ secrets.ANTHROPIC_ORGANIZATION_ID }}');
+  });
+
+  // Claude CLI は ANTHROPIC_API_KEY を CLAUDE_CODE_OAUTH_TOKEN より優先する（ADR 0013）。
+  // 失効した API キーを無条件に渡すと OAuth トークンが握り潰され、レビューは 401 を
+  // 約 180 秒リトライしたのち is_error:true / num_turns:1 / cost $0 で無言終了する。
+  test('Claude Code Review prefers the OAuth token over a stale API key', () => {
+    const workflow = readWorkflow('.github/workflows/claude-code-review.yml');
+
+    expect(workflow).toContain(
+      "anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}",
+    );
+    expect(workflow).not.toContain('anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}');
   });
 
   test('repo-maintenance reports downstream sync when managed files change', () => {
