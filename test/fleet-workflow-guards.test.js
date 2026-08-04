@@ -27,9 +27,12 @@ function buildGhStub({ discovered = [], workflows = {} }) {
   }
   lines.push('  exit 0', 'fi', 'if [ "$1" = "repo" ] && [ "$2" = "clone" ]; then');
   // gh repo clone <owner/name> <dest> -- <flags...> なので $3=owner/name, $4=dest
-  lines.push('  name="${3##*/}"', '  dest="$4"', '  mkdir -p "$dest"');
+  // 既知のリポジトリのときだけ dest を作る。未知のものは「clone は成功したが
+  // チェックアウトが無い」状況を再現する。
+  lines.push('  name="${3##*/}"', '  dest="$4"');
   for (const [name, files] of Object.entries(workflows)) {
     lines.push(`  if [ "$name" = "${name}" ]; then`);
+    lines.push('    mkdir -p "$dest"');
     for (const [file, content] of Object.entries(files)) {
       lines.push(`    mkdir -p "$dest/$(dirname "${file}")"`);
       lines.push(`    cat > "$dest/${file}" <<'WORKFLOW_EOF'\n${content}\nWORKFLOW_EOF`);
@@ -178,6 +181,15 @@ describe('script/fleet-workflow-guards.sh', () => {
     } finally {
       fs.rmSync(summaryPath, { force: true });
     }
+  });
+
+  // clone が成功したように見えてチェックアウトが無い場合、黙って clean と報告しては
+  // いけない。走査できなかったことが分かる形で残す必要がある。
+  test('does not report clean when the checkout is missing', () => {
+    const result = runFleet(['--repos', 'ghost'], { workflows: {} });
+
+    expect(result.output).not.toContain('No workflow guard violations');
+    expect(result.output).toContain('ghost');
   });
 
   test('treats a repository without workflows as clean instead of erroring', () => {

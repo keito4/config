@@ -71,15 +71,18 @@ discover_repos() {
 }
 
 # 1 リポジトリ分の違反行を stdout へ出す。違反が無ければ何も出さない。
+# チェックアウトへ入れないときは 2 を返す。ここを握り潰すと、走査できていないのに
+# 「違反なし」と報告してしまう。
 scan_repo() {
-  local repo="$1" dest="$2" guard findings=""
+  local dest="$1" guard output
+
+  [[ -d "$dest" ]] || return 2
 
   for guard in "${GUARDS[@]}"; do
-    # 1 つ落ちても残りの検査を続ける。まとめて直せるようにするため。
-    findings+="$(cd "$dest" && "$SCRIPT_DIR/repo-maintenance.sh" "$guard" 2>&1 | grep -E '^(⚠|.*\[1;33m)' || true)"$'\n'
+    # 検査は違反があると非ゼロを返す。1 つ落ちても残りを続け、まとめて直せるようにする。
+    output="$(cd "$dest" || exit 1; "$SCRIPT_DIR/repo-maintenance.sh" "$guard" 2>&1)" || true
+    grep -E '^(⚠|.*\[1;33m)' <<<"$output" || true
   done
-
-  printf '%s' "$findings" | sed '/^[[:space:]]*$/d'
 }
 
 main() {
@@ -112,8 +115,15 @@ main() {
       continue
     fi
 
-    local findings
-    findings="$(scan_repo "$repo" "$dest")"
+    local findings scan_status=0
+    findings="$(scan_repo "$dest")" || scan_status=$?
+
+    if [[ "$scan_status" -eq 2 ]]; then
+      violations=$((violations + 1))
+      output::warning "$repo: checkout missing; not scanned"
+      summary+="| \`$repo\` | ⚠️ not scanned |"$'\n'
+      continue
+    fi
 
     if [[ -n "$findings" ]]; then
       violations=$((violations + 1))
