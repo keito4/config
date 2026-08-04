@@ -106,7 +106,10 @@ jobs:
         uses: anthropics/claude-code-action@be7b93b1907a4abad570368f3c74b6fe3807510b # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Claude CLI は ANTHROPIC_API_KEY を OAuth トークンより優先する（ADR 0013）。
+          # OAuth が設定されている限り API キーは渡さない。渡すと失効キーが OAuth を
+          # 握り潰し、401 を約 180 秒リトライしたのちエラー本文なしで失敗する。
+          anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}
           anthropic_federation_rule_id: ${{ secrets.ANTHROPIC_FEDERATION_RULE_ID }}
           anthropic_organization_id: ${{ secrets.ANTHROPIC_ORGANIZATION_ID }}
 

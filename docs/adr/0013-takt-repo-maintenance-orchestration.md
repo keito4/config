@@ -62,6 +62,17 @@ OAuth token reaches the Claude CLI unchanged. Because the CLI prefers
 variables when an OAuth token is present, so the credential that was verified
 is the credential that is used.
 
+The same precedence applies to every workflow that invokes
+`anthropics/claude-code-action`. The action exports whatever credential inputs
+it receives, so passing `anthropic_api_key` unconditionally alongside
+`claude_code_oauth_token` lets a stale API key shadow a working OAuth token.
+`.github/workflows/claude-code-review.yml` therefore forwards
+`anthropic_api_key` only when `CLAUDE_CODE_OAUTH_TOKEN` is empty, and
+`.github/workflows/claude.yml` forwards the OAuth token alone. Without this
+guard the run does not fail loudly: the CLI retries the 401 for roughly three
+minutes and then reports `is_error: true` with `num_turns: 1` and
+`total_cost_usd: 0` and no error text.
+
 `script/validate-takt-auth.sh` probes the resolved credential against the
 Anthropic API before the multi-minute TAKT run. It fails the job only on an
 unambiguous rejection (HTTP 401/403) and warns on any other outcome, so an
