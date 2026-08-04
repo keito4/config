@@ -57,24 +57,65 @@ check_scheduled_maintenance_configuration() {
   output::success "Scheduled Maintenance configuration ok"
 }
 
+workflow_has_event() {
+  local workflow="${1:?Workflow required}"
+  local event="${2:?Event required}"
+
+  awk -v event="$event" '
+    function has_event(line) {
+      return line ~ "(^|[^A-Za-z0-9_-])" event "([^A-Za-z0-9_-]|$)"
+    }
+    /^on:[[:space:]]*\[/ || /^"on":[[:space:]]*\[/ || /^\047on\047:[[:space:]]*\[/ {
+      if (has_event($0)) found = 1
+      next
+    }
+    # スカラー形式 (on: push)。空値の "on:" は英字を要求することで除外される。
+    /^on:[[:space:]]*[A-Za-z_]/ || /^"on":[[:space:]]*[A-Za-z_]/ || /^\047on\047:[[:space:]]*[A-Za-z_]/ {
+      if (has_event($0)) found = 1
+      next
+    }
+    /^on:[[:space:]]*$/ || /^"on":[[:space:]]*$/ || /^\047on\047:[[:space:]]*$/ {
+      in_on = 1
+      next
+    }
+    in_on && /^[^[:space:]#][^:]*:/ {
+      in_on = 0
+    }
+    in_on {
+      if ($0 ~ "^[[:space:]]*-[[:space:]]*" event "([[:space:]#]|$)") found = 1
+      if ($0 ~ "^[[:space:]]*" event ":[[:space:]]*") found = 1
+    }
+    END { exit found ? 0 : 1 }
+  ' "$workflow"
+}
+
 # Claude CLI は ANTHROPIC_API_KEY を CLAUDE_CODE_OAUTH_TOKEN より優先する（ADR 0013）。
 # 両方を無条件に claude-code-action へ渡すと、失効した API キーが有効な OAuth トークンを
 # 握り潰す。失敗は無言（is_error:true / num_turns:1 / total_cost_usd:0 / エラー本文なし）で、
 # 約 180 秒リトライしてから終わるため気付きにくい。
 check_claude_action_credentials() {
-  local workflow issue_count=0 stripped
+  local workflow issue_count=0
 
   for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
     [[ -f "$workflow" ]] || continue
 
-    # 行頭コメントを落とす。注意書きの中の文字列を実設定と誤認しないため。
-    stripped="$(sed 's/^[[:space:]]*#.*$//' "$workflow")"
-
-    grep -q "anthropics/claude-code-action" <<<"$stripped" || continue
-    grep -q "claude_code_oauth_token:" <<<"$stripped" || continue
-
-    if grep -qE "^[[:space:]]*anthropic_api_key:" <<<"$stripped" \
-      && ! grep -qE "^[[:space:]]*anthropic_api_key:.*CLAUDE_CODE_OAUTH_TOKEN" <<<"$stripped"; then
+    # claude-code-action のステップ単位で判定する。ファイル全体を見ると、ガード済みの
+    # 1 行が否定判定を打ち消して別ステップの無条件なキーを見逃す。
+    if ! awk '
+      function flush() {
+        if (in_step && oauth && unguarded) bad = 1
+        in_step = 0; oauth = 0; unguarded = 0
+      }
+      # 行頭コメントを落とす。注意書きの中の文字列を実設定と誤認しないため。
+      { line = $0; sub(/^[[:space:]]*#.*$/, "", line) }
+      line ~ /uses:[[:space:]]*anthropics\/claude-code-action/ { flush(); in_step = 1; next }
+      in_step && line ~ /^[[:space:]]*-[[:space:]]/ { flush() }
+      in_step && line ~ /^[[:space:]]*claude_code_oauth_token:/ { oauth = 1 }
+      in_step && line ~ /^[[:space:]]*anthropic_api_key:/ {
+        if (line !~ /CLAUDE_CODE_OAUTH_TOKEN/) unguarded = 1
+      }
+      END { flush(); exit bad ? 1 : 0 }
+    ' "$workflow"; then
       output::warning "$(basename "$workflow"): anthropic_api_key overrides CLAUDE_CODE_OAUTH_TOKEN"
       echo "Pass the API key only when the OAuth token is empty:"
       echo "  anthropic_api_key: \${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}"
@@ -101,7 +142,8 @@ check_self_cancelling_workflows() {
     stripped="$(sed 's/^[[:space:]]*#.*$//' "$workflow")"
 
     grep -qE "^[[:space:]]*cancel-in-progress:[[:space:]]*true[[:space:]]*$" <<<"$stripped" || continue
-    grep -qE "^[[:space:]]*push:" <<<"$stripped" || continue
+    # on: push / on: [push, ...] の短縮形も push トリガーなので workflow_has_event で判定する。
+    workflow_has_event "$workflow" "push" || continue
     grep -qE "git push|peter-evans/create-pull-request|softprops/action-gh-release|googleapis/release-please" <<<"$stripped" || continue
 
     output::warning "$(basename "$workflow"): cancel-in-progress cancels this workflow's own push"
@@ -121,22 +163,33 @@ check_self_cancelling_workflows() {
 # `gh pr edit "$PR_URL"` は URL 引数から特定できるため通ってしまい、引数を持たない
 # `gh label create` だけが "fatal: not a git repository" で落ちるので気付きにくい。
 check_gh_repo_context() {
-  local workflow issue_count=0 stripped
+  local workflow issue_count=0
 
   for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
     [[ -f "$workflow" ]] || continue
 
-    stripped="$(sed 's/^[[:space:]]*#.*$//' "$workflow")"
-
-    # checkout していればリポジトリは解決できる。
-    grep -q "actions/checkout" <<<"$stripped" && continue
-    grep -qE "\bgh (label|issue|release|run|workflow|pr (create|list|status))\b" <<<"$stripped" || continue
-    grep -qE "GH_REPO:|--repo " <<<"$stripped" && continue
-
-    output::warning "$(basename "$workflow"): gh has no repository to resolve without a checkout"
-    echo "Add the repository to the step environment:"
-    echo "  GH_REPO: \${{ github.repository }}"
-    issue_count=$((issue_count + 1))
+    # ジョブ単位で判定する。あるジョブの checkout や GH_REPO は別ジョブの gh を設定しない。
+    # --repo は同じコマンド行にある場合だけ有効とみなす。
+    if ! awk '
+      function flush() {
+        if (in_job && bad_cmd && !has_checkout && !has_gh_repo) bad = 1
+        bad_cmd = 0; has_checkout = 0; has_gh_repo = 0
+      }
+      { line = $0; sub(/^[[:space:]]*#.*$/, "", line) }
+      /^jobs:[[:space:]]*$/ { in_jobs = 1; next }
+      in_jobs && /^  [A-Za-z0-9_-]+:/ { flush(); in_job = 1; next }
+      in_job && line ~ /actions\/checkout/ { has_checkout = 1 }
+      in_job && line ~ /^[[:space:]]*GH_REPO:/ { has_gh_repo = 1 }
+      in_job && line ~ /(^|[^A-Za-z0-9_-])gh[[:space:]]+((label|issue|release|run|workflow)|pr[[:space:]]+(create|list|status))([^A-Za-z0-9_-]|$)/ {
+        if (line !~ /--repo[[:space:]]/) bad_cmd = 1
+      }
+      END { flush(); exit bad ? 1 : 0 }
+    ' "$workflow"; then
+      output::warning "$(basename "$workflow"): gh has no repository to resolve without a checkout"
+      echo "Add the repository to the step environment:"
+      echo "  GH_REPO: \${{ github.repository }}"
+      issue_count=$((issue_count + 1))
+    fi
   done
 
   if [[ "$issue_count" -gt 0 ]]; then

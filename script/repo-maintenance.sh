@@ -107,33 +107,6 @@ run_if_exists() {
   "$@"
 }
 
-workflow_has_event() {
-  local workflow="${1:?Workflow required}"
-  local event="${2:?Event required}"
-
-  awk -v event="$event" '
-    function has_event(line) {
-      return line ~ "(^|[^A-Za-z0-9_-])" event "([^A-Za-z0-9_-]|$)"
-    }
-    /^on:[[:space:]]*\[/ || /^"on":[[:space:]]*\[/ || /^\047on\047:[[:space:]]*\[/ {
-      if (has_event($0)) found = 1
-      next
-    }
-    /^on:[[:space:]]*$/ || /^"on":[[:space:]]*$/ || /^\047on\047:[[:space:]]*$/ {
-      in_on = 1
-      next
-    }
-    in_on && /^[^[:space:]#][^:]*:/ {
-      in_on = 0
-    }
-    in_on {
-      if ($0 ~ "^[[:space:]]*-[[:space:]]*" event "([[:space:]#]|$)") found = 1
-      if ($0 ~ "^[[:space:]]*" event ":[[:space:]]*") found = 1
-    }
-    END { exit found ? 0 : 1 }
-  ' "$workflow"
-}
-
 workflow_is_required_candidate() {
   local workflow="${1:?Workflow required}"
   local base

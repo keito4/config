@@ -113,6 +113,51 @@ describe('check_claude_action_credentials', () => {
 
     expect(result.status).toBe(0);
   });
+
+  // 1つでもガード済みの行があるとファイル全体の否定 grep が無効化され、
+  // 別ステップの無条件な API キーを見逃す。
+  test('flags an unguarded step even when another step is guarded', () => {
+    const workflow = [
+      'name: Claude',
+      'jobs:',
+      '  review:',
+      '    steps:',
+      '      - uses: anthropics/claude-code-action@abc123 # v1',
+      '        with:',
+      '          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}',
+      "          anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}",
+      '      - uses: anthropics/claude-code-action@abc123 # v1',
+      '        with:',
+      '          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}',
+      '          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}',
+      '',
+    ].join('\n');
+
+    const result = runCheck(FLAG, { 'claude.yml': workflow });
+
+    expect(result.status).not.toBe(0);
+  });
+
+  // claude-code-action 以外のアクションが anthropic_api_key を取るのは無関係。
+  test('does not flag an anthropic_api_key belonging to another action', () => {
+    const workflow = [
+      'name: Claude',
+      'jobs:',
+      '  review:',
+      '    steps:',
+      '      - uses: anthropics/claude-code-action@abc123 # v1',
+      '        with:',
+      '          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}',
+      '      - uses: some-org/other-action@abc123 # v1',
+      '        with:',
+      '          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}',
+      '',
+    ].join('\n');
+
+    const result = runCheck(FLAG, { 'claude.yml': workflow });
+
+    expect(result.status).toBe(0);
+  });
 });
 
 // keito4/intent-gate-android PR #60: release ジョブがバージョンバンプを push した結果、
@@ -182,6 +227,26 @@ describe('check_self_cancelling_workflows', () => {
     const result = runCheck(FLAG, { 'ci.yml': workflow });
 
     expect(result.status).toBe(0);
+  });
+
+  // on: [push, ...] / on: push の短縮形もれっきとした push トリガー。
+  test.each([['on: [push, pull_request]'], ['on: push']])('recognizes the %s shorthand trigger', (onLine) => {
+    const workflow = [
+      'name: CI',
+      onLine,
+      'concurrency:',
+      '  group: ${{ github.workflow }}-${{ github.ref }}',
+      '  cancel-in-progress: true',
+      'jobs:',
+      '  release:',
+      '    steps:',
+      '      - run: git push origin HEAD:main',
+      '',
+    ].join('\n');
+
+    const result = runCheck(FLAG, { 'ci.yml': workflow });
+
+    expect(result.status).not.toBe(0);
   });
 
   test('flags a release action that publishes assets from a push-triggered run', () => {
@@ -263,6 +328,45 @@ describe('check_gh_repo_context', () => {
     });
 
     expect(result.status).toBe(0);
+  });
+
+  // ジョブAの checkout はジョブBの gh を設定しない。
+  test('flags a checkout-less job even when a sibling job checks out', () => {
+    const workflow = [
+      'name: CI',
+      'jobs:',
+      '  build:',
+      '    steps:',
+      '      - uses: actions/checkout@abc123 # v7.0.1',
+      '  label:',
+      '    steps:',
+      '      - name: Label updates',
+      '        run: gh label create "dependabot-minor" --force',
+      '',
+    ].join('\n');
+
+    const result = runCheck(FLAG, { 'ci.yml': workflow });
+
+    expect(result.status).not.toBe(0);
+  });
+
+  // 別コマンドに付いた --repo は gh label create を設定しない。
+  test('flags a command without --repo even when a sibling command has one', () => {
+    const workflow = [
+      'name: CI',
+      'jobs:',
+      '  label:',
+      '    steps:',
+      '      - name: Label updates',
+      '        run: |',
+      '          gh issue list --repo "$GITHUB_REPOSITORY"',
+      '          gh label create "dependabot-minor" --force',
+      '',
+    ].join('\n');
+
+    const result = runCheck(FLAG, { 'ci.yml': workflow });
+
+    expect(result.status).not.toBe(0);
   });
 
   test('ignores gh subcommands that take a pull request URL', () => {
