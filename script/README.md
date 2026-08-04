@@ -190,6 +190,11 @@ Runs repository maintenance checks and managed updates. This is the executable s
 ./script/repo-maintenance.sh --check-gh-repo-context
 ```
 
+The workflow guards (`--check-claude-action-credentials`, `--check-self-cancelling-workflows`,
+`--check-gh-repo-context`, `--check-artifact-retention`) scan `.github/workflows/`,
+`.github/workflows/templates/`, and `templates/workflows/`. `ci.yml` runs all four in its
+Workflow Lint job so regressions fail the pull request.
+
 ### setup-ci.sh
 
 Detects project type and package manager, then writes CI/CD workflow defaults.

@@ -20,7 +20,8 @@ function runCheck(flag, workflows) {
 
   try {
     for (const [name, content] of Object.entries(workflows)) {
-      const target = path.join(tempRoot, '.github', 'workflows', name);
+      // パス区切りを含むキーはそのまま使う。含まなければ .github/workflows/ に置く。
+      const target = name.includes('/') ? path.join(tempRoot, name) : path.join(tempRoot, '.github', 'workflows', name);
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.writeFileSync(target, content);
     }
@@ -375,5 +376,89 @@ describe('check_gh_repo_context', () => {
     });
 
     expect(result.status).toBe(0);
+  });
+});
+
+// config は templates/workflows/ を下流リポジトリへ配布する。ここを走査しないと、
+// 配布物に入った不具合を config 側の検査が検出できない（実際 claude-health-check.yml の
+// gh バグは .github/workflows/ しか見ていなかったため検査をすり抜けていた）。
+describe('workflow guards cover distributed templates', () => {
+  test('--check-gh-repo-context flags a template that never checks out', () => {
+    const workflow = [
+      'name: Claude Code Health Check',
+      'jobs:',
+      '  health-check:',
+      '    steps:',
+      '      - name: Create issue on failure',
+      '        env:',
+      '          GH_TOKEN: ${{ github.token }}',
+      '        run: gh issue create --title x',
+      '',
+    ].join('\n');
+
+    const result = runCheck('--check-gh-repo-context', {
+      'templates/workflows/claude-health-check.yml': workflow,
+    });
+
+    expect(result.status).not.toBe(0);
+    expect(result.output).toContain('claude-health-check.yml');
+  });
+
+  test('--check-claude-action-credentials flags a template that shadows the OAuth token', () => {
+    const workflow = [
+      'name: Claude',
+      'jobs:',
+      '  claude:',
+      '    steps:',
+      '      - uses: anthropics/claude-code-action@abc123 # v1',
+      '        with:',
+      '          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}',
+      '          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}',
+      '',
+    ].join('\n');
+
+    const result = runCheck('--check-claude-action-credentials', {
+      'templates/workflows/claude.yml': workflow,
+    });
+
+    expect(result.status).not.toBe(0);
+  });
+
+  test('--check-self-cancelling-workflows flags a template that cancels its own push', () => {
+    const workflow = [
+      'name: Release',
+      'on: [push]',
+      'concurrency:',
+      '  group: ${{ github.workflow }}',
+      '  cancel-in-progress: true',
+      'jobs:',
+      '  release:',
+      '    steps:',
+      '      - run: git push origin HEAD:main',
+      '',
+    ].join('\n');
+
+    const result = runCheck('--check-self-cancelling-workflows', {
+      'templates/workflows/release.yml': workflow,
+    });
+
+    expect(result.status).not.toBe(0);
+  });
+
+  test('also covers reusable workflow templates under .github/workflows/templates', () => {
+    const workflow = [
+      'name: Reusable',
+      'jobs:',
+      '  label:',
+      '    steps:',
+      '      - run: gh label create "x" --force',
+      '',
+    ].join('\n');
+
+    const result = runCheck('--check-gh-repo-context', {
+      '.github/workflows/templates/reusable.yml': workflow,
+    });
+
+    expect(result.status).not.toBe(0);
   });
 });

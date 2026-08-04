@@ -296,6 +296,27 @@ describe('Claude workflow contracts', () => {
     expect(script).toContain('/^  [A-Za-z0-9_-]+:/');
   });
 
+  // 検査は週次メンテナンスの警告だけでは退行を止められない。PR の CI で強制する。
+  test('CI enforces the workflow guards on pull requests', () => {
+    const workflow = readWorkflow('.github/workflows/ci.yml');
+
+    expect(workflow).toContain('name: Run workflow guards');
+    expect(workflow).toContain('script/repo-maintenance.sh "$check"');
+    for (const flag of [
+      '--check-claude-action-credentials',
+      '--check-self-cancelling-workflows',
+      '--check-gh-repo-context',
+      '--check-artifact-retention',
+    ]) {
+      expect(workflow).toContain(flag);
+    }
+    // 最初の失敗で打ち切らず、全違反を報告してから落ちる。
+    expect(workflow).toContain('|| guard_status=1');
+    expect(workflow).toContain('exit "$guard_status"');
+    // Workflow Lint は quality-gate の needs に含まれるため、失敗がマージを止める。
+    expect(workflow).toContain('needs: [changes, lint, test, integration-test, actionlint, workflow-template-sync]');
+  });
+
   // on: push / on: [push] / on:\n  push: / on:\n  - push はいずれも push トリガー。
   // スカラー形式を取りこぼすと、必須ワークフロー検査も自己キャンセル検査もすり抜ける。
   test('workflow_has_event recognizes every valid trigger form', () => {

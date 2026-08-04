@@ -57,6 +57,17 @@ check_scheduled_maintenance_configuration() {
   output::success "Scheduled Maintenance configuration ok"
 }
 
+# 検査対象のワークフロー一覧。actionlint の収集範囲と同じ3ディレクトリを見る。
+# config は templates/workflows/ を下流リポジトリへ配布するため、ここを外すと
+# 配布物に入った不具合を検出できない。
+workflow_files() {
+  {
+    find .github/workflows -maxdepth 1 -type f \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null || true
+    find .github/workflows/templates -type f \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null || true
+    find templates/workflows -type f \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null || true
+  } | sort
+}
+
 workflow_has_event() {
   local workflow="${1:?Workflow required}"
   local event="${2:?Event required}"
@@ -96,8 +107,8 @@ workflow_has_event() {
 check_claude_action_credentials() {
   local workflow issue_count=0
 
-  for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
-    [[ -f "$workflow" ]] || continue
+  while IFS= read -r workflow; do
+    [[ -n "$workflow" ]] || continue
 
     # claude-code-action のステップ単位で判定する。ファイル全体を見ると、ガード済みの
     # 1 行が否定判定を打ち消して別ステップの無条件なキーを見逃す。
@@ -121,7 +132,7 @@ check_claude_action_credentials() {
       echo "  anthropic_api_key: \${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}"
       issue_count=$((issue_count + 1))
     fi
-  done
+  done < <(workflow_files)
 
   if [[ "$issue_count" -gt 0 ]]; then
     return 1
@@ -136,8 +147,8 @@ check_claude_action_credentials() {
 check_self_cancelling_workflows() {
   local workflow issue_count=0 stripped
 
-  for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
-    [[ -f "$workflow" ]] || continue
+  while IFS= read -r workflow; do
+    [[ -n "$workflow" ]] || continue
 
     stripped="$(sed 's/^[[:space:]]*#.*$//' "$workflow")"
 
@@ -150,7 +161,7 @@ check_self_cancelling_workflows() {
     echo "Scope the cancellation to pull requests so pushes to the default branch run to completion:"
     echo "  cancel-in-progress: \${{ github.event_name == 'pull_request' }}"
     issue_count=$((issue_count + 1))
-  done
+  done < <(workflow_files)
 
   if [[ "$issue_count" -gt 0 ]]; then
     return 1
@@ -165,8 +176,8 @@ check_self_cancelling_workflows() {
 check_gh_repo_context() {
   local workflow issue_count=0
 
-  for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
-    [[ -f "$workflow" ]] || continue
+  while IFS= read -r workflow; do
+    [[ -n "$workflow" ]] || continue
 
     # ジョブ単位で判定する。あるジョブの checkout や GH_REPO は別ジョブの gh を設定しない。
     # --repo は同じコマンド行にある場合だけ有効とみなす。
@@ -190,7 +201,7 @@ check_gh_repo_context() {
       echo "  GH_REPO: \${{ github.repository }}"
       issue_count=$((issue_count + 1))
     fi
-  done
+  done < <(workflow_files)
 
   if [[ "$issue_count" -gt 0 ]]; then
     return 1
@@ -202,8 +213,8 @@ check_gh_repo_context() {
 check_artifact_retention() {
   local workflow issue_count=0
 
-  for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
-    [[ -f "$workflow" ]] || continue
+  while IFS= read -r workflow; do
+    [[ -n "$workflow" ]] || continue
     if ! awk -v file="$(basename "$workflow")" '
       /^[[:space:]]*(-[[:space:]]*)?uses:[[:space:]]*actions\/upload-artifact@/ {
         in_upload = 1
@@ -239,7 +250,7 @@ check_artifact_retention() {
     ' "$workflow"; then
       issue_count=$((issue_count + 1))
     fi
-  done
+  done < <(workflow_files)
 
   if [[ "$issue_count" -gt 0 ]]; then
     return 1
