@@ -17,8 +17,13 @@ typeset -ga CONFIG_CLAUDE_PLUGIN_FILES=(config.json known_marketplaces.json)
 typeset -ga CONFIG_CODEX_SHARED_FILES=()
 typeset -ga CONFIG_CODEX_SHARED_DIRS=(prompts rules)
 
-# このライブラリを起点にした script/ ディレクトリの絶対パス（sourced でも解決できる %x を使う）
-typeset -g CONFIG_SCRIPT_DIR="${${(%):-%x}:A:h:h}"
+# このライブラリを起点にした script/ ディレクトリの絶対パス
+# （zsh からも bash(bats) からも source されるため両対応で解決する）
+if [[ -n "${ZSH_VERSION:-}" ]]; then
+  typeset -g CONFIG_SCRIPT_DIR="${${(%):-%x}:A:h:h}"
+else
+  CONFIG_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+fi
 
 # Constants for Cursor configuration
 typeset -ga CONFIG_CURSOR_SHARED_FILES=(mcp.json)
