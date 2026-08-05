@@ -32,6 +32,18 @@ fetch_check_runs() {
     --jq '.check_runs[] | select(.name != "check-ci-status" and .name != "claude-review") | {name, status, conclusion}'
 }
 
+# check-run JSON (1件でも複数件でも可) を "name: status - conclusion" 形式で表示
+print_check_summary() {
+  local runs="$1"
+  echo "$runs" | jq -r '"\(.name): \(.status) - \(.conclusion)"'
+}
+
+# ポーリング間隔だけ待機し、経過時間を進める
+wait_before_next_poll() {
+  sleep "$POLL_INTERVAL"
+  ELAPSED_TIME=$((ELAPSED_TIME + POLL_INTERVAL))
+}
+
 echo "Waiting for CI to complete for $REPO (SHA: $HEAD_SHA)"
 
 while [ "$ELAPSED_TIME" -lt "$MAX_WAIT_TIME" ]; do
@@ -40,7 +52,7 @@ while [ "$ELAPSED_TIME" -lt "$MAX_WAIT_TIME" ]; do
   CHECK_RUNS="$(fetch_check_runs)"
 
   echo "Check Runs:"
-  echo "$CHECK_RUNS" | jq -r '"\(.name): \(.status) - \(.conclusion)"'
+  print_check_summary "$CHECK_RUNS"
 
   QUALITY_GATE="$(echo "$CHECK_RUNS" | jq -r 'select(.name == "Quality Gate")')"
 
@@ -55,16 +67,14 @@ while [ "$ELAPSED_TIME" -lt "$MAX_WAIT_TIME" ]; do
     fi
 
     echo "Quality Gate check has not started yet, waiting..."
-    sleep "$POLL_INTERVAL"
-    ELAPSED_TIME=$((ELAPSED_TIME + POLL_INTERVAL))
+    wait_before_next_poll
     continue
   fi
 
   if echo "$QUALITY_GATE" | jq -e 'select(.status != "completed")' >/dev/null; then
     echo "Quality Gate is still running, waiting..."
-    echo "$QUALITY_GATE" | jq -r '"\(.name): \(.status) - \(.conclusion)"'
-    sleep "$POLL_INTERVAL"
-    ELAPSED_TIME=$((ELAPSED_TIME + POLL_INTERVAL))
+    print_check_summary "$QUALITY_GATE"
+    wait_before_next_poll
     continue
   fi
 
