@@ -10,8 +10,15 @@ typeset -ga CONFIG_CLAUDE_SHARED_DIRS=(commands agents hooks)
 typeset -ga CONFIG_CLAUDE_PLUGIN_FILES=(config.json known_marketplaces.json)
 
 # Constants for Codex configuration
-typeset -ga CONFIG_CODEX_SHARED_FILES=(config.toml)
+# config.toml は含めない: Codex 自身が端末固有の状態（projects.*.trust_level,
+# marketplaces.*, プラグイン有効化, 絶対パス入り MCP 定義）を config.toml に
+# 書き戻すため、symlink 配備すると追跡ファイルが恒久的に dirty になる。
+# 代わりに config::deploy_codex_config でベースをローカル実ファイルへマージ配備する。
+typeset -ga CONFIG_CODEX_SHARED_FILES=()
 typeset -ga CONFIG_CODEX_SHARED_DIRS=(prompts rules)
+
+# このライブラリを起点にした script/ ディレクトリの絶対パス（sourced でも解決できる %x を使う）
+typeset -g CONFIG_SCRIPT_DIR="${${(%):-%x}:A:h:h}"
 
 # Constants for Cursor configuration
 typeset -ga CONFIG_CURSOR_SHARED_FILES=(mcp.json)
@@ -200,14 +207,55 @@ config::export_claude() {
     CONFIG_CLAUDE_PLUGIN_FILES
 }
 
-config::import_codex() {
-  config::_import_tool "Codex" \
-    "${1:?Source directory required}" \
-    "${2:-$HOME/.codex}" \
-    CONFIG_CODEX_SHARED_FILES \
-    CONFIG_CODEX_SHARED_DIRS
+# Codex の config.toml をベース→ローカルの深いマージで配備する
+# （ベース定義キーはベース優先、ローカルのみのキー＝端末状態は保持。
+#   配備先が symlink なら実ファイルへ自動移行する。詳細は script/codex-config-merge.py）
+config::deploy_codex_config() {
+  local base="${1:?Base config.toml required}"
+  local target="${2:?Target config.toml required}"
+  local merge_script="$CONFIG_SCRIPT_DIR/codex-config-merge.py"
+
+  if command -v uv >/dev/null 2>&1 && [[ -f "$merge_script" ]]; then
+    if uv run --script --quiet "$merge_script" "$base" "$target"; then
+      echo "✅ Deployed codex/config.toml (merge)"
+      return 0
+    fi
+    echo "⚠️  codex/config.toml のマージ配備に失敗しました" >&2
+    return 1
+  fi
+
+  # uv が無い環境のフォールバック（マージはしないが dirty の原因は残さない）
+  if [[ -L "$target" ]]; then
+    local content
+    content="$(cat "$target")"
+    rm "$target"
+    printf '%s' "$content" >"$target"
+    echo "⚠️  uv が無いためマージをスキップ（symlink は実ファイル化しました）: $target"
+  elif [[ ! -e "$target" ]]; then
+    cp "$base" "$target"
+    echo "✅ Seeded codex/config.toml (uv 無しのため単純コピー)"
+  else
+    echo "⚠️  uv が無いため codex/config.toml のマージをスキップしました"
+  fi
 }
 
+config::import_codex() {
+  local source_dir="${1:?Source directory required}"
+  local target_dir="${2:-$HOME/.codex}"
+
+  config::_import_tool "Codex" \
+    "$source_dir" \
+    "$target_dir" \
+    CONFIG_CODEX_SHARED_FILES \
+    CONFIG_CODEX_SHARED_DIRS
+
+  if [[ -f "$source_dir/config.toml" ]]; then
+    config::deploy_codex_config "$source_dir/config.toml" "$target_dir/config.toml"
+  fi
+}
+
+# 注意: config.toml は export しない（端末固有状態がリポジトリへ逆流するため）。
+# 共有設定を変えたいときはリポジトリの .codex/config.toml を直接編集する。
 config::export_codex() {
   config::_export_tool "Codex" \
     "${1:-$HOME/.codex}" \

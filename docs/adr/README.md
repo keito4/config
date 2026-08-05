@@ -26,6 +26,7 @@
 | [0019](0019-downstream-template-auto-sync.md)                   | Downstream Template Auto-Sync                                     | Accepted           |
 | [0020](0020-claude-skill-distribution-and-settings-boundary.md) | Claude スキルの配布形式と settings.json のホスト／downstream 境界 | Accepted           |
 | [0021](0021-screenshot-based-mobile-data-ingest.md)             | スマホ専用データのスクショ経由週次取り込み                        | Accepted           |
+| [0022](0022-codex-config-merge-deploy.md)                       | Codex config.toml のマージ配備（symlink 廃止）                    | Accepted           |
 
 ## ADR テンプレート
 
