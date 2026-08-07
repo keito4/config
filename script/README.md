@@ -4,20 +4,21 @@ This directory contains utility scripts for managing configuration, credentials,
 
 ## Quick Reference
 
-| Script                           | Purpose                                                  | Used By                |
-| -------------------------------- | -------------------------------------------------------- | ---------------------- |
-| `setup-claude.sh`                | Claude Code CLI setup                                    | Makefile, DevContainer |
-| `credentials.sh`                 | 1Password credential management                          | Makefile               |
-| `update-libraries.sh`            | Refresh `npm/global.json` (Dependabot owns package.json) | package.json           |
-| `version.sh`                     | Semantic versioning                                      | Makefile               |
-| `update-agents-md.sh`            | AGENTS.md 自動生成セクション更新                         | repo-maintenance       |
-| `repo-maintenance.sh`            | Repository maintenance executable workflow               | `/repo-maintenance`    |
-| `fleet-workflow-guards.sh`       | Workflow guards across every recently pushed repository  | fleet-workflow-guards  |
-| `validate-takt-auth.sh`          | Fail fast on rejected Anthropic credentials              | scheduled-maintenance  |
-| `trust-claude-workspace.sh`      | Trust a workspace in `~/.claude.json` for headless runs  | scheduled-maintenance  |
-| `setup-ci.sh`                    | CI/CD workflow setup                                     | `/setup-ci`            |
-| `setup-new-repo.sh`              | New repository bootstrap                                 | `/setup-new-repo`      |
-| `macos/setup-bettertouchtool.js` | BetterTouchTool gesture setup for AeroSpace/Raycast      | Local macOS setup      |
+| Script                           | Purpose                                                                      | Used By                                         |
+| -------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------- |
+| `setup-claude.sh`                | Claude Code CLI setup                                                        | Makefile, DevContainer                          |
+| `credentials.sh`                 | 1Password credential management                                              | Makefile                                        |
+| `codex-config-merge.py`          | Deploy `.codex/config.toml` by deep-merging onto the local file (no symlink) | `script/lib/config.sh` (`config::import_codex`) |
+| `update-libraries.sh`            | Refresh `npm/global.json` (Dependabot owns package.json)                     | package.json                                    |
+| `version.sh`                     | Semantic versioning                                                          | Makefile                                        |
+| `update-agents-md.sh`            | AGENTS.md 自動生成セクション更新                                             | repo-maintenance                                |
+| `repo-maintenance.sh`            | Repository maintenance executable workflow                                   | `/repo-maintenance`                             |
+| `fleet-workflow-guards.sh`       | Workflow guards across every recently pushed repository                      | fleet-workflow-guards                           |
+| `validate-takt-auth.sh`          | Fail fast on rejected Anthropic credentials                                  | scheduled-maintenance                           |
+| `trust-claude-workspace.sh`      | Trust a workspace in `~/.claude.json` for headless runs                      | scheduled-maintenance                           |
+| `setup-ci.sh`                    | CI/CD workflow setup                                                         | `/setup-ci`                                     |
+| `setup-new-repo.sh`              | New repository bootstrap                                                     | `/setup-new-repo`                               |
+| `macos/setup-bettertouchtool.js` | BetterTouchTool gesture setup for AeroSpace/Raycast                          | Local macOS setup                               |
 
 ## Configuration Management
 
@@ -43,6 +44,32 @@ osascript -l JavaScript ./script/macos/setup-bettertouchtool.js
 | 3 finger click                    | Middle click                       |
 | 4 finger swipe left/right/up/down | AeroSpace focus movement           |
 | 4 finger tap                      | Open Raycast                       |
+
+### codex-config-merge.py
+
+Deploys the repository's shared `.codex/config.toml` onto the terminal's real
+`~/.codex/config.toml` by deep-merging instead of symlinking. Codex/ChatGPT
+apps write terminal-local state (trust levels, marketplace paths, plugin
+enablement, absolute-path MCP definitions) directly into `config.toml`, so a
+symlink to the tracked file left `git status` permanently dirty. See
+[ADR 0022](../docs/adr/0022-codex-config-merge-deploy.md) for the full
+rationale.
+
+**Usage**:
+
+```bash
+./script/codex-config-merge.py <base_toml> <target_toml>
+```
+
+**Called by**: `config::deploy_codex_config` in `script/lib/config.sh`, invoked
+from `config::import_codex` during `./script/import.sh`. Requires `uv`
+(Python 3.11+); without it, `config::deploy_codex_config` falls back to
+converting an existing symlink to a real file or seeding a copy, skipping the
+merge.
+
+**Merge rule**: tables merge recursively; base keys win over local keys;
+local-only keys (terminal state) are preserved. Deleting a key from the base
+does not propagate to already-deployed local files.
 
 ### export.sh
 

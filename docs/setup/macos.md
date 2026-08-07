@@ -107,7 +107,11 @@ make credentials
 - **skhd**: アクセシビリティ (許可しないと IME ショートカットが動かない)。
   許可対象は `/usr/local/bin/skhd` (activation がコピーする安定パス)。
   ファイル選択ダイアログでは Cmd+Shift+G でパスを直接入力する。
-  許可後は `launchctl kickstart -k gui/$(id -u)/org.nixos.skhd` で再起動する
+  許可後は `launchctl kickstart -k gui/$(id -u)/org.nixos.skhd` で再起動する。
+  `/usr/local/bin/skhd` は ad-hoc 署名のため nixpkgs の skhd が更新されるたびに
+  許可が失効する。`sudo ./script/macos/setup-skhd-signing.sh` を一度実行して
+  固定 identity での自己署名を有効にし、`make nix-switch` を流したあとアクセシ
+  ビリティで skhd を削除・再追加すると、以後の更新でも許可が保持される
 - **Xcode**: 初回起動時のライセンス同意 (`sudo xcodebuild -license accept` でも可)
 
 ## トラブルシューティング
