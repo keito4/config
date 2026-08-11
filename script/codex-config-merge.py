@@ -27,11 +27,12 @@ import os
 import sys
 import tomllib
 from pathlib import Path
+from typing import Any
 
 import tomli_w
 
 
-def deep_merge(local, base):
+def deep_merge(local: Any, base: Any) -> Any:
     """base を local に重ねる。dict は再帰マージ、それ以外は base 優先。"""
     if isinstance(local, dict) and isinstance(base, dict):
         merged = dict(local)
