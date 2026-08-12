@@ -243,25 +243,33 @@ link_content_to_extra_config_dirs() {
 # （<name>/SKILL.md + <name>/scripts/...）の2形式がある。後者は SKILL.md だけ
 # リンクすると補助ファイルが見えないため、ディレクトリごとリンクする。
 
-# 単一ファイルのスキル: <name>.md -> ~/.claude/skills/<name>/SKILL.md
-link_skill_file() {
-    local md="$1" skills_dir="$2"
-    local name target
-    name="$(basename "$md" .md)"
-    target="${skills_dir}/${name}/SKILL.md"
+# スキルのシンボリックリンクを作成/更新する共通ヘルパー。
+# link_skill_file / link_skill_dir はどちらも「target が既に src を指す
+# symlink なら何もしない → 無ければ張り替える」という同じ手順のため、
+# 対象パスの違い（ファイル1階層 or ディレクトリ）だけを呼び出し側に残して集約する。
+link_skill_symlink() {
+    local src="$1" target="$2" name="$3"
 
-    if [[ -L "$target" ]] && [[ "$(readlink "$target")" == "$md" ]]; then
+    if [[ -L "$target" ]] && [[ "$(readlink "$target")" == "$src" ]]; then
         log_info "  スキル ${name} は最新です"
         return
     fi
 
-    mkdir -p "${skills_dir}/${name}"
-    rm -f "$target"
-    if ln -s "$md" "$target"; then
-        log_success "  スキル ${name} -> ${md} をリンクしました"
+    mkdir -p "$(dirname "$target")"
+    rm -rf "$target"
+    if ln -s "$src" "$target"; then
+        log_success "  スキル ${name} -> ${src} をリンクしました"
     else
         log_warn "  スキル ${name} のリンクに失敗しました"
     fi
+}
+
+# 単一ファイルのスキル: <name>.md -> ~/.claude/skills/<name>/SKILL.md
+link_skill_file() {
+    local md="$1" skills_dir="$2"
+    local name
+    name="$(basename "$md" .md)"
+    link_skill_symlink "$md" "${skills_dir}/${name}/SKILL.md" "$name"
 }
 
 # 補助ファイルを伴うスキル: <name>/ -> ~/.claude/skills/<name>
@@ -271,22 +279,11 @@ link_skill_dir() {
     name="$(basename "$src")"
     target="${skills_dir}/${name}"
 
-    if [[ -L "$target" ]] && [[ "$(readlink "$target")" == "$src" ]]; then
-        log_info "  スキル ${name} は最新です"
-        return
-    fi
-
     if [[ -d "$target" ]] && [[ ! -L "$target" ]]; then
         log_warn "  スキル ${name} の実体コピーを private-config へのリンクに置き換えます"
     fi
 
-    mkdir -p "$skills_dir"
-    rm -rf "$target"
-    if ln -s "$src" "$target"; then
-        log_success "  スキル ${name} -> ${src} をリンクしました"
-    else
-        log_warn "  スキル ${name} のリンクに失敗しました"
-    fi
+    link_skill_symlink "$src" "$target" "$name"
 }
 
 link_skills_from_dir() {
