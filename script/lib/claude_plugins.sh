@@ -249,6 +249,7 @@ plugins::apply_hookify_patch() {
     )
 
     # cacheディレクトリ内のhookifyプラグインも検索
+    local cache_dir
     if [[ -d "${claude_dir}/plugins/cache" ]]; then
         while IFS= read -r -d '' cache_dir; do
             if [[ -d "$cache_dir" ]] && [[ "$cache_dir" == *"/hookify" ]]; then
@@ -258,6 +259,7 @@ plugins::apply_hookify_patch() {
     fi
 
     local hookify_found=0
+    local hookify_dir
 
     for hookify_dir in "${hookify_paths[@]}"; do
         if [[ -d "$hookify_dir" ]]; then
