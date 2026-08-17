@@ -15,5 +15,9 @@
 **/*.gen.*
 **/database.types.ts
 
-# テンプレートサンプルファイル（網羅的な参照実装のため分割不可）
-templates/testing/**
+# テンプレートサンプルファイル（そのまま配置して使う単一ファイルの参照実装のため分割不可）
+# templates/testing/** を丸ごと除外すると、他の大半のファイル（350行未満）に対する
+# チェックも無効化されてしまうため、閾値超過している具体ファイルのみを列挙する。
+templates/testing/examples/api.test.ts
+templates/testing/examples/i18n.test.tsx
+templates/testing/examples/ssr-hydration.spec.ts
