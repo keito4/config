@@ -82,6 +82,13 @@ emit_tsv_row() {
   printf '%s\t%s\t%s\n' "$category" "$target" "$source"
 }
 
+# 各行を "<prefix>`<line>`" の形式に整形する（Markdown箇条書き用）
+format_backtick_list() {
+  local prefix="$1"
+
+  sed "s/^/${prefix}\`/" | sed 's/$/`/'
+}
+
 emit_markdown_list() {
   local label="$1"
   local refs="$2"
@@ -90,7 +97,7 @@ emit_markdown_list() {
   count=$(printf '%s\n' "$refs" | sed '/^$/d' | wc -l | tr -d ' ')
   printf -- '- %s (%s)\n' "$label" "$count"
   if [ "$count" -gt 0 ]; then
-    printf '%s\n' "$refs" | sed '/^$/d' | sed 's/^/  - `/' | sed 's/$/`/'
+    printf '%s\n' "$refs" | sed '/^$/d' | format_backtick_list '  - '
   fi
 }
 
@@ -176,6 +183,6 @@ SUMMARY
   if [ "${#ZERO_CODE_TEST[@]}" -eq 0 ]; then
     printf -- '- None\n'
   else
-    printf '%s\n' "${ZERO_CODE_TEST[@]}" | sed 's/^/- `/' | sed 's/$/`/'
+    printf '%s\n' "${ZERO_CODE_TEST[@]}" | format_backtick_list '- '
   fi
 fi
