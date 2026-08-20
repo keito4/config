@@ -1,14 +1,33 @@
 {
   "groups": {
     "claude-config": [
-      { "source": ".claude/hooks/", "target": ".claude/hooks/" },
-      { "source": ".claude/rules/", "target": ".claude/rules/" },
-      { "source": ".claude/settings.json", "target": ".claude/settings.json" }
+      {
+        "source": ".claude/hooks/",
+        "target": ".claude/hooks/"
+      },
+      {
+        "source": ".claude/rules/",
+        "target": ".claude/rules/"
+      },
+      {
+        "source": ".claude/settings.json",
+        "target": ".claude/settings.json"
+      }
     ],
     "workflow-claude": [
       {
         "source": "templates/workflows/claude.yml",
         "target": ".github/workflows/claude.yml"
+      }
+    ],
+    "workflow-claude-review": [
+      {
+        "source": "templates/workflows/claude-code-review.yml",
+        "target": ".github/workflows/claude-code-review.yml"
+      },
+      {
+        "source": "script/wait-ci-checks.sh",
+        "target": "script/wait-ci-checks.sh"
       }
     ],
     "workflow-quality-gate-fallback": [
@@ -33,17 +52,24 @@
   "repos": [
     {
       "name": "keito4/calendar_alerm",
-      "groups": ["claude-config", "workflow-claude", "workflow-quality-gate-fallback", "workflow-dependabot-auto-merge"]
+      "groups": [
+        "claude-config",
+        "workflow-claude",
+        "workflow-claude-review",
+        "workflow-quality-gate-fallback",
+        "workflow-dependabot-auto-merge"
+      ]
     },
     {
       "name": "keito4/effectuation",
-      "groups": ["claude-config", "workflow-claude", "workflow-quality-gate-fallback"]
+      "groups": ["claude-config", "workflow-claude", "workflow-claude-review", "workflow-quality-gate-fallback"]
     },
     {
       "name": "keito4/intent-gate-android",
       "groups": [
         "claude-config",
         "workflow-claude",
+        "workflow-claude-review",
         "workflow-quality-gate-fallback",
         "workflow-dependabot-auto-merge",
         "workflow-label-sync"
@@ -51,7 +77,13 @@
     },
     {
       "name": "keito4/ohana",
-      "groups": ["claude-config", "workflow-claude", "workflow-quality-gate-fallback", "workflow-dependabot-auto-merge"]
+      "groups": [
+        "claude-config",
+        "workflow-claude",
+        "workflow-claude-review",
+        "workflow-quality-gate-fallback",
+        "workflow-dependabot-auto-merge"
+      ]
     },
     {
       "name": "keito4/raycast-extensions",

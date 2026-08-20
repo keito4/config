@@ -1,0 +1,156 @@
+# Claude Code Review ワークフロー
+#
+# PR 作成時（opened / ready_for_review / reopened）に CI の完了を待ってから
+# Claude Code がコードレビューを実行する。Draft PR・Bot の PR は除外。
+# 認証 Secret が未設定の場合はレビューをスキップする。
+#
+# 使い方:
+#   .github/workflows/claude-code-review.yml にコピーして配置
+#   script/wait-ci-checks.sh が必要（sync-downstream で一緒に配布される）
+#   リポジトリ Secret に CLAUDE_CODE_OAUTH_TOKEN を設定
+#
+# カスタマイズ:
+#   - prompt: レビュー観点
+#   - claude_args: 許可ツール等
+
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, reopened]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # CIが完了しているかチェック
+  check-ci-status:
+    # Draft PRはスキップ
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20 # CIの完了を待つため延長
+    continue-on-error: true # ワークフローファイル変更時の初回PR用
+    outputs:
+      ci_passed: ${{ steps.check.outputs.ci_passed }}
+      review_gate_changed: ${{ steps.gate-change.outputs.review_gate_changed }}
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: Detect Claude Code Review gate changes
+        id: gate-change
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          CHANGED_FILES="$(gh pr diff "$PR_NUMBER" --repo "$REPO" --name-only)"
+
+          if printf '%s\n' "$CHANGED_FILES" | grep -Fxq ".github/workflows/claude-code-review.yml" ||
+             printf '%s\n' "$CHANGED_FILES" | grep -Fxq "script/wait-ci-checks.sh"; then
+            echo "review_gate_changed=true" >> "$GITHUB_OUTPUT"
+            echo "Claude Code Review gate changed; skipping the Anthropic action for this PR."
+            exit 0
+          fi
+
+          echo "review_gate_changed=false" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for CI and check status
+        id: check
+        if: steps.gate-change.outputs.review_gate_changed != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          REPO="${{ github.repository }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          echo "Waiting for CI to complete for PR #$PR_NUMBER"
+          script/wait-ci-checks.sh "$REPO" "$HEAD_SHA"
+
+  claude-review:
+    # CIが成功した場合のみ実行（Draft PR、Dependabotはスキップ）
+    if: github.event.pull_request.draft == false && needs.check-ci-status.outputs.ci_passed == 'true' && needs.check-ci-status.outputs.review_gate_changed != 'true' && github.event.sender.type != 'Bot'
+    needs: [check-ci-status]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true # ワークフローファイル変更時の初回PR用
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+      actions: read
+      checks: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: Check Claude authentication
+        id: claude-auth
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_FEDERATION_RULE_ID: ${{ secrets.ANTHROPIC_FEDERATION_RULE_ID }}
+          ANTHROPIC_ORGANIZATION_ID: ${{ secrets.ANTHROPIC_ORGANIZATION_ID }}
+        run: |
+          if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] ||
+             [ -n "$ANTHROPIC_API_KEY" ] ||
+             { [ -n "$ANTHROPIC_FEDERATION_RULE_ID" ] && [ -n "$ANTHROPIC_ORGANIZATION_ID" ]; }; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping Claude Code Review because no Claude authentication secret is configured."
+          fi
+
+      - name: Run Claude Code Review
+        id: claude-review
+        if: steps.claude-auth.outputs.available == 'true'
+        uses: anthropics/claude-code-action@9d7150bc8a3dae8149739a88019d192b579ad90c # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Claude CLI は ANTHROPIC_API_KEY を OAuth トークンより優先する（ADR 0013）。
+          # OAuth が設定されている限り API キーは渡さない。渡すと失効キーが OAuth を
+          # 握り潰し、401 を約 180 秒リトライしたのちエラー本文なしで失敗する。
+          anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}
+          anthropic_federation_rule_id: ${{ secrets.ANTHROPIC_FEDERATION_RULE_ID }}
+          anthropic_organization_id: ${{ secrets.ANTHROPIC_ORGANIZATION_ID }}
+
+          # 進捗トラッキングを有効化
+          track_progress: true
+
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Please review this pull request and provide feedback on:
+            - Code quality and best practices
+            - Potential bugs or issues
+            - Performance considerations
+            - Security concerns
+            - Test coverage
+
+            Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
+
+            Provide detailed feedback using inline comments for specific issues.
+            Use top-level comments for general observations.
+
+          claude_args: |
+            --allowedTools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr checks:*)"
+
+          # CI結果の読み取り権限
+          additional_permissions: |
+            actions: read
+            checks: read
