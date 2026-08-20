@@ -10,6 +10,7 @@ const repoRoot = path.resolve(__dirname, '..');
 // intentionally different from the runnable workflow (ADR 0018).
 const syncPairs = [
   ['templates/workflows/claude.yml', '.github/workflows/claude.yml'],
+  ['templates/workflows/claude-code-review.yml', '.github/workflows/claude-code-review.yml'],
   ['templates/workflows/dependabot-auto-merge.yml', '.github/workflows/dependabot-auto-merge.yml'],
   ['templates/workflows/quality-gate-fallback.yml', '.github/workflows/quality-gate-fallback.yml'],
   ['templates/workflows/scheduled-maintenance.yml', '.github/workflows/scheduled-maintenance.yml'],
