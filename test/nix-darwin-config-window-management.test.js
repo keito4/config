@@ -12,7 +12,9 @@ describe('AeroSpace window management and BetterTouchTool gestures', () => {
     const aerospaceConfig = readRepoFile('dot/aerospace.toml');
 
     expect(aerospaceConfig).toContain('config-version = 2');
-    expect(aerospaceConfig).toContain('start-at-login = true');
+    // 自動起動は無効化。アプリ毎のワークスペース分離により、アプリ切替時に表示
+    // ワークスペースが切り替わり直前のアプリが画面から消えるため。本体は残す。
+    expect(aerospaceConfig).toContain('start-at-login = false');
     expect(aerospaceConfig).toContain('auto-reload-config = true');
     expect(aerospaceConfig).toContain('persistent-workspaces = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]');
     expect(aerospaceConfig).toContain('inner.horizontal = 6');

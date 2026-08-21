@@ -9,7 +9,11 @@ config-version = 2
 after-startup-command = []
 
 # Start AeroSpace at login
-start-at-login = true
+# Disabled: per-app workspace assignment (see [[on-window-detected]] below) makes
+# focusing an app on another workspace switch the visible workspace, so the previous
+# app appears to "disappear". Keep AeroSpace installed but don't auto-launch it.
+# Re-enable by setting this back to true (and `aerospace enable on`).
+start-at-login = false
 
 # Automatically reload the config when the config file is saved.
 auto-reload-config = true
