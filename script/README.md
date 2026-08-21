@@ -18,6 +18,7 @@ This directory contains utility scripts for managing configuration, credentials,
 | `trust-claude-workspace.sh`      | Trust a workspace in `~/.claude.json` for headless runs                      | scheduled-maintenance                           |
 | `setup-ci.sh`                    | CI/CD workflow setup                                                         | `/setup-ci`                                     |
 | `setup-new-repo.sh`              | New repository bootstrap                                                     | `/setup-new-repo`                               |
+| `audit-references.sh`            | Reports code/test/docs references to files under `script/` and `templates/`  | Manual maintenance                              |
 | `macos/setup-bettertouchtool.js` | BetterTouchTool gesture setup for AeroSpace/Raycast                          | Local macOS setup                               |
 
 ## Configuration Management
@@ -322,6 +323,20 @@ Generates changelog from conventional commits.
 **Usage**: `./script/changelog-generator.sh --since <tag>`
 
 **Claude command**: `/changelog-generator`
+
+### audit-references.sh
+
+Audits tracked files under `script/` and `templates/` and reports which
+code/CI, test, and docs files reference each one. Useful for finding orphaned
+scripts before deleting them or when checking whether a new script needs to be
+wired into docs/CI.
+
+**Usage**:
+
+```bash
+./script/audit-references.sh                  # Markdown report
+./script/audit-references.sh --format tsv      # Machine-readable output
+```
 
 ## Infrastructure & DevContainer
 

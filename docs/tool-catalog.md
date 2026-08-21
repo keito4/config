@@ -34,7 +34,7 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 | -------- | --------------- | -------------------------- |
 | Node.js  | 24.19.0         | JavaScript/TypeScript 実行 |
 | Python 3 | apt 管理        | スクリプト、AI ツール      |
-| pnpm     | 11.21.0         | パッケージマネージャ       |
+| pnpm     | 11.22.0         | パッケージマネージャ       |
 | npm      | see global.json | パッケージマネージャ       |
 | corepack | see global.json | パッケージマネージャ切替   |
 
@@ -44,7 +44,7 @@ Layer 1: ベースイメージ (ghcr.io/keito4/config-base)
 
 | ツール                            | バージョン管理             | 用途                |
 | --------------------------------- | -------------------------- | ------------------- |
-| Claude Code                       | native installer (2.1.226) | AI コーディング支援 |
+| Claude Code                       | native installer (2.1.233) | AI コーディング支援 |
 | Codex (`@openai/codex`)           | see global.json            | OpenAI Codex CLI    |
 | Gemini CLI (`@google/gemini-cli`) | see global.json            | Google Gemini CLI   |
 | Happy Coder                       | see global.json            | AI コーディング     |
