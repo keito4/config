@@ -9,11 +9,7 @@ config-version = 2
 after-startup-command = []
 
 # Start AeroSpace at login
-# Disabled: per-app workspace assignment (see [[on-window-detected]] below) makes
-# focusing an app on another workspace switch the visible workspace, so the previous
-# app appears to "disappear". Keep AeroSpace installed but don't auto-launch it.
-# Re-enable by setting this back to true (and `aerospace enable on`).
-start-at-login = false
+start-at-login = true
 
 # Automatically reload the config when the config file is saved.
 auto-reload-config = true
@@ -71,72 +67,14 @@ persistent-workspaces = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
     outer.top =        6
     outer.right =      6
 
-# Workspaces:
-# 1 terminal/agents, 2 browsers, 3 editor, 4 AI, 5 communication,
-# 6 planning/docs, 7 mail/calendar, 8 infrastructure, 9 utilities.
-[[on-window-detected]]
-    if.app-id = 'com.cmuxterm.app'
-    run = 'move-node-to-workspace 1'
-
-[[on-window-detected]]
-    if.app-id = 'com.google.Chrome'
-    run = 'move-node-to-workspace 2'
-
-[[on-window-detected]]
-    if.app-id = 'company.thebrowser.Browser'
-    run = 'move-node-to-workspace 2'
-
-[[on-window-detected]]
-    if.app-id = 'com.todesktop.230313mzl4w4u92'
-    run = 'move-node-to-workspace 3'
-
-[[on-window-detected]]
-    if.app-id = 'com.microsoft.VSCode'
-    run = 'move-node-to-workspace 3'
-
-[[on-window-detected]]
-    if.app-id = 'com.openai.codex'
-    run = 'move-node-to-workspace 4'
-
-[[on-window-detected]]
-    if.app-id = 'com.anthropic.claudefordesktop'
-    run = 'move-node-to-workspace 4'
-
-[[on-window-detected]]
-    if.app-id = 'com.tinyspeck.slackmacgap'
-    run = 'move-node-to-workspace 5'
-
-[[on-window-detected]]
-    if.app-id = 'com.hnc.Discord'
-    run = 'move-node-to-workspace 5'
-
-[[on-window-detected]]
-    if.app-id = 'notion.id'
-    run = 'move-node-to-workspace 6'
-
-[[on-window-detected]]
-    if.app-id = 'com.linear'
-    run = 'move-node-to-workspace 6'
-
-[[on-window-detected]]
-    if.app-id = 'com.readdle.SparkDesktop'
-    run = 'move-node-to-workspace 7'
-
-[[on-window-detected]]
-    if.app-id = 'com.cron.electron'
-    run = 'move-node-to-workspace 7'
-
-[[on-window-detected]]
-    if.app-id = 'dev.kdrag0n.MacVirt'
-    run = 'move-node-to-workspace 8'
-
-[[on-window-detected]]
-    if.app-id = 'com.raycast.macos'
-    run = 'move-node-to-workspace 9'
-
-[[on-window-detected]]
-    if.app-id = 'com.hegenberg.BetterTouchTool'
-    run = 'move-node-to-workspace 9'
+# Window routing:
+# アプリ毎の専用ワークスペース割当（move-node-to-workspace）は撤廃した。
+# 各アプリを別ワークスペースへ固定すると、アプリ間フォーカス移動のたびに
+# 表示ワークスペースが切り替わり、直前のアプリが画面から消えてしまうため。
+# 撤廃後はウィンドウが「開いた時点のワークスペース」にそのままタイルされ、
+# 同一ワークスペース上で自由にパネル分割できる。
+# 特定アプリを特定ワークスペースへ寄せたくなったら、on-window-detected の
+# ルールブロックを個別に追加する（AeroSpace 公式ドキュメント参照）。
 
 # 'main' binding mode declaration
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes

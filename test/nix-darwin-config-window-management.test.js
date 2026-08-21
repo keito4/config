@@ -8,30 +8,23 @@ function readRepoFile(relativePath) {
 }
 
 describe('AeroSpace window management and BetterTouchTool gestures', () => {
-  test('AeroSpace owns window management with app workspace routing', () => {
+  test('AeroSpace owns window management and tiles windows where they open', () => {
     const aerospaceConfig = readRepoFile('dot/aerospace.toml');
 
     expect(aerospaceConfig).toContain('config-version = 2');
-    // 自動起動は無効化。アプリ毎のワークスペース分離により、アプリ切替時に表示
-    // ワークスペースが切り替わり直前のアプリが画面から消えるため。本体は残す。
-    expect(aerospaceConfig).toContain('start-at-login = false');
+    expect(aerospaceConfig).toContain('start-at-login = true');
     expect(aerospaceConfig).toContain('auto-reload-config = true');
     expect(aerospaceConfig).toContain('persistent-workspaces = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]');
     expect(aerospaceConfig).toContain('inner.horizontal = 6');
     expect(aerospaceConfig).toContain('outer.top =        6');
-    expect(aerospaceConfig).toContain('[[on-window-detected]]');
-    expect(aerospaceConfig).toContain("if.app-id = 'com.cmuxterm.app'");
-    expect(aerospaceConfig).toContain("if.app-id = 'com.google.Chrome'");
-    expect(aerospaceConfig).toContain("if.app-id = 'company.thebrowser.Browser'");
-    expect(aerospaceConfig).toContain("if.app-id = 'com.todesktop.230313mzl4w4u92'");
-    expect(aerospaceConfig).toContain("if.app-id = 'com.openai.codex'");
-    expect(aerospaceConfig).toContain("if.app-id = 'com.anthropic.claudefordesktop'");
-    expect(aerospaceConfig).toContain("if.app-id = 'com.tinyspeck.slackmacgap'");
-    expect(aerospaceConfig).toContain("if.app-id = 'notion.id'");
-    expect(aerospaceConfig).toContain("if.app-id = 'com.readdle.SparkDesktop'");
-    expect(aerospaceConfig).toContain("if.app-id = 'com.raycast.macos'");
-    expect(aerospaceConfig).toContain("if.app-id = 'com.hegenberg.BetterTouchTool'");
-    expect(aerospaceConfig).toContain("run = 'move-node-to-workspace 9'");
+    expect(aerospaceConfig).toContain("default-root-container-layout = 'tiles'");
+
+    // アプリ毎の専用ワークスペース割当は撤廃済み。各アプリを別ワークスペースへ
+    // 固定するとアプリ間フォーカス移動のたびに表示ワークスペースが切り替わり、
+    // 直前のアプリが画面から消えてしまうため。撤廃後はウィンドウが開いた場所に
+    // タイルされ、同一ワークスペース上で自由にパネル分割できる。
+    expect(aerospaceConfig).not.toContain('[[on-window-detected]]');
+    expect(aerospaceConfig).not.toContain('if.app-id');
   });
 
   test('BetterTouchTool gesture setup is GitHub-managed and preserves existing triggers', () => {
