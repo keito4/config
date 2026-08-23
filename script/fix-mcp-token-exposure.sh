@@ -115,7 +115,13 @@ apply_config_dir() {
         print_info "スキップ (.claude.json なし): $dir"
         return 0
     fi
-    cp -p "$file" "$file.pre-mcp-token-fix.$(date +%Y%m%d-%H%M%S)"
+    local backup
+    backup="$file.pre-mcp-token-fix.$(date +%Y%m%d-%H%M%S)"
+    cp -p "$file" "$backup"
+    # cp -p は元ファイルのパーミッションを引き継ぐが、万一 $file 自体が
+    # 緩いパーミッションで作られていた場合に備え、平文トークンを含む
+    # バックアップは明示的に自分専用へ絞る。
+    chmod 600 "$backup"
     for name in $MANAGED_SERVERS; do
         mcp_cli "$dir" mcp remove -s user "$name" >/dev/null 2>&1 || true
         mcp_cli "$dir" mcp add-json -s user "$name" "$(server_json "$name")" >/dev/null
@@ -171,6 +177,7 @@ main() {
     print_success "管理対象の MCP 定義は全て安全な形式です。"
     if [ "$mode" = "apply" ]; then
         print_warning "反映には対象 config dir のセッション再起動が必要です。"
+        print_warning "*.pre-mcp-token-fix.* バックアップには旧トークンが平文で残っています。反映確認後は削除してください。"
     fi
 }
 
