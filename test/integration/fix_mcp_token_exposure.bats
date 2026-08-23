@@ -139,6 +139,31 @@ assert "--header \"Authorization: Bearer" not in cmd, "token expanded into argv:
     [ "$before" = "$after" ]
 }
 
+@test "apply mode backs up .claude.json with 0600 permissions" {
+    write_config "$TEST_TEMP_DIR/leaky" leaky
+    chmod 644 "$TEST_TEMP_DIR/leaky/.claude.json"
+
+    # claude CLI をスタブ化し、実際の MCP 登録は行わない
+    claude() { :; }
+    export -f claude
+
+    # claude スタブは .claude.json を書き換えないため MCP は leaky のまま残り、
+    # 全体の終了コードは失敗になる。ここで検証したいのはバックアップの
+    # パーミッションだけなので、終了コードは問わない。
+    run "$(SCRIPT)" "$TEST_TEMP_DIR/leaky"
+
+    local backup
+    backup="$(ls "$TEST_TEMP_DIR"/leaky/.claude.json.pre-mcp-token-fix.* 2>/dev/null | head -n1)"
+    [ -n "$backup" ]
+    local mode
+    if stat -c '%a' "$backup" >/dev/null 2>&1; then
+        mode="$(stat -c '%a' "$backup")" # GNU coreutils (Linux)
+    else
+        mode="$(stat -f '%OLp' "$backup")" # BSD stat (macOS)
+    fi
+    [ "$mode" = "600" ]
+}
+
 @test "fix-mcp-token-exposure.sh stays below critical complexity threshold" {
     run "$REPO_ROOT/script/code-complexity-check.sh" --files "$REPO_ROOT/script/fix-mcp-token-exposure.sh" --json
     assert_success
