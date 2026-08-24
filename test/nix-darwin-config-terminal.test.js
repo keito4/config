@@ -48,6 +48,16 @@ describe('home-manager cmux terminal configuration', () => {
     expect(cmuxModule).toContain('copyOnSelect = true;');
   });
 
+  test('zsh drops a TERMINFO that cannot resolve the current TERM', () => {
+    // cmux.app が TERMINFO に自前の terminfo ディレクトリを差し込むため、tmux 内
+    // (TERM=tmux-256color) では termbox-go 系 CLI (peco) が Init に失敗して panic する。
+    const zshModule = readRepoFile('nix/home/zsh.nix');
+
+    expect(zshModule).toContain('envExtra');
+    expect(zshModule).toContain('_terminfo_entries');
+    expect(zshModule).toContain('unset TERMINFO');
+  });
+
   test('Ghostty config is managed for cmux terminal rendering', () => {
     const cmuxModule = readRepoFile('nix/home/cmux.nix');
 
