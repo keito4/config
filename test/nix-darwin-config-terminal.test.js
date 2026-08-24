@@ -80,6 +80,15 @@ describe('home-manager cmux terminal configuration', () => {
     expect(attachScript).not.toContain('agent-deck list --json 2>/dev/null');
   });
 
+  test('agent-deck attach tells you when the pick is the session you are in', () => {
+    // cmux は 1 タブ = 1 セッションで tmux クライアントを貼り付けるため、いま自分が
+    // いるセッションを選ぶと switch-client が no-op になり「何も起きない」ように見える。
+    const attachScript = readRepoFile('script/agent/agent-deck-attach.sh');
+
+    expect(attachScript).toContain("tmux display-message -p '#{session_name}'");
+    expect(attachScript).toContain('すでにこのセッションにいます');
+  });
+
   test('Ghostty config is managed for cmux terminal rendering', () => {
     const cmuxModule = readRepoFile('nix/home/cmux.nix');
 

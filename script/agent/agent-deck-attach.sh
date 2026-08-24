@@ -56,6 +56,17 @@ if [ -z "$tmux_session" ] || [ "$tmux_session" = "null" ]; then
   die "セッション情報が取得できませんでした: $id"
 fi
 
+# cmux は 1 タブ = 1 セッションで tmux クライアントを貼り付けるため、いま自分が
+# いるセッションを選ぶと switch-client が no-op になり「何も起きない」ように見える。
+# 正常系なので終了コードは 0 のまま、何が起きたかだけ伝える。
+if [ -n "${TMUX:-}" ]; then
+  current_session=$(tmux display-message -p '#{session_name}' 2>/dev/null || true)
+  if [ -n "$current_session" ] && [ "$current_session" = "$tmux_session" ]; then
+    echo "ada: すでにこのセッションにいます: $tmux_session" >&2
+    exit 0
+  fi
+fi
+
 # tmux プロセスが死んでいたら起動を待ってからアタッチ
 if ! tmux has-session -t "=$tmux_session" 2>/dev/null; then
   agent-deck session start "$id"
