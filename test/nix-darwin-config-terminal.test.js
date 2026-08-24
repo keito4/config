@@ -58,6 +58,15 @@ describe('home-manager cmux terminal configuration', () => {
     expect(zshModule).toContain('unset TERMINFO');
   });
 
+  test('agent-deck attach drops an unusable TERMINFO before invoking peco', () => {
+    // .zshenv のガードより前に起動した古いシェルから呼ばれても peco が panic しないよう、
+    // ada 側でも同じ判定を行う。
+    const attachScript = readRepoFile('script/agent/agent-deck-attach.sh');
+
+    expect(attachScript).toContain('compgen -G "$TERMINFO/*/$TERM"');
+    expect(attachScript).toContain('unset TERMINFO');
+  });
+
   test('Ghostty config is managed for cmux terminal rendering', () => {
     const cmuxModule = readRepoFile('nix/home/cmux.nix');
 
