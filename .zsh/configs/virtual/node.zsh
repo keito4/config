@@ -24,7 +24,12 @@ _nvm_lazy_load() {
     return 1
   fi
 }
-nvm() { _nvm_lazy_load; nvm "$@"; }
+nvm() {
+  # 読み込みに失敗したら nvm はもう未定義なので、そのまま呼ぶと
+  # 実際の失敗理由ではなく command not found になる。ここで打ち切る。
+  _nvm_lazy_load || return $?
+  nvm "$@"
+}
 
 export PNPM_HOME="$HOME/Library/pnpm"
 case ":$PATH:" in
