@@ -67,6 +67,19 @@ describe('home-manager cmux terminal configuration', () => {
     expect(attachScript).toContain('unset TERMINFO');
   });
 
+  test('agent-deck attach reports failures instead of exiting silently', () => {
+    // set -euo pipefail と 2>/dev/null の組み合わせで、どの段階で失敗しても
+    // 何も表示されずに終了していた。失敗は必ず理由を出す。
+    const attachScript = readRepoFile('script/agent/agent-deck-attach.sh');
+
+    expect(attachScript).toContain('die()');
+    expect(attachScript).toContain('agent-deck list --json に失敗しました');
+    expect(attachScript).toContain('アタッチできるセッションがありません');
+    expect(attachScript).toContain('peco が異常終了しました');
+    expect(attachScript).toContain('switch-client に失敗しました');
+    expect(attachScript).not.toContain('agent-deck list --json 2>/dev/null');
+  });
+
   test('Ghostty config is managed for cmux terminal rendering', () => {
     const cmuxModule = readRepoFile('nix/home/cmux.nix');
 
