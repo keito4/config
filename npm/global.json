@@ -1,12 +1,20 @@
 {
   "name": "lib",
   "dependencies": {
+    "@antfu/ni": {
+      "version": "30.5.0",
+      "overridden": false
+    },
     "@commitlint/cli": {
       "version": "21.2.2",
       "overridden": false
     },
     "@commitlint/config-conventional": {
       "version": "21.2.2",
+      "overridden": false
+    },
+    "@google/gemini-cli": {
+      "version": "0.56.0",
       "overridden": false
     },
     "@leonardsellem/n8n-mcp-server": {
@@ -17,44 +25,20 @@
       "version": "0.149.1",
       "overridden": false
     },
-    "@google/gemini-cli": {
-      "version": "0.56.0",
-      "overridden": false
-    },
-    "happy": {
-      "version": "1.2.0",
+    "agent-browser": {
+      "version": "0.33.2",
       "overridden": false
     },
     "bash-language-server": {
       "version": "5.6.0",
       "overridden": false
     },
-    "typescript": {
-      "version": "7.0.2",
-      "overridden": false
-    },
-    "typescript-language-server": {
-      "version": "6.0.0",
-      "overridden": false
-    },
-    "vscode-langservers-extracted": {
-      "version": "4.10.0",
-      "overridden": false
-    },
-    "yaml-language-server": {
-      "version": "1.24.0",
-      "overridden": false
-    },
-    "corepack": {
-      "version": "0.35.0",
-      "overridden": false
-    },
-    "@antfu/ni": {
-      "version": "30.5.0",
-      "overridden": false
-    },
     "difit": {
       "version": "5.0.11",
+      "overridden": false
+    },
+    "happy": {
+      "version": "1.2.0",
       "overridden": false
     },
     "mcp-remote": {
@@ -65,16 +49,28 @@
       "version": "2.35.7",
       "overridden": false
     },
-    "npm": {
-      "version": "12.0.2",
-      "overridden": false
-    },
     "pm2": {
       "version": "7.0.3",
       "overridden": false
     },
+    "typescript-language-server": {
+      "version": "6.0.0",
+      "overridden": false
+    },
+    "typescript": {
+      "version": "7.0.2",
+      "overridden": false
+    },
     "vercel": {
       "version": "59.5.0",
+      "overridden": false
+    },
+    "vscode-langservers-extracted": {
+      "version": "4.10.0",
+      "overridden": false
+    },
+    "yaml-language-server": {
+      "version": "1.24.0",
       "overridden": false
     }
   }

@@ -1,5 +1,4 @@
 # Expose selected shared local secrets to CLI tools such as Codex MCP servers.
-# NOTE: This loader is duplicated in nix/home/zsh.nix (home.file). Keep both in sync.
 # 許可キー一覧は組織名を含むため private-config 管理の外部ファイルに置く
 _codex_env_allowlist="$HOME/.config/devcontainer-env-keys.txt"
 if [[ -r "$_codex_env_allowlist" ]]; then
