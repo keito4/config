@@ -29,6 +29,7 @@ in
 
     ".zsh/configs/aliases.zsh" = managedSource (configRoot + /.zsh/configs/aliases.zsh);
     ".zsh/configs/color.zsh" = managedSource (configRoot + /.zsh/configs/color.zsh);
+    ".zsh/configs/completion.zsh" = managedSource (configRoot + /.zsh/configs/completion.zsh);
     ".zsh/configs/history.zsh" = managedSource (configRoot + /.zsh/configs/history.zsh);
     ".zsh/configs/keybindings.zsh" = managedSource (configRoot + /.zsh/configs/keybindings.zsh);
     ".zsh/configs/prompt.zsh" = managedSource (configRoot + /.zsh/configs/prompt.zsh);
@@ -38,12 +39,19 @@ in
       configRoot + /.zsh/configs/pre/.env.secret.template
     );
     ".zsh/configs/pre/.gitignore" = managedSource (configRoot + /.zsh/configs/pre/.gitignore);
+    ".zsh/configs/pre/completion.zsh" = managedSource (
+      configRoot + /.zsh/configs/pre/completion.zsh
+    );
+    ".zsh/configs/pre/devcontainer-env.zsh" = managedSource (
+      configRoot + /.zsh/configs/pre/devcontainer-env.zsh
+    );
     ".zsh/configs/pre/envup.zsh" = managedSource (configRoot + /.zsh/configs/pre/envup.zsh);
     ".zsh/configs/pre/path.zsh" = managedSource (configRoot + /.zsh/configs/pre/path.zsh);
 
     ".zsh/configs/virtual/dart.zsh" = managedSource (configRoot + /.zsh/configs/virtual/dart.zsh);
     ".zsh/configs/virtual/go.zsh" = managedSource (configRoot + /.zsh/configs/virtual/go.zsh);
     ".zsh/configs/virtual/java.zsh" = managedSource (configRoot + /.zsh/configs/virtual/java.zsh);
+    ".zsh/configs/virtual/node.zsh" = managedSource (configRoot + /.zsh/configs/virtual/node.zsh);
     ".zsh/configs/virtual/php.zsh" = managedSource (configRoot + /.zsh/configs/virtual/php.zsh);
     ".zsh/configs/virtual/python.zsh" = managedSource (configRoot + /.zsh/configs/virtual/python.zsh);
     ".zsh/configs/virtual/ruby.zsh" = managedSource (configRoot + /.zsh/configs/virtual/ruby.zsh);

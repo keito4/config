@@ -57,14 +57,21 @@ describe('home-manager dotfiles and agent tooling', () => {
 
   test('devcontainer env loader reads approved credential keys from private allowlist', () => {
     const zshModule = readRepoFile('nix/home/zsh.nix');
+    const dotfilesModule = readRepoFile('nix/home/dotfiles.nix');
     const devcontainerEnvLoader = readRepoFile('.zsh/configs/pre/devcontainer-env.zsh');
 
-    [zshModule, devcontainerEnvLoader].forEach((loader) => {
-      // 許可キーはインライン列挙せず private-config 管理の外部ファイルから読む
-      expect(loader).toContain('devcontainer-env-keys.txt');
-      expect(loader).toContain('.devcontainer.env');
+    // ローダーの実体は .zsh/ 側の1本だけ。nix 側は home.file で配備し loginExtra から読むので、
+    // 内容をインラインで複製しない（複製するとどちらか片方だけが更新されて挙動が食い違う）。
+    expect(dotfilesModule).toContain('.zsh/configs/pre/devcontainer-env.zsh');
+    expect(zshModule).toContain('.zsh/configs/pre/devcontainer-env.zsh');
+    expect(zshModule).not.toContain('devcontainer-env-keys.txt');
 
-      // 組織名を含むキーや 1Password サービストークンを公開リポジトリに残さない
+    // 許可キーはインライン列挙せず private-config 管理の外部ファイルから読む
+    expect(devcontainerEnvLoader).toContain('devcontainer-env-keys.txt');
+    expect(devcontainerEnvLoader).toContain('.devcontainer.env');
+
+    // 組織名を含むキーや 1Password サービストークンを公開リポジトリに残さない
+    [zshModule, devcontainerEnvLoader].forEach((loader) => {
       ['ELU_SENTRY_TOKEN', 'ELU_NOTION_API_KEY', 'OYKOT_NOTION_API_KEY', 'OP_SERVICE_ACCOUNT_TOKEN'].forEach(
         (envKey) => {
           expect(loader).not.toContain(envKey);
