@@ -90,6 +90,16 @@ report.log
 # 端末ローカルの状態（hooks の trusted_hash 等）を含むため追跡しない。
 .codex/*.config.toml
 
+# Codex execpolicy rules
+# default.rules は Codex がセッション中の「常に許可」で自動追記する端末ローカル状態、
+# synced-allowlist.rules は private-config/permissions/sync.sh の生成物（正本は別リポジトリ）。
+# どちらも端末固有の絶対パスを含むため追跡しない。
+.codex/rules/
+
+# Cursor MCP settings
+# screenpipe 等のローカル API キーが平文で書き込まれるため追跡しない。
+.cursor/mcp.json
+
 # MCP tool artifacts
 .playwright-mcp/
 
