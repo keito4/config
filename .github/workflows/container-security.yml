@@ -65,6 +65,12 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/config-base:cache
 
       - name: Run Trivy vulnerability scanner
+        # ignore-unfixed: 修正版が未提供の CVE を抑制する。主に Ubuntu 24.04 (Noble)
+        #   ベースイメージ由来の linux-libc-dev カーネル CVE が対象で、Ubuntu が
+        #   "needed" のまま fixed version を出さないため、イメージ再ビルドのたびに
+        #   新しい CRITICAL が湧き .trivyignore へのいたちごっこになる。
+        #   修正版が存在する CVE (grpc-go, protobufjs, Vercel CLI 等) は引き続き
+        #   検出され、.trivyignore で個別に管理する。
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
         with:
           image-ref: 'config-base:scan'
@@ -72,6 +78,7 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
           vuln-type: 'os,library'
+          ignore-unfixed: 'true'
           trivyignores: '.trivyignore'
 
       - name: Upload Trivy scan results to GitHub Security tab
