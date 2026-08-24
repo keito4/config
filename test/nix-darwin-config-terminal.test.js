@@ -48,6 +48,47 @@ describe('home-manager cmux terminal configuration', () => {
     expect(cmuxModule).toContain('copyOnSelect = true;');
   });
 
+  test('zsh drops a TERMINFO that cannot resolve the current TERM', () => {
+    // cmux.app が TERMINFO に自前の terminfo ディレクトリを差し込むため、tmux 内
+    // (TERM=tmux-256color) では termbox-go 系 CLI (peco) が Init に失敗して panic する。
+    const zshModule = readRepoFile('nix/home/zsh.nix');
+
+    expect(zshModule).toContain('envExtra');
+    expect(zshModule).toContain('_terminfo_entries');
+    expect(zshModule).toContain('unset TERMINFO');
+  });
+
+  test('agent-deck attach drops an unusable TERMINFO before invoking peco', () => {
+    // .zshenv のガードより前に起動した古いシェルから呼ばれても peco が panic しないよう、
+    // ada 側でも同じ判定を行う。
+    const attachScript = readRepoFile('script/agent/agent-deck-attach.sh');
+
+    expect(attachScript).toContain('compgen -G "$TERMINFO/*/$TERM"');
+    expect(attachScript).toContain('unset TERMINFO');
+  });
+
+  test('agent-deck attach reports failures instead of exiting silently', () => {
+    // set -euo pipefail と 2>/dev/null の組み合わせで、どの段階で失敗しても
+    // 何も表示されずに終了していた。失敗は必ず理由を出す。
+    const attachScript = readRepoFile('script/agent/agent-deck-attach.sh');
+
+    expect(attachScript).toContain('die()');
+    expect(attachScript).toContain('agent-deck list --json に失敗しました');
+    expect(attachScript).toContain('アタッチできるセッションがありません');
+    expect(attachScript).toContain('peco が異常終了しました');
+    expect(attachScript).toContain('switch-client に失敗しました');
+    expect(attachScript).not.toContain('agent-deck list --json 2>/dev/null');
+  });
+
+  test('agent-deck attach tells you when the pick is the session you are in', () => {
+    // cmux は 1 タブ = 1 セッションで tmux クライアントを貼り付けるため、いま自分が
+    // いるセッションを選ぶと switch-client が no-op になり「何も起きない」ように見える。
+    const attachScript = readRepoFile('script/agent/agent-deck-attach.sh');
+
+    expect(attachScript).toContain("tmux display-message -p '#{session_name}'");
+    expect(attachScript).toContain('すでにこのセッションにいます');
+  });
+
   test('Ghostty config is managed for cmux terminal rendering', () => {
     const cmuxModule = readRepoFile('nix/home/cmux.nix');
 
