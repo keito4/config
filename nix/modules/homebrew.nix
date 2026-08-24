@@ -38,11 +38,23 @@ in
 
     # === Formulae (Nix にないもの / tap 依存 / macOS 固有) ===
     brews = [
+      "actionlint" # GitHub Actions workflow linter
+      "apkeep" # APK downloader (Android 実機デバッグ用)
       "asheshgoplani/tap/agent-deck" # Agent Deck CLI
       "bash" # bash 4+ (setup-claude.sh や typeset -g を使うスクリプトが必要。macOS 標準は 3.2)
+      "bats-core" # BATS (test/integration/ の実行に必要)
       "cliclick" # macOS automation
+      "cocoapods" # iOS/Flutter 依存管理
+      "doppler" # Doppler secret management CLI
+      "gitleaks" # 資格情報スキャン (security-credential-scan)
+      "jadx" # APK デコンパイラ (Android 実機デバッグ用)
       "mas" # Mac App Store CLI
+      "opentofu" # Terraform 互換 IaC
       "pinentry-mac" # GPG pinentry for macOS
+      "swiftlint" # Swift linter
+      "terragrunt" # Terraform/OpenTofu ラッパー
+      "xcodegen" # Xcode プロジェクト生成
+      "yq" # YAML/JSON プロセッサ
 
       # Tap-dependent formulae
       "koekeishiya/formulae/skhd"
@@ -60,13 +72,16 @@ in
       # Development Tools
       # gcloud は nixpkgs の google-cloud-sdk で管理（cask の postinstall が
       # virtualenv コマンドを要求し、新規マシンで失敗するため）
+      "android-platform-tools" # adb (Android 実機デバッグ用)
       "android-studio"
       "cursor"
       "dotnet-sdk"
       "elgato-stream-deck"
       "flutter"
+      "lm-studio"
       "ngrok"
       "orbstack"
+      "session-manager-plugin" # AWS SSM Session Manager
       "tableplus"
       "visual-studio-code"
 
@@ -103,6 +118,7 @@ in
       "dropbox"
       "google-japanese-ime"
       "jordanbaird-ice"
+      "libreoffice"
       "parallels-client"
       "qblocker"
       "the-unarchiver"
