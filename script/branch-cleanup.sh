@@ -20,6 +20,44 @@ MERGED_ONLY=false
 # Protected branches
 PROTECTED_BRANCHES=("main" "master" "develop" "staging" "production")
 
+# Return success (0) when $1 is a protected branch or the current branch.
+# Relies on the global PROTECTED_BRANCHES array and CURRENT_BRANCH variable.
+is_protected_branch() {
+  local branch=$1
+  local protected
+
+  if [ "$branch" = "$CURRENT_BRANCH" ]; then
+    return 0
+  fi
+
+  for protected in "${PROTECTED_BRANCHES[@]}"; do
+    if [ "$branch" = "$protected" ]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+# Print up to the first 5 entries of a branch list as "  <icon> <branch>
+# (<date_prefix><last_commit>)", then a "... and N more" summary line when
+# the list is longer than that.
+print_branch_group() {
+  local icon=$1
+  local date_prefix=$2
+  shift 2
+  local branches=("$@")
+  local branch last_commit
+
+  for branch in "${branches[@]:0:5}"; do
+    last_commit=$(git log -1 --format="%cr" "$branch" 2>/dev/null || echo "unknown")
+    echo "  $icon $branch (${date_prefix}${last_commit})"
+  done
+  if [ "${#branches[@]}" -gt 5 ]; then
+    echo "  ... and $((${#branches[@]} - 5)) more"
+  fi
+}
+
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -91,21 +129,7 @@ git fetch --prune > /dev/null 2>&1
 # Find merged branches
 MERGED_BRANCHES=()
 while IFS= read -r branch; do
-  # Skip protected branches
-  is_protected=false
-  for protected in "${PROTECTED_BRANCHES[@]}"; do
-    if [ "$branch" = "$protected" ]; then
-      is_protected=true
-      break
-    fi
-  done
-
-  # Skip current branch
-  if [ "$branch" = "$CURRENT_BRANCH" ]; then
-    is_protected=true
-  fi
-
-  if [ "$is_protected" = false ]; then
+  if ! is_protected_branch "$branch"; then
     MERGED_BRANCHES+=("$branch")
   fi
 done < <(git branch --merged "$MAIN_BRANCH" | sed 's/^[* ]*//' | grep -v "^$MAIN_BRANCH$" || true)
@@ -121,20 +145,7 @@ if [ "$MERGED_ONLY" = false ]; then
       continue
     fi
 
-    # Skip protected branches and current
-    is_protected=false
-    for protected in "${PROTECTED_BRANCHES[@]}"; do
-      if [ "$branch" = "$protected" ]; then
-        is_protected=true
-        break
-      fi
-    done
-
-    if [ "$branch" = "$CURRENT_BRANCH" ]; then
-      is_protected=true
-    fi
-
-    if [ "$is_protected" = false ]; then
+    if ! is_protected_branch "$branch"; then
       # Get last commit date
       LAST_COMMIT_DATE=$(git log -1 --format=%ct "$branch" 2>/dev/null || echo "0")
 
@@ -169,26 +180,14 @@ echo ""
 # Show merged branches
 if [ "${#MERGED_BRANCHES[@]}" -gt 0 ]; then
   echo -e "${GREEN}Merged (${#MERGED_BRANCHES[@]}):${NC}"
-  for branch in "${MERGED_BRANCHES[@]:0:5}"; do
-    LAST_COMMIT=$(git log -1 --format="%cr" "$branch" 2>/dev/null || echo "unknown")
-    echo "  ✓ $branch (merged $LAST_COMMIT)"
-  done
-  if [ "${#MERGED_BRANCHES[@]}" -gt 5 ]; then
-    echo "  ... and $((${#MERGED_BRANCHES[@]} - 5)) more"
-  fi
+  print_branch_group "✓" "merged " "${MERGED_BRANCHES[@]}"
   echo ""
 fi
 
 # Show stale branches
 if [ "${#STALE_BRANCHES[@]}" -gt 0 ]; then
   echo -e "${YELLOW}Stale (${#STALE_BRANCHES[@]}):${NC}"
-  for branch in "${STALE_BRANCHES[@]:0:5}"; do
-    LAST_COMMIT=$(git log -1 --format="%cr" "$branch" 2>/dev/null || echo "unknown")
-    echo "  ⚠ $branch ($LAST_COMMIT)"
-  done
-  if [ "${#STALE_BRANCHES[@]}" -gt 5 ]; then
-    echo "  ... and $((${#STALE_BRANCHES[@]} - 5)) more"
-  fi
+  print_branch_group "⚠" "" "${STALE_BRANCHES[@]}"
   echo ""
 fi
 
