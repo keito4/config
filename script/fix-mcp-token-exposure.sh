@@ -19,6 +19,23 @@
 #   既定スコープの状態ファイルは ~/.claude/.claude.json ではなく ~/.claude.json
 #   (旧レイアウト)。~/.claude/.claude.json だけ直しても既定セッションには効かない。
 #   反映には対象セッションの再起動が必要 (MCP は起動時に spawn される)。
+#
+# 2026-08-26 追記 — config dir だけを見ていては足りない:
+#   この検査は当初 config dir の .claude.json しか見ておらず、
+#   *プロジェクトスコープの .mcp.json* を対象外にしていた。そのため
+#   あるリポジトリの .mcp.json が古い形式のまま残り
+#   (--header "Authorization: Bearer $VAR" はダブルクォートなので
+#   シェルが exec 前に展開する)、linear/supabase/sentry/vercel 4サーバー分の
+#   平文トークンが argv に載っていたのに、--check は
+#   「管理対象の MCP 定義は全て安全な形式です」と緑を返していた。
+#
+#   さらに定義が正しくても *それ以前に起動したセッション* は古い argv を
+#   保持し続ける (MCP は起動時 spawn なので定義修正だけでは消えない)。
+#   よって検査は3層で行う:
+#     1. config dir の .claude.json   (従来)
+#     2. プロジェクトの .mcp.json     (--scan-projects)
+#     3. 実行中プロセスの argv        (--scan-processes)
+#   3 が最終的な事実。1 と 2 が緑でも 3 が赤なら該当セッションの再起動が要る。
 # ============================================================================
 #
 # SC2016: $LINEAR_API_KEY 等は MCP 起動時に bash -lc 側で展開させるため、
@@ -33,6 +50,9 @@ source "$REPO_ROOT/script/lib/output.sh"
 
 # 管理対象の MCP サーバー名 (lib/output.sh と同じく bash 4.0+ が前提)
 MANAGED_SERVERS="linear supabase sentry-elu"
+
+# プロジェクトスコープの .mcp.json を探すルート
+PROJECT_ROOT_DEFAULT="$HOME/develop"
 
 # 全定義に共通する前置き: 資格情報の読み込みと npx キャッシュの固定
 COMMON_PRELUDE='set -a; . "$HOME/.devcontainer.env"; set +a; export npm_config_cache="${TMPDIR:-/tmp}/mcp-npm-cache"; mkdir -p "$npm_config_cache"; '
@@ -74,23 +94,8 @@ check_config_dir() {
         print_info "スキップ (.claude.json なし): $dir"
         return 0
     fi
-    MCP_FILE="$file" MCP_SERVERS="$MANAGED_SERVERS" python3 -c '
-import json, os, sys
-servers = json.load(open(os.environ["MCP_FILE"])).get("mcpServers", {})
-leaked = []
-for name in os.environ["MCP_SERVERS"].split():
-    entry = servers.get(name)
-    if entry is None:
-        print("  %-12s -- (未設定)" % name)
-        continue
-    args = entry.get("args") or ["", ""]
-    cmd = args[1] if len(args) > 1 else ""
-    if "--access-token" in cmd or '"'"'--header "Authorization: Bearer'"'"' in cmd:
-        leaked.append(name)
-        print("  %-12s NG (argv にトークン)" % name)
-    else:
-        print("  %-12s OK" % name)
-sys.exit(1 if leaked else 0)'
+    # shellcheck disable=SC2086  # MANAGED_SERVERS は意図的に単語分割する
+    python3 "$REPO_ROOT/script/lib/mcp_audit.py" configdir "$file" $MANAGED_SERVERS
 }
 
 # 対象 config dir に向けて claude CLI を実行する。
@@ -128,14 +133,39 @@ apply_config_dir() {
     done
 }
 
+# プロジェクトスコープの .mcp.json を検査する (報告のみ・書き換えはしない)
+#
+# 共有リポジトリに配られているファイルを勝手に書き換えると、他人の作業や
+# コミットに紛れ込む。ここでは検出して直し方を示すに留める。
+check_project_mcp_json() {
+    python3 "$REPO_ROOT/script/lib/mcp_audit.py" projects "${1:-$PROJECT_ROOT_DEFAULT}"
+}
+
+# 実行中の MCP プロセスの argv を検査する
+#
+# 定義を直しても、それ以前に起動したセッションは古い argv を保持し続ける。
+# ここが最終的な事実なので、定義が緑でもこちらを必ず見る。
+check_running_processes() {
+    python3 "$REPO_ROOT/script/lib/mcp_audit.py" processes
+}
+
 usage() {
     cat <<'USAGE'
-Usage: fix-mcp-token-exposure.sh [--check | --print <server>] [config_dir ...]
+Usage: fix-mcp-token-exposure.sh [--check | --audit | --print <server>] [config_dir ...]
 
   (既定)            管理対象 MCP を安全な定義へ置き換える (claude CLI が必要)
-  --check           置き換え済みかどうかを検査するだけ (書き込みなし)
+  --check           config dir の .claude.json だけを検査する (書き込みなし)
+  --audit           --check に加えてプロジェクトの .mcp.json と
+                    実行中プロセスの argv も検査する (推奨・書き込みなし)
+  --scan-projects [root]  プロジェクトの .mcp.json だけを検査する (既定 ~/develop)
+  --scan-processes        実行中プロセスの argv だけを検査する
   --print <server>  生成される mcpServers エントリの JSON を出力する
   --list            管理対象のサーバー名を出力する
+
+⚠️ --check は config dir しか見ないので、プロジェクトの .mcp.json に古い定義が
+   残っていても緑になる (2026-08-26 に実際に見逃した)。通常は --audit を使う。
+   実行中プロセスの argv が最終的な事実で、定義が緑でも古いセッションが
+   生きていれば赤になる。その場合は該当セッションの再起動が要る。
 
 config_dir の既定は $HOME と ~/.claude-private。
 既定スコープの状態ファイルは ~/.claude/.claude.json ではなく ~/.claude.json
@@ -147,6 +177,18 @@ main() {
     local mode="apply"
     case "${1:-}" in
         --check) mode="check"; shift ;;
+        --audit) mode="audit"; shift ;;
+        --scan-projects)
+            shift
+            printf '### プロジェクトの .mcp.json (%s)\n' "${1:-$PROJECT_ROOT_DEFAULT}"
+            check_project_mcp_json "${1:-$PROJECT_ROOT_DEFAULT}"
+            return $?
+            ;;
+        --scan-processes)
+            printf '### 実行中プロセスの argv\n'
+            check_running_processes
+            return $?
+            ;;
         --print) shift; server_json "${1:?--print にはサーバー名が必要です}"; return 0 ;;
         --list) echo "$MANAGED_SERVERS" | tr ' ' '\n'; return 0 ;;
         -h | --help) usage; return 0 ;;
@@ -169,6 +211,10 @@ main() {
         [ "$mode" = "apply" ] && apply_config_dir "$dir"
         check_config_dir "$dir" || failed=1
     done
+
+    if [ "$mode" = "audit" ]; then
+        python3 "$REPO_ROOT/script/lib/mcp_audit.py" audit "$PROJECT_ROOT_DEFAULT" || failed=1
+    fi
 
     if [ "$failed" -ne 0 ]; then
         print_error "argv にトークンを渡す MCP 定義が残っています。"
