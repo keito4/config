@@ -284,13 +284,11 @@ jobs:
       contents: read
       issues: write
       pull-requests: read
-    continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
 
       - name: Check PR Size
         uses: ./.github/actions/pr-size-check
-        continue-on-error: true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -298,7 +296,7 @@ jobs:
     name: Quality Gate
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [changes, lint, test, integration-test, actionlint, workflow-template-sync]
+    needs: [changes, lint, test, integration-test, actionlint, workflow-template-sync, pr-size-check]
     if: always()
     steps:
       - name: Check job results
@@ -308,6 +306,7 @@ jobs:
           INTEGRATION_RESULT: ${{ needs.integration-test.result }}
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
           WORKFLOW_TEMPLATE_SYNC_RESULT: ${{ needs.workflow-template-sync.result }}
+          PR_SIZE_RESULT: ${{ needs.pr-size-check.result }}
         run: |
           echo "## Quality Gate Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -318,6 +317,7 @@ jobs:
           echo "| Integration Tests | $INTEGRATION_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| Workflow Lint | $ACTIONLINT_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| Workflow Template Sync | $WORKFLOW_TEMPLATE_SYNC_RESULT |" >> $GITHUB_STEP_SUMMARY
+          echo "| PR Size | $PR_SIZE_RESULT |" >> $GITHUB_STEP_SUMMARY
 
       - name: Verify all checks passed
         env:
@@ -326,6 +326,7 @@ jobs:
           INTEGRATION_RESULT: ${{ needs.integration-test.result }}
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
           WORKFLOW_TEMPLATE_SYNC_RESULT: ${{ needs.workflow-template-sync.result }}
+          PR_SIZE_RESULT: ${{ needs.pr-size-check.result }}
         run: |
           # skipped は成功扱い（該当ファイルの変更がない場合）
           function check_result() {
@@ -352,6 +353,10 @@ jobs:
           fi
           if ! check_result "$WORKFLOW_TEMPLATE_SYNC_RESULT"; then
             echo "::error::Workflow Template Sync failed"
+            FAILED=true
+          fi
+          if ! check_result "$PR_SIZE_RESULT"; then
+            echo "::error::PR Size gate failed (>400 lines or >25 files; apply size/override to bypass)"
             FAILED=true
           fi
 
