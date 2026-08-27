@@ -15,9 +15,79 @@ fi
 
 # macOS 標準の bash 3.2 は typeset -g をサポートせず、
 # 「typeset: -g: invalid option」という分かりにくいエラーで失敗する。
-# 先に明示的なメッセージで落とす (zsh では BASH_VERSION が空なのでスキップ)。
-if [[ -n "${BASH_VERSION:-}" && "${BASH_VERSINFO[0]}" -lt 4 ]]; then
-    echo "エラー: このライブラリは bash 4.0 以降が必要です (現在: ${BASH_VERSION})" >&2
+# PATH で /bin が /opt/homebrew/bin より前にあると `#!/usr/bin/env bash` が
+# 3.2 に解決されるため、より新しい bash があればそれで実行し直す。
+# ここから下の再実行ブロックは bash 3.2 でも解釈できる構文だけで書くこと。
+
+# このリポジトリのスクリプトが必要とする最低バージョンを満たすか判定する。
+# `declare -A` は 4.0、`typeset -g` は 4.2、`local -n` は 4.3 で追加されたため、
+# 全部を満たす 4.3 を下限とする。4.0〜4.2 を掴むと、再実行した先で別のエラーに
+# なったうえ「4 以上なので再実行しない」と判断されて詰む。
+output::bash_is_supported() {
+    local major="$1" minor="$2"
+
+    [ "$major" -gt 4 ] && return 0
+    [ "$major" -eq 4 ] && [ "$minor" -ge 3 ] && return 0
+    return 1
+}
+
+# PATH 上で最初に見つかったサポート対象 bash のパスを出力する。
+output::find_modern_bash() {
+    local dir candidate version major minor
+    local IFS=':'
+    # shellcheck disable=SC2086 # PATH は IFS=':' で意図的に分割する。
+    for dir in $PATH; do
+        [ -n "$dir" ] || continue
+        candidate="${dir}/bash"
+        [ -x "$candidate" ] || continue
+        version="$("$candidate" -c 'printf "%s %s" "${BASH_VERSINFO[0]}" "${BASH_VERSINFO[1]}"' 2>/dev/null)" || continue
+        major="${version%% *}"
+        minor="${version##* }"
+        [ -n "$major" ] && [ -n "$minor" ] || continue
+        if output::bash_is_supported "$major" "$minor"; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# 再実行してよいかを判定する。
+# entry:  source チェーンの最も外側のファイル
+# argv0:  $0
+# major / minor: 実行中の bash のバージョン
+#
+# 再実行先はサポート対象であることを確認済みなので、この判定は子で必ず偽になる。
+# 別途ループ防止フラグを持つ必要はない。
+output::should_reexec_bash() {
+    local entry="$1" argv0="$2" major="$3" minor="$4"
+
+    output::bash_is_supported "$major" "$minor" && return 1
+    # 対話シェルや bats から source された場合、実行し直すべき本体が存在しない。
+    [ "$entry" = "$argv0" ] || return 1
+    [ -f "$argv0" ] || return 1
+    return 0
+}
+
+if [[ -n "${BASH_VERSION:-}" ]] &&
+    output::should_reexec_bash \
+        "${BASH_SOURCE[$((${#BASH_SOURCE[@]} - 1))]}" \
+        "$0" \
+        "${BASH_VERSINFO[0]}" \
+        "${BASH_VERSINFO[1]}"; then
+    if OUTPUT_LIB_MODERN_BASH="$(output::find_modern_bash)"; then
+        # 自分だけ作り直しても、子スクリプトの `#!/usr/bin/env bash` が古い bash に
+        # 解決されるままでは同じ場所で落ちる。PATH ごと引き継がせる。
+        PATH="${OUTPUT_LIB_MODERN_BASH%/*}:$PATH"
+        export PATH
+        exec "$OUTPUT_LIB_MODERN_BASH" "$0" "$@"
+    fi
+fi
+
+# 新しい bash が見つからなかった場合は、従来どおり明示的なメッセージで落とす
+# (zsh では BASH_VERSION が空なのでスキップ)。
+if [[ -n "${BASH_VERSION:-}" ]] && ! output::bash_is_supported "${BASH_VERSINFO[0]}" "${BASH_VERSINFO[1]}"; then
+    echo "エラー: このライブラリは bash 4.3 以降が必要です (現在: ${BASH_VERSION})" >&2
     echo "macOS の場合: brew install bash を実行し、PATH に /opt/homebrew/bin を追加してください" >&2
     return 1 2>/dev/null || exit 1
 fi
