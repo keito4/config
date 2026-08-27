@@ -28,6 +28,7 @@
 | [0021](0021-screenshot-based-mobile-data-ingest.md)             | スマホ専用データのスクショ経由週次取り込み                        | Accepted           |
 | [0022](0022-codex-config-merge-deploy.md)                       | Codex config.toml のマージ配備（symlink 廃止）                    | Accepted           |
 | [0023](0023-reexec-scripts-under-modern-bash.md)                | 古い bash で起動されたスクリプトを新しい bash で実行し直す        | Accepted           |
+| [0024](0024-pr-size-hard-gate.md)                               | PR サイズ制限を警告からハード制約に変更する                       | Accepted           |
 
 ## ADR テンプレート
 

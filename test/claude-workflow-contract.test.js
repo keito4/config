@@ -305,6 +305,13 @@ describe('Claude workflow contracts', () => {
     expect(script).toContain('/^  [A-Za-z0-9_-]+:/');
   });
 
+  // quality-gate ジョブの needs ブロックを取り出す（単一行・複数行どちらの YAML 配列でも動く）。
+  function qualityGateNeeds(workflow) {
+    const start = workflow.indexOf('  quality-gate:');
+    const match = workflow.slice(start).match(/needs:\s*(\[[^\]]*\])/);
+    return match ? match[1] : '';
+  }
+
   // 検査は週次メンテナンスの警告だけでは退行を止められない。PR の CI で強制する。
   test('CI enforces the workflow guards on pull requests', () => {
     const workflow = readWorkflow('.github/workflows/ci.yml');
@@ -322,8 +329,18 @@ describe('Claude workflow contracts', () => {
     // 最初の失敗で打ち切らず、全違反を報告してから落ちる。
     expect(workflow).toContain('|| guard_status=1');
     expect(workflow).toContain('exit "$guard_status"');
-    // Workflow Lint は quality-gate の needs に含まれるため、失敗がマージを止める。
-    expect(workflow).toContain('needs: [changes, lint, test, integration-test, actionlint, workflow-template-sync]');
+    // Workflow Lint / PR Size は quality-gate の needs に含まれるため、失敗がマージを止める。
+    for (const job of [
+      'changes',
+      'lint',
+      'test',
+      'integration-test',
+      'actionlint',
+      'workflow-template-sync',
+      'pr-size-check',
+    ]) {
+      expect(qualityGateNeeds(workflow)).toContain(job);
+    }
   });
 
   // on: push / on: [push] / on:\n  push: / on:\n  - push はいずれも push トリガー。

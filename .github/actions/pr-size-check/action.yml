@@ -1,17 +1,28 @@
 name: 'PR Size Check'
-description: 'Apply a size label to pull requests and warn on very large diffs'
+description: 'Apply a size label to pull requests and fail on diffs beyond the hard limit (400 lines / 25 files)'
 
 inputs:
   github-token:
     description: 'GitHub token used to update labels and comments'
     required: true
+  max-lines:
+    description: 'Hard limit for total changed lines (additions + deletions)'
+    required: false
+    default: '400'
+  max-files:
+    description: 'Hard limit for changed files'
+    required: false
+    default: '25'
+  override-label:
+    description: 'Label that bypasses the hard limit (must be applied by a human reviewer)'
+    required: false
+    default: 'size/override'
 
 runs:
   using: 'composite'
   steps:
     - name: Check PR Size
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
-      continue-on-error: true
       with:
         github-token: ${{ inputs.github-token }}
         script: |
@@ -20,6 +31,10 @@ runs:
             core.info('PR size check skipped: event payload has no pull_request.');
             return;
           }
+
+          const maxLines = parseInt('${{ inputs.max-lines }}', 10);
+          const maxFiles = parseInt('${{ inputs.max-files }}', 10);
+          const overrideLabel = '${{ inputs.override-label }}';
 
           const { additions, deletions, changed_files } = pullRequest;
           const totalChanges = additions + deletions;
@@ -39,9 +54,22 @@ runs:
             }
           }
 
-          const currentLabels = pullRequest.labels.map((label) => label.name);
+          // Read labels via API, not from the event payload: on a workflow re-run the
+          // payload is a stale snapshot and would miss a freshly applied override label.
+          const { data: liveLabels } = await github.rest.issues
+            .listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            })
+            .catch(() => ({ data: pullRequest.labels }));
+          const currentLabels = liveLabels.map((label) => label.name);
+
+          // Labeling and comments are best-effort (may lack permission on forks);
+          // the hard gate below must still run, so every API call is wrapped.
           for (const label of currentLabels) {
-            if (label.startsWith('size/')) {
+            if (label.startsWith('size/') && label !== overrideLabel) {
               await github.rest.issues
                 .removeLabel({
                   owner: context.repo.owner,
@@ -53,24 +81,40 @@ runs:
             }
           }
 
-          await github.rest.issues.addLabels({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.issue.number,
-            labels: [sizeLabel],
-          });
+          await github.rest.issues
+            .addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [sizeLabel],
+            })
+            .catch(() => {});
 
-          if (sizeLabel === 'size/XL') {
-            const body = `## Large PR Warning
+          core.info(`PR Size: ${sizeLabel} (${totalChanges} lines, ${changed_files} files)`);
 
-          This PR is quite large with **${totalChanges} lines** changed across **${changed_files} files**.
+          const overLimit = totalChanges > maxLines || changed_files > maxFiles;
+          if (!overLimit) {
+            return;
+          }
 
-          Large PRs are harder to review and more likely to introduce bugs. Please consider:
-          - Breaking this into smaller, focused PRs
-          - Separating refactoring from feature changes
-          - Creating a PR series with clear dependencies
+          if (currentLabels.includes(overrideLabel)) {
+            core.warning(
+              `PR exceeds the size limit (${totalChanges} lines / ${changed_files} files > ` +
+                `${maxLines} lines / ${maxFiles} files) but has the '${overrideLabel}' label. Passing.`
+            );
+            return;
+          }
 
-          **PR Size Guidelines:**
+          const body = `## PR Size Gate Failed
+
+          This PR changes **${totalChanges} lines** across **${changed_files} files**, exceeding the hard limit of **${maxLines} lines / ${maxFiles} files**.
+
+          Options:
+          - Split this into smaller, focused PRs (preferred)
+          - Separate refactoring from feature changes
+          - If the size is unavoidable (e.g. generated code, lockfiles, bulk renames), ask a reviewer to apply the \`${overrideLabel}\` label and re-run the check
+
+          **PR Size Labels (informational):**
           | Size | Lines | Files |
           |------|-------|-------|
           | XS | <=50 | <=3 |
@@ -79,12 +123,30 @@ runs:
           | L | <=1000 | <=30 |
           | XL | >1000 | >30 |`;
 
-            await github.rest.issues.createComment({
+          const { data: comments } = await github.rest.issues
+            .listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body,
-            });
+              per_page: 100,
+            })
+            .catch(() => ({ data: [] }));
+          const alreadyCommented = comments.some(
+            (c) => c.body && c.body.includes('## PR Size Gate Failed')
+          );
+          if (!alreadyCommented) {
+            await github.rest.issues
+              .createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              })
+              .catch(() => {});
           }
 
-          core.info(`PR Size: ${sizeLabel} (${totalChanges} lines, ${changed_files} files)`);
+          core.setFailed(
+            `PR size gate failed: ${totalChanges} lines / ${changed_files} files ` +
+              `(limit: ${maxLines} lines / ${maxFiles} files). ` +
+              `Split the PR or have a reviewer apply the '${overrideLabel}' label.`
+          );

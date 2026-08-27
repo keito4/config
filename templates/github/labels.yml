@@ -136,3 +136,7 @@
 - name: 'size/XL'
   color: 'd93f0b'
   description: 'PR サイズ XLarge'
+
+- name: 'size/override'
+  color: '5319e7'
+  description: 'PR サイズ上限(400行/25ファイル)の明示的な例外承認。人間のレビュアーのみが付与する'
