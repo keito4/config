@@ -82,6 +82,39 @@ source_plugins_lib() {
   [ ! -d "$dst" ]
 }
 
+@test "plugins::_sync_directory skips copying when the target is a symlink to the source" {
+  source_plugins_lib
+
+  local src="${TEST_TEMP_DIR}/commands"
+  local dst="${TEST_TEMP_DIR}/out/commands"
+  mkdir -p "$src" "${TEST_TEMP_DIR}/out"
+  echo "hello" > "${src}/a.md"
+  ln -s "$src" "$dst"
+
+  run plugins::_sync_directory "$src" "$dst" "コマンド" "*.md"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"コピーに失敗"* ]]
+  [[ "$output" == *"同期をスキップ"* ]]
+  [ -f "${src}/a.md" ]
+  grep -q "hello" "${src}/a.md"
+}
+
+@test "plugins::_sync_directory skips the whole-directory copy when the target is a symlink to the source" {
+  source_plugins_lib
+
+  local src="${TEST_TEMP_DIR}/hooks"
+  local dst="${TEST_TEMP_DIR}/out/hooks"
+  mkdir -p "$src" "${TEST_TEMP_DIR}/out"
+  echo "hook" > "${src}/hook.py"
+  ln -s "$src" "$dst"
+
+  run plugins::_sync_directory "$src" "$dst" "フック"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"コピーに失敗"* ]]
+  [[ "$output" == *"同期をスキップ"* ]]
+  grep -q "hook" "${src}/hook.py"
+}
+
 # ---------------------------------------------------------------------------
 # plugins::copy_config_files
 # ---------------------------------------------------------------------------
