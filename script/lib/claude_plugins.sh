@@ -61,6 +61,15 @@ plugins::_sync_directory() {
         return 0
     fi
 
+    # ~/.claude/<name> が正本ディレクトリへの symlink になっている環境では、
+    # コピー元とコピー先が同一実体になり cp が「same file」で失敗する。
+    # 既に正本を参照できているので同期そのものが不要。
+    if [[ -d "$target_dir" ]] &&
+        [[ "$(cd "$source_dir" && pwd -P)" == "$(cd "$target_dir" && pwd -P)" ]]; then
+        log_info "${name}は既に正本を参照しているため同期をスキップします"
+        return 0
+    fi
+
     mkdir -p "$target_dir"
 
     if [[ -n "$pattern" ]]; then
