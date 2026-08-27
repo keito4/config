@@ -80,13 +80,40 @@ source_output_lib() {
   source "${REPO_ROOT}/script/lib/output.sh"
 }
 
-@test "output::find_modern_bash returns a bash that is 4.0 or newer" {
+# `typeset -g` は 4.2、`local -n` は 4.3 で入った。4.0〜4.2 を掴むと、再実行した先で
+# 別のエラーになったうえ「4 以上だから再実行しない」と判断されて詰む。
+@test "output::bash_is_supported requires 4.3 or newer" {
+  source_output_lib
+
+  run output::bash_is_supported 5 2
+  [ "$status" -eq 0 ]
+  run output::bash_is_supported 4 3
+  [ "$status" -eq 0 ]
+  run output::bash_is_supported 4 2
+  [ "$status" -eq 1 ]
+  run output::bash_is_supported 4 0
+  [ "$status" -eq 1 ]
+  run output::bash_is_supported 3 2
+  [ "$status" -eq 1 ]
+}
+
+@test "output::should_reexec_bash re-execs an unsupported bash 4.2" {
+  source_output_lib
+
+  local script="${TEST_TEMP_DIR}/entry.sh"
+  echo '#!/usr/bin/env bash' > "$script"
+
+  run output::should_reexec_bash "$script" "$script" 4 2
+  [ "$status" -eq 0 ]
+}
+
+@test "output::find_modern_bash returns a bash that is 4.3 or newer" {
   source_output_lib
 
   run output::find_modern_bash
   [ "$status" -eq 0 ]
   [ -x "$output" ]
-  "$output" -c '[ "${BASH_VERSINFO[0]}" -ge 4 ]'
+  "$output" -c '[ "${BASH_VERSINFO[0]}" -gt 4 ] || { [ "${BASH_VERSINFO[0]}" -eq 4 ] && [ "${BASH_VERSINFO[1]}" -ge 3 ]; }'
 }
 
 @test "output::should_reexec_bash requests a re-exec when an old bash runs a real script" {
@@ -95,7 +122,7 @@ source_output_lib() {
   local script="${TEST_TEMP_DIR}/entry.sh"
   echo '#!/usr/bin/env bash' > "$script"
 
-  run output::should_reexec_bash "$script" "$script" 3
+  run output::should_reexec_bash "$script" "$script" 3 2
   [ "$status" -eq 0 ]
 }
 
@@ -105,7 +132,7 @@ source_output_lib() {
   local script="${TEST_TEMP_DIR}/entry.sh"
   echo '#!/usr/bin/env bash' > "$script"
 
-  run output::should_reexec_bash "$script" "$script" 5
+  run output::should_reexec_bash "$script" "$script" 5 2
   [ "$status" -eq 1 ]
 }
 
@@ -113,15 +140,15 @@ source_output_lib() {
 @test "output::should_reexec_bash does not re-exec when the library is not the entry script" {
   source_output_lib
 
-  run output::should_reexec_bash "${REPO_ROOT}/script/lib/output.sh" "bash" 3
+  run output::should_reexec_bash "${REPO_ROOT}/script/lib/output.sh" "bash" 3 2
   [ "$status" -eq 1 ]
 }
 
 # 親だけ作り直しても、子スクリプトの `#!/usr/bin/env bash` が 3.2 に解決される
 # ままだと同じエラーが出る。PATH ごと引き継がせる必要がある。
 @test "child scripts inherit the modern bash through PATH" {
-  if ! /bin/bash -c '[ "${BASH_VERSINFO[0]}" -lt 4 ]' 2>/dev/null; then
-    skip "/bin/bash is already 4.0 or newer"
+  if /bin/bash -c '[ "${BASH_VERSINFO[0]}" -gt 4 ] || { [ "${BASH_VERSINFO[0]}" -eq 4 ] && [ "${BASH_VERSINFO[1]}" -ge 3 ]; }' 2>/dev/null; then
+    skip "/bin/bash is already 4.3 or newer"
   fi
 
   local child="${TEST_TEMP_DIR}/child.sh"
@@ -153,8 +180,8 @@ EOF
 }
 
 @test "a script sourcing output.sh survives being launched with bash 3.2" {
-  if ! /bin/bash -c '[ "${BASH_VERSINFO[0]}" -lt 4 ]' 2>/dev/null; then
-    skip "/bin/bash is already 4.0 or newer"
+  if /bin/bash -c '[ "${BASH_VERSINFO[0]}" -gt 4 ] || { [ "${BASH_VERSINFO[0]}" -eq 4 ] && [ "${BASH_VERSINFO[1]}" -ge 3 ]; }' 2>/dev/null; then
+    skip "/bin/bash is already 4.3 or newer"
   fi
 
   local script="${TEST_TEMP_DIR}/entry.sh"
@@ -178,8 +205,8 @@ EOF
 
 # output.sh を source しない入口スクリプトは再実行の恩恵を受けられない。
 @test "update-agents-md.sh re-execs under a modern bash" {
-  if ! /bin/bash -c '[ "${BASH_VERSINFO[0]}" -lt 4 ]' 2>/dev/null; then
-    skip "/bin/bash is already 4.0 or newer"
+  if /bin/bash -c '[ "${BASH_VERSINFO[0]}" -gt 4 ] || { [ "${BASH_VERSINFO[0]}" -eq 4 ] && [ "${BASH_VERSINFO[1]}" -ge 3 ]; }' 2>/dev/null; then
+    skip "/bin/bash is already 4.3 or newer"
   fi
 
   source_output_lib

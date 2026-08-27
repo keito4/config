@@ -7,7 +7,8 @@ Accepted
 ## Context
 
 `script/lib/` の共通ライブラリは `typeset -g` / `declare -A` / `local -n` といった
-bash 4 以降の構文を使う。一方 macOS に同梱される `/bin/bash` は 3.2.57 で止まっており、
+新しい bash の構文を使う。`declare -A` は 4.0、`typeset -g` は 4.2、`local -n` は 4.3 で
+追加されたため、実際の下限は **4.3** である。一方 macOS に同梱される `/bin/bash` は 3.2.57 で止まっており、
 スクリプトの `#!/usr/bin/env bash` が **PATH 上で最初に見つかった bash** に解決される。
 
 実測した問題は PATH の順序である。この Mac の場合、Claude Code など GUI から起動された
@@ -27,9 +28,12 @@ bash 4 以降の構文を使う。一方 macOS に同梱される `/bin/bash` �
 **`script/lib/output.sh` が、古い bash で起動されたスクリプトを新しい bash で
 実行し直す。** 判定と探索は 2 つの関数に分ける。
 
-- `output::find_modern_bash` — PATH を先頭から走査し、`BASH_VERSINFO[0] >= 4` を
-  満たす最初の `bash` を返す。
-- `output::should_reexec_bash <entry> <argv0> <major>` — 再実行してよいかを判定する。
+- `output::bash_is_supported <major> <minor>` — 下限 4.3 を満たすか判定する。
+- `output::find_modern_bash` — PATH を先頭から走査し、条件を満たす最初の `bash` を返す。
+- `output::should_reexec_bash <entry> <argv0> <major> <minor>` — 再実行の可否を判定する。
+
+下限を「4 以上」にすると、PATH 上で 4.0〜4.2 が先に見つかった場合にそれを掴んでしまい、
+再実行した先で別のエラーになったうえ「4 以上なので再実行しない」と判断されて詰む。
 
 再実行時は **PATH の先頭に新しい bash のディレクトリを差し込んでから `exec` する**。
 親だけ作り直しても、子スクリプトの `#!/usr/bin/env bash` が古い bash に解決される
@@ -62,7 +66,7 @@ source を追加した。
 
 ### Mitigation
 
-- 再実行先は「4.0 以降であること」を実際に起動して確認済みなので、子では判定が必ず
+- 再実行先は「4.3 以降であること」を実際に起動して確認済みなので、子では判定が必ず
   偽になりループしない。別途フラグを持たない。
 - 新しい bash が見つからない場合は従来どおり明示的なエラーメッセージで落とす。
 - 上記の制約は `test/integration/lib_functions.bats` に回帰テストとして固定した。
