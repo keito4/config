@@ -27,6 +27,7 @@
 | [0020](0020-claude-skill-distribution-and-settings-boundary.md) | Claude スキルの配布形式と settings.json のホスト／downstream 境界 | Accepted           |
 | [0021](0021-screenshot-based-mobile-data-ingest.md)             | スマホ専用データのスクショ経由週次取り込み                        | Accepted           |
 | [0022](0022-codex-config-merge-deploy.md)                       | Codex config.toml のマージ配備（symlink 廃止）                    | Accepted           |
+| [0023](0023-reexec-scripts-under-modern-bash.md)                | 古い bash で起動されたスクリプトを新しい bash で実行し直す        | Accepted           |
 
 ## ADR テンプレート
 

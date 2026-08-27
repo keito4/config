@@ -9,6 +9,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+# agents-md-data.sh は bash 4 の構文を使う。output.sh を先に読み込むことで、
+# 古い bash で起動された場合に新しい bash へ実行し直させる。
+# shellcheck source=script/lib/output.sh
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/lib/output.sh"
 # shellcheck source=script/lib/agents-md-data.sh
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/lib/agents-md-data.sh"

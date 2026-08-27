@@ -15,7 +15,60 @@ fi
 
 # macOS 標準の bash 3.2 は typeset -g をサポートせず、
 # 「typeset: -g: invalid option」という分かりにくいエラーで失敗する。
-# 先に明示的なメッセージで落とす (zsh では BASH_VERSION が空なのでスキップ)。
+# PATH で /bin が /opt/homebrew/bin より前にあると `#!/usr/bin/env bash` が
+# 3.2 に解決されるため、より新しい bash があればそれで実行し直す。
+# ここから下の再実行ブロックは bash 3.2 でも解釈できる構文だけで書くこと。
+
+# PATH 上で最初に見つかった bash 4.0 以降のパスを出力する。
+output::find_modern_bash() {
+    local dir candidate
+    local IFS=':'
+    # shellcheck disable=SC2086 # PATH は IFS=':' で意図的に分割する。
+    for dir in $PATH; do
+        [ -n "$dir" ] || continue
+        candidate="${dir}/bash"
+        [ -x "$candidate" ] || continue
+        if "$candidate" -c '[ "${BASH_VERSINFO[0]}" -ge 4 ]' 2>/dev/null; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# 再実行してよいかを判定する。
+# entry:  source チェーンの最も外側のファイル
+# argv0:  $0
+# major:  実行中の bash のメジャーバージョン
+#
+# 再実行先は 4.0 以降であることを確認済みなので、この判定は子で必ず偽になる。
+# 別途ループ防止フラグを持つ必要はない。
+output::should_reexec_bash() {
+    local entry="$1" argv0="$2" major="$3"
+
+    [ "$major" -lt 4 ] || return 1
+    # 対話シェルや bats から source された場合、実行し直すべき本体が存在しない。
+    [ "$entry" = "$argv0" ] || return 1
+    [ -f "$argv0" ] || return 1
+    return 0
+}
+
+if [[ -n "${BASH_VERSION:-}" ]] &&
+    output::should_reexec_bash \
+        "${BASH_SOURCE[$((${#BASH_SOURCE[@]} - 1))]}" \
+        "$0" \
+        "${BASH_VERSINFO[0]}"; then
+    if OUTPUT_LIB_MODERN_BASH="$(output::find_modern_bash)"; then
+        # 自分だけ作り直しても、子スクリプトの `#!/usr/bin/env bash` が古い bash に
+        # 解決されるままでは同じ場所で落ちる。PATH ごと引き継がせる。
+        PATH="${OUTPUT_LIB_MODERN_BASH%/*}:$PATH"
+        export PATH
+        exec "$OUTPUT_LIB_MODERN_BASH" "$0" "$@"
+    fi
+fi
+
+# 新しい bash が見つからなかった場合は、従来どおり明示的なメッセージで落とす
+# (zsh では BASH_VERSION が空なのでスキップ)。
 if [[ -n "${BASH_VERSION:-}" && "${BASH_VERSINFO[0]}" -lt 4 ]]; then
     echo "エラー: このライブラリは bash 4.0 以降が必要です (現在: ${BASH_VERSION})" >&2
     echo "macOS の場合: brew install bash を実行し、PATH に /opt/homebrew/bin を追加してください" >&2

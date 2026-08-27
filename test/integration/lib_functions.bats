@@ -71,6 +71,138 @@ load ../test_helper/test_helper
 }
 
 # Output function tests (consolidated from errors.sh)
+# ---------------------------------------------------------------------------
+# bash 3.2 環境での自動再実行
+# ---------------------------------------------------------------------------
+
+source_output_lib() {
+  # shellcheck source=script/lib/output.sh
+  source "${REPO_ROOT}/script/lib/output.sh"
+}
+
+@test "output::find_modern_bash returns a bash that is 4.0 or newer" {
+  source_output_lib
+
+  run output::find_modern_bash
+  [ "$status" -eq 0 ]
+  [ -x "$output" ]
+  "$output" -c '[ "${BASH_VERSINFO[0]}" -ge 4 ]'
+}
+
+@test "output::should_reexec_bash requests a re-exec when an old bash runs a real script" {
+  source_output_lib
+
+  local script="${TEST_TEMP_DIR}/entry.sh"
+  echo '#!/usr/bin/env bash' > "$script"
+
+  run output::should_reexec_bash "$script" "$script" 3
+  [ "$status" -eq 0 ]
+}
+
+@test "output::should_reexec_bash leaves a modern bash alone" {
+  source_output_lib
+
+  local script="${TEST_TEMP_DIR}/entry.sh"
+  echo '#!/usr/bin/env bash' > "$script"
+
+  run output::should_reexec_bash "$script" "$script" 5
+  [ "$status" -eq 1 ]
+}
+
+# 対話シェルや bats から source された場合、再実行してよい「本体」が存在しない。
+@test "output::should_reexec_bash does not re-exec when the library is not the entry script" {
+  source_output_lib
+
+  run output::should_reexec_bash "${REPO_ROOT}/script/lib/output.sh" "bash" 3
+  [ "$status" -eq 1 ]
+}
+
+# 親だけ作り直しても、子スクリプトの `#!/usr/bin/env bash` が 3.2 に解決される
+# ままだと同じエラーが出る。PATH ごと引き継がせる必要がある。
+@test "child scripts inherit the modern bash through PATH" {
+  if ! /bin/bash -c '[ "${BASH_VERSINFO[0]}" -lt 4 ]' 2>/dev/null; then
+    skip "/bin/bash is already 4.0 or newer"
+  fi
+
+  local child="${TEST_TEMP_DIR}/child.sh"
+  cat > "$child" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+source "${REPO_ROOT}/script/lib/output.sh"
+echo "child=\${BASH_VERSINFO[0]}"
+EOF
+  chmod +x "$child"
+
+  local parent="${TEST_TEMP_DIR}/parent.sh"
+  cat > "$parent" <<EOF
+#!/bin/bash
+set -euo pipefail
+source "${REPO_ROOT}/script/lib/output.sh"
+"${child}"
+EOF
+  chmod +x "$parent"
+
+  source_output_lib
+  local modern_bash modern_dir
+  modern_bash="$(output::find_modern_bash)"
+  modern_dir="${modern_bash%/*}"
+
+  run env PATH="/usr/bin:/bin:${modern_dir}" /bin/bash "$parent"
+  [ "$status" -eq 0 ]
+  [ "${output#child=}" -ge 4 ]
+}
+
+@test "a script sourcing output.sh survives being launched with bash 3.2" {
+  if ! /bin/bash -c '[ "${BASH_VERSINFO[0]}" -lt 4 ]' 2>/dev/null; then
+    skip "/bin/bash is already 4.0 or newer"
+  fi
+
+  local script="${TEST_TEMP_DIR}/entry.sh"
+  cat > "$script" <<EOF
+#!/bin/bash
+set -euo pipefail
+source "${REPO_ROOT}/script/lib/output.sh"
+echo "major=\${BASH_VERSINFO[0]}"
+EOF
+  chmod +x "$script"
+
+  source_output_lib
+  local modern_bash modern_dir
+  modern_bash="$(output::find_modern_bash)"
+  modern_dir="${modern_bash%/*}"
+
+  run env PATH="/usr/bin:/bin:${modern_dir}" /bin/bash "$script"
+  [ "$status" -eq 0 ]
+  [ "${output#major=}" -ge 4 ]
+}
+
+# output.sh を source しない入口スクリプトは再実行の恩恵を受けられない。
+@test "update-agents-md.sh re-execs under a modern bash" {
+  if ! /bin/bash -c '[ "${BASH_VERSINFO[0]}" -lt 4 ]' 2>/dev/null; then
+    skip "/bin/bash is already 4.0 or newer"
+  fi
+
+  source_output_lib
+  local repo_root modern_bash modern_dir
+  repo_root="$(cd "$REPO_ROOT" && pwd)"
+  modern_bash="$(output::find_modern_bash)"
+  modern_dir="${modern_bash%/*}"
+
+  local work="${TEST_TEMP_DIR}/repo"
+  mkdir -p "${work}/docs"
+  printf '# Test Agents\n\n<!-- BEGIN AUTO-GENERATED -->\n<!-- END AUTO-GENERATED -->\n' > "${work}/AGENTS.md"
+  printf '{"scripts":{},"engines":{"node":"24.14.1"}}\n' > "${work}/package.json"
+  printf '# Docs\n' > "${work}/docs/README.md"
+  git -C "$work" init -q
+  git -C "$work" add AGENTS.md package.json docs/README.md
+
+  cd "$work"
+  run env PATH="/usr/bin:/bin:${modern_dir}" /bin/bash "${repo_root}/script/update-agents-md.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"bash 4.0 以降が必要"* ]]
+  grep -q '`docs/`' "${work}/AGENTS.md"
+}
+
 @test "output.sh defines output::fatal function" {
   grep -q "output::fatal()" "${REPO_ROOT}/script/lib/output.sh"
 }

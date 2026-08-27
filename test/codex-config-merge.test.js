@@ -58,7 +58,26 @@ describe('script/codex-config-merge.py', () => {
   let stubDir;
   let readTomlScript;
 
+  // codex-config-merge.py は tomllib を使うため Python 3.11 以上が必要。
+  // macOS の /usr/bin/python3 は 3.9 で、PATH の先頭に来ることがあるため、
+  // 条件を満たすものを PATH 上から選ぶ。
+  function resolveModernPython() {
+    for (const dir of (process.env.PATH || '').split(path.delimiter).filter(Boolean)) {
+      const candidate = path.join(dir, 'python3');
+      const probe = spawnSync(candidate, ['-c', 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'], {
+        encoding: 'utf8',
+      });
+      if (probe.status === 0) {
+        return candidate;
+      }
+    }
+    throw new Error('python3 3.11 以上が PATH 上に見つかりません (codex-config-merge.py は tomllib を使用)');
+  }
+
+  let python;
+
   beforeAll(() => {
+    python = resolveModernPython();
     fs.mkdirSync(CONTEXT_DIR, { recursive: true });
     stubDir = fs.mkdtempSync(path.join(CONTEXT_DIR, 'codex-merge-stub-'));
     fs.writeFileSync(path.join(stubDir, 'tomli_w.py'), TOMLI_W_SHIM);
@@ -75,7 +94,7 @@ describe('script/codex-config-merge.py', () => {
   }
 
   function runMerge(args) {
-    const result = spawnSync('python3', [SCRIPT_PATH, ...args], {
+    const result = spawnSync(python, [SCRIPT_PATH, ...args], {
       encoding: 'utf8',
       env: { ...process.env, PYTHONPATH: stubDir },
       timeout: 15000,
@@ -84,7 +103,7 @@ describe('script/codex-config-merge.py', () => {
   }
 
   function readToml(filePath) {
-    const result = spawnSync('python3', [readTomlScript, filePath], { encoding: 'utf8' });
+    const result = spawnSync(python, [readTomlScript, filePath], { encoding: 'utf8' });
     if (result.status !== 0) {
       throw new Error(`failed to read TOML ${filePath}: ${result.stderr}`);
     }
