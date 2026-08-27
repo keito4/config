@@ -190,6 +190,14 @@ create_claude_config() {
 
 Use the repository quality gates before committing changes.
 
+## Hard constraints (enforced by CI)
+
+- PR size: <= 400 changed lines and <= 25 files (pr-size-gate.yml; exception = reviewer applies \`size/override\` label and re-runs)
+- Lint / Format / Test must be green (ci.yml)
+
+Add project-specific hard constraints early (directory layout checks, banned-pattern lint,
+import-dependency rules): agents take the shortest path, so make the shortest path the correct one.
+
 ## Repository
 
 - Project: $PROJECT_NAME
