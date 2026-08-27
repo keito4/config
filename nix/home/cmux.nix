@@ -75,6 +75,12 @@ let
     surface-tab-bar-font-size = 11
     scrollback-limit = 50000000
     split-divider-color = #3e4451
+    # Keep text legible on any background — including the Agent Deck wait tints
+    # the cmux colour watcher paints (agentdeck-streamdeck-plugin). Text below
+    # this contrast ratio against its cell background is auto-adjusted (darkened
+    # on a light tint, lightened on a dark one), which a per-cell colour set by an
+    # app cannot otherwise be overridden to do.
+    minimum-contrast = 4.5
   '';
 in
 {
