@@ -215,7 +215,7 @@ copy_supporting_templates() {
   mkdir -p "$TARGET_DIR/.github/workflows" "$TARGET_DIR/.github"
 
   local template
-  for template in dependabot-auto-merge label-sync quality-gate-fallback; do
+  for template in dependabot-auto-merge label-sync quality-gate-fallback pr-size-gate; do
     local source="$CONFIG_REPO/templates/workflows/$template.yml"
     local target="$TARGET_DIR/.github/workflows/$template.yml"
     if [[ -f "$source" && ! -f "$target" ]]; then
