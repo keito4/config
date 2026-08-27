@@ -95,6 +95,15 @@ describe('Claude workflow contracts', () => {
     expect(workflow).not.toContain('QUALITY_GATE_CONCLUSION=');
   });
 
+  // synchronize が無いと、指摘を直して push してもレビューは再実行されず、
+  // PR には最初の差分に対するレビューだけが残る（close→reopen での手動再実行が必要だった）。
+  test('Claude Code Review re-runs when the PR head is updated', () => {
+    const expected = 'types: [opened, synchronize, ready_for_review, reopened]';
+
+    expect(readWorkflow('.github/workflows/claude-code-review.yml')).toContain(expected);
+    expect(readWorkflow('templates/workflows/claude-code-review.yml')).toContain(expected);
+  });
+
   test('Claude Code Review skips Anthropic action when its review gate changes', () => {
     const workflow = readWorkflow('.github/workflows/claude-code-review.yml');
 

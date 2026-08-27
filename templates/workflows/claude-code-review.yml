@@ -1,7 +1,7 @@
 # Claude Code Review ワークフロー
 #
-# PR 作成時（opened / ready_for_review / reopened）に CI の完了を待ってから
-# Claude Code がコードレビューを実行する。Draft PR・Bot の PR は除外。
+# PR 作成時と更新時（opened / synchronize / ready_for_review / reopened）に CI の完了を
+# 待ってから Claude Code がコードレビューを実行する。Draft PR・Bot の PR は除外。
 # 認証 Secret が未設定の場合はレビューをスキップする。
 #
 # 使い方:
@@ -17,7 +17,7 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, ready_for_review, reopened]
+    types: [opened, synchronize, ready_for_review, reopened]
 
 permissions: {}
 
