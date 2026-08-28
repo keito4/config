@@ -182,7 +182,6 @@
       "Read(**/*.key)"
     ],
     "ask": [
-      "Bash(rm:*)",
       "Bash(git merge:*)",
       "Bash(git rebase:*)",
       "Bash(git reset:*)",
