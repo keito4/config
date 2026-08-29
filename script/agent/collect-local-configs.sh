@@ -96,12 +96,16 @@ classify_path() {
 
 file_size() {
   local path="${1:?path required}"
-  stat -f '%z' "$path" 2>/dev/null || stat -c '%s' "$path"
+  # GNU coreutils (Linux) is tried first: BSD stat's "-f" flag is silently
+  # accepted by GNU stat too (as a filesystem-status flag), so probing GNU
+  # syntax first avoids it returning multi-line filesystem info instead of
+  # failing over to the BSD form.
+  stat -c '%s' "$path" 2>/dev/null || stat -f '%z' "$path"
 }
 
 file_mtime() {
   local path="${1:?path required}"
-  stat -f '%Sm' -t '%Y-%m-%dT%H:%M:%S%z' "$path" 2>/dev/null || stat -c '%y' "$path"
+  stat -c '%y' "$path" 2>/dev/null || stat -f '%Sm' -t '%Y-%m-%dT%H:%M:%S%z' "$path"
 }
 
 printf 'category\tbytes\tmtime\tpath\n' >"$OUTPUT"
