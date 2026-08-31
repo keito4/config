@@ -58,6 +58,43 @@ mkdir -p "$TARGET_DIR"
 TYPE="${TYPE:-$(project::detect_type "$TARGET_DIR")}"
 PACKAGE_MANAGER="$(project::detect_package_manager "$TARGET_DIR")"
 
+# CI ランナー。GitHub ホストランナーが枯渇した OYKOT-jp では 2026-08-30 以降
+# ジョブが0ステップのまま即失敗するようになり、8/31 に全リポジトリを Ubicloud へ移行した。
+# 新規リポジトリだけ ubuntu-latest に戻るのを防ぐため、導入済みの owner では Ubicloud を既定にする。
+# Ubicloud 未導入の owner を巻き込んで壊さないよう、既定は owner ごとに切り替える。
+detect_ci_runner() {
+  local owner
+  # GitHub の owner は大文字小文字を区別しないので、remote の記録揺れで
+  # 取りこぼさないよう小文字へ寄せて比較する
+  owner="$(git -C "$TARGET_DIR" remote get-url origin 2>/dev/null |
+    sed -E 's#\.git$##; s#.*[:/]([^/]+)/[^/]+$#\1#' |
+    tr '[:upper:]' '[:lower:]')"
+
+  case "$owner" in
+    oykot-jp|elu-co-jp) echo "ubicloud-standard-2" ;;
+    *) echo "ubuntu-latest" ;;
+  esac
+}
+
+CI_RUNNER="${CI_RUNNER:-$(detect_ci_runner)}"
+
+# テンプレート正本は ubuntu-latest のまま置く（配布先の keito4/* が Ubicloud 未導入のため）。
+# 配置した時点で、対象リポジトリのランナーへ書き換える。
+apply_ci_runner() {
+  local file="${1:?File required}"
+
+  if [[ "$CI_RUNNER" == "ubuntu-latest" ]]; then
+    return 0
+  fi
+
+  # 置換文字列に & \ # が入ると sed の結果が壊れるため、埋め込む前に無害化する
+  local replacement
+  replacement="$(printf '%s' "$CI_RUNNER" | sed -e 's#[\\&#]#\\&#g')"
+
+  sed -i.bak -E "s#^([[:space:]]*runs-on:)[[:space:]]*ubuntu-latest[[:space:]]*\$#\1 ${replacement}#" "$file"
+  rm -f "$file.bak"
+}
+
 package_install_command() {
   case "$PACKAGE_MANAGER" in
     pnpm) echo "pnpm install --frozen-lockfile" ;;
@@ -90,6 +127,7 @@ Project Detection
 Type: $TYPE
 Package Manager: $PACKAGE_MANAGER
 CI Level: $LEVEL
+CI Runner: $CI_RUNNER
 Target: $TARGET_DIR
 Workflow exists: $(workflow_exists && echo "yes" || echo "no")
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -122,7 +160,7 @@ concurrency:
 
 jobs:
   quality:
-    runs-on: ubuntu-latest
+    runs-on: ${CI_RUNNER}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
@@ -138,7 +176,7 @@ jobs:
         run: $typecheck_cmd
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${CI_RUNNER}
     needs: quality
     steps:
       - uses: actions/checkout@v7
@@ -151,7 +189,7 @@ jobs:
         run: $test_cmd
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${CI_RUNNER}
     needs: [quality, test]
     steps:
       - uses: actions/checkout@v7
@@ -168,7 +206,7 @@ EOF
     cat >> "$workflow" <<EOF
 
   security:
-    runs-on: ubuntu-latest
+    runs-on: ${CI_RUNNER}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
@@ -186,7 +224,7 @@ EOF
 write_terraform_workflow() {
   local workflow="$TARGET_DIR/.github/workflows/ci.yml"
 
-  cat > "$workflow" <<'EOF'
+  cat > "$workflow" <<EOF
 name: Terraform CI
 
 on:
@@ -196,12 +234,12 @@ on:
     branches: [main, develop]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: \${{ github.workflow }}-\${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   terraform:
-    runs-on: ubuntu-latest
+    runs-on: ${CI_RUNNER}
     steps:
       - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v4
@@ -220,6 +258,7 @@ copy_supporting_templates() {
     local target="$TARGET_DIR/.github/workflows/$template.yml"
     if [[ -f "$source" && ! -f "$target" ]]; then
       cp "$source" "$target"
+      apply_ci_runner "$target"
     fi
   done
 
