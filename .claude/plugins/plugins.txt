@@ -33,12 +33,6 @@ feature-dev@claude-code-plugins
 frontend-design@claude-code-plugins
 security-guidance@claude-code-plugins
 
-# === Templates (claude-code-templates) ===
-devops-automation@claude-code-templates
-documentation-generator@claude-code-templates
-nextjs-vercel-pro@claude-code-templates
-supabase-toolkit@claude-code-templates
-
 # === Supabase Agent Skills (Plugin) ===
 postgres-best-practices@supabase-agent-skills
 
