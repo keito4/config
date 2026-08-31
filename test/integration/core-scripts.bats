@@ -174,6 +174,22 @@ setup_ci_fixture() {
     grep -q "runs-on: ubicloud-standard-2-arm" "$dir/.github/workflows/ci.yml"
 }
 
+@test "setup-new-repo.sh gives new repositories the owner's runner" {
+    # setup-new-repo.sh は git init するだけで origin を張らないため、
+    # owner はディレクトリ配置からしか分からない。新規リポジトリこそ
+    # ランナー移行の対象なので、この経路が素通りしないことを固定する。
+    local owner_dir="$TEST_TEMP_DIR/OYKOT-jp"
+    local dir="$owner_dir/fixture"
+    mkdir -p "$owner_dir"
+
+    run bash "$REPO_ROOT/script/setup-new-repo.sh" "$dir" --type nodejs --no-install
+    [ "$status" -eq 0 ]
+
+    [ -z "$(git -C "$dir" remote 2>/dev/null)" ]
+    grep -q "runs-on: ubicloud-standard-2" "$dir/.github/workflows/ci.yml"
+    ! grep -rq "runs-on: ubuntu-latest" "$dir/.github/workflows/"
+}
+
 @test "setup-ci.sh keeps GitHub expressions intact in the terraform workflow" {
     local dir="$TEST_TEMP_DIR/terraform"
     setup_ci_fixture "$dir" "git@github.com:OYKOT-jp/fixture.git"

@@ -63,12 +63,24 @@ PACKAGE_MANAGER="$(project::detect_package_manager "$TARGET_DIR")"
 # 新規リポジトリだけ ubuntu-latest に戻るのを防ぐため、導入済みの owner では Ubicloud を既定にする。
 # Ubicloud 未導入の owner を巻き込んで壊さないよう、既定は owner ごとに切り替える。
 detect_ci_runner() {
-  local owner
-  # GitHub の owner は大文字小文字を区別しないので、remote の記録揺れで
-  # 取りこぼさないよう小文字へ寄せて比較する
+  local owner dir
+
   owner="$(git -C "$TARGET_DIR" remote get-url origin 2>/dev/null |
-    sed -E 's#\.git$##; s#.*[:/]([^/]+)/[^/]+$#\1#' |
-    tr '[:upper:]' '[:lower:]')"
+    sed -E 's#\.git$##; s#.*[:/]([^/]+)/[^/]+$#\1#')"
+
+  # setup-new-repo.sh は git init だけで origin を張らないままここへ来るため、
+  # remote からは owner を引けない。新規リポジトリこそ本来の対象なので、
+  # <...>/github.com/<owner>/<repo> の配置規約に従って親ディレクトリからも拾う。
+  if [[ -z "$owner" ]]; then
+    if ! dir="$(cd "$TARGET_DIR" 2>/dev/null && pwd)"; then
+      dir="$TARGET_DIR"
+    fi
+    owner="$(basename "$(dirname "$dir")")"
+  fi
+
+  # GitHub の owner は大文字小文字を区別しないので、表記揺れで
+  # 取りこぼさないよう小文字へ寄せて比較する
+  owner="$(printf '%s' "$owner" | tr '[:upper:]' '[:lower:]')"
 
   case "$owner" in
     oykot-jp|elu-co-jp) echo "ubicloud-standard-2" ;;
