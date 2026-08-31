@@ -51,9 +51,11 @@ Claude Code のアセットについて、この端末の実態と リポジト�
 
 4. **`~/.claude/settings.json` はホスト所有の実体ファイルにする。**
    追跡ファイルへの symlink をやめ、`setup-claude.sh` の `seed_user_settings` が
-   リポジトリのベースラインを「初回の種」としてだけ配る（既存ファイルは上書きしない。
-   旧構成の symlink は内容を保ったまま実体へ切り離す）。これにより、Claude Code や
-   agent-deck の書き戻しがリポジトリを汚さなくなる。
+   リポジトリのベースラインを初回の種として配る。既存ファイルは上書きせず、
+   `permissions.allow` だけを重複排除しながら追加マージする。`hooks` / `deny` / `ask` と
+   その他の端末固有キーは保持する。旧構成の symlink は内容を保ったまま実体へ切り離す。
+   これにより、Claude Code や agent-deck の書き戻しがリポジトリを汚さず、正本に追加した
+   安全な許可ルールは `make claude-setup` で既存端末にも届く。
 
 5. **追跡する `.claude/settings.json` には端末固有の hook を入れない。**
    このファイルは downstream 8リポジトリと自身の CI の両方で読まれるため、
@@ -76,9 +78,11 @@ Claude Code のアセットについて、この端末の実態と リポジト�
 
 ### Negative
 
-- `~/.claude/settings.json` が実体になるため、リポジトリのベースライン更新
+- `~/.claude/settings.json` が実体のため、`permissions.allow` 以外のベースライン更新
   （新しい Quality Gate hook 等）は自動では反映されない。ホスト側の hooks には
-  agent-deck の登録が混ざるため、機械的な上書きはできない。
+  agent-deck の登録が混ざるため、ファイル全体の機械的な上書きはできない。
+- `permissions.allow` の削除は既存端末へ伝播しない。追加のみを自動化することで、
+  端末固有の許可を誤って消さないことを優先する。
 - スキルを追加するときはディレクトリを切る必要がある（フラットな `.md` は無視される）。
 - private-config のスキルを `~/.claude/skills` に展開する際、同名の実体コピーは
   リンクに置き換えられる（正本が明確なためドリフト除去を優先する）。
@@ -87,6 +91,7 @@ Claude Code のアセットについて、この端末の実態と リポジト�
 
 - ベースラインに hooks を足したときは、`~/.claude/settings.json` にも手で反映する
   （`.claude/hooks/` 側の実体はリポジトリ参照なので、追加が必要なのは登録だけ）。
+- `permissions.allow` を削除するときは、必要性を確認して各端末から明示的に削除する。
 - 有効なプラグインを増やしたときは `plugins.txt` に宣言を足す。新端末の復元経路はこちら。
 - 配布時の無害化は `test/sync-downstream.test.js` が、スキル展開と
   `~/.claude/settings.json` の扱いは `test/integration/setup_claude.bats` が固定する。
