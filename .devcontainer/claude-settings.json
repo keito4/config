@@ -76,7 +76,6 @@
       "Bash(touch:*)",
       "Bash(cp:*)",
       "Bash(mv:*)",
-      "Bash(rm:*)",
       "Bash(chmod:*)",
       "Bash(ln:*)",
       "Bash(curl:*)",
