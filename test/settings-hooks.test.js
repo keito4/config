@@ -264,6 +264,12 @@ describe('.claude/settings.json — hooks configuration', () => {
       expect(settings.permissions.allow.length).toBeGreaterThan(0);
     });
 
+    test('allow list should permit worklog state writes and edits', () => {
+      expect(settings.permissions.allow).toEqual(
+        expect.arrayContaining(['Write(~/.claude-worklog/**)', 'Edit(~/.claude-worklog/**)']),
+      );
+    });
+
     test('should have deny array with dangerous command blocks', () => {
       expect(Array.isArray(settings.permissions.deny)).toBe(true);
       expect(settings.permissions.deny.length).toBeGreaterThan(0);

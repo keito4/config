@@ -74,7 +74,63 @@ setup_settings_local() {
 # このリポジトリ自身の CI（GitHub Actions 上の Claude Code）にも流れる。CI には
 # agent-deck が無いため、SessionStart hook が毎回失敗する。
 #
-# リポジトリのベースラインは「初回の種」としてだけ配り、以後は上書きしない。
+# リポジトリのベースラインは初回の種として配る。既存ファイルには
+# permissions.allow だけを追加マージし、それ以外の端末固有設定は保持する。
+merge_baseline_permissions_allow() {
+    local baseline="$1"
+
+    if ! command -v jq &> /dev/null; then
+        log_warn "jq が見つかりません。${SETTINGS_FILE} への permissions.allow 同期をスキップします"
+        return
+    fi
+
+    if ! jq -e '
+        type == "object"
+        and (.permissions | type == "object")
+        and (.permissions.allow | type == "array")
+        and all(.permissions.allow[]; type == "string")
+    ' "$baseline" > /dev/null 2>&1; then
+        log_warn "ベースラインの permissions.allow が不正なため同期をスキップします: ${baseline}"
+        return
+    fi
+
+    if ! jq -e '
+        if type != "object" then false
+        elif .permissions == null then true
+        elif (.permissions | type) != "object" then false
+        elif .permissions.allow == null then true
+        else (.permissions.allow | type == "array")
+            and all(.permissions.allow[]; type == "string")
+        end
+    ' "$SETTINGS_FILE" > /dev/null 2>&1; then
+        log_warn "${SETTINGS_FILE} が不正なJSONまたは permissions.allow の形式が不正なため同期をスキップします"
+        return
+    fi
+
+    local merged_file
+    merged_file="$(mktemp)"
+    if ! jq -s '
+        .[0] as $current
+        | .[1] as $baseline
+        | (reduce (($current.permissions.allow // []) + $baseline.permissions.allow)[] as $entry
+            ([]; if index($entry) == null then . + [$entry] else . end)) as $allow
+        | $current
+        | setpath(["permissions", "allow"]; $allow)
+    ' "$SETTINGS_FILE" "$baseline" > "$merged_file" 2>/dev/null; then
+        log_warn "${SETTINGS_FILE} の permissions.allow マージに失敗しました"
+        rm -f "$merged_file"
+        return
+    fi
+
+    if cmp -s "$SETTINGS_FILE" "$merged_file"; then
+        log_info "${SETTINGS_FILE} の permissions.allow は最新です"
+    else
+        cp "$merged_file" "$SETTINGS_FILE"
+        log_success "${SETTINGS_FILE} の permissions.allow をベースラインから同期しました"
+    fi
+    rm -f "$merged_file"
+}
+
 seed_user_settings() {
     local baseline="${REPO_ROOT}/.claude/settings.json"
 
@@ -87,12 +143,6 @@ seed_user_settings() {
         mv "$tmp" "$SETTINGS_FILE"
         chmod 644 "$SETTINGS_FILE"
         log_success "${SETTINGS_FILE} を symlink から実体に置き換えました"
-        return
-    fi
-
-    if [[ -e "$SETTINGS_FILE" ]]; then
-        log_info "${SETTINGS_FILE} は既に存在します（上書きしません）"
-        return
     fi
 
     if [[ ! -f "$baseline" ]]; then
@@ -100,9 +150,15 @@ seed_user_settings() {
         return
     fi
 
-    mkdir -p "$CLAUDE_DIR"
-    cp "$baseline" "$SETTINGS_FILE"
-    log_success "${SETTINGS_FILE} をリポジトリのベースラインから作成しました"
+    if [[ ! -e "$SETTINGS_FILE" ]]; then
+        mkdir -p "$CLAUDE_DIR"
+        cp "$baseline" "$SETTINGS_FILE"
+        log_success "${SETTINGS_FILE} をリポジトリのベースラインから作成しました"
+        return
+    fi
+
+    log_info "${SETTINGS_FILE} は既に存在します（端末固有設定を保持します）"
+    merge_baseline_permissions_allow "$baseline"
 }
 
 # 追加の CLAUDE_CONFIG_DIR を列挙する

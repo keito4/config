@@ -143,6 +143,10 @@ Initializes Claude Code CLI configuration, syncs settings, and installs plugins.
 配置先は `PRIVATE_CONFIG_DIR` 環境変数で上書き可能（デフォルト:
 `~/develop/github.com/keito4/private-config`）。
 
+`~/.claude/settings.json` が既にある場合は端末固有設定を保持し、リポジトリ正本の
+`permissions.allow` だけを重複排除しながら追加マージする。正本から削除した許可は
+自動では削除されない。
+
 ### setup-claude-build.sh
 
 Build-time setup for Claude Code in DevContainer images.
