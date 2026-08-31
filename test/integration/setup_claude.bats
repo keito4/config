@@ -221,6 +221,22 @@ init_extra_config_dir() {
   [ ! -e "${fake_home}/.claude-worklog/commands" ]
 }
 
+@test "setup-claude.sh syncs permissions.allow into extra config dirs" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+  cat > "${fake_home}/.claude/settings.json" <<'JSON'
+{"permissions":{"allow":["Write(~/.claude-worklog/**)","Edit(~/.claude-worklog/**)"]}}
+JSON
+  mkdir -p "${fake_home}/.claude-private"
+  echo '{"model":"opus"}' > "${fake_home}/.claude-private/settings.json"
+
+  run_setup_in_fake_home "$fake_home"
+
+  jq -e '.permissions.allow == ["Write(~/.claude-worklog/**)", "Edit(~/.claude-worklog/**)"]' \
+    "${fake_home}/.claude-private/settings.json"
+  [ "$(jq -r '.model' "${fake_home}/.claude-private/settings.json")" = "opus" ]
+}
+
 # ---------------------------------------------------------------------------
 # ~/.claude/settings.json はホスト所有（symlink にしない）
 # ---------------------------------------------------------------------------
