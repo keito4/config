@@ -323,6 +323,21 @@ JSON
   [[ "$output" == *"不正なJSONまたは permissions.allow の形式が不正"* ]]
 }
 
+@test "setup-claude.sh preserves explicit null permissions values" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+
+  local fixture
+  for fixture in '{"permissions":null}' '{"permissions":{"allow":null}}'; do
+    echo "$fixture" > "${fake_home}/.claude/settings.json"
+
+    run_setup_in_fake_home "$fake_home"
+
+    [ "$(cat "${fake_home}/.claude/settings.json")" = "$fixture" ]
+    [[ "$output" == *"不正なJSONまたは permissions.allow の形式が不正"* ]]
+  done
+}
+
 # ---------------------------------------------------------------------------
 # リポジトリ／private-config のスキルを ~/.claude/skills に展開する
 # ---------------------------------------------------------------------------
