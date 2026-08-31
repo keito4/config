@@ -113,6 +113,11 @@ report.log
 # MCP local overrides (use .mcp.local.json for personal settings)
 .mcp.local.json
 
+# MCP lock file
+# Claude Code が .mcp.json を読むときに作る端末ローカルの空ロック。
+# 追跡すると repo-sync-check が毎回「未コミット変更がある」と誤検知する。
+.mcp.json.lock
+
 # Nix build output
 result
 
