@@ -64,11 +64,14 @@ PACKAGE_MANAGER="$(project::detect_package_manager "$TARGET_DIR")"
 # Ubicloud 未導入の owner を巻き込んで壊さないよう、既定は owner ごとに切り替える。
 detect_ci_runner() {
   local owner
+  # GitHub の owner は大文字小文字を区別しないので、remote の記録揺れで
+  # 取りこぼさないよう小文字へ寄せて比較する
   owner="$(git -C "$TARGET_DIR" remote get-url origin 2>/dev/null |
-    sed -E 's#\.git$##; s#.*[:/]([^/]+)/[^/]+$#\1#')"
+    sed -E 's#\.git$##; s#.*[:/]([^/]+)/[^/]+$#\1#' |
+    tr '[:upper:]' '[:lower:]')"
 
   case "$owner" in
-    OYKOT-jp|Elu-co-jp) echo "ubicloud-standard-2" ;;
+    oykot-jp|elu-co-jp) echo "ubicloud-standard-2" ;;
     *) echo "ubuntu-latest" ;;
   esac
 }
@@ -84,7 +87,11 @@ apply_ci_runner() {
     return 0
   fi
 
-  sed -i.bak -E "s#^([[:space:]]*runs-on:)[[:space:]]*ubuntu-latest[[:space:]]*\$#\1 ${CI_RUNNER}#" "$file"
+  # 置換文字列に & \ # が入ると sed の結果が壊れるため、埋め込む前に無害化する
+  local replacement
+  replacement="$(printf '%s' "$CI_RUNNER" | sed -e 's#[\\&#]#\\&#g')"
+
+  sed -i.bak -E "s#^([[:space:]]*runs-on:)[[:space:]]*ubuntu-latest[[:space:]]*\$#\1 ${replacement}#" "$file"
   rm -f "$file.bak"
 }
 

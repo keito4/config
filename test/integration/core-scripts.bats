@@ -117,6 +117,75 @@ load ../test_helper/test_helper
     [ -x "$REPO_ROOT/script/setup-ci.sh" ]
 }
 
+# Ubicloud 導入済み owner では Ubicloud ランナーを、それ以外では ubuntu-latest を
+# 生成することを固定する。ここが崩れると新規リポジトリだけ枯渇したランナーに戻る。
+setup_ci_fixture() {
+    local dir="$1" remote="$2"
+
+    mkdir -p "$dir"
+    git -C "$dir" init --quiet
+    if [ -n "$remote" ]; then
+        git -C "$dir" remote add origin "$remote"
+    fi
+    printf '{"name":"fixture","scripts":{"lint":"true","test":"true","build":"true"}}\n' > "$dir/package.json"
+}
+
+@test "setup-ci.sh uses the Ubicloud runner for Ubicloud-enabled owners" {
+    local dir="$TEST_TEMP_DIR/oykot"
+    setup_ci_fixture "$dir" "git@github.com:OYKOT-jp/fixture.git"
+
+    run bash "$REPO_ROOT/script/setup-ci.sh" --target "$dir"
+    [ "$status" -eq 0 ]
+
+    grep -q "runs-on: ubicloud-standard-2" "$dir/.github/workflows/ci.yml"
+    ! grep -q "runs-on: ubuntu-latest" "$dir/.github/workflows/ci.yml"
+    # コピーしたテンプレートも配置時に書き換わること
+    ! grep -rq "runs-on: ubuntu-latest" "$dir/.github/workflows/"
+}
+
+@test "setup-ci.sh keeps ubuntu-latest for owners without Ubicloud" {
+    local dir="$TEST_TEMP_DIR/personal"
+    setup_ci_fixture "$dir" "https://github.com/keito4/fixture.git"
+
+    run bash "$REPO_ROOT/script/setup-ci.sh" --target "$dir"
+    [ "$status" -eq 0 ]
+
+    grep -q "runs-on: ubuntu-latest" "$dir/.github/workflows/ci.yml"
+    ! grep -q "ubicloud" "$dir/.github/workflows/ci.yml"
+}
+
+@test "setup-ci.sh falls back to ubuntu-latest without a git remote" {
+    local dir="$TEST_TEMP_DIR/no-remote"
+    setup_ci_fixture "$dir" ""
+
+    run bash "$REPO_ROOT/script/setup-ci.sh" --target "$dir"
+    [ "$status" -eq 0 ]
+
+    grep -q "runs-on: ubuntu-latest" "$dir/.github/workflows/ci.yml"
+}
+
+@test "setup-ci.sh honours an explicit CI_RUNNER override" {
+    local dir="$TEST_TEMP_DIR/override"
+    setup_ci_fixture "$dir" "https://github.com/keito4/fixture.git"
+
+    CI_RUNNER=ubicloud-standard-2-arm run bash "$REPO_ROOT/script/setup-ci.sh" --target "$dir"
+    [ "$status" -eq 0 ]
+
+    grep -q "runs-on: ubicloud-standard-2-arm" "$dir/.github/workflows/ci.yml"
+}
+
+@test "setup-ci.sh keeps GitHub expressions intact in the terraform workflow" {
+    local dir="$TEST_TEMP_DIR/terraform"
+    setup_ci_fixture "$dir" "git@github.com:OYKOT-jp/fixture.git"
+    touch "$dir/main.tf"
+
+    run bash "$REPO_ROOT/script/setup-ci.sh" --target "$dir" --type terraform
+    [ "$status" -eq 0 ]
+
+    grep -q 'group: ${{ github.workflow }}-${{ github.ref }}' "$dir/.github/workflows/ci.yml"
+    grep -q "runs-on: ubicloud-standard-2" "$dir/.github/workflows/ci.yml"
+}
+
 @test "setup-new-repo.sh exists and is executable" {
     assert_file_exists "$REPO_ROOT/script/setup-new-repo.sh"
     [ -x "$REPO_ROOT/script/setup-new-repo.sh" ]
