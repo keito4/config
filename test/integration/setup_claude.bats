@@ -221,6 +221,24 @@ init_extra_config_dir() {
   [ ! -e "${fake_home}/.claude-worklog/commands" ]
 }
 
+@test "setup-claude.sh syncs permissions.allow into extra config dirs" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+  cat > "${fake_home}/.claude/settings.json" <<'JSON'
+{"permissions":{"allow":["Write(~/.claude-worklog/**)","Edit(~/.claude-worklog/**)"]}}
+JSON
+  mkdir -p "${fake_home}/.claude-private"
+  echo '{"model":"opus"}' > "${fake_home}/.claude-private/settings.json"
+
+  run_setup_in_fake_home "$fake_home"
+
+  jq -e '.permissions.allow
+    | index("Write(~/.claude-worklog/**)") != null
+      and index("Edit(~/.claude-worklog/**)") != null' \
+    "${fake_home}/.claude-private/settings.json"
+  [ "$(jq -r '.model' "${fake_home}/.claude-private/settings.json")" = "opus" ]
+}
+
 # ---------------------------------------------------------------------------
 # ~/.claude/settings.json はホスト所有（symlink にしない）
 # ---------------------------------------------------------------------------
@@ -248,16 +266,61 @@ init_extra_config_dir() {
   # ホスト固有の hook を追跡ファイルへ書き戻させないため、実体に切り離す
   [ ! -L "${fake_home}/.claude/settings.json" ]
   grep -q "agent-deck hook-handler" "${fake_home}/.claude/settings.json"
+  jq -e '.permissions.allow | index("Write(~/.claude-worklog/**)") != null' \
+    "${fake_home}/.claude/settings.json"
 }
 
-@test "setup-claude.sh does not overwrite an existing settings.json" {
+@test "setup-claude.sh merges baseline permissions.allow without overwriting host settings" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+  cat > "${fake_home}/.claude/settings.json" <<'JSON'
+{
+  "model": "opus",
+  "hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": "agent-deck hook-handler"}]}]},
+  "permissions": {
+    "allow": ["Bash(host-only:*)", "Write(~/.claude-worklog/**)"],
+    "deny": ["Read(./secrets/**)"],
+    "ask": ["Bash(git push:*)"]
+  }
+}
+JSON
+
+  run_setup_in_fake_home "$fake_home"
+
+  jq --slurpfile baseline "${REPO_ROOT}/.claude/settings.json" -e '
+    .model == "opus"
+    and .hooks.SessionStart[0].hooks[0].command == "agent-deck hook-handler"
+    and .permissions.deny == ["Read(./secrets/**)"]
+    and .permissions.ask == ["Bash(git push:*)"]
+    and .permissions.allow[0] == "Bash(host-only:*)"
+    and ([.permissions.allow[] | select(. == "Write(~/.claude-worklog/**)")] | length) == 1
+    and (($baseline[0].permissions.allow - .permissions.allow) | length) == 0
+  ' "${fake_home}/.claude/settings.json"
+}
+
+@test "setup-claude.sh permissions.allow merge is idempotent" {
   local fake_home="${TEST_TEMP_DIR}/home"
   mkdir -p "${fake_home}/.claude"
   echo '{"permissions":{"allow":["Bash(host-only:*)"]}}' > "${fake_home}/.claude/settings.json"
 
   run_setup_in_fake_home "$fake_home"
+  cp "${fake_home}/.claude/settings.json" "${TEST_TEMP_DIR}/settings-after-first-run.json"
 
-  grep -q "host-only" "${fake_home}/.claude/settings.json"
+  run_setup_in_fake_home "$fake_home"
+
+  cmp -s "${TEST_TEMP_DIR}/settings-after-first-run.json" "${fake_home}/.claude/settings.json"
+  [[ "$output" == *"permissions.allow は最新です"* ]]
+}
+
+@test "setup-claude.sh preserves an invalid existing settings.json" {
+  local fake_home="${TEST_TEMP_DIR}/home"
+  mkdir -p "${fake_home}/.claude"
+  echo 'not json' > "${fake_home}/.claude/settings.json"
+
+  run_setup_in_fake_home "$fake_home"
+
+  [ "$(cat "${fake_home}/.claude/settings.json")" = "not json" ]
+  [[ "$output" == *"不正なJSONまたは permissions.allow の形式が不正"* ]]
 }
 
 # ---------------------------------------------------------------------------

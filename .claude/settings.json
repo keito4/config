@@ -153,7 +153,9 @@
       "Read(//.claude/plugins/**)",
       "Read(//home/vscode/**)",
       "Read(//tmp/**)",
-      "Read(//workspaces/**)"
+      "Read(//workspaces/**)",
+      "Write(~/.claude-worklog/**)",
+      "Edit(~/.claude-worklog/**)"
     ],
     "deny": [
       "Bash(git push --force)",
