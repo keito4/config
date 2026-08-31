@@ -65,17 +65,24 @@ PACKAGE_MANAGER="$(project::detect_package_manager "$TARGET_DIR")"
 detect_ci_runner() {
   local owner dir
 
+  # 不一致の行をそのまま返すと owner が空にならずフォールバックへ落ちないので、
+  # -n と p でマッチしたときだけ出力する
   owner="$(git -C "$TARGET_DIR" remote get-url origin 2>/dev/null |
-    sed -E 's#\.git$##; s#.*[:/]([^/]+)/[^/]+$#\1#')"
+    sed -E 's#\.git$##' |
+    sed -nE 's#^.*[:/]([^/]+)/[^/]+$#\1#p')"
 
   # setup-new-repo.sh は git init だけで origin を張らないままここへ来るため、
   # remote からは owner を引けない。新規リポジトリこそ本来の対象なので、
-  # <...>/github.com/<owner>/<repo> の配置規約に従って親ディレクトリからも拾う。
+  # <...>/github.com/<owner>/<repo> の配置規約に一致するときだけ親から拾う。
+  # 規約を確かめずに親ディレクトリ名だけで決めると、たまたま同名のディレクトリが
+  # あるだけで Ubicloud に倒れてしまう。
   if [[ -z "$owner" ]]; then
     if ! dir="$(cd "$TARGET_DIR" 2>/dev/null && pwd)"; then
       dir="$TARGET_DIR"
     fi
-    owner="$(basename "$(dirname "$dir")")"
+    if [[ "$(basename "$(dirname "$(dirname "$dir")")")" == "github.com" ]]; then
+      owner="$(basename "$(dirname "$dir")")"
+    fi
   fi
 
   # GitHub の owner は大文字小文字を区別しないので、表記揺れで
