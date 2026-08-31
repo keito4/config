@@ -96,9 +96,9 @@ merge_baseline_permissions_allow() {
 
     if ! jq -e '
         if type != "object" then false
-        elif .permissions == null then true
+        elif (has("permissions") | not) then true
         elif (.permissions | type) != "object" then false
-        elif .permissions.allow == null then true
+        elif (.permissions | has("allow") | not) then true
         else (.permissions.allow | type == "array")
             and all(.permissions.allow[]; type == "string")
         end
