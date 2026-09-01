@@ -178,9 +178,8 @@ setup_ci_fixture() {
     # setup-new-repo.sh は git init するだけで origin を張らないため、
     # owner はディレクトリ配置からしか分からない。新規リポジトリこそ
     # ランナー移行の対象なので、この経路が素通りしないことを固定する。
-    local owner_dir="$TEST_TEMP_DIR/OYKOT-jp"
-    local dir="$owner_dir/fixture"
-    mkdir -p "$owner_dir"
+    local dir="$TEST_TEMP_DIR/github.com/OYKOT-jp/fixture"
+    mkdir -p "$(dirname "$dir")"
 
     run bash "$REPO_ROOT/script/setup-new-repo.sh" "$dir" --type nodejs --no-install
     [ "$status" -eq 0 ]
@@ -188,6 +187,41 @@ setup_ci_fixture() {
     [ -z "$(git -C "$dir" remote 2>/dev/null)" ]
     grep -q "runs-on: ubicloud-standard-2" "$dir/.github/workflows/ci.yml"
     ! grep -rq "runs-on: ubuntu-latest" "$dir/.github/workflows/"
+}
+
+@test "setup-new-repo.sh keeps ubuntu-latest for owners without Ubicloud" {
+    local dir="$TEST_TEMP_DIR/github.com/keito4/fixture"
+    mkdir -p "$(dirname "$dir")"
+
+    run bash "$REPO_ROOT/script/setup-new-repo.sh" "$dir" --type nodejs --no-install
+    [ "$status" -eq 0 ]
+
+    grep -q "runs-on: ubuntu-latest" "$dir/.github/workflows/ci.yml"
+    ! grep -q "ubicloud" "$dir/.github/workflows/ci.yml"
+}
+
+@test "setup-ci.sh ignores a matching directory name outside github.com" {
+    # 配置規約を確かめずに親ディレクトリ名だけで決めると、たまたま同名の
+    # ディレクトリがあるだけで Ubicloud に倒れる。そこを踏まないことを固定する。
+    local dir="$TEST_TEMP_DIR/elsewhere/OYKOT-jp/fixture"
+    setup_ci_fixture "$dir" ""
+
+    run bash "$REPO_ROOT/script/setup-ci.sh" --target "$dir"
+    [ "$status" -eq 0 ]
+
+    grep -q "runs-on: ubuntu-latest" "$dir/.github/workflows/ci.yml"
+    ! grep -q "ubicloud" "$dir/.github/workflows/ci.yml"
+}
+
+@test "setup-ci.sh falls back to the path when the remote is unparseable" {
+    # sed が不一致の行をそのまま返すと owner が空にならず、パスへ落ちない
+    local dir="$TEST_TEMP_DIR/github.com/OYKOT-jp/odd-remote"
+    setup_ci_fixture "$dir" "not-a-valid-remote"
+
+    run bash "$REPO_ROOT/script/setup-ci.sh" --target "$dir"
+    [ "$status" -eq 0 ]
+
+    grep -q "runs-on: ubicloud-standard-2" "$dir/.github/workflows/ci.yml"
 }
 
 @test "setup-ci.sh keeps GitHub expressions intact in the terraform workflow" {
