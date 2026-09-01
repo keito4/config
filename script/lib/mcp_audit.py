@@ -49,7 +49,7 @@ RESTART = (
 )
 
 
-def leaking_servers(servers: dict) -> list[str]:
+def leaking_servers(servers: dict[str, dict]) -> list[str]:
     """argv に実トークンが載る定義の名前を返す。"""
     hits = []
     for name, entry in servers.items():
