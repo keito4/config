@@ -57,6 +57,30 @@ is owned by this sync pipeline.
   a manifest edit.
 - Downstream repositories with intentional local changes will keep receiving
   sync PRs until the path is excluded in the manifest.
+- The whole pipeline hangs on one rotating credential, `CLAUDE_PAT`. A GitHub
+  PAT expires after at most a year, and both the downstream checkout and the
+  PR creation use it, so expiry stops all distribution at once.
+
+## Amendment 2026-09-03: credential expiry must be loud
+
+The `CLAUDE_PAT` above expired and every `sync-downstream` run failed for
+months without anyone noticing (issue #1188). Two properties of the workflow
+made that possible, and both are now fixed:
+
+- Expiry surfaced inside `actions/checkout`, so the log showed only
+  `Bad credentials` repeated across the matrix, naming neither the secret nor
+  the remedy. A `preflight` job now validates the token against
+  `GET /user` before the matrix runs and fails once with the secret name, the
+  required scopes, and the `gh secret set` command.
+- Nothing reported the failure. A `notify` job now opens an issue on failure,
+  following `scheduled-maintenance.yml`, and a weekly `schedule` trigger runs
+  the token check alone (`plan` and `sync` are gated on
+  `github.event_name != 'schedule'`) so expiry is found without waiting for a
+  template push.
+
+The general rule this pipeline now follows: a credential whose expiry is
+certain needs a check that names it, and a failure nobody is told about will
+be a failure nobody fixes.
 
 ### Mitigation
 
