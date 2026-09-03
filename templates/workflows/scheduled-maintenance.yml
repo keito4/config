@@ -33,15 +33,6 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      - name: Validate maintenance token
-        env:
-          CLAUDE_PR_GITHUB_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}
-        run: |
-          if [ -z "$CLAUDE_PR_GITHUB_TOKEN" ]; then
-            echo "CLAUDE_PR_GITHUB_TOKEN or CLAUDE_PAT is required for scheduled maintenance because it may update workflow files."
-            exit 1
-          fi
-
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
@@ -52,12 +43,19 @@ jobs:
       # This managed config-repository workflow depends on .takt/**,
       # script/repo-maintenance.sh, script/run-takt-repo-maintenance.sh,
       # script/check-trivyignore-review.sh, script/validate-takt-auth.sh,
+      # script/validate-github-token.sh,
       # script/trust-claude-workspace.sh, and the setup-node-ci action.
       - name: Validate TAKT authentication
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           TAKT_ANTHROPIC_API_KEY: ${{ secrets.TAKT_ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY }}
         run: script/validate-takt-auth.sh
+
+      - name: Validate maintenance token
+        env:
+          GITHUB_PR_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}
+          GITHUB_TOKEN_PROBE_REPO: ${{ github.repository }}
+        run: script/validate-github-token.sh
 
       - name: Setup Node.js
         uses: ./.github/actions/setup-node-ci

@@ -15,6 +15,7 @@ This directory contains utility scripts for managing configuration, credentials,
 | `repo-maintenance.sh`            | Repository maintenance executable workflow                                   | `/repo-maintenance`                             |
 | `fleet-workflow-guards.sh`       | Workflow guards across every recently pushed repository                      | fleet-workflow-guards                           |
 | `validate-takt-auth.sh`          | Fail fast on rejected Anthropic credentials                                  | scheduled-maintenance                           |
+| `validate-github-token.sh`       | Fail fast when a GitHub token cannot push to the target repository           | scheduled-maintenance, sync-downstream          |
 | `trust-claude-workspace.sh`      | Trust a workspace in `~/.claude.json` for headless runs                      | scheduled-maintenance                           |
 | `setup-ci.sh`                    | CI/CD workflow setup                                                         | `/setup-ci`                                     |
 | `setup-new-repo.sh`              | New repository bootstrap                                                     | `/setup-new-repo`                               |
