@@ -40,6 +40,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
       - name: Validate downstream token
         env:
           CLAUDE_PAT: ${{ secrets.CLAUDE_PAT }}
@@ -49,25 +51,50 @@ jobs:
             exit 1
           fi
 
-          headers="$RUNNER_TEMP/pat-headers.txt"
-          status=$(curl -sS -o /dev/null -D "$headers" -w '%{http_code}' \
+          # /user を叩いても「トークンが生きているか」しか分からない。sync が実際に
+          # 要るのは downstream への push 権限なので、manifest の先頭リポジトリで
+          # 確かめる。ここを緩くすると、週次実行が緑なのに sync は落ちる状態を作る。
+          probe=$(jq -r '.repos[0].name' .github/sync-downstream.json)
+          body="$RUNNER_TEMP/probe.json"
+          headers="$RUNNER_TEMP/probe-headers.txt"
+
+          status=$(curl -sS -o "$body" -D "$headers" -w '%{http_code}' \
             -H "Authorization: Bearer $CLAUDE_PAT" \
             -H "Accept: application/vnd.github+json" \
-            https://api.github.com/user)
+            "https://api.github.com/repos/$probe") || status=000
 
-          if [ "$status" != "200" ]; then
-            echo "::error::CLAUDE_PAT was rejected by https://api.github.com/user (HTTP $status). The token is expired or revoked. Reissue it with the 'repo' and 'workflow' scopes and register it with: gh secret set CLAUDE_PAT --repo ${{ github.repository }}"
+          # 失効・権限不足・API 到達不能はそれぞれ対処が違う。まとめて「失効」と
+          # 報告すると、直せない相手を直そうとすることになる。
+          case "$status" in
+            200) ;;
+            000)
+              echo "::error::Could not reach https://api.github.com to validate CLAUDE_PAT. This is a network or GitHub API failure, not evidence that the token is bad. Re-run this workflow."
+              exit 1
+              ;;
+            401)
+              echo "::error::CLAUDE_PAT was rejected (HTTP 401): the token is expired or revoked. Reissue it with the 'repo' and 'workflow' scopes and register it with: gh secret set CLAUDE_PAT --repo ${{ github.repository }}"
+              exit 1
+              ;;
+            *)
+              echo "::error::CLAUDE_PAT is live but cannot see $probe (HTTP $status). Give the token access to every repository in .github/sync-downstream.json."
+              exit 1
+              ;;
+          esac
+
+          if [ "$(jq -r '.permissions.push // false' "$body")" != "true" ]; then
+            echo "::error::CLAUDE_PAT can read $probe but cannot push to it. sync-downstream needs write access to open pull requests. Grant write access and re-register the token."
             exit 1
           fi
 
-          # classic PAT のときだけ返る。workflow スコープが無いと downstream の
+          # classic PAT のときだけ返る。workflow スコープが無いと、downstream の
           # .github/workflows/ を書き換える PR だけが後段で落ちる。
           scopes=$(grep -i '^x-oauth-scopes:' "$headers" | cut -d: -f2- | tr -d ' \r' || true)
           if [ -n "$scopes" ] && ! printf '%s' ",$scopes," | grep -q ',workflow,'; then
-            echo "::warning::CLAUDE_PAT is missing the 'workflow' scope (has: $scopes). Pull requests touching downstream .github/workflows/ will be rejected."
+            echo "::error::CLAUDE_PAT is missing the 'workflow' scope (has: $scopes). Pull requests touching downstream .github/workflows/ will be rejected. Reissue the token with both 'repo' and 'workflow'."
+            exit 1
           fi
 
-          echo "CLAUDE_PAT accepted by the GitHub API."
+          echo "CLAUDE_PAT can push to $probe."
 
   plan:
     needs: preflight
@@ -166,7 +193,9 @@ jobs:
 
           CAUSE="See the run log for the failing step."
           if [ "$TOKEN_RESULT" = "failure" ]; then
-            CAUSE="The \`CLAUDE_PAT\` secret is missing or was rejected by the GitHub API. Reissue a token with the \`repo\` and \`workflow\` scopes and register it with \`gh secret set CLAUDE_PAT --repo $GH_REPO\`."
+            # preflight は失効・権限不足・API 到達不能を撃ち分けて \`::error::\` に
+            # 書いている。ここで原因を断定すると、その撃ち分けを潰してしまう。
+            CAUSE="The \`Validate downstream token\` step failed; its \`::error::\` line in the run log names the exact cause and remedy. If the token is expired, reissue it with the \`repo\` and \`workflow\` scopes and register it with \`gh secret set CLAUDE_PAT --repo $GH_REPO\`."
           fi
 
           gh issue create \
