@@ -119,7 +119,13 @@ main() {
   if [[ -n "$REPOS" ]]; then
     read -r -a repos <<<"$REPOS"
   else
-    mapfile -t repos < <(discover_repos)
+    # `mapfile < <(discover_repos)` は gh の終了ステータスを捨てる。失効した認証情報では
+    # gh が 401 で 0 行を返すため、走査できていないのに「対象なし」と区別が付かなくなり、
+    # 何も検査しないまま緑で終わる。先に受け取ってから展開する。
+    local discovered
+    discovered="$(discover_repos)" ||
+      output::fatal "failed to discover repositories under $OWNER (check the credential used by gh)"
+    mapfile -t repos < <(printf '%s' "$discovered" | grep -v '^$' || true)
   fi
 
   if [[ "${#repos[@]}" -eq 0 ]]; then

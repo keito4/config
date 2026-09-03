@@ -20,12 +20,18 @@ function cleanGitEnv(extra = {}) {
  * @param {Record<string, Record<string, string>>} options.workflows - リポジトリ名ごとの配置内容。
  * @returns {string} gh スタブのシェルスクリプト。
  */
-function buildGhStub({ discovered = [], workflows = {} }) {
+function buildGhStub({ discovered = [], workflows = {}, discoveryFails = false }) {
   const lines = ['#!/usr/bin/env bash', 'if [ "$1" = "repo" ] && [ "$2" = "list" ]; then'];
-  for (const name of discovered) {
-    lines.push(`  echo '${name}'`);
+  if (discoveryFails) {
+    // 失効した PAT で gh が返す形。stdout は空、stderr にエラー、終了ステータスは非ゼロ。
+    lines.push('  echo "gh: Bad credentials (HTTP 401)" >&2', '  exit 1');
+  } else {
+    for (const name of discovered) {
+      lines.push(`  echo '${name}'`);
+    }
+    lines.push('  exit 0');
   }
-  lines.push('  exit 0', 'fi', 'if [ "$1" = "repo" ] && [ "$2" = "clone" ]; then');
+  lines.push('fi', 'if [ "$1" = "repo" ] && [ "$2" = "clone" ]; then');
   // gh repo clone <owner/name> <dest> -- <flags...> なので $3=owner/name, $4=dest
   // 既知のリポジトリのときだけ dest を作る。未知のものは「clone は成功したが
   // チェックアウトが無い」状況を再現する。
@@ -43,7 +49,7 @@ function buildGhStub({ discovered = [], workflows = {} }) {
   return lines.join('\n');
 }
 
-function runFleet(args, { discovered = [], workflows = {}, env = {} } = {}) {
+function runFleet(args, { discovered = [], workflows = {}, discoveryFails = false, env = {} } = {}) {
   const contextDir = path.join(repoPath, '.context');
   fs.mkdirSync(contextDir, { recursive: true });
   const tempRoot = fs.mkdtempSync(path.join(contextDir, 'fleet-guards-test-'));
@@ -52,7 +58,7 @@ function runFleet(args, { discovered = [], workflows = {}, env = {} } = {}) {
     const binDir = path.join(tempRoot, 'bin');
     fs.mkdirSync(binDir, { recursive: true });
     const ghPath = path.join(binDir, 'gh');
-    fs.writeFileSync(ghPath, buildGhStub({ discovered, workflows }));
+    fs.writeFileSync(ghPath, buildGhStub({ discovered, workflows, discoveryFails }));
     fs.chmodSync(ghPath, 0o755);
 
     const scriptPath = path.join(repoPath, 'script', 'fleet-workflow-guards.sh');
@@ -176,6 +182,16 @@ describe('script/fleet-workflow-guards.sh', () => {
     expect(result.output).toContain('alpha');
     expect(result.output).toContain('bravo');
     expect(result.output).toContain('charlie');
+  });
+
+  // 失効した PAT では gh repo list が 401 で 0 行を返す。終了ステータスを見ないと
+  // 「走査対象なし」と区別が付かず、何も検査していないのに緑で終わる。
+  test('fails loudly when repository discovery cannot reach the GitHub API', () => {
+    const result = runFleet([], { discoveryFails: true });
+
+    expect(result.status).not.toBe(0);
+    expect(result.output).not.toContain('No workflow guard violations');
+    expect(result.output).toMatch(/discover/i);
   });
 
   test('discovers repositories from the owner when --repos is omitted', () => {
