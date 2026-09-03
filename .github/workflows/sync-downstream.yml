@@ -75,8 +75,16 @@ jobs:
               echo "::error::CLAUDE_PAT was rejected (HTTP 401): the token is expired or revoked. Reissue it with the 'repo' and 'workflow' scopes and register it with: gh secret set CLAUDE_PAT --repo ${{ github.repository }}"
               exit 1
               ;;
-            *)
+            403 | 404)
               echo "::error::CLAUDE_PAT is live but cannot see $probe (HTTP $status). Give the token access to every repository in .github/sync-downstream.json."
+              exit 1
+              ;;
+            429 | 5??)
+              echo "::error::GitHub API returned HTTP $status while validating CLAUDE_PAT. This is rate limiting or a GitHub outage, not a token problem. Re-run this workflow."
+              exit 1
+              ;;
+            *)
+              echo "::error::Unexpected HTTP $status from the GitHub API while validating CLAUDE_PAT against $probe. Check the run log before assuming the token is at fault."
               exit 1
               ;;
           esac
@@ -195,7 +203,7 @@ jobs:
           if [ "$TOKEN_RESULT" = "failure" ]; then
             # preflight は失効・権限不足・API 到達不能を撃ち分けて \`::error::\` に
             # 書いている。ここで原因を断定すると、その撃ち分けを潰してしまう。
-            CAUSE="The \`Validate downstream token\` step failed; its \`::error::\` line in the run log names the exact cause and remedy. If the token is expired, reissue it with the \`repo\` and \`workflow\` scopes and register it with \`gh secret set CLAUDE_PAT --repo $GH_REPO\`."
+            CAUSE="The \`preflight\` job failed. If it reached \`Validate downstream token\`, that step's \`::error::\` line names the exact cause and remedy; otherwise the failure is in the checkout before it. When the token is expired, reissue it with the \`repo\` and \`workflow\` scopes and register it with \`gh secret set CLAUDE_PAT --repo $GH_REPO\`."
           fi
 
           gh issue create \

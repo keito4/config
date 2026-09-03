@@ -69,9 +69,15 @@ made that possible, and both are now fixed:
 
 - Expiry surfaced inside `actions/checkout`, so the log showed only
   `Bad credentials` repeated across the matrix, naming neither the secret nor
-  the remedy. A `preflight` job now validates the token against
-  `GET /user` before the matrix runs and fails once with the secret name, the
-  required scopes, and the `gh secret set` command.
+  the remedy. A `preflight` job now probes the first
+  repository in the manifest with `GET /repos/{owner}/{repo}` before the matrix
+  runs, and fails once with the secret name, the required scopes, and the
+  `gh secret set` command. It checks `permissions.push` rather than mere
+  liveness, because a token that authenticates but cannot write to the
+  downstream repositories would otherwise make the weekly check pass while the
+  sync still fails — the same silently-green failure this change removes
+  elsewhere. Expiry, missing repository access, and a GitHub outage are
+  reported as distinct causes, since they have distinct remedies.
 - Nothing reported the failure. A `notify` job now opens an issue on failure,
   following `scheduled-maintenance.yml`, and a weekly `schedule` trigger runs
   the token check alone (`plan` and `sync` are gated on

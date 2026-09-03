@@ -35,7 +35,15 @@ describe('sync-downstream workflow contracts', () => {
     expect(step.run).toMatch(/permissions\.push/);
     expect(step.run).toMatch(/401\)/);
     expect(step.run).toMatch(/000\)/);
-    expect(step.run.match(/::error::/g).length).toBeGreaterThanOrEqual(5);
+    expect(step.run).toMatch(/403 \| 404\)/);
+    expect(step.run).toMatch(/429 \| 5\?\?\)/);
+
+    // 各分岐は必ず落ちること。`exit 1` を1つ落とすだけで、検証を通過したように
+    // 見えて matrix へ進む — preflight を入れた意味が消える。
+    const errors = step.run.match(/::error::/g).length;
+    const exits = step.run.match(/^\s*exit 1$/gm).length;
+    expect(errors).toBeGreaterThanOrEqual(6);
+    expect(exits).toBe(errors);
   });
 
   test('gates plan and sync behind the preflight check', () => {
