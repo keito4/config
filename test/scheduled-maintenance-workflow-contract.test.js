@@ -29,6 +29,9 @@ describe('Scheduled maintenance workflow contracts', () => {
       'CLAUDE_BRANCH: maintenance/${{ github.run_id }}-${{ github.run_attempt }}',
       'timeout-minutes: 45',
       'name: Validate maintenance token',
+      'GITHUB_PR_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || secrets.CLAUDE_PAT }}',
+      'GITHUB_TOKEN_PROBE_REPO: ${{ github.repository }}',
+      'run: script/validate-github-token.sh',
       'name: Validate TAKT authentication',
       'run: script/validate-takt-auth.sh',
       'name: Trust workspace for Claude Code',
@@ -76,8 +79,14 @@ describe('Scheduled maintenance workflow contracts', () => {
     ];
 
     for (const snippet of requiredSnippets) expect(workflow).toContain(snippet);
-    expect(workflow.indexOf('name: Validate maintenance token')).toBeLessThan(
+    // 検査は script/validate-github-token.sh を呼ぶのでチェックアウト後に置くが、
+    // 45 分の TAKT 実行より前に落ちること。#1190 では空でないことしか見ておらず、
+    // 失効した PAT で走り切ってから push が exit 128 になっていた。
+    expect(workflow.indexOf('name: Validate maintenance token')).toBeGreaterThan(
       workflow.indexOf('name: Checkout repository'),
+    );
+    expect(workflow.indexOf('name: Validate maintenance token')).toBeLessThan(
+      workflow.indexOf('name: Run scheduled maintenance with TAKT'),
     );
     expect(workflow.indexOf('name: Run scheduled maintenance with TAKT')).toBeLessThan(
       workflow.indexOf('name: Create maintenance pull request'),

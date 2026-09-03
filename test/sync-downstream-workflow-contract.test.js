@@ -28,22 +28,13 @@ describe('sync-downstream workflow contracts', () => {
     const step = jobs.preflight.steps.find((s) => s.name === 'Validate downstream token');
 
     expect(step).toBeDefined();
-    expect(step.env.CLAUDE_PAT).toBe('${{ secrets.CLAUDE_PAT }}');
-    // 未設定・失効・権限不足・API 到達不能はそれぞれ対処が違う。区別せずに
-    // 一括で「失効」と言うと、直せない相手を直そうとすることになる。
-    expect(step.run).toMatch(/api\.github\.com\/repos\//);
-    expect(step.run).toMatch(/permissions\.push/);
-    expect(step.run).toMatch(/401\)/);
-    expect(step.run).toMatch(/000\)/);
-    expect(step.run).toMatch(/403 \| 404\)/);
-    expect(step.run).toMatch(/429 \| 5\?\?\)/);
-
-    // 各分岐は必ず落ちること。`exit 1` を1つ落とすだけで、検証を通過したように
-    // 見えて matrix へ進む — preflight を入れた意味が消える。
-    const errors = step.run.match(/::error::/g).length;
-    const exits = step.run.match(/^\s*exit 1$/gm).length;
-    expect(errors).toBeGreaterThanOrEqual(6);
-    expect(exits).toBe(errors);
+    expect(step.env.GITHUB_PR_TOKEN).toBe('${{ secrets.CLAUDE_PAT }}');
+    // 検査本体は script/validate-github-token.sh。振る舞いは
+    // test/integration/github_token_validation.bats が固定する。
+    expect(step.run).toContain('script/validate-github-token.sh');
+    // 生存確認ではなく、実際に配布する相手へ push できるかを見ること。
+    expect(step.run).toContain('GITHUB_TOKEN_PROBE_REPO=');
+    expect(step.run).toContain('.github/sync-downstream.json');
   });
 
   test('gates plan and sync behind the preflight check', () => {
