@@ -20,6 +20,12 @@ MERGED_ONLY=false
 # Protected branches
 PROTECTED_BRANCHES=("main" "master" "develop" "staging" "production")
 
+# Populated by detect_branches / find_merged_branches / find_stale_branches
+CURRENT_BRANCH=""
+MAIN_BRANCH=""
+MERGED_BRANCHES=()
+STALE_BRANCHES=()
+
 # Return success (0) when $1 is a protected branch or the current branch.
 # Relies on the global PROTECTED_BRANCHES array and CURRENT_BRANCH variable.
 is_protected_branch() {
@@ -58,86 +64,95 @@ print_branch_group() {
   fi
 }
 
-# Parse arguments
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    --dry-run)
-      DRY_RUN=true
-      shift
-      ;;
-    --remote)
-      INCLUDE_REMOTE=true
-      shift
-      ;;
-    --yes|-y)
-      AUTO_CONFIRM=true
-      shift
-      ;;
-    --stale-days)
-      STALE_DAYS="$2"
-      shift 2
-      ;;
-    --merged-only)
-      MERGED_ONLY=true
-      shift
-      ;;
-    --help)
-      echo "Usage: $0 [OPTIONS]"
-      echo ""
-      echo "Options:"
-      echo "  --dry-run        Preview without deleting"
-      echo "  --remote         Include remote branches"
-      echo "  --yes, -y        Auto-confirm deletion"
-      echo "  --stale-days N   Staleness threshold (default: 30)"
-      echo "  --merged-only    Only delete merged branches"
-      echo "  --help           Show this help message"
-      exit 0
-      ;;
-    *)
-      echo "Unknown option: $1"
-      exit 1
-      ;;
-  esac
-done
+print_usage() {
+  echo "Usage: $0 [OPTIONS]"
+  echo ""
+  echo "Options:"
+  echo "  --dry-run        Preview without deleting"
+  echo "  --remote         Include remote branches"
+  echo "  --yes, -y        Auto-confirm deletion"
+  echo "  --stale-days N   Staleness threshold (default: 30)"
+  echo "  --merged-only    Only delete merged branches"
+  echo "  --help           Show this help message"
+}
 
-echo -e "${BLUE}🧹 Branch Cleanup${NC}"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
+# Parse CLI options into the global DRY_RUN/INCLUDE_REMOTE/AUTO_CONFIRM/STALE_DAYS/MERGED_ONLY vars
+parse_args() {
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+      --dry-run)
+        DRY_RUN=true
+        shift
+        ;;
+      --remote)
+        INCLUDE_REMOTE=true
+        shift
+        ;;
+      --yes|-y)
+        AUTO_CONFIRM=true
+        shift
+        ;;
+      --stale-days)
+        STALE_DAYS="$2"
+        shift 2
+        ;;
+      --merged-only)
+        MERGED_ONLY=true
+        shift
+        ;;
+      --help)
+        print_usage
+        exit 0
+        ;;
+      *)
+        echo "Unknown option: $1"
+        exit 1
+        ;;
+    esac
+  done
+}
 
-# Check if in git repository
-if ! git rev-parse --git-dir > /dev/null 2>&1; then
-  echo -e "${RED}✗ Not in a git repository${NC}"
-  exit 1
-fi
-
-# Get current branch
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-echo -e "📍 Current branch: ${GREEN}$CURRENT_BRANCH${NC}"
-
-# Get main branch
-MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5 2>/dev/null || echo "main")
-if ! git rev-parse --verify "$MAIN_BRANCH" > /dev/null 2>&1; then
-  MAIN_BRANCH="master"
-fi
-
-echo -e "🔒 Protected: ${PROTECTED_BRANCHES[*]}"
-echo ""
-
-# Fetch latest
-git fetch --prune > /dev/null 2>&1
-
-# Find merged branches
-MERGED_BRANCHES=()
-while IFS= read -r branch; do
-  if ! is_protected_branch "$branch"; then
-    MERGED_BRANCHES+=("$branch")
+# Abort with an error message unless the current directory is inside a git repository
+ensure_git_repository() {
+  if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    echo -e "${RED}✗ Not in a git repository${NC}"
+    exit 1
   fi
-done < <(git branch --merged "$MAIN_BRANCH" | sed 's/^[* ]*//' | grep -v "^$MAIN_BRANCH$" || true)
+}
 
-# Find stale branches (if not merged-only)
-STALE_BRANCHES=()
-if [ "$MERGED_ONLY" = false ]; then
-  CUTOFF_DATE=$(date -v-"${STALE_DAYS}"d +%s 2>/dev/null || date -d "${STALE_DAYS} days ago" +%s 2>/dev/null || echo "0")
+# Populate the global CURRENT_BRANCH and MAIN_BRANCH variables
+detect_branches() {
+  CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+  echo -e "📍 Current branch: ${GREEN}$CURRENT_BRANCH${NC}"
+
+  MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5 2>/dev/null || echo "main")
+  if ! git rev-parse --verify "$MAIN_BRANCH" > /dev/null 2>&1; then
+    MAIN_BRANCH="master"
+  fi
+}
+
+# Populate the global MERGED_BRANCHES array with non-protected branches already merged into MAIN_BRANCH
+find_merged_branches() {
+  MERGED_BRANCHES=()
+  while IFS= read -r branch; do
+    if ! is_protected_branch "$branch"; then
+      MERGED_BRANCHES+=("$branch")
+    fi
+  done < <(git branch --merged "$MAIN_BRANCH" | sed 's/^[* ]*//' | grep -v "^$MAIN_BRANCH$" || true)
+}
+
+# Populate the global STALE_BRANCHES array with non-protected, not-yet-merged branches whose
+# last commit predates STALE_DAYS. No-op when MERGED_ONLY is set.
+find_stale_branches() {
+  STALE_BRANCHES=()
+  if [ "$MERGED_ONLY" = true ]; then
+    return
+  fi
+
+  local cutoff_date
+  local branch
+  local last_commit_date
+  cutoff_date=$(date -v-"${STALE_DAYS}"d +%s 2>/dev/null || date -d "${STALE_DAYS} days ago" +%s 2>/dev/null || echo "0")
 
   while IFS= read -r branch; do
     # Skip if already in merged list
@@ -146,87 +161,88 @@ if [ "$MERGED_ONLY" = false ]; then
     fi
 
     if ! is_protected_branch "$branch"; then
-      # Get last commit date
-      LAST_COMMIT_DATE=$(git log -1 --format=%ct "$branch" 2>/dev/null || echo "0")
+      last_commit_date=$(git log -1 --format=%ct "$branch" 2>/dev/null || echo "0")
 
-      if [ "$LAST_COMMIT_DATE" -lt "$CUTOFF_DATE" ] && [ "$LAST_COMMIT_DATE" != "0" ]; then
+      if [ "$last_commit_date" -lt "$cutoff_date" ] && [ "$last_commit_date" != "0" ]; then
         STALE_BRANCHES+=("$branch")
       fi
     fi
   done < <(git branch | sed 's/^[* ]*//' | grep -v "^$MAIN_BRANCH$" || true)
-fi
+}
 
-# Display analysis
-echo -e "${BLUE}📊 Analysis${NC}"
-TOTAL_BRANCHES=$(git branch | wc -l | tr -d ' ')
-echo "  • Total local branches: $TOTAL_BRANCHES"
-echo "  • Merged branches: ${#MERGED_BRANCHES[@]}"
-if [ "$MERGED_ONLY" = false ]; then
-  echo "  • Stale branches (${STALE_DAYS}+ days): ${#STALE_BRANCHES[@]}"
-fi
-echo ""
-
-# Calculate total to delete
-TOTAL_TO_DELETE=$((${#MERGED_BRANCHES[@]} + ${#STALE_BRANCHES[@]}))
-
-if [ "$TOTAL_TO_DELETE" -eq 0 ]; then
-  echo -e "${GREEN}✨ No branches to clean up!${NC}"
-  exit 0
-fi
-
-echo -e "${YELLOW}🗑️  Branches to delete ($TOTAL_TO_DELETE):${NC}"
-echo ""
-
-# Show merged branches
-if [ "${#MERGED_BRANCHES[@]}" -gt 0 ]; then
-  echo -e "${GREEN}Merged (${#MERGED_BRANCHES[@]}):${NC}"
-  print_branch_group "✓" "merged " "${MERGED_BRANCHES[@]}"
+# Print the branch count summary (total/merged/stale)
+show_analysis() {
+  echo -e "${BLUE}📊 Analysis${NC}"
+  local total_branches
+  total_branches=$(git branch | wc -l | tr -d ' ')
+  echo "  • Total local branches: $total_branches"
+  echo "  • Merged branches: ${#MERGED_BRANCHES[@]}"
+  if [ "$MERGED_ONLY" = false ]; then
+    echo "  • Stale branches (${STALE_DAYS}+ days): ${#STALE_BRANCHES[@]}"
+  fi
   echo ""
-fi
+}
 
-# Show stale branches
-if [ "${#STALE_BRANCHES[@]}" -gt 0 ]; then
-  echo -e "${YELLOW}Stale (${#STALE_BRANCHES[@]}):${NC}"
-  print_branch_group "⚠" "" "${STALE_BRANCHES[@]}"
+# Print the merged/stale branch groups that are about to be deleted
+show_branches_to_delete() {
+  local total_to_delete=$1
+
+  echo -e "${YELLOW}🗑️  Branches to delete ($total_to_delete):${NC}"
   echo ""
-fi
 
-# Dry run mode
-if [ "$DRY_RUN" = true ]; then
-  echo -e "${BLUE}ℹ️  Dry run mode - no branches deleted${NC}"
-  echo "  Run without --dry-run to delete these branches"
-  exit 0
-fi
+  if [ "${#MERGED_BRANCHES[@]}" -gt 0 ]; then
+    echo -e "${GREEN}Merged (${#MERGED_BRANCHES[@]}):${NC}"
+    print_branch_group "✓" "merged " "${MERGED_BRANCHES[@]}"
+    echo ""
+  fi
 
-# Confirm deletion
-if [ "$AUTO_CONFIRM" = false ]; then
+  if [ "${#STALE_BRANCHES[@]}" -gt 0 ]; then
+    echo -e "${YELLOW}Stale (${#STALE_BRANCHES[@]}):${NC}"
+    print_branch_group "⚠" "" "${STALE_BRANCHES[@]}"
+    echo ""
+  fi
+}
+
+# Prompt the user unless AUTO_CONFIRM is set. Returns failure (1) when the user declines.
+confirm_deletion() {
+  if [ "$AUTO_CONFIRM" = true ]; then
+    return 0
+  fi
+
   echo -n "Delete these branches? [y/N]: "
   read -r response
   if [[ ! "$response" =~ ^[Yy]$ ]]; then
     echo "Cancelled."
-    exit 0
+    return 1
   fi
-fi
+}
 
-# Delete branches
-echo ""
-echo "Deleting branches..."
-DELETED_COUNT=0
+# Delete every branch in MERGED_BRANCHES/STALE_BRANCHES, printing progress per branch
+delete_branches() {
+  echo ""
+  echo "Deleting branches..."
+  local deleted_count=0
+  local branch
 
-for branch in "${MERGED_BRANCHES[@]}" "${STALE_BRANCHES[@]}"; do
-  if git branch -D "$branch" > /dev/null 2>&1; then
-    echo -e "  ${GREEN}✓${NC} Deleted $branch"
-    DELETED_COUNT=$((DELETED_COUNT + 1))
-  else
-    echo -e "  ${RED}✗${NC} Failed to delete $branch"
+  for branch in "${MERGED_BRANCHES[@]}" "${STALE_BRANCHES[@]}"; do
+    if git branch -D "$branch" > /dev/null 2>&1; then
+      echo -e "  ${GREEN}✓${NC} Deleted $branch"
+      deleted_count=$((deleted_count + 1))
+    else
+      echo -e "  ${RED}✗${NC} Failed to delete $branch"
+    fi
+  done
+
+  echo ""
+  echo -e "${GREEN}✨ Cleanup complete! Removed $deleted_count branches.${NC}"
+}
+
+# Remote branch cleanup (best-effort; currently a placeholder pointing at manual cleanup)
+cleanup_remote_branches() {
+  if [ "$INCLUDE_REMOTE" != true ]; then
+    return
   fi
-done
 
-echo ""
-echo -e "${GREEN}✨ Cleanup complete! Removed $DELETED_COUNT branches.${NC}"
-
-# Remote cleanup (if requested)
-if [ "$INCLUDE_REMOTE" = true ]; then
   echo ""
   echo -e "${BLUE}🌐 Remote Branch Cleanup${NC}"
   echo "  (This requires GitHub CLI and proper permissions)"
@@ -239,4 +255,49 @@ if [ "$INCLUDE_REMOTE" = true ]; then
   else
     echo "  GitHub CLI (gh) not installed"
   fi
-fi
+}
+
+main() {
+  parse_args "$@"
+
+  echo -e "${BLUE}🧹 Branch Cleanup${NC}"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+
+  ensure_git_repository
+  detect_branches
+
+  echo -e "🔒 Protected: ${PROTECTED_BRANCHES[*]}"
+  echo ""
+
+  git fetch --prune > /dev/null 2>&1
+
+  find_merged_branches
+  find_stale_branches
+
+  show_analysis
+
+  local total_to_delete=$((${#MERGED_BRANCHES[@]} + ${#STALE_BRANCHES[@]}))
+
+  if [ "$total_to_delete" -eq 0 ]; then
+    echo -e "${GREEN}✨ No branches to clean up!${NC}"
+    exit 0
+  fi
+
+  show_branches_to_delete "$total_to_delete"
+
+  if [ "$DRY_RUN" = true ]; then
+    echo -e "${BLUE}ℹ️  Dry run mode - no branches deleted${NC}"
+    echo "  Run without --dry-run to delete these branches"
+    exit 0
+  fi
+
+  if ! confirm_deletion; then
+    exit 0
+  fi
+
+  delete_branches
+  cleanup_remote_branches
+}
+
+main "$@"
