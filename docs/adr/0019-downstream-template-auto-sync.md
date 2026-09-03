@@ -76,8 +76,18 @@ made that possible, and both are now fixed:
   liveness, because a token that authenticates but cannot write to the
   downstream repositories would otherwise make the weekly check pass while the
   sync still fails — the same silently-green failure this change removes
-  elsewhere. Expiry, missing repository access, and a GitHub outage are
-  reported as distinct causes, since they have distinct remedies.
+  elsewhere. Expiry, missing repository access, a token without push, and a
+  missing `workflow` scope are reported as distinct causes, since they have
+  distinct remedies. Rate limiting and API outages are warnings that let the run
+  continue: blaming the token for a GitHub outage sends people to fix the wrong
+  thing, and a weekly failure issue nobody can act on is precisely how the
+  `scheduled-maintenance` failures came to be closed unread (issue #1190).
+- The check lives in `script/validate-github-token.sh`, shared with
+  `scheduled-maintenance.yml` and its distributed template (issues #1190,
+  #1193) under the ADR 0011 rule that a duplicate appearing in three places
+  gets commonized. Its behavior is pinned by
+  `test/integration/github_token_validation.bats`, so the workflow YAML only
+  has to name the token and the repository to probe.
 - Nothing reported the failure. A `notify` job now opens an issue on failure,
   following `scheduled-maintenance.yml`, and a weekly `schedule` trigger runs
   the token check alone (`plan` and `sync` are gated on
