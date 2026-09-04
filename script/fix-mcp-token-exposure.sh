@@ -25,7 +25,7 @@
 #   起動のたびにレジストリ解決を走らせるため遅く (freee-mcp で実測 20.0 秒、
 #   Claude Code の起動タイムアウトは 30 秒)、さらに複数の MCP が同じ npx キャッシュを
 #   共有するため、並行起動でキャッシュが ENOTEMPTY を起こすと起動自体が失敗する
-#   (2026-09-05 に実際に slack/sentry-elu が同時に CONNECTION_CLOSED になった)。
+#   (2026-09-05 未明 JST に実際に slack/sentry-elu が同時に CONNECTION_CLOSED になった)。
 #   そこでグローバル導入済みバイナリの直叩きへ移す。前提として次が要る:
 #       npm i -g @sentry/mcp-server
 #   トレードオフとして npx の自動更新は失われ、更新は `npm i -g` が必要になる。
