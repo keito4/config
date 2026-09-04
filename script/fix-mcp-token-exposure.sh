@@ -20,6 +20,19 @@
 #   (旧レイアウト)。~/.claude/.claude.json だけ直しても既定セッションには効かない。
 #   反映には対象セッションの再起動が必要 (MCP は起動時に spawn される)。
 #
+# 2026-09-05 追記 — npx 起動は遅く、かつ壊れる:
+#   sentry-elu は `npx -y @sentry/mcp-server@latest` で起動していた。`@latest` は
+#   起動のたびにレジストリ解決を走らせるため遅く (freee-mcp で実測 20.0 秒、
+#   Claude Code の起動タイムアウトは 30 秒)、さらに複数の MCP が同じ npx キャッシュを
+#   共有するため、並行起動でキャッシュが ENOTEMPTY を起こすと起動自体が失敗する
+#   (2026-09-05 に実際に slack/sentry-elu が同時に CONNECTION_CLOSED になった)。
+#   そこでグローバル導入済みバイナリの直叩きへ移す。前提として次が要る:
+#       npm i -g @sentry/mcp-server
+#   トレードオフとして npx の自動更新は失われ、更新は `npm i -g` が必要になる。
+#   バイナリの絶対パスは *定義生成時* に `npm prefix -g` から解決して埋め込む
+#   (起動時に PATH 解決へ依存しない。MCP は login shell の PATH に
+#   ~/.local/bin を持たないことがある)。
+#
 # 2026-08-26 追記 — config dir だけを見ていては足りない:
 #   この検査は当初 config dir の .claude.json しか見ておらず、
 #   *プロジェクトスコープの .mcp.json* を対象外にしていた。そのため
@@ -54,20 +67,28 @@ MANAGED_SERVERS="linear supabase sentry-elu"
 # プロジェクトスコープの .mcp.json を探すルート
 PROJECT_ROOT_DEFAULT="$HOME/develop"
 
-# 全定義に共通する前置き: 資格情報の読み込みと npx キャッシュの固定
-COMMON_PRELUDE='set -a; . "$HOME/.devcontainer.env"; set +a; export npm_config_cache="${TMPDIR:-/tmp}/mcp-npm-cache"; mkdir -p "$npm_config_cache"; '
+# 全定義に共通する前置き: 資格情報の読み込み
+COMMON_PRELUDE='set -a; . "$HOME/.devcontainer.env"; set +a; '
+
+# npx で起動するサーバーだけに要る前置き: npx キャッシュの固定
+NPX_CACHE_PRELUDE='export npm_config_cache="${TMPDIR:-/tmp}/mcp-npm-cache"; mkdir -p "$npm_config_cache"; '
+
+# npm i -g で入るバイナリの置き場。定義生成時に解決して絶対パスを埋め込む。
+npm_global_bin() {
+    printf '%s/bin' "$(npm prefix -g)"
+}
 
 # サーバー名 -> トークンを環境変数へ逃がした起動コマンド
 server_command() {
     case "$1" in
         linear)
-            printf '%s' 'export LINEAR_AUTH_HEADER="Bearer $LINEAR_API_KEY"; exec npx -y mcp-remote https://mcp.linear.app/mcp --header '"'"'Authorization:${LINEAR_AUTH_HEADER}'"'"''
+            printf '%s%s' "$NPX_CACHE_PRELUDE" 'export LINEAR_AUTH_HEADER="Bearer $LINEAR_API_KEY"; exec npx -y mcp-remote https://mcp.linear.app/mcp --header '"'"'Authorization:${LINEAR_AUTH_HEADER}'"'"''
             ;;
         supabase)
-            printf '%s' 'export SUPABASE_AUTH_HEADER="Bearer $SUPABASE_ACCESS_TOKEN"; exec npx -y mcp-remote '"'"'https://mcp.supabase.com/mcp?read_only=true'"'"' --header '"'"'Authorization:${SUPABASE_AUTH_HEADER}'"'"''
+            printf '%s%s' "$NPX_CACHE_PRELUDE" 'export SUPABASE_AUTH_HEADER="Bearer $SUPABASE_ACCESS_TOKEN"; exec npx -y mcp-remote '"'"'https://mcp.supabase.com/mcp?read_only=true'"'"' --header '"'"'Authorization:${SUPABASE_AUTH_HEADER}'"'"''
             ;;
         sentry-elu)
-            printf '%s' 'export SENTRY_ACCESS_TOKEN="$ELU_SENTRY_TOKEN" SENTRY_HOST=sentry.io; exec npx -y @sentry/mcp-server@latest'
+            printf '%s"%s/sentry-mcp"' 'export SENTRY_ACCESS_TOKEN="$ELU_SENTRY_TOKEN" SENTRY_HOST=sentry.io; exec ' "$(npm_global_bin)"
             ;;
         *)
             print_error "未知の MCP サーバー: $1"
@@ -166,6 +187,10 @@ Usage: fix-mcp-token-exposure.sh [--check | --audit | --print <server>] [config_
    残っていても緑になる (2026-08-26 に実際に見逃した)。通常は --audit を使う。
    実行中プロセスの argv が最終的な事実で、定義が緑でも古いセッションが
    生きていれば赤になる。その場合は該当セッションの再起動が要る。
+
+前提: sentry-elu はグローバル導入済みバイナリを直叩きする (npx 起動は遅く、
+共有 npx キャッシュの破損で起動不能になるため)。事前に次を実行しておくこと:
+    npm i -g @sentry/mcp-server
 
 config_dir の既定は $HOME と ~/.claude-private。
 既定スコープの状態ファイルは ~/.claude/.claude.json ではなく ~/.claude.json

@@ -109,6 +109,16 @@ assert "--header \"Authorization: Bearer" not in cmd, "token expanded into argv:
     printf '%s' "$output" | grep -q 'SENTRY_HOST=sentry.io'
 }
 
+# npx 起動は遅く (レジストリ解決が毎回走る)、複数 MCP で共有する npx キャッシュが
+# 壊れると起動自体が失敗する。sentry-elu はグローバル導入済みバイナリを直叩きする。
+@test "sentry launches a global binary by absolute path instead of npx" {
+    run "$(SCRIPT)" --print sentry-elu
+    assert_success
+    ! printf '%s' "$output" | grep -q 'npx'
+    # MCP は login shell の PATH に npm の global bin を持たないことがあるため絶対パスで埋める
+    printf '%s' "$output" | grep -qF "$(npm prefix -g)/bin/sentry-mcp"
+}
+
 @test "--check fails on a config dir that leaks tokens through argv" {
     write_config "$TEST_TEMP_DIR/leaky" leaky
     run "$(SCRIPT)" --check "$TEST_TEMP_DIR/leaky"
