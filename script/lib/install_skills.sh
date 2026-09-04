@@ -41,10 +41,15 @@ fi
 # スキルディレクトリを作成
 mkdir -p "$AGENTS_DIR"
 
-# スキルの存在チェック（グローバルとプロジェクトの両方を確認）
+# スキルの存在チェック（インストール先であるグローバルのみを確認）
+#
+# なぜプロジェクト配下を見ないか: インストールは常に `npx skills add -g`＝グローバル
+# (~/.agents/skills) に対して行う。判定にプロジェクト配下 (.agents/skills/) を含めると、
+# そこに実体がある限りグローバル導入が恒久的にスキップされ、当該スキルが他ディレクトリ
+# から永久に見えなくなる（#1196）。.agents/ は gitignore 対象のため git でも検知できない。
 skill_exists() {
     local name="$1"
-    [[ -d "${AGENTS_DIR}/${name}" ]] || [[ -d "${PROJECT_AGENTS_DIR}/${name}" ]]
+    [[ -d "${AGENTS_DIR}/${name}" ]]
 }
 
 installed=0
