@@ -37,6 +37,17 @@ SETTINGS_FILE="${CLAUDE_DIR}/settings.json"
 # 端末ごとにパスが変わりうるため上書き可能にする。
 PRIVATE_CONFIG_DIR="${PRIVATE_CONFIG_DIR:-${HOME}/develop/github.com/keito4/private-config}"
 
+# スキルの symlink 先は、作業ツリーではなく origin/main 追従の専用チェックアウト
+# （<repo>-deploy-main worktree）に統一する。作業ツリーを直接指すと、
+#   - ブランチ切替や未コミット変更がそのまま全セッションのスキル挙動になる
+#   - 逆に main へマージした修正が、作業ツリーが別ブランチにいる限り配備されない
+# という2方向の事故が起きるため（2026-09-05 方針A決定）。
+# 編集中のスキルを即試したいときだけ、これらを作業ツリーのパスへ上書きして実行する。
+# `%-deploy-main` の除去は、deploy-main チェックアウト内からこのスクリプトを
+# 実行した場合に <repo>-deploy-main-deploy-main という入れ子 worktree を作らないため。
+CONFIG_DEPLOY_DIR="${CONFIG_DEPLOY_DIR:-${REPO_ROOT%-deploy-main}-deploy-main}"
+PRIVATE_CONFIG_DEPLOY_DIR="${PRIVATE_CONFIG_DEPLOY_DIR:-${PRIVATE_CONFIG_DIR%-deploy-main}-deploy-main}"
+
 # 複数の CLAUDE_CONFIG_DIR に共有設定を配るためのキー。
 # ここに無いキー（model / theme / tui 等）は各 dir 固有として保持される。
 # shellcheck disable=SC2016  # jq に渡すJSONリテラル。$schema はシェル変数ではない
@@ -342,6 +353,101 @@ link_skill_dir() {
     link_skill_symlink "$src" "$target" "$name"
 }
 
+# <repo>-deploy-main（origin/main 追従の専用 worktree）を用意・更新する。
+# - 無ければ worktree として作成し、あれば origin/main へ detach で追従させる
+# - fetch 失敗（オフライン等）は警告して手元の状態のまま続行（古くても予測可能を優先）
+# - deploy 側に手元変更があれば上書きせず警告する（deploy 用チェックアウトは編集禁止）
+# 戻り値: deploy チェックアウトが使える場合 0、使えない場合 1。
+ensure_deploy_main_checkout() {
+    local repo_dir="$1" deploy_dir="$2"
+    # refspec を明示して remote-tracking ref (origin/main) を確実に更新する
+    # （既定 refspec に依存した opportunistic update に頼らない）。
+    local fetch_refspec="+refs/heads/main:refs/remotes/origin/main"
+
+    if [[ ! -d "$deploy_dir" ]]; then
+        if ! git -C "$repo_dir" rev-parse --git-dir &>/dev/null; then
+            log_warn "  ${repo_dir} は git リポジトリではないため deploy-main を用意できません"
+            return 1
+        fi
+        if ! git -C "$repo_dir" fetch --quiet origin "$fetch_refspec" 2>/dev/null; then
+            log_warn "  ${repo_dir} の fetch に失敗しました（オフライン?）"
+        fi
+        if git -C "$repo_dir" worktree add --detach "$deploy_dir" origin/main &>/dev/null; then
+            log_success "  deploy-main チェックアウトを作成しました: ${deploy_dir}"
+            return 0
+        fi
+        log_warn "  deploy-main チェックアウトの作成に失敗しました: ${deploy_dir}"
+        return 1
+    fi
+
+    # 既存ディレクトリが git 作業ツリーでない（壊れた/無関係のディレクトリ）場合は
+    # 参照元として採用せず、呼び出し側のフォールバックに回す。
+    if ! git -C "$deploy_dir" rev-parse --is-inside-work-tree &>/dev/null; then
+        log_warn "  ${deploy_dir} は git 作業ツリーではありません。deploy-main として使えないためフォールバックします"
+        return 1
+    fi
+
+    # 環境変数で deploy 先を作業ツリー自身に向けた場合（相対パス・symlink 経由の
+    # 別表記を含む）は、作業ツリーを勝手に detach しないよう追従処理をしない。
+    # 同一性はパス文字列ではなく git の toplevel で判定する。
+    local repo_top deploy_top
+    repo_top="$(git -C "$repo_dir" rev-parse --show-toplevel 2>/dev/null || true)"
+    deploy_top="$(git -C "$deploy_dir" rev-parse --show-toplevel 2>/dev/null || true)"
+    if [[ -n "$repo_top" ]] && [[ "$deploy_top" == "$repo_top" ]]; then
+        log_info "  deploy 先が作業ツリーと同一のため origin/main への追従をスキップします"
+        return 0
+    fi
+
+    # 無関係なリポジトリのチェックアウトを誤って配備しないよう origin を突合する。
+    # （同一リポジトリなら worktree でも別 clone でも許容する。repo_dir が git で
+    # ない場合は突合できないため、deploy 側単独で追従を続行する）
+    if [[ -n "$repo_top" ]]; then
+        local repo_origin deploy_origin
+        repo_origin="$(git -C "$repo_dir" remote get-url origin 2>/dev/null || true)"
+        deploy_origin="$(git -C "$deploy_dir" remote get-url origin 2>/dev/null || true)"
+        if [[ -z "$deploy_origin" ]] || [[ "$deploy_origin" != "$repo_origin" ]]; then
+            log_warn "  ${deploy_dir} の origin が ${repo_dir} と一致しません。誤配備防止のためフォールバックします"
+            return 1
+        fi
+    else
+        log_warn "  ${repo_dir} が git リポジトリではないため origin を突合できません。既存の ${deploy_dir} を追従させて使います"
+    fi
+
+    # dirty な deploy は追従だけ止めて可視化する（意図的な設計判断）:
+    # symlink は生参照のためリンク更新を止めても手元変更は見え続け、作業ツリーへの
+    # フォールバックはさらに main から遠い内容を配備する。自動 reset --hard は
+    # 破壊的なので行わず、警告＋復旧手順の提示に留める。
+    if [[ -n "$(git -C "$deploy_dir" status --porcelain 2>/dev/null)" ]]; then
+        log_warn "  ${deploy_dir} に手元変更があります。origin/main への追従をスキップします（deploy 用チェックアウトは編集しないでください。復旧: git -C ${deploy_dir} checkout -- . && git -C ${deploy_dir} clean -fd）"
+        return 0
+    fi
+
+    # worktree（repo と ref 共有）でも別 clone でも成立するよう、deploy 側で fetch する。
+    if ! git -C "$deploy_dir" fetch --quiet origin "$fetch_refspec" 2>/dev/null; then
+        log_warn "  ${deploy_dir} の fetch に失敗しました（オフライン?）。deploy-main は手元の状態のまま使います"
+    fi
+    if git -C "$deploy_dir" checkout --quiet --detach origin/main 2>/dev/null; then
+        log_info "  deploy-main を origin/main ($(git -C "$deploy_dir" rev-parse --short HEAD)) に更新しました"
+    else
+        log_warn "  ${deploy_dir} を origin/main へ更新できませんでした。現在の状態のまま使います"
+    fi
+    return 0
+}
+
+# スキルの参照元を決めて SKILLS_SOURCE_DIR に入れる。
+# deploy-main が使えればそれを、用意できない環境では作業ツリーへフォールバックする。
+# （log_* は stdout に出るため、コマンド置換ではなくグローバル変数で返す。）
+SKILLS_SOURCE_DIR=""
+resolve_skills_source() {
+    local repo_dir="$1" deploy_dir="$2"
+    if ensure_deploy_main_checkout "$repo_dir" "$deploy_dir"; then
+        SKILLS_SOURCE_DIR="$deploy_dir"
+    else
+        log_warn "  フォールバック: 作業ツリー ${repo_dir} からスキルをリンクします（ブランチ状態がそのまま反映される点に注意）"
+        SKILLS_SOURCE_DIR="$repo_dir"
+    fi
+}
+
 link_skills_from_dir() {
     local src_dir="$1"
     if [[ ! -d "$src_dir" ]]; then
@@ -392,11 +498,18 @@ main() {
     sync_settings_to_extra_config_dirs
 
     # スキルを ~/.claude/skills に展開（extra dir へのリンク前に実行）。
+    # 参照元は origin/main 追従の deploy-main チェックアウトに統一する（方針A）。
     # 名前が衝突した場合は private-config を勝たせるため、リポジトリを先に処理する。
+    log_info "スキル配備用の deploy-main チェックアウトを確認します..."
+    resolve_skills_source "$REPO_ROOT" "$CONFIG_DEPLOY_DIR"
+    local repo_skills_src="$SKILLS_SOURCE_DIR"
+    resolve_skills_source "$PRIVATE_CONFIG_DIR" "$PRIVATE_CONFIG_DEPLOY_DIR"
+    local private_skills_src="$SKILLS_SOURCE_DIR"
+
     log_info "リポジトリのスキルを ~/.claude/skills に展開します..."
-    link_skills_from_dir "${REPO_ROOT}/.claude/skills"
+    link_skills_from_dir "${repo_skills_src}/.claude/skills"
     log_info "private-config の個人スキルを ~/.claude/skills に展開します..."
-    link_skills_from_dir "${PRIVATE_CONFIG_DIR}/.claude/skills"
+    link_skills_from_dir "${private_skills_src}/.claude/skills"
 
     # commands / agents / skills を追加の CLAUDE_CONFIG_DIR にリンク
     # claude CLI の有無に依存しないため、CLI チェックより前に実行する
