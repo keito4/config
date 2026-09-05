@@ -393,23 +393,32 @@ ensure_deploy_main_checkout() {
     local repo_top deploy_top
     repo_top="$(git -C "$repo_dir" rev-parse --show-toplevel 2>/dev/null || true)"
     deploy_top="$(git -C "$deploy_dir" rev-parse --show-toplevel 2>/dev/null || true)"
-    if [[ -z "$repo_top" ]] || [[ "$deploy_top" == "$repo_top" ]]; then
+    if [[ -n "$repo_top" ]] && [[ "$deploy_top" == "$repo_top" ]]; then
         log_info "  deploy 先が作業ツリーと同一のため origin/main への追従をスキップします"
         return 0
     fi
 
     # 無関係なリポジトリのチェックアウトを誤って配備しないよう origin を突合する。
-    # （同一リポジトリなら worktree でも別 clone でも許容する）
-    local repo_origin deploy_origin
-    repo_origin="$(git -C "$repo_dir" remote get-url origin 2>/dev/null || true)"
-    deploy_origin="$(git -C "$deploy_dir" remote get-url origin 2>/dev/null || true)"
-    if [[ -z "$deploy_origin" ]] || [[ "$deploy_origin" != "$repo_origin" ]]; then
-        log_warn "  ${deploy_dir} の origin が ${repo_dir} と一致しません。誤配備防止のためフォールバックします"
-        return 1
+    # （同一リポジトリなら worktree でも別 clone でも許容する。repo_dir が git で
+    # ない場合は突合できないため、deploy 側単独で追従を続行する）
+    if [[ -n "$repo_top" ]]; then
+        local repo_origin deploy_origin
+        repo_origin="$(git -C "$repo_dir" remote get-url origin 2>/dev/null || true)"
+        deploy_origin="$(git -C "$deploy_dir" remote get-url origin 2>/dev/null || true)"
+        if [[ -z "$deploy_origin" ]] || [[ "$deploy_origin" != "$repo_origin" ]]; then
+            log_warn "  ${deploy_dir} の origin が ${repo_dir} と一致しません。誤配備防止のためフォールバックします"
+            return 1
+        fi
+    else
+        log_warn "  ${repo_dir} が git リポジトリではないため origin を突合できません。既存の ${deploy_dir} を追従させて使います"
     fi
 
+    # dirty な deploy は追従だけ止めて可視化する（意図的な設計判断）:
+    # symlink は生参照のためリンク更新を止めても手元変更は見え続け、作業ツリーへの
+    # フォールバックはさらに main から遠い内容を配備する。自動 reset --hard は
+    # 破壊的なので行わず、警告＋復旧手順の提示に留める。
     if [[ -n "$(git -C "$deploy_dir" status --porcelain 2>/dev/null)" ]]; then
-        log_warn "  ${deploy_dir} に手元変更があります。origin/main への追従をスキップします（deploy 用チェックアウトは編集しないでください）"
+        log_warn "  ${deploy_dir} に手元変更があります。origin/main への追従をスキップします（deploy 用チェックアウトは編集しないでください。復旧: git -C ${deploy_dir} checkout -- . && git -C ${deploy_dir} clean -fd）"
         return 0
     fi
 
