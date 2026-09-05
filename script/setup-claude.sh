@@ -360,26 +360,18 @@ link_skill_dir() {
 # 戻り値: deploy チェックアウトが使える場合 0、使えない場合 1。
 ensure_deploy_main_checkout() {
     local repo_dir="$1" deploy_dir="$2"
-
-    # 環境変数で deploy 先を作業ツリー自身に向けた場合は、追従処理をしない
-    # （作業ツリーを勝手に detach させないためのガード）。
-    if [[ "$deploy_dir" == "$repo_dir" ]]; then
-        log_info "  deploy 先が作業ツリーと同一のため origin/main への追従をスキップします"
-        return 0
-    fi
-
-    if ! git -C "$repo_dir" rev-parse --git-dir &>/dev/null; then
-        log_warn "  ${repo_dir} は git リポジトリではないため deploy-main を用意できません"
-        return 1
-    fi
-
     # refspec を明示して remote-tracking ref (origin/main) を確実に更新する
     # （既定 refspec に依存した opportunistic update に頼らない）。
-    if ! git -C "$repo_dir" fetch --quiet origin "+refs/heads/main:refs/remotes/origin/main" 2>/dev/null; then
-        log_warn "  ${repo_dir} の fetch に失敗しました（オフライン?）。deploy-main は手元の状態のまま使います"
-    fi
+    local fetch_refspec="+refs/heads/main:refs/remotes/origin/main"
 
     if [[ ! -d "$deploy_dir" ]]; then
+        if ! git -C "$repo_dir" rev-parse --git-dir &>/dev/null; then
+            log_warn "  ${repo_dir} は git リポジトリではないため deploy-main を用意できません"
+            return 1
+        fi
+        if ! git -C "$repo_dir" fetch --quiet origin "$fetch_refspec" 2>/dev/null; then
+            log_warn "  ${repo_dir} の fetch に失敗しました（オフライン?）"
+        fi
         if git -C "$repo_dir" worktree add --detach "$deploy_dir" origin/main &>/dev/null; then
             log_success "  deploy-main チェックアウトを作成しました: ${deploy_dir}"
             return 0
@@ -395,11 +387,36 @@ ensure_deploy_main_checkout() {
         return 1
     fi
 
+    # 環境変数で deploy 先を作業ツリー自身に向けた場合（相対パス・symlink 経由の
+    # 別表記を含む）は、作業ツリーを勝手に detach しないよう追従処理をしない。
+    # 同一性はパス文字列ではなく git の toplevel で判定する。
+    local repo_top deploy_top
+    repo_top="$(git -C "$repo_dir" rev-parse --show-toplevel 2>/dev/null || true)"
+    deploy_top="$(git -C "$deploy_dir" rev-parse --show-toplevel 2>/dev/null || true)"
+    if [[ -z "$repo_top" ]] || [[ "$deploy_top" == "$repo_top" ]]; then
+        log_info "  deploy 先が作業ツリーと同一のため origin/main への追従をスキップします"
+        return 0
+    fi
+
+    # 無関係なリポジトリのチェックアウトを誤って配備しないよう origin を突合する。
+    # （同一リポジトリなら worktree でも別 clone でも許容する）
+    local repo_origin deploy_origin
+    repo_origin="$(git -C "$repo_dir" remote get-url origin 2>/dev/null || true)"
+    deploy_origin="$(git -C "$deploy_dir" remote get-url origin 2>/dev/null || true)"
+    if [[ -z "$deploy_origin" ]] || [[ "$deploy_origin" != "$repo_origin" ]]; then
+        log_warn "  ${deploy_dir} の origin が ${repo_dir} と一致しません。誤配備防止のためフォールバックします"
+        return 1
+    fi
+
     if [[ -n "$(git -C "$deploy_dir" status --porcelain 2>/dev/null)" ]]; then
         log_warn "  ${deploy_dir} に手元変更があります。origin/main への追従をスキップします（deploy 用チェックアウトは編集しないでください）"
         return 0
     fi
 
+    # worktree（repo と ref 共有）でも別 clone でも成立するよう、deploy 側で fetch する。
+    if ! git -C "$deploy_dir" fetch --quiet origin "$fetch_refspec" 2>/dev/null; then
+        log_warn "  ${deploy_dir} の fetch に失敗しました（オフライン?）。deploy-main は手元の状態のまま使います"
+    fi
     if git -C "$deploy_dir" checkout --quiet --detach origin/main 2>/dev/null; then
         log_info "  deploy-main を origin/main ($(git -C "$deploy_dir" rev-parse --short HEAD)) に更新しました"
     else
