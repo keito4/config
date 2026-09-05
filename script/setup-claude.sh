@@ -373,7 +373,9 @@ ensure_deploy_main_checkout() {
         return 1
     fi
 
-    if ! git -C "$repo_dir" fetch origin main --quiet 2>/dev/null; then
+    # refspec を明示して remote-tracking ref (origin/main) を確実に更新する
+    # （既定 refspec に依存した opportunistic update に頼らない）。
+    if ! git -C "$repo_dir" fetch --quiet origin "+refs/heads/main:refs/remotes/origin/main" 2>/dev/null; then
         log_warn "  ${repo_dir} の fetch に失敗しました（オフライン?）。deploy-main は手元の状態のまま使います"
     fi
 
@@ -383,6 +385,13 @@ ensure_deploy_main_checkout() {
             return 0
         fi
         log_warn "  deploy-main チェックアウトの作成に失敗しました: ${deploy_dir}"
+        return 1
+    fi
+
+    # 既存ディレクトリが git 作業ツリーでない（壊れた/無関係のディレクトリ）場合は
+    # 参照元として採用せず、呼び出し側のフォールバックに回す。
+    if ! git -C "$deploy_dir" rev-parse --is-inside-work-tree &>/dev/null; then
+        log_warn "  ${deploy_dir} は git 作業ツリーではありません。deploy-main として使えないためフォールバックします"
         return 1
     fi
 
