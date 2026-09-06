@@ -89,45 +89,47 @@ git config --global gpg.format ssh
 （パッチ適用済み）にバンドルが更新され解消しました。`overrides` の `"npm": "^11.17.0"` は 11.18.0 系も許容するため、
 今後 `npm install` すればこの修正が自動的に取り込まれます。
 
-#### semantic-release 経由の npm 内蔵 tar / brace-expansion / ip-address / undici (MODERATE / HIGH) — 監視中
+#### semantic-release 経由の npm 内蔵 tar / brace-expansion / ip-address / undici (MODERATE / HIGH) — 解決済み
 
-`semantic-release@25.0.8` は `@semantic-release/npm` 経由で npm CLI (`npm@11.19.0` 時点) を依存に持ち、npm CLI が
-内部にバンドルする以下のパッケージに既知の脆弱性があります：
+`semantic-release` は `@semantic-release/npm` 経由で npm CLI を依存に持ち、`npm@11.19.0` 時点では npm CLI が
+内部にバンドルする以下のパッケージに既知の脆弱性がありました：
 
 - GHSA-r292-9mhp-454m (tar, moderate): 細工した長いパスの tar 展開でスタックオーバーフロー DoS
 - GHSA-mh99-v99m-4gvg / GHSA-rgw5-rvv9-x895 (brace-expansion, high): 非拡張の展開パターンで OOM DoS
 - GHSA-mwp4-54f8-5fhr / GHSA-4xrf-jv44-h6hh / GHSA-22jq-vg5j-6vgg (ip-address, high): IPv4/IPv6 アドレス解析の
   誤判定による SSRF / 信頼境界バイパス
 - GHSA-8xcm-r25x-g524 / GHSA-m8rv-5g2x-5cg5 / GHSA-v3r7-h72x-cjcm (undici, moderate): レスポンス非同期化・CRLF
-  インジェクション・Cookie 属性インジェクション（2026年に新たに公開された undici の追加脆弱性。上記「解決済み」の
-  undici 修正とは別件）
+  インジェクション・Cookie 属性インジェクション
 
-いずれも npm パッケージのバンドル依存 (`node_modules/npm/node_modules/*`) であり、`overrides` による上書きは
-効かない（npm の bundleDependencies はトップレベル overrides の対象外。`package.json` の `overrides` に
-`tar` / `brace-expansion` / `ip-address` / `undici` の安全な最小バージョンを設定済みだが、バンドル依存には
-反映されないことを確認済み）。`npm audit fix --force` が提案する修正は `semantic-release@24.2.9`
-（マイナーダウングレード）であり、リリースパイプラインの回帰リスクを伴うため採用しない。
+いずれも npm パッケージのバンドル依存 (`node_modules/npm/node_modules/*`) であり、`tar` / `brace-expansion` /
+`ip-address` / `undici` に対する `overrides` はバンドル依存には反映されない（npm の bundleDependencies は
+トップレベル overrides の対象外）。ただし `npm@11.19.1` でバンドル依存自体（特に `tar@^7.5.22`）が更新され
+脆弱性が解消されたため、`overrides` の `"npm"` を `^11.17.0` → `^11.19.1` に引き上げて解消した
+（`npm audit` → 0 vulnerabilities を確認済み）。
 
-- 対応: npm CLI がバンドル tar / brace-expansion / ip-address / undici を更新するまで監視・待機
-  （`SECURITY.md` 更新のたびに再確認）
-- 監視: `npm audit --audit-level=high` で確認（CI は `--audit-level=critical` を使用）
-- 影響範囲: `semantic-release` 実行時（リリース CI ジョブ内）の npm CLI 内部処理のみ。信頼済みメンテナのみが
-  トリガーするリリースワークフロー内でしか実行されず、外部入力を処理しないためプロダクションアプリ・外部公開
-  面には直接影響しない
+- 対応: `overrides.npm` を `^11.19.1` 以上に固定。今後も npm CLI が新たな内蔵脆弱性を出した場合は
+  同様に `overrides.npm` を最新の 11.x へ引き上げて解消できないか確認する
+- 監視: `npm audit --audit-level=critical`（CI）に加え、定期的に `npm audit` (dev含む) で確認
 
-#### takt 経由の @opentelemetry/propagator-jaeger (HIGH) — 監視中
+#### takt 経由の @opentelemetry/propagator-jaeger (HIGH) — 解決済み
 
-`takt@0.54.1`（TAKT ワークフロー自動化ツール, devDependencies）が依存する `@opentelemetry/sdk-node` 経由で
-`@opentelemetry/propagator-jaeger@<2.9.0` に DoS 脆弱性があります：
+`takt`（TAKT ワークフロー自動化ツール, devDependencies）が依存する `@opentelemetry/sdk-node` 経由で
+`@opentelemetry/propagator-jaeger@<2.9.0` に DoS 脆弱性がありました：
 
 - GHSA-45rx-2jwx-cxfr (high): 不正な形式のヘッダーによる `JaegerPropagator` の未処理例外 DoS
 
-`npm audit fix --force` が提案する修正は `takt@0.41.0` へのメジャーダウングレードであり、TAKT の機能退行を
-伴うため採用しない。
+`overrides` に `"@opentelemetry/propagator-jaeger": ">=2.9.0"` を設定済みで、`takt@0.60.0` 時点では
+`@opentelemetry/propagator-jaeger@2.10.0` に解決され解消していることを確認済み（`npm ls` で確認）。
 
-- 対応: takt が opentelemetry 依存を更新するまで監視・待機
-- 影響範囲: ローカル/CI での `takt` 実行時のみ。TAKT はスケジュールされたエージェントタスクの自動化に使われる
-  開発用ツールであり、外部からのネットワーク入力を受け付けるプロダクションサービスではない
+#### takt (MCP SDK 経由) の express / qs (MODERATE) — 解決済み
+
+`takt` が依存する `@modelcontextprotocol/sdk` 経由で `express@5.2.1` → `qs@6.15.3` が解決され、以下の脆弱性が
+ありました：
+
+- GHSA-x5fp-wj9c-mxmx: bracket-key のカンマ解析による配列長上限バイパス
+- GHSA-4mjr-xmp4-gh2g: `isBuffer` 判定を悪用した DoS
+
+`overrides` に `"qs": ">=6.16.0"` を追加して解消（`npm audit` → 0 vulnerabilities を確認済み）。
 
 #### Trivy で検出されるコンテナ脆弱性
 
