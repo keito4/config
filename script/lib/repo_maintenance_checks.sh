@@ -141,6 +141,98 @@ check_claude_action_credentials() {
   output::success "Claude Actions credential precedence ok"
 }
 
+# トークン未設定でも claude-code-action は起動し、認証に失敗して赤で終わる。呼び出し側が
+# continue-on-error: true を付けているため、ワークフローは緑のままジョブだけが黙って赤になり、
+# レビューが止まっていることに気付けない。keito4/calendar_alerm#88 と keito4/effectuation#5 が
+# これで、いずれもトークン失効から発覚まで日単位で放置された。
+# 認証情報が無いときは実行せず skip させ、「失敗」と「未設定」を区別できる状態を保つ。
+check_claude_token_guard() {
+  local workflow issue_count=0
+
+  while IFS= read -r workflow; do
+    [[ -n "$workflow" ]] || continue
+
+    grep -q "anthropics/claude-code-action" "$workflow" || continue
+
+    # 前段で認証情報を検証して落とすワークフローは、黙って赤くなる問題を持たない。
+    # config 自身の scheduled-maintenance.yml がこの形。
+    grep -qE "validate-takt-auth\.sh|validate-claude-auth\.sh" "$workflow" && continue
+
+    # ステップ単位で判定する。ファイル全体を見ると、ガード済みの 1 ステップが
+    # 同じファイルにある未ガードのステップを覆い隠す。ジョブ全体を needs の出力で
+    # 塞ぐ形（keito4/effectuation）も実際に使われているため、ジョブ単位の if: も見る。
+    if ! awk '
+      function end_if() {
+        # 認証の可否そのものを見ている条件だけをガードとして認める。下書き判定などの
+        # 無関係な if: を通すと、条件が付いてさえいれば緑になり検査が意味を失う。
+        if (cond ~ /outputs\.available/ || cond ~ /outputs\.[A-Za-z0-9_]*token/) {
+          if (if_is_job) job_guard = 1; else has_guard = 1
+        }
+        in_if = 0; cond = ""
+      }
+      function flush() {
+        if (has_action && !has_guard && !job_guard) bad = 1
+        has_action = 0; has_guard = 0
+      }
+      BEGIN { step_indent = -1; job_indent = -1 }
+      {
+        line = $0
+        sub(/^[[:space:]]*#.*$/, "", line)
+        match(line, /^[[:space:]]*/)
+        indent = RLENGTH
+      }
+      # if: の値が複数行に折り返される形 (if: >-, if: |) を最後まで拾う。
+      in_if {
+        if (line ~ /^[[:space:]]*$/) next
+        if (indent > if_indent) { cond = cond " " line; next }
+        end_if()
+      }
+      /^jobs:[[:space:]]*$/ { in_jobs = 1; next }
+      in_jobs && line ~ /^[[:space:]]+[A-Za-z0-9_.-]+:[[:space:]]*$/ {
+        if (job_indent < 0) job_indent = indent
+        if (indent == job_indent) {
+          flush()
+          job_guard = 0; seen_steps = 0; step_indent = -1
+          next
+        }
+      }
+      line ~ /^[[:space:]]*steps:[[:space:]]*$/ { seen_steps = 1 }
+      # steps: より前の if: はジョブに掛かる。後の if: はステップに掛かる。
+      seen_steps && line ~ /^[[:space:]]*-[[:space:]]/ {
+        if (step_indent < 0 || indent <= step_indent) {
+          flush()
+          step_indent = indent
+        }
+      }
+      line ~ /uses:[[:space:]]*anthropics\/claude-code-action/ { has_action = 1 }
+      line ~ /^[[:space:]]*(-[[:space:]]+)?if:/ {
+        match(line, /^[[:space:]]*(-[[:space:]]+)?/)
+        if_indent = RLENGTH
+        in_if = 1
+        cond = line
+        if_is_job = seen_steps ? 0 : 1
+        next
+      }
+      END { if (in_if) end_if(); flush(); exit bad ? 1 : 0 }
+    ' "$workflow"; then
+      output::warning "$(basename "$workflow"): claude-code-action runs even when no Claude token is configured"
+      echo "Gate the step on an authentication check so a missing token skips instead of failing:"
+      echo "  - name: Check Claude authentication"
+      echo "    id: claude-auth"
+      echo "    ..."
+      echo "  - uses: anthropics/claude-code-action@..."
+      echo "    if: steps.claude-auth.outputs.available == 'true'"
+      issue_count=$((issue_count + 1))
+    fi
+  done < <(workflow_files)
+
+  if [[ "$issue_count" -gt 0 ]]; then
+    return 1
+  fi
+
+  output::success "Claude token guard ok"
+}
+
 # push で起動するワークフローが自分でコミットや Release を publish すると、その push が
 # 起こす新規実行に cancel-in-progress: true で自分自身をキャンセルされる。
 # keito4/intent-gate-android では v1.2.49 の APK 添付と Firebase 配信が失われた。

@@ -16,8 +16,25 @@ jobs:
     permissions:
       issues: write
     steps:
+      # トークンが 1 つも設定されていないリポジトリでは、この検査に確かめるものが無い。
+      # ガードせずに動かすと毎週「期限切れ」の Issue を作り続け、本当に失効したときの
+      # 通知が埋もれる。
+      - name: Check Claude authentication
+        id: claude-auth
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] || [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping the health check because no Claude authentication secret is configured."
+          fi
+
       - name: Check Claude Code token validity
         id: check
+        if: steps.claude-auth.outputs.available == 'true'
         uses: anthropics/claude-code-action@44423bdec74b97d67543eb16c110546762c110b2 # v1.0.181
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -26,7 +43,7 @@ jobs:
         continue-on-error: true
 
       - name: Create issue on failure
-        if: steps.check.outcome == 'failure'
+        if: steps.claude-auth.outputs.available == 'true' && steps.check.outcome == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}
           # このジョブは checkout しないため gh はリポジトリを git から解決できない。
