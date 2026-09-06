@@ -45,8 +45,16 @@ PRIVATE_CONFIG_DIR="${PRIVATE_CONFIG_DIR:-${HOME}/develop/github.com/keito4/priv
 # 編集中のスキルを即試したいときだけ、これらを作業ツリーのパスへ上書きして実行する。
 # `%-deploy-main` の除去は、deploy-main チェックアウト内からこのスクリプトを
 # 実行した場合に <repo>-deploy-main-deploy-main という入れ子 worktree を作らないため。
-CONFIG_DEPLOY_DIR="${CONFIG_DEPLOY_DIR:-${REPO_ROOT%-deploy-main}-deploy-main}"
-PRIVATE_CONFIG_DEPLOY_DIR="${PRIVATE_CONFIG_DEPLOY_DIR:-${PRIVATE_CONFIG_DIR%-deploy-main}-deploy-main}"
+#
+# 導出式は ensure_deploy_main_checkout の「既定パスかどうか」判定にも使うため関数に
+# 一本化する。式を二重に持つと、片方だけ変えたときにガードが黙って効かなくなる。
+# 関数定義が既定値計算より前に必要なので、ここで定義する。
+default_deploy_dir_for() {
+    printf '%s\n' "${1%-deploy-main}-deploy-main"
+}
+
+CONFIG_DEPLOY_DIR="${CONFIG_DEPLOY_DIR:-$(default_deploy_dir_for "$REPO_ROOT")}"
+PRIVATE_CONFIG_DEPLOY_DIR="${PRIVATE_CONFIG_DEPLOY_DIR:-$(default_deploy_dir_for "$PRIVATE_CONFIG_DIR")}"
 
 # 複数の CLAUDE_CONFIG_DIR に共有設定を配るためのキー。
 # ここに無いキー（model / theme / tui 等）は各 dir 固有として保持される。
@@ -428,7 +436,7 @@ ensure_deploy_main_checkout() {
     # detach してしまう。override の目的（マージ前スキルの即時検証）そのものを壊すため、
     # 既定パス以外は追従せず現在の内容のまま使う。
     local default_deploy_dir default_deploy_top
-    default_deploy_dir="${repo_dir%-deploy-main}-deploy-main"
+    default_deploy_dir="$(default_deploy_dir_for "$repo_dir")"
     default_deploy_top="$(canonical_dir "$default_deploy_dir")"
     if [[ "$(canonical_dir "$deploy_dir")" != "$default_deploy_top" ]]; then
         log_warn "  ${deploy_dir} は既定の deploy-main（${default_deploy_dir}）ではないため origin/main への追従をスキップします（現在の内容をそのまま配備します）"
