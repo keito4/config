@@ -353,6 +353,13 @@ link_skill_dir() {
     link_skill_symlink "$src" "$target" "$name"
 }
 
+# パス比較用の正規化。symlink・相対パス・末尾スラッシュの差異を吸収する。
+# 実在しないパスは（比較可能なよう）文字列のまま返す。realpath 非依存で macOS でも動く。
+canonical_dir() {
+    local p="$1"
+    if [[ -d "$p" ]]; then (cd "$p" && pwd -P); else printf '%s\n' "$p"; fi
+}
+
 # <repo>-deploy-main（origin/main 追従の専用 worktree）を用意・更新する。
 # - 無ければ worktree として作成し、あれば origin/main へ detach で追従させる
 # - fetch 失敗（オフライン等）は警告して手元の状態のまま続行（古くても予測可能を優先）
@@ -411,6 +418,21 @@ ensure_deploy_main_checkout() {
         fi
     else
         log_warn "  ${repo_dir} が git リポジトリではないため origin を突合できません。既存の ${deploy_dir} を追従させて使います"
+    fi
+
+    # origin/main への追従（detach）は、このスクリプトが管理する既定の deploy-main
+    # に対してのみ行う。CONFIG_DEPLOY_DIR / PRIVATE_CONFIG_DEPLOY_DIR で明示的に
+    # 別の場所を指された場合、それが「同一リポジトリの別 worktree（機能ブランチを
+    # チェックアウト済み）」だと、上の toplevel 一致・origin 一致・dirty の各ガードを
+    # すべて通過してしまい、利用者が作業中のチェックアウトを黙って origin/main へ
+    # detach してしまう。override の目的（マージ前スキルの即時検証）そのものを壊すため、
+    # 既定パス以外は追従せず現在の内容のまま使う。
+    local default_deploy_dir default_deploy_top
+    default_deploy_dir="${repo_dir%-deploy-main}-deploy-main"
+    default_deploy_top="$(canonical_dir "$default_deploy_dir")"
+    if [[ "$(canonical_dir "$deploy_dir")" != "$default_deploy_top" ]]; then
+        log_warn "  ${deploy_dir} は既定の deploy-main（${default_deploy_dir}）ではないため origin/main への追従をスキップします（現在の内容をそのまま配備します）"
+        return 0
     fi
 
     # dirty な deploy は追従だけ止めて可視化する（意図的な設計判断）:
