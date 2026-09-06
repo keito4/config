@@ -17,8 +17,12 @@ on:
         description: '対象とする最終 push からの日数'
         required: false
         default: '90'
+      owners:
+        description: '走査する GitHub オーナー（空白区切り）'
+        required: false
+        default: 'keito4 Elu-co-jp OYKOT-jp'
       repos:
-        description: '走査するリポジトリ名（空白区切り）。空なら自動検出'
+        description: '走査するリポジトリ名（空白区切り）。空なら自動検出。指定時は owners を1つに絞ること'
         required: false
         default: ''
 
@@ -32,7 +36,7 @@ jobs:
   scan:
     name: Scan repositories
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -46,10 +50,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CLAUDE_PAT }}
           FLEET_DAYS: ${{ inputs.days || '90' }}
+          FLEET_OWNERS: ${{ inputs.owners || 'keito4 Elu-co-jp OYKOT-jp' }}
           FLEET_REPOS: ${{ inputs.repos || '' }}
         run: |
-          args=(--days "$FLEET_DAYS")
-          if [ -n "$FLEET_REPOS" ]; then
-            args+=(--repos "$FLEET_REPOS")
+          set -u
+          # リポジトリ名はオーナーを跨いで一意ではない（notion_mcp は keito4 と OYKOT-jp の
+          # 両方にある）。--repos を複数オーナーへ配ると別物を走査してしまう。
+          if [ -n "$FLEET_REPOS" ] && [ "$(printf '%s\n' $FLEET_OWNERS | wc -l)" -ne 1 ]; then
+            echo "::error::repos を指定するときは owners を1つに絞ってください" >&2
+            exit 1
           fi
-          script/fleet-workflow-guards.sh "${args[@]}"
+
+          # 1 オーナーの違反で残りの走査を打ち切ると、全体の実態が分からないまま直すことになる。
+          status=0
+          for owner in $FLEET_OWNERS; do
+            args=(--owner "$owner" --days "$FLEET_DAYS")
+            if [ -n "$FLEET_REPOS" ]; then
+              args+=(--repos "$FLEET_REPOS")
+            fi
+            script/fleet-workflow-guards.sh "${args[@]}" || status=1
+          done
+          exit "$status"

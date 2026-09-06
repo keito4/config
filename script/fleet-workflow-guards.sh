@@ -17,6 +17,7 @@ WORK_DIR="${FLEET_WORK_DIR:-${CONTEXT_DIR:-.context}/fleet}"
 
 GUARDS=(
   --check-claude-action-credentials
+  --check-claude-token-guard
   --check-self-cancelling-workflows
   --check-gh-repo-context
   --check-artifact-retention
@@ -134,7 +135,7 @@ main() {
   fi
 
   mkdir -p "$WORK_DIR"
-  summary+="## Workflow guard scan"$'\n\n'
+  summary+="## Workflow guard scan: $OWNER"$'\n\n'
   summary+="| Repository | Result |"$'\n'
   summary+="| --- | --- |"$'\n'
 
