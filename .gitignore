@@ -3,7 +3,10 @@
 Thumbs.db
 
 # Dependencies
-node_modules/
+# 末尾スラッシュを付けない: git はスラッシュ付きをディレクトリ限定として扱うため、
+# worktree 等で node_modules を symlink にすると無視されず git add -A が拾ってしまう。
+# (Nix の result も同じ理由でスラッシュなし)
+node_modules
 .pnp
 .pnp.js
 

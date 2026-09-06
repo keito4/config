@@ -145,7 +145,7 @@ Read the reference configuration from this repository:
 - Fetch `keito4/config` リポジトリの `.devcontainer/devcontainer.json`
 - Fetch `keito4/config` リポジトリの `.devcontainer/codex-config.json`
 - Fetch `keito4/config` リポジトリの `.devcontainer/claude-settings.json`
-- Fetch `keito4/config` リポジトリの `.codex/devcontainer-recommendations.md`
+- Fetch `keito4/config` リポジトリの `.claude/devcontainer-recommendations.md`
 
 Extract recommended configuration based on `updateScope`:
 
