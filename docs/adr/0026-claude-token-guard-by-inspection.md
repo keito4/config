@@ -30,9 +30,16 @@ GitHub App を用意する）も検討したが、次の理由で採らない。
    `--check-claude-token-guard` で単体実行できるようにする。
    `anthropics/claude-code-action` を使うステップは、認証の可否を見る条件の配下にあることを要求する。
    認めるのは次の 3 形態のみ。
-   - ステップの `if:` が `steps.<id>.outputs.available` / `outputs.*token*` を参照する
+   - ステップの `if:` が `outputs.available` / `outputs.*token*` を **`== 'true'` の肯定形**で参照する
    - 同じジョブの `if:` が `needs.<job>.outputs.*` で同等の条件を持つ（keito4/effectuation の形）
-   - 前段で `script/validate-takt-auth.sh` 等が認証を検証して落とす（config 自身の scheduled-maintenance.yml の形）
+   - **同じジョブで、action より前に** `script/validate-takt-auth.sh` 等が認証を検証して落とす
+     （config 自身の scheduled-maintenance.yml の形）
+
+   否定形（`!= 'true'` / `== 'false'`）と `||` を含む条件はガードとして認めない。
+   いずれもトークンが無いときに action が動いてしまい、防ぎたい失敗をそのまま起こす。
+   preflight もファイル内に名前が出るだけでは認めない。コメントや別ジョブの検証は、
+   この action の実行を止められない。
+
 2. `ci.yml` の Workflow Lint ジョブへ加え、このリポジトリとテンプレートの退行を PR で止める。
 3. `Fleet Workflow Guards` の走査対象を keito4 だけでなく **Elu-co-jp / OYKOT-jp** へ広げる。
    配布できないリポジトリは、**週次の読み取り専用スキャンで未ガードを検出する**ことで担保する。

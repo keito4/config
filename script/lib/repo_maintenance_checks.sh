@@ -154,30 +154,33 @@ check_claude_token_guard() {
 
     grep -q "anthropics/claude-code-action" "$workflow" || continue
 
-    # 前段で認証情報を検証して落とすワークフローは、黙って赤くなる問題を持たない。
-    # config 自身の scheduled-maintenance.yml がこの形。
-    grep -qE "validate-takt-auth\.sh|validate-claude-auth\.sh" "$workflow" && continue
-
     # ステップ単位で判定する。ファイル全体を見ると、ガード済みの 1 ステップが
     # 同じファイルにある未ガードのステップを覆い隠す。ジョブ全体を needs の出力で
     # 塞ぐ形（keito4/effectuation）も実際に使われているため、ジョブ単位の if: も見る。
     if ! awk '
+      # 行内の最初の # 以降を落とした部分。コメントの中の文字列を実設定と誤認しないため。
+      function code(l,   i) {
+        i = index(l, "#")
+        return i ? substr(l, 1, i - 1) : l
+      }
       function end_if() {
-        # 認証の可否そのものを見ている条件だけをガードとして認める。下書き判定などの
-        # 無関係な if: を通すと、条件が付いてさえいれば緑になり検査が意味を失う。
-        if (cond ~ /outputs\.available/ || cond ~ /outputs\.[A-Za-z0-9_]*token/) {
+        # 認証の可否そのものを、肯定形で見ている条件だけをガードとして認める。
+        # 下書き判定などの無関係な if: を通すと、条件が付いてさえいれば緑になり
+        # 検査が意味を失う。否定形 (!= true / == false) と || による迂回は、
+        # トークンが無いときに動いてしまうためガードにならない。
+        if (cond !~ /\|\|/ &&
+            cond ~ /outputs\.(available|[A-Za-z0-9_]*token[A-Za-z0-9_]*)[[:space:]]*==[[:space:]]*.?true/) {
           if (if_is_job) job_guard = 1; else has_guard = 1
         }
         in_if = 0; cond = ""
       }
       function flush() {
-        if (has_action && !has_guard && !job_guard) bad = 1
-        has_action = 0; has_guard = 0
+        if (has_action && !has_guard && !job_guard && !action_preflight) bad = 1
+        has_action = 0; has_guard = 0; action_preflight = 0
       }
       BEGIN { step_indent = -1; job_indent = -1 }
       {
-        line = $0
-        sub(/^[[:space:]]*#.*$/, "", line)
+        line = code($0)
         match(line, /^[[:space:]]*/)
         indent = RLENGTH
       }
@@ -192,19 +195,25 @@ check_claude_token_guard() {
         if (job_indent < 0) job_indent = indent
         if (indent == job_indent) {
           flush()
-          job_guard = 0; seen_steps = 0; step_indent = -1
+          job_guard = 0; preflight = 0; seen_steps = 0; step_indent = -1
           next
         }
       }
       line ~ /^[[:space:]]*steps:[[:space:]]*$/ { seen_steps = 1 }
-      # steps: より前の if: はジョブに掛かる。後の if: はステップに掛かる。
+      # 前段で認証情報を検証して落とすジョブは、黙って赤くなる問題を持たない。
+      # config 自身の scheduled-maintenance.yml がこの形。ファイル内のどこかに
+      # 名前が出るだけでは足りず、同じジョブで、action より前に実行される必要がある。
+      line ~ /validate-(takt|claude)-auth\.sh/ { preflight = 1 }
       seen_steps && line ~ /^[[:space:]]*-[[:space:]]/ {
         if (step_indent < 0 || indent <= step_indent) {
           flush()
           step_indent = indent
         }
       }
-      line ~ /uses:[[:space:]]*anthropics\/claude-code-action/ { has_action = 1 }
+      line ~ /uses:[[:space:]]*anthropics\/claude-code-action/ {
+        has_action = 1
+        action_preflight = preflight
+      }
       line ~ /^[[:space:]]*(-[[:space:]]+)?if:/ {
         match(line, /^[[:space:]]*(-[[:space:]]+)?/)
         if_indent = RLENGTH
