@@ -276,3 +276,161 @@ EOF
   run plugins::detect_and_add_marketplaces "${TEST_TEMP_DIR}/does-not-exist.txt" ""
   [ "$status" -eq 1 ]
 }
+
+# ---------------------------------------------------------------------------
+# plugins::sweep_orphan_marketplace_temp_dirs
+#
+# Deletes directories, so every guard is covered: only the two known temp
+# naming schemes are eligible, referenced installLocations are preserved,
+# recently touched clones (another process may still be cloning into them)
+# are preserved, and an unreadable protection list aborts the sweep entirely.
+# ---------------------------------------------------------------------------
+
+# Builds a plugins dir with one stale orphan, one fresh orphan, one referenced
+# temp dir and two names that must never match. Echoes the plugins dir.
+make_sweep_fixture() {
+  local plugins_dir="$1"
+  local marketplaces="${plugins_dir}/marketplaces"
+  mkdir -p "$marketplaces"
+
+  mkdir -p "${marketplaces}/temp_1786586447348"          # old format, stale
+  mkdir -p "${marketplaces}/temp_git_1788683458768_ab12cd" # new format, stale
+  mkdir -p "${marketplaces}/temp_1799999999999"          # referenced
+  mkdir -p "${marketplaces}/temp_1788000000000"          # fresh (just created)
+  mkdir -p "${marketplaces}/temp_1234"                   # too few digits
+  mkdir -p "${marketplaces}/temp_notatimestamp"          # not a timestamp
+  mkdir -p "${marketplaces}/real-marketplace"
+
+  touch -t 202001010000 "${marketplaces}/temp_1786586447348" \
+    "${marketplaces}/temp_git_1788683458768_ab12cd" \
+    "${marketplaces}/temp_1799999999999"
+
+  cat > "${plugins_dir}/known_marketplaces.json" <<EOF
+{
+  "real": {
+    "source": { "source": "git", "url": "https://example.com/real.git" },
+    "installLocation": "${marketplaces}/real-marketplace",
+    "lastUpdated": "2025-01-01T00:00:00.000Z"
+  },
+  "referenced-temp": {
+    "source": { "source": "git", "url": "https://example.com/other.git" },
+    "installLocation": "${marketplaces}/temp_1799999999999",
+    "lastUpdated": "2025-01-01T00:00:00.000Z"
+  }
+}
+EOF
+}
+
+@test "plugins::sweep_orphan_marketplace_temp_dirs removes stale orphans in both naming formats" {
+  source_plugins_lib
+
+  local plugins_dir="${TEST_TEMP_DIR}/sweep-basic"
+  make_sweep_fixture "$plugins_dir"
+
+  plugins::sweep_orphan_marketplace_temp_dirs "$plugins_dir"
+
+  [ ! -d "${plugins_dir}/marketplaces/temp_1786586447348" ]
+  [ ! -d "${plugins_dir}/marketplaces/temp_git_1788683458768_ab12cd" ]
+}
+
+@test "plugins::sweep_orphan_marketplace_temp_dirs preserves referenced, fresh and non-matching directories" {
+  source_plugins_lib
+
+  local plugins_dir="${TEST_TEMP_DIR}/sweep-preserve"
+  make_sweep_fixture "$plugins_dir"
+
+  plugins::sweep_orphan_marketplace_temp_dirs "$plugins_dir"
+
+  # Referenced by known_marketplaces.json even though the name matches.
+  [ -d "${plugins_dir}/marketplaces/temp_1799999999999" ]
+  # Touched just now: another process may still be cloning into it.
+  [ -d "${plugins_dir}/marketplaces/temp_1788000000000" ]
+  # Names that must never be treated as sweep targets.
+  [ -d "${plugins_dir}/marketplaces/temp_1234" ]
+  [ -d "${plugins_dir}/marketplaces/temp_notatimestamp" ]
+  [ -d "${plugins_dir}/marketplaces/real-marketplace" ]
+}
+
+@test "plugins::sweep_orphan_marketplace_temp_dirs dry mode reports without deleting" {
+  source_plugins_lib
+
+  local plugins_dir="${TEST_TEMP_DIR}/sweep-dry"
+  make_sweep_fixture "$plugins_dir"
+
+  CLAUDE_PLUGINS_TEMP_SWEEP=dry run plugins::sweep_orphan_marketplace_temp_dirs "$plugins_dir"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"dry-run"* ]]
+  [ -d "${plugins_dir}/marketplaces/temp_1786586447348" ]
+}
+
+@test "plugins::sweep_orphan_marketplace_temp_dirs off mode skips entirely" {
+  source_plugins_lib
+
+  local plugins_dir="${TEST_TEMP_DIR}/sweep-off"
+  make_sweep_fixture "$plugins_dir"
+
+  CLAUDE_PLUGINS_TEMP_SWEEP=off run plugins::sweep_orphan_marketplace_temp_dirs "$plugins_dir"
+  [ "$status" -eq 0 ]
+  [ -d "${plugins_dir}/marketplaces/temp_1786586447348" ]
+}
+
+@test "plugins::sweep_orphan_marketplace_temp_dirs skips the sweep when known_marketplaces.json is unreadable" {
+  source_plugins_lib
+
+  local plugins_dir="${TEST_TEMP_DIR}/sweep-badjson"
+  make_sweep_fixture "$plugins_dir"
+  echo "this is not json" > "${plugins_dir}/known_marketplaces.json"
+
+  run plugins::sweep_orphan_marketplace_temp_dirs "$plugins_dir"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"スキップ"* ]]
+  # Nothing may be deleted while the protection list cannot be resolved.
+  [ -d "${plugins_dir}/marketplaces/temp_1786586447348" ]
+  [ -d "${plugins_dir}/marketplaces/temp_git_1788683458768_ab12cd" ]
+}
+
+@test "plugins::sweep_orphan_marketplace_temp_dirs skips the sweep when jq is unavailable" {
+  source_plugins_lib
+
+  local plugins_dir="${TEST_TEMP_DIR}/sweep-nojq"
+  make_sweep_fixture "$plugins_dir"
+
+  # command -v must not find jq; shadow it with a function returning failure.
+  command() {
+    if [[ "$1" == "-v" && "$2" == "jq" ]]; then
+      return 1
+    fi
+    builtin command "$@"
+  }
+
+  run plugins::sweep_orphan_marketplace_temp_dirs "$plugins_dir"
+  unset -f command
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"jq"* ]]
+  [ -d "${plugins_dir}/marketplaces/temp_1786586447348" ]
+}
+
+@test "plugins::sweep_orphan_marketplace_temp_dirs falls back to the default grace period on a non-numeric value" {
+  source_plugins_lib
+
+  local plugins_dir="${TEST_TEMP_DIR}/sweep-badage"
+  make_sweep_fixture "$plugins_dir"
+
+  CLAUDE_PLUGINS_TEMP_MIN_AGE_S=not-a-number run plugins::sweep_orphan_marketplace_temp_dirs "$plugins_dir"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"数値ではありません"* ]]
+  # The grace period must still protect the freshly created directory.
+  [ -d "${plugins_dir}/marketplaces/temp_1788000000000" ]
+}
+
+@test "plugins::_mtime returns an epoch timestamp on this platform" {
+  source_plugins_lib
+
+  local probe="${TEST_TEMP_DIR}/mtime-probe"
+  touch "$probe"
+
+  run plugins::_mtime "$probe"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ ^[0-9]+$ ]]
+}
