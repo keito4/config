@@ -258,7 +258,9 @@ repositories.
 
 Requires `gh` authenticated with a token that can read the target repositories.
 `.github/workflows/fleet-workflow-guards.yml` runs it weekly with `CLAUDE_PAT`
-and writes the per-repository result to the job summary.
+over `keito4`, `Elu-co-jp`, and `OYKOT-jp`, and writes the per-repository result to the job
+summary. Repository names are not unique across owners (`notion_mcp` exists under both
+`keito4` and `OYKOT-jp`), so the `repos` input may only be combined with a single owner.
 
 ### setup-ci.sh
 
