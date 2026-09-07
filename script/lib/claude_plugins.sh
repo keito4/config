@@ -137,10 +137,14 @@ plugins::copy_config_files() {
 # known_marketplaces.json から参照されていないものをここで回収する。
 #
 # 使用法: plugins::sweep_orphan_marketplace_temp_dirs <plugins_dir>
-# 環境変数 CLAUDE_PLUGINS_TEMP_SWEEP: on(既定) / dry(検出のみ) / off(スキップ)
+# 環境変数:
+#   CLAUDE_PLUGINS_TEMP_SWEEP     on(既定) / dry(検出のみ) / off(スキップ)
+#   CLAUDE_PLUGINS_TEMP_MIN_AGE_S 猶予秒数（既定 3600）。他プロセスがクローン中の
+#                                 temp ディレクトリを巻き込まないよう、これより新しいものは残す。
 plugins::sweep_orphan_marketplace_temp_dirs() {
     local plugins_dir="${1:?Plugins directory required}"
     local mode="${CLAUDE_PLUGINS_TEMP_SWEEP:-on}"
+    local min_age="${CLAUDE_PLUGINS_TEMP_MIN_AGE_S:-3600}"
 
     if [[ "$mode" == "off" ]]; then
         log_info "temp_* スイープはスキップされました (CLAUDE_PLUGINS_TEMP_SWEEP=off)"
@@ -151,13 +155,25 @@ plugins::sweep_orphan_marketplace_temp_dirs() {
     [[ -d "$marketplaces_dir" ]] || return 0
 
     # known_marketplaces.json が参照している installLocation は絶対に消さない
+    # 保護対象を確認できないまま削除すると現用のマーケットプレイスを巻き込むため、
+    # known_marketplaces.json が存在するのに読めない場合はスイープ自体を中止する。
     local known="${plugins_dir}/known_marketplaces.json"
     local referenced=""
-    if [[ -f "$known" ]] && command -v jq &> /dev/null; then
-        referenced=$(jq -r '.[].installLocation // empty' "$known" 2>/dev/null || true)
+    if [[ -f "$known" ]]; then
+        if ! command -v jq &> /dev/null; then
+            log_warn "jq が無いため known_marketplaces.json の参照先を確認できません。temp_* スイープをスキップします"
+            return 0
+        fi
+        if ! referenced=$(jq -r '.[].installLocation // empty' "$known" 2>/dev/null); then
+            log_warn "known_marketplaces.json を読めないため temp_* スイープをスキップします"
+            return 0
+        fi
     fi
 
-    local swept=0 found=0 entry name
+    local now
+    now=$(date +%s)
+
+    local swept=0 found=0 skipped_recent=0 entry name mtime
     for entry in "${marketplaces_dir}"/temp_*; do
         [[ -d "$entry" ]] || continue
         name=$(basename "$entry")
@@ -174,6 +190,14 @@ plugins::sweep_orphan_marketplace_temp_dirs() {
             continue
         fi
 
+        # 別プロセス（別セッションの Claude CLI / デスクトップアプリ）が
+        # まさにクローン中の temp を消さないよう、更新から一定時間空いたものだけを対象にする
+        mtime=$(stat -f %m "$entry" 2>/dev/null || stat -c %Y "$entry" 2>/dev/null || echo 0)
+        if [[ "$mtime" -gt 0 ]] && [[ $((now - mtime)) -lt $min_age ]]; then
+            skipped_recent=$((skipped_recent + 1))
+            continue
+        fi
+
         found=$((found + 1))
         if [[ "$mode" == "dry" ]]; then
             log_info "  [dry-run] 削除対象: ${entry}"
@@ -186,6 +210,10 @@ plugins::sweep_orphan_marketplace_temp_dirs() {
             log_warn "  削除に失敗: ${entry}"
         fi
     done
+
+    if [[ $skipped_recent -gt 0 ]]; then
+        log_info "  更新から ${min_age} 秒未満のため温存: ${skipped_recent} 件（クローン進行中の可能性）"
+    fi
 
     if [[ $found -eq 0 ]]; then
         return 0
