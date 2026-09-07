@@ -127,6 +127,22 @@ plugins::copy_config_files() {
     fi
 }
 
+# ファイルの mtime を epoch 秒で返す（内部関数）
+#
+# BSD stat（macOS）と GNU stat（Linux）で書式指定が異なるうえ、
+# GNU stat の -f は --file-system（別の意味）なので、
+# `stat -f %m || stat -c %Y` のフォールバックは Linux で
+# ファイルシステム情報を stdout に吐いたまま失敗し、後続の数値比較を壊す。
+# そのため実行系を明示的に判定する。
+plugins::_mtime() {
+    local path="$1"
+
+    if stat -c %Y "$path" 2>/dev/null; then
+        return 0
+    fi
+    stat -f %m "$path" 2>/dev/null || true
+}
+
 # marketplaces/ に残った孤児 temp_* クローンのスイープ
 #
 # Claude Code の marketplace refresh は source: "git" のとき
@@ -145,6 +161,12 @@ plugins::sweep_orphan_marketplace_temp_dirs() {
     local plugins_dir="${1:?Plugins directory required}"
     local mode="${CLAUDE_PLUGINS_TEMP_SWEEP:-on}"
     local min_age="${CLAUDE_PLUGINS_TEMP_MIN_AGE_S:-3600}"
+
+    # 非数値だと猶予判定が黙って無効化され、削除しすぎる方向に倒れるため既定値へ戻す
+    if ! [[ "$min_age" =~ ^[0-9]+$ ]]; then
+        log_warn "CLAUDE_PLUGINS_TEMP_MIN_AGE_S が数値ではありません (${min_age})。既定の 3600 秒を使います"
+        min_age=3600
+    fi
 
     if [[ "$mode" == "off" ]]; then
         log_info "temp_* スイープはスキップされました (CLAUDE_PLUGINS_TEMP_SWEEP=off)"
@@ -191,9 +213,10 @@ plugins::sweep_orphan_marketplace_temp_dirs() {
         fi
 
         # 別プロセス（別セッションの Claude CLI / デスクトップアプリ）が
-        # まさにクローン中の temp を消さないよう、更新から一定時間空いたものだけを対象にする
-        mtime=$(stat -f %m "$entry" 2>/dev/null || stat -c %Y "$entry" 2>/dev/null || echo 0)
-        if [[ "$mtime" -gt 0 ]] && [[ $((now - mtime)) -lt $min_age ]]; then
+        # まさにクローン中の temp を消さないよう、更新から一定時間空いたものだけを対象にする。
+        # mtime を取れなかった場合は判断材料が無いので削除しない（安全側）。
+        mtime=$(plugins::_mtime "$entry")
+        if ! [[ "$mtime" =~ ^[0-9]+$ ]] || [[ $((now - mtime)) -lt $min_age ]]; then
             skipped_recent=$((skipped_recent + 1))
             continue
         fi
