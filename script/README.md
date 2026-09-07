@@ -220,14 +220,22 @@ Runs repository maintenance checks and managed updates. This is the executable s
 ./script/repo-maintenance.sh --check-scheduled-maintenance
 ./script/repo-maintenance.sh --check-artifact-retention
 ./script/repo-maintenance.sh --check-claude-action-credentials
+./script/repo-maintenance.sh --check-claude-token-guard
 ./script/repo-maintenance.sh --check-self-cancelling-workflows
 ./script/repo-maintenance.sh --check-gh-repo-context
 ```
 
-The workflow guards (`--check-claude-action-credentials`, `--check-self-cancelling-workflows`,
-`--check-gh-repo-context`, `--check-artifact-retention`) scan `.github/workflows/`,
-`.github/workflows/templates/`, and `templates/workflows/`. `ci.yml` runs all four in its
-Workflow Lint job so regressions fail the pull request.
+The workflow guards (`--check-claude-action-credentials`, `--check-claude-token-guard`,
+`--check-self-cancelling-workflows`, `--check-gh-repo-context`, `--check-artifact-retention`)
+scan `.github/workflows/`, `.github/workflows/templates/`, and `templates/workflows/`.
+`ci.yml` runs all five in its Workflow Lint job so regressions fail the pull request.
+
+`--check-claude-token-guard` requires every `anthropics/claude-code-action` step to be
+gated on an authentication check, so a missing or revoked token skips the step instead of
+failing it. Callers wrap these jobs in `continue-on-error: true`, so an ungated step turns
+into a silently red job under a green workflow. The guard accepts a step-level
+`if: steps.<id>.outputs.available` / `outputs.*token*`, the same condition on the enclosing
+job (`needs.<job>.outputs.*`), or a preflight that fails fast (`script/validate-takt-auth.sh`).
 
 ### fleet-workflow-guards.sh
 
@@ -245,6 +253,7 @@ repositories.
 ./script/fleet-workflow-guards.sh                       # 直近90日に push されたリポジトリ
 ./script/fleet-workflow-guards.sh --days 30
 ./script/fleet-workflow-guards.sh --repos "config ohana"
+./script/fleet-workflow-guards.sh --owner Elu-co-jp
 ```
 
 Requires `gh` authenticated with a token that can read the target repositories.

@@ -30,6 +30,7 @@
 | [0023](0023-reexec-scripts-under-modern-bash.md)                | 古い bash で起動されたスクリプトを新しい bash で実行し直す        | Accepted           |
 | [0024](0024-pr-size-hard-gate.md)                               | PR サイズ制限を警告からハード制約に変更する                       | Accepted           |
 | [0025](0025-launch-mcp-servers-from-global-binaries.md)         | MCP サーバーを npx ではなくグローバル導入済みバイナリで起動する   | Accepted           |
+| [0026](0026-claude-token-guard-by-inspection.md)                | 配布対象外リポジトリの Claude トークンガードを検査で担保する      | Accepted           |
 
 ## ADR テンプレート
 
