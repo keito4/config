@@ -561,6 +561,9 @@ main() {
     # プラグイン設定ファイルのコピー
     plugins::copy_config_files "$REPO_PLUGINS_DIR" "$PLUGINS_DIR"
 
+    # marketplace refresh が残した孤児 temp_* クローンを回収
+    plugins::sweep_orphan_marketplace_temp_dirs "$PLUGINS_DIR"
+
     # plugins.txtの存在確認
     if [[ ! -f "$PLUGINS_FILE" ]]; then
         log_warn "plugins.txt が見つかりません: ${PLUGINS_FILE}"

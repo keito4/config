@@ -357,8 +357,6 @@
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
     "swift-lsp@claude-plugins-official": true,
-    "devops-automation@claude-code-templates": true,
-    "documentation-generator@claude-code-templates": true,
     "backend-development@claude-code-workflows": true,
     "code-refactoring@claude-code-workflows": true,
     "database-design@claude-code-workflows": true,
@@ -369,8 +367,6 @@
     "feature-dev@claude-code-plugins": true,
     "frontend-design@claude-code-plugins": true,
     "security-guidance@claude-code-plugins": true,
-    "nextjs-vercel-pro@claude-code-templates": true,
-    "supabase-toolkit@claude-code-templates": true,
     "commit-commands@claude-plugins-official": true,
     "hookify@claude-plugins-official": true,
     "plugin-dev@claude-plugins-official": true,
