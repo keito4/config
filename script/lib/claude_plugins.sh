@@ -13,7 +13,6 @@ readonly PLUGINS_KNOWN_MARKETPLACES_FALLBACK=(
     "agent-browser:vercel-labs/agent-browser"
     "anthropic-agent-skills:url:https://github.com/anthropics/skills.git"
     "claude-code-plugins:anthropics/claude-code"
-    "claude-code-templates:url:https://github.com/davila7/claude-code-templates.git"
     "claude-code-workflows:wshobson/agents"
     "claude-plugins-official:anthropics/claude-plugins-official"
     "intellectronica-skills:intellectronica/agent-skills"
@@ -125,6 +124,77 @@ plugins::copy_config_files() {
         log_info "テンプレートから known_marketplaces.json を生成中..."
         sed "s|{{HOME}}|${HOME}|g" "$template" > "$known_marketplaces"
         log_success "known_marketplaces.json を生成しました"
+    fi
+}
+
+# marketplaces/ に残った孤児 temp_* クローンのスイープ
+#
+# Claude Code の marketplace refresh は source: "git" のとき
+# クローン先を temp_<epoch_ms>（〜2.1.247）/ temp_<source>_<ms>_<rand>（2.1.251〜）に取る。
+# クローン後の検証に失敗する（= リポジトリに .claude-plugin/marketplace.json が無い）と
+# 例外を投げたまま temp ディレクトリを掃除せずに終了するため、1回あたり数十〜数百MBが残留する。
+# 旧形式 temp_<ms> は Claude Code 本体のスイープ正規表現にマッチせず永久に回収されないので、
+# known_marketplaces.json から参照されていないものをここで回収する。
+#
+# 使用法: plugins::sweep_orphan_marketplace_temp_dirs <plugins_dir>
+# 環境変数 CLAUDE_PLUGINS_TEMP_SWEEP: on(既定) / dry(検出のみ) / off(スキップ)
+plugins::sweep_orphan_marketplace_temp_dirs() {
+    local plugins_dir="${1:?Plugins directory required}"
+    local mode="${CLAUDE_PLUGINS_TEMP_SWEEP:-on}"
+
+    if [[ "$mode" == "off" ]]; then
+        log_info "temp_* スイープはスキップされました (CLAUDE_PLUGINS_TEMP_SWEEP=off)"
+        return 0
+    fi
+
+    local marketplaces_dir="${plugins_dir}/marketplaces"
+    [[ -d "$marketplaces_dir" ]] || return 0
+
+    # known_marketplaces.json が参照している installLocation は絶対に消さない
+    local known="${plugins_dir}/known_marketplaces.json"
+    local referenced=""
+    if [[ -f "$known" ]] && command -v jq &> /dev/null; then
+        referenced=$(jq -r '.[].installLocation // empty' "$known" 2>/dev/null || true)
+    fi
+
+    local swept=0 found=0 entry name
+    for entry in "${marketplaces_dir}"/temp_*; do
+        [[ -d "$entry" ]] || continue
+        name=$(basename "$entry")
+
+        # 旧形式 temp_<ms> と新形式 temp_<source>_<ms>_<rand> のみを対象にする
+        if ! [[ "$name" =~ ^temp_[0-9]{10,}$ ]] &&
+            ! [[ "$name" =~ ^temp_(local|npm|github|git|subdir|archive|command|unknown)_[0-9]{10,}_[a-z0-9]{1,6}(_x|\.clone)?$ ]]; then
+            continue
+        fi
+
+        # known_marketplaces.json から参照されているものは残す
+        if [[ -n "$referenced" ]] && grep -Fxq "$entry" <<< "$referenced"; then
+            log_warn "  参照中のため温存: ${name}"
+            continue
+        fi
+
+        found=$((found + 1))
+        if [[ "$mode" == "dry" ]]; then
+            log_info "  [dry-run] 削除対象: ${entry}"
+            continue
+        fi
+
+        if rm -rf "$entry"; then
+            swept=$((swept + 1))
+        else
+            log_warn "  削除に失敗: ${entry}"
+        fi
+    done
+
+    if [[ $found -eq 0 ]]; then
+        return 0
+    fi
+
+    if [[ "$mode" == "dry" ]]; then
+        log_info "孤児 temp_* を ${found} 件検出しました (dry-run のため削除していません)"
+    else
+        log_success "孤児 temp_* を ${swept} 件削除しました"
     fi
 }
 

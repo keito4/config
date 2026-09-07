@@ -104,7 +104,6 @@ make claude-plugins
 
 - **anthropics/claude-code** (`claude-code-plugins`) - 公式Claude Codeプラグイン
 - **anthropics/claude-plugins-official** (`claude-plugins-official`) - 公式プラグイン（commit-commands, hookify, etc.）
-- **davila7/claude-code-templates** (`claude-code-templates`) - コミュニティテンプレート
 - **wshobson/agents** (`claude-code-workflows`) - ワークフロー自動化プラグイン
 - **supabase/agent-skills** (`supabase-agent-skills`) - Supabase/PostgreSQL開発ベストプラクティス
 - **vercel-labs/agent-browser** (`agent-browser`) - ブラウザ自動化（テスト、フォーム、スクリーンショット）

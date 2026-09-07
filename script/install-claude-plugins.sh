@@ -130,6 +130,8 @@ fi
 log_info "Claude version: $(claude --version 2>&1 || echo 'unknown')"
 
 # --- マーケットプレイス追加 ---
+plugins::sweep_orphan_marketplace_temp_dirs "${CLAUDE_DIR}/plugins"
+
 plugins::detect_and_add_marketplaces "$PLUGINS_FILE" "$KNOWN_MARKETPLACES"
 
 # --- プラグインインストール ---

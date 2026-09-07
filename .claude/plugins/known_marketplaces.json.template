@@ -23,14 +23,6 @@
     "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-code-plugins",
     "lastUpdated": "2025-01-01T00:00:00.000Z"
   },
-  "claude-code-templates": {
-    "source": {
-      "source": "git",
-      "url": "https://github.com/davila7/claude-code-templates.git"
-    },
-    "installLocation": "{{HOME}}/.claude/plugins/marketplaces/claude-code-templates",
-    "lastUpdated": "2025-01-01T00:00:00.000Z"
-  },
   "claude-code-workflows": {
     "source": {
       "source": "github",
