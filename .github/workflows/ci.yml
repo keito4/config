@@ -254,6 +254,7 @@ jobs:
           guard_status=0
           for check in \
             --check-claude-action-credentials \
+            --check-claude-token-guard \
             --check-self-cancelling-workflows \
             --check-gh-repo-context \
             --check-artifact-retention; do
