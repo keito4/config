@@ -311,7 +311,5 @@
       }
     ]
   },
-  "enabledPlugins": {
-    "kubernetes-operations@claude-code-workflows": true
-  }
+  "enabledPlugins": {}
 }
