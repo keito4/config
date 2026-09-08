@@ -20,6 +20,14 @@ MODEL="${LMSTUDIO_MODEL:-qwen/qwen3-coder-next}" # MLX build; override for anoth
 AUTH_TOKEN="${LMSTUDIO_AUTH_TOKEN:-lmstudio}"
 CONTEXT_LENGTH="${LMSTUDIO_CONTEXT_LENGTH:-262144}"
 
+# resident_copies() below feeds this into JS `Number(...)`; a non-numeric value
+# would silently become NaN, making every loaded model compare as "too small"
+# and get unloaded. Fail fast instead of letting that type coercion hide the mistake.
+if ! [[ "$CONTEXT_LENGTH" =~ ^[0-9]+$ ]]; then
+  echo "claude-lmstudio: LMSTUDIO_CONTEXT_LENGTH must be a positive integer, got '${CONTEXT_LENGTH}'" >&2
+  exit 1
+fi
+
 usage() {
   cat <<'EOF'
 Usage: claude-lmstudio [claude-args...]
