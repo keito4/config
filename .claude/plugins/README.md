@@ -132,8 +132,35 @@ make claude-plugins
 恒久的に外すには次の 2 つを両方やる：
 
 1. `plugins.txt` から行を削除する（このリポジトリの変更＝正本）
-2. 母艦で `claude plugin uninstall <name>@<marketplace>` を実行し、
-   `~/.claude/plugins/installed_plugins.json` の user スコープから消す
+2. 母艦で `claude plugin uninstall <name>@<marketplace> -s user -y` を実行し、
+   `installed_plugins.json` の user スコープから消す
+
+### installed_plugins.json は CLAUDE_CONFIG_DIR ごとに独立している
+
+`settings.json` と同じく、インストール台帳も config dir ごとに別ファイルになっている：
+
+- `~/.claude/plugins/installed_plugins.json`
+- `~/.claude-private/plugins/installed_plugins.json`
+- `~/.claude-elu/plugins/installed_plugins.json`
+
+`setup-claude.sh` は `settings.json` の共有キー（`CLAUDE_SHARED_SETTINGS_KEYS`）を
+追加 config dir へ同期するが、**プラグインのインストール自体は `~/.claude` に対してしか
+実行しない**。そのため uninstall は config dir ごとに回す必要がある：
+
+```bash
+for cfg in ~/.claude ~/.claude-private ~/.claude-elu; do
+  CLAUDE_CONFIG_DIR="$cfg" claude plugin uninstall <name>@<marketplace> -s user -y
+done
+```
+
+`claude plugin uninstall` は `installed_plugins.json` と `settings.json` の
+`enabledPlugins` を同時に更新するため、`enabledPlugins` の手作業での再適用は不要。
+
+### project スコープのインストールは別枠で残る
+
+`installed_plugins.json` には `scope: project` のエントリも入る。user スコープを消しても
+project スコープは残り、そのプロジェクトを開いたセッションでは読み込まれる。
+`-s project` を指定して該当プロジェクトごとに外す。
 
 ## Docker ビルド時のプラグインインストール
 
