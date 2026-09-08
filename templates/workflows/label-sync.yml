@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - name: Sync labels
-        uses: EndBug/label-sync@52074158190acb45f3077f9099fea818aa43f97a # v2
+        uses: EndBug/label-sync@5594ed7b544bfb68a18aa061740f5c2f726eb91a # Node 24 (upstream PR #316)
         with:
           config-file: .github/labels.yml
           # 既存ラベルを保持（false = labels.yml にないラベルを削除しない）

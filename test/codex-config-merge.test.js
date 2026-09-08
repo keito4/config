@@ -185,6 +185,47 @@ describe('script/codex-config-merge.py', () => {
     }
   });
 
+  // Codex/ChatGPT アプリが書く ~/.codex/config.toml は 0600 で、トークンを含む
+  // MCP 定義を持ちうる。os.replace で差し替えるとき tmp ファイルは umask 由来の
+  // 0644 で作られるため、配備のたびに権限が緩んでいた（2026-09-08 母艦で実測）。
+  test('preserves the existing target file mode instead of widening it to the umask default', () => {
+    const repo = makeTempRepo();
+    try {
+      const basePath = path.join(repo, 'base.toml');
+      const targetPath = path.join(repo, 'config.toml');
+      fs.writeFileSync(basePath, '[a]\nvalue = "base"\n');
+      fs.writeFileSync(targetPath, '[a]\nlocal_only = "keep-me"\n');
+      fs.chmodSync(targetPath, 0o600);
+
+      const result = runMerge([basePath, targetPath]);
+
+      expect(result.status).toBe(0);
+      expect(fs.statSync(targetPath).mode & 0o777).toBe(0o600);
+    } finally {
+      fs.rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  test('preserves the linked file mode when migrating a symlinked target', () => {
+    const repo = makeTempRepo();
+    try {
+      const basePath = path.join(repo, 'base.toml');
+      const linkedFile = path.join(repo, 'linked-source.toml');
+      const targetPath = path.join(repo, 'config.toml');
+      fs.writeFileSync(basePath, '[a]\nvalue = "base"\n');
+      fs.writeFileSync(linkedFile, '[a]\nlocal_only = "from-symlink"\n');
+      fs.chmodSync(linkedFile, 0o600);
+      fs.symlinkSync(linkedFile, targetPath);
+
+      const result = runMerge([basePath, targetPath]);
+
+      expect(result.status).toBe(0);
+      expect(fs.statSync(targetPath).mode & 0o777).toBe(0o600);
+    } finally {
+      fs.rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
   test('migrates a symlinked target to a real file, keeping the linked content as local state', () => {
     const repo = makeTempRepo();
     try {

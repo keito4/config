@@ -67,6 +67,7 @@ describe('quality-gate-fallback.yml (template and actual)', () => {
 
 describe('label-sync.yml (template and actual)', () => {
   const workflowPaths = ['templates/workflows/label-sync.yml', '.github/workflows/label-sync.yml'];
+  const node24Commit = '5594ed7b544bfb68a18aa061740f5c2f726eb91a';
 
   test.each(workflowPaths)('%s: should trigger on push to main with .github/labels.yml changes', (wfPath) => {
     const workflow = readWorkflow(wfPath);
@@ -79,9 +80,10 @@ describe('label-sync.yml (template and actual)', () => {
     expect(workflow).toContain('workflow_dispatch:');
   });
 
-  test.each(workflowPaths)('%s: should use EndBug/label-sync action', (wfPath) => {
+  test.each(workflowPaths)('%s: should pin the Node 24 EndBug/label-sync commit', (wfPath) => {
     const workflow = readWorkflow(wfPath);
-    expect(workflow).toContain('EndBug/label-sync');
+    expect(workflow).toContain(`EndBug/label-sync@${node24Commit}`);
+    expect(workflow).not.toContain('EndBug/label-sync@52074158190acb45f3077f9099fea818aa43f97a');
   });
 
   test.each(workflowPaths)('%s: should have checkout read and label write permissions', (wfPath) => {
