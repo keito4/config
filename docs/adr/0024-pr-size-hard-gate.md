@@ -40,12 +40,16 @@ useEffect 禁止もすべて CI で hard fail にする。人間のコードレ�
 4. サイズラベル（XS〜XL）の付与と警告コメントは情報提供として残す。
    ラベル操作 API はフォーク PR で権限がない場合があるため best-effort とし、
    失敗してもゲート判定には影響させない。
+5. `ci.yml` の `paths` に一致しない変更でも必須チェックを迂回できないよう、
+   常時起動する `quality-gate-fallback.yml` でも同じサイズ上限を検査してから
+   fallback の `Quality Gate` を成功させる。
 
 ## Consequences
 
 - 400 行超の PR は `size/override` を付けて re-run しない限りマージできない。
   エージェントには PR 分割を促す圧力として働く。
-- 既存の downstream リポジトリはこのリポジトリの action を直接は共有していない。
-  横展開する場合は templates/workflows への追加を別途行う（未実施）。
+- downstream には自己完結した `pr-size-gate.yml` と、同じ検査を含む
+  `quality-gate-fallback.yml` を配布する。後者により `Quality Gate` を必須にしている
+  既存リポジトリでも paths 不一致の抜け穴を塞ぐ。
 - サイズラベル (`size/M` ≤500 行) とハード上限 (400 行) は意図的に別の軸である。
   `size/M` が付いていてもゲートで落ちる PR がある。

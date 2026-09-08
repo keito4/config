@@ -35,6 +35,15 @@ describe('quality-gate-fallback.yml (template and actual)', () => {
     expect(workflow).toContain('actions: read');
   });
 
+  test.each(workflowPaths)('%s: should enforce PR size even when the main CI is skipped by paths', (wfPath) => {
+    const workflow = readWorkflow(wfPath);
+    expect(workflow).toContain('Enforce PR size');
+    expect(workflow).toContain('const MAX_LINES = 400');
+    expect(workflow).toContain('const MAX_FILES = 25');
+    expect(workflow).toContain("const OVERRIDE_LABEL = 'size/override'");
+    expect(workflow).toContain('core.setFailed(');
+  });
+
   test.each(workflowPaths)('%s: should have timeout-minutes to prevent runaway jobs', (wfPath) => {
     const workflow = readWorkflow(wfPath);
     expect(workflow).toContain('timeout-minutes:');
