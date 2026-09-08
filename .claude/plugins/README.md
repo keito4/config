@@ -112,14 +112,28 @@ make claude-plugins
 - **lackeyjb/playwright-skill** (`playwright-skill`) - Playwright自動化スキル
 - **mattpocock/skills** (`mattpocock`) - 実務エンジニアリング向けスキル（grill-me / to-spec / to-tickets / tdd / improve-codebase-architecture ほか）
 
-## 推奨プラグイン
+## インストールするプラグイン（2026-09-06 棚卸し後）
 
-開発効率向上のために以下のプラグインを推奨：
+`plugins.txt` に載せるのは常用する 3 件だけに絞っている：
 
 - `frontend-design@claude-code-plugins` - フロントエンド設計支援
-- `feature-dev@claude-code-plugins` - 機能開発サポート
 - `security-guidance@claude-code-plugins` - セキュリティガイダンス
-- `javascript-typescript@claude-code-workflows` - JS/TS開発ワークフロー
+- `agent-browser@agent-browser` - ブラウザ自動化（テスト、フォーム、スクリーンショット）
+
+`known_marketplaces.json.template` には過去に使っていたマーケットプレイスも残してあるが、
+マーケットプレイスを登録するだけでは skill / agent は増えない。必要になったら `plugins.txt`
+に 1 行足して `make claude-plugins` を実行する。
+
+### enabledPlugins だけを消しても無効化にならない
+
+`plugins.txt` に名前が残っている限り、`setup-claude.sh` / devcontainer ビルドの
+`claude plugin install` が走った時点で再インストールされ、`settings.json` の
+`enabledPlugins` も自動的に復活する（2026-09-06 に実際に 21 件へ巻き戻った）。
+恒久的に外すには次の 2 つを両方やる：
+
+1. `plugins.txt` から行を削除する（このリポジトリの変更＝正本）
+2. 母艦で `claude plugin uninstall <name>@<marketplace>` を実行し、
+   `~/.claude/plugins/installed_plugins.json` の user スコープから消す
 
 ## Docker ビルド時のプラグインインストール
 

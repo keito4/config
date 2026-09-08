@@ -2,47 +2,18 @@
 # このファイルに記載されたプラグインは devcontainer ビルド時にインストールされます
 # 形式: plugin-name@marketplace-name
 # 行頭 # はコメント
-
-# === Official Plugins (claude-plugins-official) ===
-# 基本プラグイン
-commit-commands@claude-plugins-official
-hookify@claude-plugins-official
-plugin-dev@claude-plugins-official
-
-# LSP サポート
-typescript-lsp@claude-plugins-official
-swift-lsp@claude-plugins-official
-
-# Code Review
-code-review@claude-plugins-official
-
-# Monitoring
-sentry@claude-plugins-official
-
-# === Workflow Plugins (claude-code-workflows) ===
-code-refactoring@claude-code-workflows
-kubernetes-operations@claude-code-workflows
-javascript-typescript@claude-code-workflows
-backend-development@claude-code-workflows
-full-stack-orchestration@claude-code-workflows
-database-design@claude-code-workflows
-database-migrations@claude-code-workflows
+#
+# 2026-09-06 の棚卸しで 21 件 → 3 件に削減した。
+# 削減理由: プラグイン由来の skill / agent がコンテキストを圧迫する一方、
+#           実運用で起動していたのは以下の 3 件だけだった。
+# 重要: このファイルが devcontainer / 母艦双方のインストール指定の正本。
+#       settings.json の enabledPlugins から消しても、ここに残っている限り
+#       setup-claude.sh の再実行で再インストールされ enabledPlugins も復活する。
+#       増やすときは「本当に常用するか」を判断してから追記すること。
 
 # === Anthropic Plugins (claude-code-plugins) ===
-feature-dev@claude-code-plugins
 frontend-design@claude-code-plugins
 security-guidance@claude-code-plugins
 
-# === Supabase Agent Skills (Plugin) ===
-postgres-best-practices@supabase-agent-skills
-
 # === Vercel Agent Browser (Plugin) ===
 agent-browser@agent-browser
-
-# === Context7 (Plugin) ===
-context7@intellectronica-skills
-
-# === Matt Pocock Skills (Plugin) ===
-# Skills for real engineering: grill-me / to-spec / to-tickets / tdd / improve-codebase-architecture ほか
-# 導入後、各リポジトリで /setup-matt-pocock-skills を1回実行する
-mattpocock-skills@mattpocock
