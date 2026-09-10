@@ -19,6 +19,11 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 function pluginOptions(name) {
   const releaserc = JSON.parse(fs.readFileSync(path.join(repoRoot, '.releaserc.json'), 'utf8'));
   const entry = releaserc.plugins.find((plugin) => plugin === name || (Array.isArray(plugin) && plugin[0] === name));
+  if (entry === undefined) {
+    // Falling back to {} here would render with the Angular default preset and
+    // report success for a release configuration that no longer uses the plugin.
+    throw new Error(`${name} is not configured in .releaserc.json`);
+  }
   return Array.isArray(entry) ? (entry[1] ?? {}) : {};
 }
 
