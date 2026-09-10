@@ -112,14 +112,55 @@ make claude-plugins
 - **lackeyjb/playwright-skill** (`playwright-skill`) - Playwright自動化スキル
 - **mattpocock/skills** (`mattpocock`) - 実務エンジニアリング向けスキル（grill-me / to-spec / to-tickets / tdd / improve-codebase-architecture ほか）
 
-## 推奨プラグイン
+## インストールするプラグイン（2026-09-06 棚卸し後）
 
-開発効率向上のために以下のプラグインを推奨：
+`plugins.txt` に載せるのは常用する 3 件だけに絞っている：
 
 - `frontend-design@claude-code-plugins` - フロントエンド設計支援
-- `feature-dev@claude-code-plugins` - 機能開発サポート
 - `security-guidance@claude-code-plugins` - セキュリティガイダンス
-- `javascript-typescript@claude-code-workflows` - JS/TS開発ワークフロー
+- `agent-browser@agent-browser` - ブラウザ自動化（テスト、フォーム、スクリーンショット）
+
+`known_marketplaces.json.template` には過去に使っていたマーケットプレイスも残してあるが、
+マーケットプレイスを登録するだけでは skill / agent は増えない。必要になったら `plugins.txt`
+に 1 行足して `make claude-plugins` を実行する。
+
+### enabledPlugins だけを消しても無効化にならない
+
+`plugins.txt` に名前が残っている限り、`setup-claude.sh` / devcontainer ビルドの
+`claude plugin install` が走った時点で再インストールされ、`settings.json` の
+`enabledPlugins` も自動的に復活する（2026-09-06 に実際に 21 件へ巻き戻った）。
+恒久的に外すには次の 2 つを両方やる：
+
+1. `plugins.txt` から行を削除する（このリポジトリの変更＝正本）
+2. 母艦で `claude plugin uninstall <name>@<marketplace> -s user -y` を実行し、
+   `installed_plugins.json` の user スコープから消す
+
+### installed_plugins.json は CLAUDE_CONFIG_DIR ごとに独立している
+
+`settings.json` と同じく、インストール台帳も config dir ごとに別ファイルになっている：
+
+- `~/.claude/plugins/installed_plugins.json`
+- `~/.claude-private/plugins/installed_plugins.json`
+- `~/.claude-elu/plugins/installed_plugins.json`
+
+`setup-claude.sh` は `settings.json` の共有キー（`CLAUDE_SHARED_SETTINGS_KEYS`）を
+追加 config dir へ同期するが、**プラグインのインストール自体は `~/.claude` に対してしか
+実行しない**。そのため uninstall は config dir ごとに回す必要がある：
+
+```bash
+for cfg in ~/.claude ~/.claude-private ~/.claude-elu; do
+  CLAUDE_CONFIG_DIR="$cfg" claude plugin uninstall <name>@<marketplace> -s user -y
+done
+```
+
+`claude plugin uninstall` は `installed_plugins.json` と `settings.json` の
+`enabledPlugins` を同時に更新するため、`enabledPlugins` の手作業での再適用は不要。
+
+### project スコープのインストールは別枠で残る
+
+`installed_plugins.json` には `scope: project` のエントリも入る。user スコープを消しても
+project スコープは残り、そのプロジェクトを開いたセッションでは読み込まれる。
+`-s project` を指定して該当プロジェクトごとに外す。
 
 ## Docker ビルド時のプラグインインストール
 

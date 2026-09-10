@@ -195,19 +195,16 @@ plugins::sweep_orphan_marketplace_temp_dirs() {
     local now
     now=$(date +%s)
 
-    local swept=0 found=0 skipped_recent=0 entry name mtime
+    local swept=0 found=0 skipped_recent=0 entry name
     for entry in "${marketplaces_dir}"/temp_*; do
         [[ -d "$entry" ]] || continue
         name=$(basename "$entry")
 
         # 旧形式 temp_<ms> と新形式 temp_<source>_<ms>_<rand> のみを対象にする
-        if ! [[ "$name" =~ ^temp_[0-9]{10,}$ ]] &&
-            ! [[ "$name" =~ ^temp_(local|npm|github|git|subdir|archive|command|unknown)_[0-9]{10,}_[a-z0-9]{1,6}(_x|\.clone)?$ ]]; then
-            continue
-        fi
+        plugins::_is_orphan_temp_name "$name" || continue
 
         # known_marketplaces.json から参照されているものは残す
-        if [[ -n "$referenced" ]] && grep -Fxq "$entry" <<< "$referenced"; then
+        if plugins::_is_referenced_install_location "$entry" "$referenced"; then
             log_warn "  参照中のため温存: ${name}"
             continue
         fi
@@ -215,8 +212,7 @@ plugins::sweep_orphan_marketplace_temp_dirs() {
         # 別プロセス（別セッションの Claude CLI / デスクトップアプリ）が
         # まさにクローン中の temp を消さないよう、更新から一定時間空いたものだけを対象にする。
         # mtime を取れなかった場合は判断材料が無いので削除しない（安全側）。
-        mtime=$(plugins::_mtime "$entry")
-        if ! [[ "$mtime" =~ ^[0-9]+$ ]] || [[ $((now - mtime)) -lt $min_age ]]; then
+        if ! plugins::_is_past_grace_period "$entry" "$now" "$min_age"; then
             skipped_recent=$((skipped_recent + 1))
             continue
         fi
@@ -247,6 +243,33 @@ plugins::sweep_orphan_marketplace_temp_dirs() {
     else
         log_success "孤児 temp_* を ${swept} 件削除しました"
     fi
+}
+
+# temp_* エントリがスイープ対象の命名規則にマッチするか判定（内部関数）
+# 対象: 旧形式 temp_<ms> と新形式 temp_<source>_<ms>_<rand>
+plugins::_is_orphan_temp_name() {
+    local name="$1"
+
+    [[ "$name" =~ ^temp_[0-9]{10,}$ ]] && return 0
+    [[ "$name" =~ ^temp_(local|npm|github|git|subdir|archive|command|unknown)_[0-9]{10,}_[a-z0-9]{1,6}(_x|\.clone)?$ ]]
+}
+
+# エントリが known_marketplaces.json の installLocation として
+# 参照されているか判定（内部関数）
+plugins::_is_referenced_install_location() {
+    local entry="$1" referenced="$2"
+
+    [[ -n "$referenced" ]] && grep -Fxq "$entry" <<< "$referenced"
+}
+
+# エントリの mtime が猶予期間 (min_age 秒) を過ぎているか判定（内部関数）
+# mtime を取れなかった場合は判断材料が無いので「猶予期間内」= 温存扱いにする
+plugins::_is_past_grace_period() {
+    local entry="$1" now="$2" min_age="$3"
+    local mtime
+    mtime=$(plugins::_mtime "$entry")
+
+    [[ "$mtime" =~ ^[0-9]+$ ]] && [[ $((now - mtime)) -ge $min_age ]]
 }
 
 # マーケットプレイスの自動検出と追加
@@ -280,6 +303,15 @@ plugins::detect_and_add_marketplaces() {
     done
 }
 
+# マーケットプレイスをURL指定で追加（内部関数）
+# 追加済みで claude コマンドが失敗した場合はエラーではなく情報ログにする
+plugins::_add_marketplace_url() {
+    local marketplace="$1"
+    local url="$2"
+
+    claude plugin marketplace add "$url" 2>/dev/null || log_info "  ${marketplace}: 既に追加済み"
+}
+
 # マーケットプレイスを追加（内部関数）
 plugins::_add_marketplace() {
     local marketplace="$1"
@@ -292,10 +324,10 @@ plugins::_add_marketplace() {
         url=$(jq -r ".\"$marketplace\".source.url // empty" "$known_marketplaces" 2>/dev/null)
 
         if [[ -n "$repo" ]]; then
-            claude plugin marketplace add "https://github.com/${repo}.git" 2>/dev/null || log_info "  ${marketplace}: 既に追加済み"
+            plugins::_add_marketplace_url "$marketplace" "https://github.com/${repo}.git"
             return 0
         elif [[ -n "$url" ]]; then
-            claude plugin marketplace add "$url" 2>/dev/null || log_info "  ${marketplace}: 既に追加済み"
+            plugins::_add_marketplace_url "$marketplace" "$url"
             return 0
         fi
     fi
@@ -309,11 +341,10 @@ plugins::_add_marketplace() {
         if [[ "$name" == "$marketplace" ]]; then
             if [[ "$value" == url:* ]]; then
                 # URL形式: "name:url:https://..."
-                local full_url="${value#url:}"
-                claude plugin marketplace add "$full_url" 2>/dev/null || log_info "  ${marketplace}: 既に追加済み"
+                plugins::_add_marketplace_url "$marketplace" "${value#url:}"
             else
                 # GitHub repo形式: "name:owner/repo"
-                claude plugin marketplace add "https://github.com/${value}.git" 2>/dev/null || log_info "  ${marketplace}: 既に追加済み"
+                plugins::_add_marketplace_url "$marketplace" "https://github.com/${value}.git"
             fi
             return 0
         fi

@@ -20,10 +20,15 @@ Codex / ChatGPT アプリは projects.*.trust_level・marketplaces.*・プラグ
 注意: 書き込みは TOML を再シリアライズするため、配備先ファイル内のコメントは
 残らない（ベースのコメントはリポジトリ側に正本がある）。
 
+配備先のパーミッションは維持する。~/.codex/config.toml は Codex が 0600 で作り、
+トークン付きの MCP 定義を持ちうるため、差し替えのたびに umask 由来の 0644 へ
+緩めてはならない。
+
 Usage: codex-config-merge.py <base_toml> <target_toml>
 """
 
 import os
+import stat
 import sys
 import tomllib
 from pathlib import Path
@@ -71,11 +76,17 @@ def main() -> int:
     if not was_symlink and target_path.exists() and target_path.read_text() == output:
         return 0
 
+    # os.replace で差し替えると tmp のモードがそのまま残る。既存の配備先（symlink の
+    # ときはリンク先）のモードを引き継いで、権限が umask 既定へ緩むのを防ぐ。
+    target_mode = stat.S_IMODE(target_path.stat().st_mode) if target_path.exists() else None
+
     if was_symlink:
         target_path.unlink()
 
     tmp_path = target_path.with_suffix(".toml.tmp")
     tmp_path.write_text(output)
+    if target_mode is not None:
+        tmp_path.chmod(target_mode)
     os.replace(tmp_path, target_path)
 
     if was_symlink:

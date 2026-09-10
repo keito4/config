@@ -178,3 +178,26 @@ CVE-2026-33186
 # Note 2026-06-28: Remove this entry if next container scan no longer reports CVE-2026-41242
 # Review date: 2026-08-28
 CVE-2026-41242
+
+# CVE-2026-56854: golang.org/x/crypto/ssh: source-address restriction silently ignored
+#   for Permissions returned by non-public-key auth callbacks
+# Severity: CRITICAL (Trivy/NVD). GitHub Advisory GHSA-gjhq-gjfw-99mq rates it HIGH
+#   with CVSS 3.1 7.5 (AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N)
+# Affected: golang.org/x/crypto v0.52.0 embedded in usr/local/bin/op (1Password CLI 2.39.0)
+# Fixed in: golang.org/x/crypto 0.55.0
+# Reason: 1Password CLI is a closed-source pre-built binary. 2.39.0 is the latest release
+#   (confirmed 2026-09-08 via https://app-updates.agilebits.com/check/1/0/CLI2/en/0/N,
+#   the same endpoint update-dev-tools.yml polls), so there is no version to upgrade to.
+#   The defect is in the *server* side of x/crypto/ssh: a source-address critical option
+#   set by PasswordCallback / KeyboardInteractiveCallback / NoClientAuthCallback /
+#   GSSAPIWithMICConfig.AllowLogin was not checked against the client's remote address.
+#   op is used here as a client-side secrets CLI and does not expose an SSH server in
+#   this image, so the vulnerable code path is not reachable in our usage.
+# Expected resolution: Wait for 1Password to ship a CLI build with x/crypto >= 0.55.0.
+#   update-dev-tools.yml bumps OP_CLI_VERSION automatically; remove this entry once a
+#   scan after that bump no longer reports CVE-2026-56854.
+# Tracking: https://developer.1password.com/docs/cli/release-notes/
+# Note 2026-09-08: Advisory published 2026-08-28. main's Trivy scan has failed since
+#   2026-09-01 (last success 2026-08-31), which matches the Trivy DB picking this up.
+# Review date: 2026-11-08
+CVE-2026-56854
