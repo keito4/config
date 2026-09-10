@@ -9,7 +9,7 @@ export default [
   js.configs.recommended,
   eslintConfigPrettier,
   {
-    files: ['**/*.{js,jsx}'],
+    files: ['**/*.{js,jsx,mjs,cjs}'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
