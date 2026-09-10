@@ -7,7 +7,8 @@
 #   - ci.yml の Quality Gate ジョブが paths フィルタでスキップされた場合や、
 #     ci.yml 自体が存在しない / 走らない場合、PR は永遠に
 #     "Expected — Waiting for status to be reported" のまま blocked になる
-#   - この fallback は ci.yml の実行可否をチェックし、走っていなければ Pass を emit する
+#   - この fallback は paths に関係なく必ず起動し、PR サイズを先に検査する
+#   - その後 ci.yml の実行可否をチェックし、走っていなければ Pass を emit する
 #
 # 動作:
 #   - ci.yml が走っている / 成功している場合 → 何もしない (本体の Quality Gate が優先)
@@ -32,6 +33,7 @@ on:
 permissions:
   contents: read
   actions: read
+  pull-requests: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-fallback
@@ -43,6 +45,41 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
+      - name: Enforce PR size
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          script: |
+            const MAX_LINES = 400;
+            const MAX_FILES = 25;
+            const OVERRIDE_LABEL = 'size/override';
+            const pullRequest = context.payload.pull_request;
+            const totalChanges = pullRequest.additions + pullRequest.deletions;
+
+            core.info(`PR size: ${totalChanges} lines / ${pullRequest.changed_files} files`);
+            if (totalChanges <= MAX_LINES && pullRequest.changed_files <= MAX_FILES) {
+              return;
+            }
+
+            const { data: liveLabels } = await github.rest.issues
+              .listLabelsOnIssue({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                per_page: 100,
+              })
+              .catch(() => ({ data: pullRequest.labels }));
+
+            if (liveLabels.some((label) => label.name === OVERRIDE_LABEL)) {
+              core.warning(`PR exceeds the size limit but has the '${OVERRIDE_LABEL}' label. Passing.`);
+              return;
+            }
+
+            core.setFailed(
+              `PR size gate failed: ${totalChanges} lines / ${pullRequest.changed_files} files ` +
+                `(limit: ${MAX_LINES} lines / ${MAX_FILES} files). ` +
+                `Split the PR or have a reviewer apply the '${OVERRIDE_LABEL}' label and re-run.`
+            );
+
       - name: Check if CI workflow ran
         id: check
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
