@@ -117,7 +117,11 @@ def scan_processes() -> int:
         match = HEADER_VALUE.search(cmd) or TOKEN_VALUE.search(cmd)
         if not match:
             continue
-        if "${" in match.group(match.lastindex):
+        # lastindex is Optional[int] (None when no group participated); both
+        # patterns always have a participating group on match, but guard
+        # explicitly rather than passing a possible None to match.group().
+        group_index = match.lastindex if match.lastindex is not None else 0
+        if "${" in match.group(group_index):
             safe += 1
             continue
         host = HOST.search(cmd)
