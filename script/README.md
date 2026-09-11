@@ -510,15 +510,22 @@ Analyzes project dependencies for security vulnerabilities and updates.
 
 Shared library functions used by multiple scripts:
 
-| File                 | Purpose                                                                        |
-| -------------------- | ------------------------------------------------------------------------------ |
-| `output.sh`          | Colored output utilities (print_info, print_success, etc.); requires bash 4.0+ |
-| `config.sh`          | Configuration loading utilities                                                |
-| `platform.sh`        | Platform detection (macOS, Linux, etc.)                                        |
-| `devcontainer.sh`    | DevContainer-specific utilities                                                |
-| `claude_plugins.sh`  | Claude plugin management utilities                                             |
-| `project-detect.sh`  | Shared project type and package manager detection                              |
-| `brew_categories.py` | Homebrew package categorization                                                |
+| File                          | Purpose                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------ |
+| `output.sh`                   | Colored output utilities (print_info, print_success, etc.); requires bash 4.0+ |
+| `config.sh`                   | Configuration loading utilities                                                |
+| `platform.sh`                 | Platform detection (macOS, Linux, etc.)                                        |
+| `devcontainer.sh`             | DevContainer-specific utilities                                                |
+| `claude_plugins.sh`           | Claude plugin management utilities                                             |
+| `project-detect.sh`           | Shared project type and package manager detection                              |
+| `brew_categories.py`          | Homebrew package categorization                                                |
+| `repo_maintenance_checks.sh`  | Additional checks sourced by `repo-maintenance.sh`                             |
+| `mcp_audit.py`                | Detects plaintext MCP tokens in argv; used by `fix-mcp-token-exposure.sh`      |
+| `install_skills.sh`           | Skill installation logic sourced by `install-skills.sh`                        |
+| `security_credential_scan.sh` | Credential scan logic sourced by `security-credential-scan.sh`                 |
+| `setup_team_protection.sh`    | Branch protection setup logic sourced by `setup-team-protection.sh`            |
+| `agents-md-data.sh`           | Data tables sourced by `update-agents-md.sh`                                   |
+| `agents-md-template.md`       | AGENTS.md template consumed by `update-agents-md.sh`                           |
 
 ## Credential Providers (credentials/providers/)
 
