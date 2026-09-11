@@ -38,28 +38,21 @@
     "@semantic-release/github": "11.0.6",
     "@semantic-release/release-notes-generator": "14.1.1",
     "bats": "^1.13.0",
-    "conventional-changelog-conventionalcommits": "^10.4.0",
-    "eslint": "10.8.1",
+    "conventional-changelog-conventionalcommits": "^9.3.1",
+    "conventional-commits-filter": "^6.0.1",
+    "conventional-commits-parser": "^7.1.2",
+    "eslint": "10.10.0",
     "eslint-config-prettier": "10.1.8",
-    "globals": "17.11.0",
+    "globals": "17.12.0",
     "husky": "9.1.7",
-    "jest": "30.4.2",
+    "jest": "30.5.1",
     "jest-junit": "^17.0.0",
+    "js-yaml": "^4.3.2",
     "prettier": "3.9.6",
     "semantic-release": "25.0.9",
-    "takt": "0.60.0"
+    "takt": "0.64.1"
   },
   "overrides": {
-    "js-yaml": "^4.3.0",
-    "tar": "^7.5.21",
-    "handlebars": ">=4.7.9",
-    "npm": "^11.19.1",
-    "brace-expansion": "^5.0.9",
-    "ip-address": ">=10.3.1",
-    "undici": ">=6.28.0",
-    "@hono/node-server": ">=2.0.5",
-    "@modelcontextprotocol/sdk": ">=1.30.0",
-    "@opentelemetry/propagator-jaeger": ">=2.9.0",
-    "qs": ">=6.16.0"
+    "@opentelemetry/propagator-jaeger": ">=2.9.0"
   }
 }

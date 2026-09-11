@@ -32,6 +32,12 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: '@semantic-release/*'
         update-types: ['version-update:semver-major']
+      # conventional-changelog-conventionalcommits@10 requires
+      # conventional-changelog-writer@9, which @semantic-release/release-notes-generator
+      # does not ship yet. The mismatch breaks releases with `Missing helper`.
+      # Lift this once release-notes-generator moves to writer@9.
+      - dependency-name: 'conventional-changelog-conventionalcommits'
+        update-types: ['version-update:semver-major']
 
   # GitHub Actions
   - package-ecosystem: 'github-actions'

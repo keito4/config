@@ -66,8 +66,8 @@ describe('eslint.config.mjs — root ESLint configuration', () => {
   });
 
   describe('Language options', () => {
-    test('should target files with js and jsx extensions', () => {
-      expect(content).toContain("'**/*.{js,jsx}'");
+    test('should target files with js, jsx, mjs and cjs extensions', () => {
+      expect(content).toContain("'**/*.{js,jsx,mjs,cjs}'");
     });
 
     test('should set ecmaVersion to 2022 or later', () => {
