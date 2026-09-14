@@ -71,11 +71,14 @@ platform::run_task install_packages
 # Import gitconfig with warning about missing personal info
 if [[ -f "$REPO_PATH/git/gitconfig" ]]; then
 	cp "$REPO_PATH/git/gitconfig" ~/.gitconfig
-	echo "⚠️  注意: ~/.gitconfig に個人情報がコメントアウトされています"
-	echo "    以下のコマンドで設定してください:"
-	echo "    git config --global user.name \"Your Name\""
-	echo "    git config --global user.email \"your.email@example.com\""
-	echo "    git config --global user.signingkey ~/.ssh/id_ed25519.pub"
+	if ! git config --global user.email >/dev/null 2>&1; then
+		echo "⚠️  注意: git の user.name / user.email が未設定です"
+		echo "    未設定のままだとコミットがホスト名ベースの匿名アドレスになり、"
+		echo "    GitHub のコミット検証や Vercel のデプロイがブロックされます。"
+		echo "    import で上書きされない ~/.gitconfig.local に設定してください:"
+		echo "    git config --file ~/.gitconfig.local user.name \"Your Name\""
+		echo "    git config --file ~/.gitconfig.local user.email \"your.email@example.com\""
+	fi
 fi
 
 [[ -f "$REPO_PATH/git/gitignore" ]] && cp "$REPO_PATH/git/gitignore" ~/.gitignore
