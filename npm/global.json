@@ -38,15 +38,15 @@
       "overridden": false
     },
     "happy": {
-      "version": "1.2.3",
+      "version": "1.2.4",
       "overridden": false
     },
     "mcp-remote": {
-      "version": "0.8.6",
+      "version": "0.14.2",
       "overridden": false
     },
     "n8n": {
-      "version": "2.38.5",
+      "version": "2.38.7",
       "overridden": false
     },
     "pm2": {
@@ -62,7 +62,7 @@
       "overridden": false
     },
     "vercel": {
-      "version": "59.15.1",
+      "version": "59.16.0",
       "overridden": false
     },
     "vscode-langservers-extracted": {
