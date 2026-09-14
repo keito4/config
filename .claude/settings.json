@@ -154,7 +154,6 @@
       "Read(//home/vscode/**)",
       "Read(//tmp/**)",
       "Read(//workspaces/**)",
-      "Write(~/.claude-worklog/**)",
       "Edit(~/.claude-worklog/**)"
     ],
     "deny": [
