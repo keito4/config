@@ -35,5 +35,6 @@
 	process = git-lfs filter-process
 	required = true
 
-# [include]
-#     path = ~/.gitconfig.local
+# Machine-local settings (user identity etc.) — survives import.sh overwrites
+[include]
+    path = ~/.gitconfig.local
