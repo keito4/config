@@ -266,7 +266,8 @@ JSON
   # ホスト固有の hook を追跡ファイルへ書き戻させないため、実体に切り離す
   [ ! -L "${fake_home}/.claude/settings.json" ]
   grep -q "agent-deck hook-handler" "${fake_home}/.claude/settings.json"
-  jq -e '.permissions.allow | index("Write(~/.claude-worklog/**)") != null' \
+  # 97b6a5b で baseline の Write ルールは Edit へ一本化された
+  jq -e '.permissions.allow | index("Edit(~/.claude-worklog/**)") != null' \
     "${fake_home}/.claude/settings.json"
 }
 

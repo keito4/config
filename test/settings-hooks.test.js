@@ -264,10 +264,9 @@ describe('.claude/settings.json — hooks configuration', () => {
       expect(settings.permissions.allow.length).toBeGreaterThan(0);
     });
 
-    test('allow list should permit worklog state writes and edits', () => {
-      expect(settings.permissions.allow).toEqual(
-        expect.arrayContaining(['Write(~/.claude-worklog/**)', 'Edit(~/.claude-worklog/**)']),
-      );
+    test('allow list should permit worklog state edits', () => {
+      // 97b6a5b: Write ルールはファイル権限チェックに一致しないため Edit へ一本化
+      expect(settings.permissions.allow).toEqual(expect.arrayContaining(['Edit(~/.claude-worklog/**)']));
     });
 
     test('should have deny array with dangerous command blocks', () => {
