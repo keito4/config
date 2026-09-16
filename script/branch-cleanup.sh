@@ -26,23 +26,31 @@ MAIN_BRANCH=""
 MERGED_BRANCHES=()
 STALE_BRANCHES=()
 
-# Return success (0) when $1 is a protected branch or the current branch.
-# Relies on the global PROTECTED_BRANCHES array and CURRENT_BRANCH variable.
-is_protected_branch() {
-  local branch=$1
-  local protected
+# Return success (0) when $1 exactly matches one of the remaining arguments
+array_contains() {
+  local needle=$1
+  shift
+  local item
 
-  if [ "$branch" = "$CURRENT_BRANCH" ]; then
-    return 0
-  fi
-
-  for protected in "${PROTECTED_BRANCHES[@]}"; do
-    if [ "$branch" = "$protected" ]; then
+  for item in "$@"; do
+    if [ "$item" = "$needle" ]; then
       return 0
     fi
   done
 
   return 1
+}
+
+# Return success (0) when $1 is a protected branch or the current branch.
+# Relies on the global PROTECTED_BRANCHES array and CURRENT_BRANCH variable.
+is_protected_branch() {
+  local branch=$1
+
+  if [ "$branch" = "$CURRENT_BRANCH" ]; then
+    return 0
+  fi
+
+  array_contains "$branch" "${PROTECTED_BRANCHES[@]}"
 }
 
 # Print up to the first 5 entries of a branch list as "  <icon> <branch>
@@ -131,6 +139,11 @@ detect_branches() {
   fi
 }
 
+# Strip the "* "/"  " branch-list marker prefix from stdin and drop the MAIN_BRANCH entry
+clean_branch_list() {
+  sed 's/^[* ]*//' | grep -v "^$MAIN_BRANCH$" || true
+}
+
 # Populate the global MERGED_BRANCHES array with non-protected branches already merged into MAIN_BRANCH
 find_merged_branches() {
   MERGED_BRANCHES=()
@@ -138,7 +151,7 @@ find_merged_branches() {
     if ! is_protected_branch "$branch"; then
       MERGED_BRANCHES+=("$branch")
     fi
-  done < <(git branch --merged "$MAIN_BRANCH" | sed 's/^[* ]*//' | grep -v "^$MAIN_BRANCH$" || true)
+  done < <(git branch --merged "$MAIN_BRANCH" | clean_branch_list)
 }
 
 # Populate the global STALE_BRANCHES array with non-protected, not-yet-merged branches whose
@@ -156,7 +169,7 @@ find_stale_branches() {
 
   while IFS= read -r branch; do
     # Skip if already in merged list
-    if [[ " ${MERGED_BRANCHES[*]} " =~ \ ${branch}\  ]]; then
+    if array_contains "$branch" "${MERGED_BRANCHES[@]}"; then
       continue
     fi
 
@@ -167,7 +180,7 @@ find_stale_branches() {
         STALE_BRANCHES+=("$branch")
       fi
     fi
-  done < <(git branch | sed 's/^[* ]*//' | grep -v "^$MAIN_BRANCH$" || true)
+  done < <(git branch | clean_branch_list)
 }
 
 # Print the branch count summary (total/merged/stale)
