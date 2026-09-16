@@ -21,6 +21,7 @@ import pathlib
 import re
 import subprocess
 import sys
+from typing import Any
 
 # シェルが展開する位置 (ダブルクォート内) に $VAR がある = argv に実値が載る
 LEAK = re.compile(r'--header\s+"[^"]*\$[A-Za-z_][A-Za-z0-9_]*[^"]*"')
@@ -49,7 +50,7 @@ RESTART = (
 )
 
 
-def leaking_servers(servers: dict[str, dict]) -> list[str]:
+def leaking_servers(servers: dict[str, dict[str, Any]]) -> list[str]:
     """argv に実トークンが載る定義の名前を返す。"""
     hits = []
     for name, entry in servers.items():
