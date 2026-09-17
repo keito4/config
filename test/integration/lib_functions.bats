@@ -38,10 +38,6 @@ load ../test_helper/test_helper
   grep -q "config::filter_gitconfig()" "${REPO_ROOT}/script/lib/config.sh"
 }
 
-@test "config.sh defines config::filter_credentials function" {
-  grep -q "config::filter_credentials()" "${REPO_ROOT}/script/lib/config.sh"
-}
-
 @test "config.sh defines managed import/export repository directories" {
   grep -q "CONFIG_MANAGED_REPO_DIRS" "${REPO_ROOT}/script/lib/config.sh"
   grep -q "config::ensure_managed_repo_dirs()" "${REPO_ROOT}/script/lib/config.sh"
@@ -283,31 +279,6 @@ EOF
 
   # Verify core.editor is preserved
   grep -q "editor = vim" "$test_output"
-}
-
-@test "config::filter_credentials removes sensitive tokens" {
-  # Create a test file with credentials
-  local test_input="${TEST_TEMP_DIR}/test.zshrc"
-  local test_output="${TEST_TEMP_DIR}/filtered.zshrc"
-
-  cat > "$test_input" << 'EOF'
-export PATH="/usr/local/bin:$PATH"
-export NPM_TOKEN="npm_abcd1234"
-export BUNDLE_RUBYGEMS__GEM__FURY__IO="token123"
-alias ll='ls -la'
-EOF
-
-  # Source config.sh and run filter function
-  source "${REPO_ROOT}/script/lib/config.sh"
-  config::filter_credentials "$test_input" "$test_output"
-
-  # Verify credentials are removed
-  ! grep -q "NPM_TOKEN" "$test_output"
-  ! grep -q "BUNDLE_RUBYGEMS" "$test_output"
-
-  # Verify safe content is preserved
-  grep -q 'export PATH="/usr/local/bin:$PATH"' "$test_output"
-  grep -q "alias ll=" "$test_output"
 }
 
 @test "output::require_command succeeds for existing command" {

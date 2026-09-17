@@ -350,18 +350,3 @@ config::filter_gitconfig() {
   echo "✅ gitconfig exported (personal info filtered)"
 }
 
-# クレデンシャルのフィルタリング
-config::filter_credentials() {
-  local input_file="${1:?Input file required}"
-  local output_file="${2:?Output file required}"
-
-  local credential_pattern='export\s+(NPM_TOKEN|BUNDLE_RUBYGEMS__[A-Z_]*|[A-Z_]*TOKEN|[A-Z_]*SECRET|[A-Z_]*PASSWORD|[A-Z_]*API_KEY|[A-Z_]*CREDENTIAL)='
-
-  if grep -q -E "$credential_pattern" "$input_file"; then
-    grep -v -E "$credential_pattern" "$input_file" > "$output_file"
-    echo "⚠️  Credentials filtered from $(basename "$input_file")"
-  else
-    cp "$input_file" "$output_file"
-    echo "✅ No credentials found in $(basename "$input_file")"
-  fi
-}
