@@ -56,6 +56,11 @@ default_deploy_dir_for() {
 CONFIG_DEPLOY_DIR="${CONFIG_DEPLOY_DIR:-$(default_deploy_dir_for "$REPO_ROOT")}"
 PRIVATE_CONFIG_DEPLOY_DIR="${PRIVATE_CONFIG_DEPLOY_DIR:-$(default_deploy_dir_for "$PRIVATE_CONFIG_DIR")}"
 
+# deploy-main に手元変更があったとき、それを破棄して origin/main へ追従させるか
+# （--force-clean-deploy）。破棄は不可逆なので既定は false（警告のみ）のままにし、
+# 本人が明示的にフラグを付けて実行したときだけ有効にする。
+FORCE_CLEAN_DEPLOY=false
+
 # 複数の CLAUDE_CONFIG_DIR に共有設定を配るためのキー。
 # ここに無いキー（model / theme / tui 等）は各 dir 固有として保持される。
 # shellcheck disable=SC2016  # jq に渡すJSONリテラル。$schema はシェル変数ではない
@@ -443,13 +448,25 @@ ensure_deploy_main_checkout() {
         return 0
     fi
 
-    # dirty な deploy は追従だけ止めて可視化する（意図的な設計判断）:
+    # dirty な deploy は既定では追従だけ止めて可視化する（意図的な設計判断）:
     # symlink は生参照のためリンク更新を止めても手元変更は見え続け、作業ツリーへの
     # フォールバックはさらに main から遠い内容を配備する。自動 reset --hard は
     # 破壊的なので行わず、警告＋復旧手順の提示に留める。
+    # --force-clean-deploy を本人が明示したときだけ、その復旧手順をここで実行する。
+    # （この分岐に来るのは既定の deploy-main のみ。override 先は上の判定で return 済みで、
+    #   フラグを付けても利用者の作業ツリーが破棄されることはない）
     if [[ -n "$(git -C "$deploy_dir" status --porcelain 2>/dev/null)" ]]; then
-        log_warn "  ${deploy_dir} に手元変更があります。origin/main への追従をスキップします（deploy 用チェックアウトは編集しないでください。復旧: git -C ${deploy_dir} checkout -- . && git -C ${deploy_dir} clean -fd）"
-        return 0
+        if [[ "$FORCE_CLEAN_DEPLOY" != true ]]; then
+            log_warn "  ${deploy_dir} に手元変更があります。origin/main への追従をスキップします（deploy 用チェックアウトは編集しないでください。復旧: git -C ${deploy_dir} checkout -- . && git -C ${deploy_dir} clean -fd、または --force-clean-deploy 付きで再実行）"
+            return 0
+        fi
+        log_warn "  --force-clean-deploy が指定されたため ${deploy_dir} の手元変更を破棄します"
+        if ! git -C "$deploy_dir" checkout --quiet -- . 2>/dev/null ||
+            ! git -C "$deploy_dir" clean --quiet -fd 2>/dev/null; then
+            log_warn "  ${deploy_dir} の手元変更を破棄できませんでした。追従をスキップし現在の内容のまま使います"
+            return 0
+        fi
+        log_success "  ${deploy_dir} の手元変更を破棄しました"
     fi
 
     # worktree（repo と ref 共有）でも別 clone でも成立するよう、deploy 側で fetch する。
@@ -502,7 +519,41 @@ link_skills_from_dir() {
     shopt -u nullglob
 }
 
+usage() {
+    cat <<'USAGE'
+Usage: setup-claude.sh [options]
+
+Options:
+  --force-clean-deploy  deploy-main チェックアウトに手元変更がある場合、それを破棄して
+                        origin/main へ追従させる（git checkout -- . && git clean -fd 相当）。
+                        既定では破棄せず、警告を出して追従だけをスキップする。
+  -h, --help            このヘルプを表示して終了する。
+USAGE
+}
+
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --force-clean-deploy)
+                FORCE_CLEAN_DEPLOY=true
+                ;;
+            -h | --help)
+                usage
+                exit 0
+                ;;
+            *)
+                print_error "不明なオプション: $1"
+                usage >&2
+                exit 1
+                ;;
+        esac
+        shift
+    done
+}
+
 main() {
+    parse_args "$@"
+
     log_info "Claude Code セットアップを開始します..."
     log_info "環境: HOME=${HOME}"
 

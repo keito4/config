@@ -458,3 +458,179 @@ JSON
   [ "$status" -eq 0 ]
   [ ! -e "${fake_home}/.claude/skills/oykot-tasks" ]
 }
+
+# ---------------------------------------------------------------------------
+# deploy-main チェックアウト（ensure_deploy_main_checkout）の追従挙動
+#
+# 実環境の <repo>-deploy-main を巻き込まないよう、script/ 一式を bare origin つきの
+# 使い捨てリポジトリへ複製し、REPO_ROOT がそこを指す状態でスクリプトを起動する。
+# 配備結果は ~/.claude/skills/sandbox-skill/SKILL.md をリンク越しに読んで判定する
+# （どのチェックアウトが配備されたかを、宣言ではなく実体で確認するため）。
+# ---------------------------------------------------------------------------
+
+# 追従検証用の使い捨てリポジトリを作る。戻り値のパスが REPO_ROOT 相当になる。
+make_sandbox_repo() {
+  local root="$1"
+
+  git init -q -b main "$root"
+  git -C "$root" config user.email "test@example.com"
+  git -C "$root" config user.name "test"
+
+  mkdir -p "${root}/script" "${root}/.claude/skills/sandbox-skill"
+  cp "${REPO_ROOT}/script/setup-claude.sh" "${root}/script/setup-claude.sh"
+  cp -R "${REPO_ROOT}/script/lib" "${root}/script/lib"
+  printf -- '---\nname: sandbox-skill\n---\nmain\n' > "${root}/.claude/skills/sandbox-skill/SKILL.md"
+
+  git -C "$root" add -A
+  git -C "$root" commit -q -m "sandbox: initial"
+
+  git init -q --bare "${root}.git"
+  git -C "$root" remote add origin "${root}.git"
+  git -C "$root" push -q origin main
+}
+
+# origin/main を1コミット進める（deploy-main が追従したかを見分ける目印を置く）
+advance_sandbox_origin() {
+  local root="$1" marker="$2"
+
+  printf -- '---\nname: sandbox-skill\n---\n%s\n' "$marker" > "${root}/.claude/skills/sandbox-skill/SKILL.md"
+  git -C "$root" commit -q -am "sandbox: ${marker}"
+  git -C "$root" push -q origin main
+}
+
+# サンドボックスの setup-claude.sh を偽 HOME で起動する。追加引数はそのまま渡る。
+run_sandbox_setup() {
+  local root="$1" fake_home="$2"
+  shift 2
+
+  mkdir -p "${fake_home}/.claude" "${fake_home}/.stub-bin"
+  cat > "${fake_home}/.stub-bin/claude" <<'STUB'
+#!/usr/bin/env bash
+exit 0
+STUB
+  chmod +x "${fake_home}/.stub-bin/claude"
+
+  HOME="$fake_home" \
+  PATH="${fake_home}/.stub-bin:${PATH}" \
+  PRIVATE_CONFIG_DIR="${fake_home}/no-private-config" \
+  CONFIG_DEPLOY_DIR="${CONFIG_DEPLOY_DIR:-}" \
+    run bash "${root}/script/setup-claude.sh" "$@"
+}
+
+# 配備された（= ~/.claude/skills にリンクされた）スキル本文を返す
+deployed_skill_body() {
+  sed -n '4p' "$1/.claude/skills/sandbox-skill/SKILL.md"
+}
+
+@test "ensure_deploy_main_checkout follows origin/main at the default deploy path" {
+  local root="${TEST_TEMP_DIR}/sandbox"
+  local fake_home="${TEST_TEMP_DIR}/home"
+  make_sandbox_repo "$root"
+
+  run_sandbox_setup "$root" "$fake_home"
+  [ "$status" -eq 0 ]
+  [ -d "${root}-deploy-main" ]
+  [ "$(deployed_skill_body "$fake_home")" = "main" ]
+
+  # origin/main が進んだら、次の実行で deploy-main もそこへ追従する
+  advance_sandbox_origin "$root" "updated"
+  run_sandbox_setup "$root" "$fake_home"
+
+  [ "$status" -eq 0 ]
+  [ "$(git -C "${root}-deploy-main" rev-parse HEAD)" = "$(git -C "$root" rev-parse origin/main)" ]
+  [ "$(deployed_skill_body "$fake_home")" = "updated" ]
+}
+
+@test "ensure_deploy_main_checkout does not detach an overridden worktree" {
+  local root="${TEST_TEMP_DIR}/sandbox"
+  local override="${TEST_TEMP_DIR}/override"
+  local fake_home="${TEST_TEMP_DIR}/home"
+  make_sandbox_repo "$root"
+
+  # マージ前のスキルを即試すための override 先（機能ブランチをチェックアウト済み）
+  git -C "$root" worktree add -q -b feature "$override" main
+  printf -- '---\nname: sandbox-skill\n---\nfeature\n' > "${override}/.claude/skills/sandbox-skill/SKILL.md"
+  git -C "$override" commit -q -am "feature: wip skill"
+  advance_sandbox_origin "$root" "updated"
+
+  CONFIG_DEPLOY_DIR="$override" run_sandbox_setup "$root" "$fake_home"
+
+  [ "$status" -eq 0 ]
+  # override の目的（作業中の内容を配備する）が壊れていないこと
+  [ "$(git -C "$override" symbolic-ref --short HEAD)" = "feature" ]
+  [ "$(deployed_skill_body "$fake_home")" = "feature" ]
+  [[ "$output" == *"既定の deploy-main"*"追従をスキップします"* ]]
+}
+
+@test "ensure_deploy_main_checkout keeps a dirty deploy-main as-is by default" {
+  local root="${TEST_TEMP_DIR}/sandbox"
+  local fake_home="${TEST_TEMP_DIR}/home"
+  make_sandbox_repo "$root"
+
+  run_sandbox_setup "$root" "$fake_home"
+  local deploy="${root}-deploy-main"
+  local head_before
+  head_before="$(git -C "$deploy" rev-parse HEAD)"
+
+  printf -- '---\nname: sandbox-skill\n---\nLOCAL-EDIT\n' > "${deploy}/.claude/skills/sandbox-skill/SKILL.md"
+  advance_sandbox_origin "$root" "updated"
+
+  run_sandbox_setup "$root" "$fake_home"
+
+  # 既定は非破壊: 手元変更は残り、追従もしない（警告のみ）
+  [ "$status" -eq 0 ]
+  [ "$(git -C "$deploy" rev-parse HEAD)" = "$head_before" ]
+  [ "$(deployed_skill_body "$fake_home")" = "LOCAL-EDIT" ]
+  [[ "$output" == *"手元変更があります"* ]]
+  [[ "$output" == *"--force-clean-deploy"* ]]
+}
+
+@test "--force-clean-deploy discards local changes and follows origin/main" {
+  local root="${TEST_TEMP_DIR}/sandbox"
+  local fake_home="${TEST_TEMP_DIR}/home"
+  make_sandbox_repo "$root"
+
+  run_sandbox_setup "$root" "$fake_home"
+  local deploy="${root}-deploy-main"
+
+  printf -- '---\nname: sandbox-skill\n---\nLOCAL-EDIT\n' > "${deploy}/.claude/skills/sandbox-skill/SKILL.md"
+  echo "stray" > "${deploy}/.claude/skills/stray-note.md"
+  advance_sandbox_origin "$root" "updated"
+
+  run_sandbox_setup "$root" "$fake_home" --force-clean-deploy
+
+  [ "$status" -eq 0 ]
+  [ -z "$(git -C "$deploy" status --porcelain)" ]
+  [ ! -e "${deploy}/.claude/skills/stray-note.md" ]
+  [ "$(git -C "$deploy" rev-parse HEAD)" = "$(git -C "$root" rev-parse origin/main)" ]
+  [ "$(deployed_skill_body "$fake_home")" = "updated" ]
+  [[ "$output" == *"手元変更を破棄しました"* ]]
+}
+
+@test "--force-clean-deploy leaves an overridden worktree untouched" {
+  local root="${TEST_TEMP_DIR}/sandbox"
+  local override="${TEST_TEMP_DIR}/override"
+  local fake_home="${TEST_TEMP_DIR}/home"
+  make_sandbox_repo "$root"
+
+  git -C "$root" worktree add -q -b feature "$override" main
+  printf -- '---\nname: sandbox-skill\n---\nWIP-EDIT\n' > "${override}/.claude/skills/sandbox-skill/SKILL.md"
+
+  CONFIG_DEPLOY_DIR="$override" run_sandbox_setup "$root" "$fake_home" --force-clean-deploy
+
+  # フラグは既定の deploy-main 専用。作業中のチェックアウトを巻き込まない
+  [ "$status" -eq 0 ]
+  [ "$(git -C "$override" symbolic-ref --short HEAD)" = "feature" ]
+  [ -n "$(git -C "$override" status --porcelain)" ]
+  [ "$(deployed_skill_body "$fake_home")" = "WIP-EDIT" ]
+}
+
+@test "setup-claude.sh rejects unknown options and prints usage for --help" {
+  run bash "${REPO_ROOT}/script/setup-claude.sh" --help
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"--force-clean-deploy"* ]]
+
+  run bash "${REPO_ROOT}/script/setup-claude.sh" --nope
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"不明なオプション"* ]]
+}

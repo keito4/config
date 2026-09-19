@@ -135,9 +135,22 @@ Manage GitHub Codespaces secrets across multiple repositories.
 
 Initializes Claude Code CLI configuration, syncs settings, and installs plugins.
 
-**Usage**: `./script/setup-claude.sh`
+**Usage**: `./script/setup-claude.sh [--force-clean-deploy]`
 
 **Makefile target**: `make claude-setup`
+
+**Options**:
+
+| Option                 | 説明                                                                                                                                                  |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--force-clean-deploy` | `<repo>-deploy-main` に手元変更がある場合、`git checkout -- . && git clean -fd` で破棄してから `origin/main` へ追従させる。既定は警告のみで破棄しない |
+| `-h`, `--help`         | ヘルプを表示して終了する                                                                                                                              |
+
+スキルの配備元は作業ツリーではなく `origin/main` 追従の `<repo>-deploy-main`
+チェックアウト。ここに手元変更があると追従を止めて **その内容が全セッションへ配備され続ける**
+ため、警告を見たら復旧するか `--force-clean-deploy` で明示的に破棄する。
+`CONFIG_DEPLOY_DIR` / `PRIVATE_CONFIG_DEPLOY_DIR` で別の場所を指した場合は、
+このフラグを付けてもそのチェックアウトは破棄されない（マージ前スキルの検証用途を壊さないため）。
 
 **Note**: `link_private_skills` により、`keito4/private-config`（組織情報を含むスキルの正本）の
 `.claude/skills/<name>.md` を `~/.claude/skills/<name>/SKILL.md` へ symlink する。
