@@ -164,13 +164,20 @@ export BUNDLE_RUBYGEMS__PKG__GITHUB__COM="op://Dev/GITHUB_TOKEN/credential"
 ```
 ⚠️  注意: ~/.zshrc にトークンがなくなっています
     トークンは ~/.zsh/configs/pre/.env.secret に設定してください
-
-⚠️  注意: ~/.gitconfig に個人情報がコメントアウトされています
-    以下のコマンドで設定してください:
-    git config --global user.name "Your Name"
-    git config --global user.email "your.email@example.com"
-    git config --global user.signingkey ~/.ssh/id_ed25519.pub
 ```
+
+`~/.gitconfig` については、`git config --global user.email` が未設定の場合のみ以下の警告が表示されます：
+
+```
+⚠️  注意: git の user.name / user.email が未設定です
+    未設定のままだとコミットがホスト名ベースの匿名アドレスになり、
+    GitHub のコミット検証や Vercel のデプロイがブロックされます。
+    import で上書きされない ~/.gitconfig.local に設定してください:
+    git config --file ~/.gitconfig.local user.name "Your Name"
+    git config --file ~/.gitconfig.local user.email "your.email@example.com"
+```
+
+`git/gitconfig` テンプレートは `[include] path = ~/.gitconfig.local` を有効化しているため、`~/.gitconfig.local` に設定した identity は `import.sh` によるインポート（`~/.gitconfig` の上書き）後も維持されます。
 
 ## 1Password Vault 推奨構造
 
