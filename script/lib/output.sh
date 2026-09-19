@@ -201,4 +201,3 @@ info() { output::info "$@"; }
 success() { output::success "$@"; }
 warning() { output::warning "$@"; }
 error() { output::error "$@"; }
-fatal() { output::fatal "$@"; }
