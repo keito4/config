@@ -607,6 +607,30 @@ deployed_skill_body() {
   [[ "$output" == *"手元変更を破棄しました"* ]]
 }
 
+@test "--force-clean-deploy also discards staged edits and nested repositories" {
+  local root="${TEST_TEMP_DIR}/sandbox"
+  local fake_home="${TEST_TEMP_DIR}/home"
+  make_sandbox_repo "$root"
+
+  run_sandbox_setup "$root" "$fake_home"
+  local deploy="${root}-deploy-main"
+
+  # checkout -- . は index を戻さず、clean -fd は入れ子の git リポジトリを消さない。
+  # どちらも残ると「破棄した」と報告したまま dirty な内容が配備され続ける。
+  printf -- '---\nname: sandbox-skill\n---\nSTAGED-EDIT\n' > "${deploy}/.claude/skills/sandbox-skill/SKILL.md"
+  git -C "$deploy" add .claude/skills/sandbox-skill/SKILL.md
+  git init -q -b main "${deploy}/vendor-clone"
+  advance_sandbox_origin "$root" "updated"
+
+  run_sandbox_setup "$root" "$fake_home" --force-clean-deploy
+
+  [ "$status" -eq 0 ]
+  [ -z "$(git -C "$deploy" status --porcelain)" ]
+  [ ! -e "${deploy}/vendor-clone" ]
+  [ "$(git -C "$deploy" rev-parse HEAD)" = "$(git -C "$root" rev-parse origin/main)" ]
+  [ "$(deployed_skill_body "$fake_home")" = "updated" ]
+}
+
 @test "--force-clean-deploy leaves an overridden worktree untouched" {
   local root="${TEST_TEMP_DIR}/sandbox"
   local override="${TEST_TEMP_DIR}/override"

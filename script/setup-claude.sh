@@ -455,14 +455,18 @@ ensure_deploy_main_checkout() {
     # --force-clean-deploy を本人が明示したときだけ、その復旧手順をここで実行する。
     # （この分岐に来るのは既定の deploy-main のみ。override 先は上の判定で return 済みで、
     #   フラグを付けても利用者の作業ツリーが破棄されることはない）
+    #
+    # 破棄は reset --hard + clean -ffd で行う。checkout -- . は index を戻さないため
+    # staged な変更が残り、clean -fd は入れ子の git リポジトリを消さない。どちらも
+    # 「破棄した」と報告したまま dirty な内容を配備し続けることになる。
     if [[ -n "$(git -C "$deploy_dir" status --porcelain 2>/dev/null)" ]]; then
         if [[ "$FORCE_CLEAN_DEPLOY" != true ]]; then
-            log_warn "  ${deploy_dir} に手元変更があります。origin/main への追従をスキップします（deploy 用チェックアウトは編集しないでください。復旧: git -C ${deploy_dir} checkout -- . && git -C ${deploy_dir} clean -fd、または --force-clean-deploy 付きで再実行）"
+            log_warn "  ${deploy_dir} に手元変更があります。origin/main への追従をスキップします（deploy 用チェックアウトは編集しないでください。復旧: git -C ${deploy_dir} reset --hard && git -C ${deploy_dir} clean -ffd、または --force-clean-deploy 付きで再実行）"
             return 0
         fi
         log_warn "  --force-clean-deploy が指定されたため ${deploy_dir} の手元変更を破棄します"
-        if ! git -C "$deploy_dir" checkout --quiet -- . 2>/dev/null ||
-            ! git -C "$deploy_dir" clean --quiet -fd 2>/dev/null; then
+        if ! git -C "$deploy_dir" reset --quiet --hard HEAD 2>/dev/null ||
+            ! git -C "$deploy_dir" clean --quiet -ffd 2>/dev/null; then
             log_warn "  ${deploy_dir} の手元変更を破棄できませんでした。追従をスキップし現在の内容のまま使います"
             return 0
         fi
@@ -525,7 +529,8 @@ Usage: setup-claude.sh [options]
 
 Options:
   --force-clean-deploy  deploy-main チェックアウトに手元変更がある場合、それを破棄して
-                        origin/main へ追従させる（git checkout -- . && git clean -fd 相当）。
+                        origin/main へ追従させる（git reset --hard && git clean -ffd 相当。
+                        staged な変更・入れ子の git リポジトリも含めて捨てる）。
                         既定では破棄せず、警告を出して追従だけをスキップする。
   -h, --help            このヘルプを表示して終了する。
 USAGE
