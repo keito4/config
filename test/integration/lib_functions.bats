@@ -344,6 +344,83 @@ EOF
   [[ "$output" == *"Operation completed"* ]]
 }
 
+@test "output::error outputs to stderr without exiting" {
+  source "${REPO_ROOT}/script/lib/output.sh"
+
+  run output::error "Something failed"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"ERROR"* ]]
+  [[ "$output" == *"Something failed"* ]]
+}
+
+@test "output::fatal exits with status 1 and prints the message" {
+  source "${REPO_ROOT}/script/lib/output.sh"
+
+  run output::fatal "boom"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"FATAL"* ]]
+  [[ "$output" == *"boom"* ]]
+}
+
+@test "output::require_command fails for a missing command" {
+  source "${REPO_ROOT}/script/lib/output.sh"
+
+  run output::require_command "definitely-not-a-real-command"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Required command not found: definitely-not-a-real-command"* ]]
+}
+
+@test "output::require_command includes the install hint when provided" {
+  source "${REPO_ROOT}/script/lib/output.sh"
+
+  run output::require_command "definitely-not-a-real-command" "brew install definitely-not-a-real-command"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Install with: brew install definitely-not-a-real-command"* ]]
+}
+
+@test "output::require_file succeeds for an existing file" {
+  source "${REPO_ROOT}/script/lib/output.sh"
+  local existing="${TEST_TEMP_DIR}/present.txt"
+  touch "$existing"
+
+  run output::require_file "$existing"
+  [ "$status" -eq 0 ]
+}
+
+@test "output::require_file fails for a missing file with default message" {
+  source "${REPO_ROOT}/script/lib/output.sh"
+  local missing="${TEST_TEMP_DIR}/absent.txt"
+
+  run output::require_file "$missing"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"File not found: ${missing}"* ]]
+}
+
+@test "output::require_file fails with a custom error message" {
+  source "${REPO_ROOT}/script/lib/output.sh"
+  local missing="${TEST_TEMP_DIR}/absent.txt"
+
+  run output::require_file "$missing" "custom missing file message"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"custom missing file message"* ]]
+}
+
+@test "output::require_directory succeeds for an existing directory" {
+  source "${REPO_ROOT}/script/lib/output.sh"
+
+  run output::require_directory "$TEST_TEMP_DIR"
+  [ "$status" -eq 0 ]
+}
+
+@test "output::require_directory fails for a missing directory with default message" {
+  source "${REPO_ROOT}/script/lib/output.sh"
+  local missing="${TEST_TEMP_DIR}/no-such-dir"
+
+  run output::require_directory "$missing"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Directory not found: ${missing}"* ]]
+}
+
 # ============================================================================
 # platform.sh runtime behaviour tests
 # ============================================================================
