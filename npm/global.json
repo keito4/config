@@ -2,19 +2,19 @@
   "name": "lib",
   "dependencies": {
     "@antfu/ni": {
-      "version": "30.5.0",
+      "version": "30.6.0",
       "overridden": false
     },
     "@commitlint/cli": {
-      "version": "21.2.2",
+      "version": "21.2.3",
       "overridden": false
     },
     "@commitlint/config-conventional": {
-      "version": "21.2.2",
+      "version": "21.2.3",
       "overridden": false
     },
     "@google/gemini-cli": {
-      "version": "0.59.0",
+      "version": "0.60.0",
       "overridden": false
     },
     "@leonardsellem/n8n-mcp-server": {
@@ -22,15 +22,15 @@
       "overridden": false
     },
     "@openai/codex": {
-      "version": "0.154.0",
+      "version": "0.155.1",
       "overridden": false
     },
     "agent-browser": {
-      "version": "0.37.1",
+      "version": "0.38.1",
       "overridden": false
     },
     "bash-language-server": {
-      "version": "5.6.0",
+      "version": "5.8.1",
       "overridden": false
     },
     "difit": {
@@ -42,11 +42,11 @@
       "overridden": false
     },
     "mcp-remote": {
-      "version": "0.14.2",
+      "version": "0.14.3",
       "overridden": false
     },
     "n8n": {
-      "version": "2.38.7",
+      "version": "2.39.8",
       "overridden": false
     },
     "pm2": {
@@ -62,7 +62,7 @@
       "overridden": false
     },
     "vercel": {
-      "version": "59.16.0",
+      "version": "59.23.2",
       "overridden": false
     },
     "vscode-langservers-extracted": {
