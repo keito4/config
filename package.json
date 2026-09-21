@@ -50,7 +50,7 @@
     "js-yaml": "^5.4.2",
     "prettier": "3.9.8",
     "semantic-release": "25.0.9",
-    "takt": "0.64.1"
+    "takt": "0.65.0"
   },
   "overrides": {
     "@opentelemetry/propagator-jaeger": ">=2.9.0"
