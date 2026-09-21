@@ -171,7 +171,7 @@ jobs:
           fi
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         if: always() && steps.codecov-token.outputs.available == 'true'
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -241,7 +241,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Run actionlint
-        uses: reviewdog/action-actionlint@d290e336d5a743810aef4404f757dc862276d2ae # v1.73.4
+        uses: reviewdog/action-actionlint@320fcdd9c860767cf17fab3b20e22e739d5d02b8 # v1.76.0
         with:
           reporter: github-pr-review
           fail_level: error
