@@ -84,7 +84,19 @@ update_dockerfile_version() {
         return 1
     fi
 
-    sed -i "/claude.ai\/install.sh/s|bash -s \${current_version}|bash -s \${new_version}|" "\${DOCKERFILE}"
+    local tmp_dockerfile update_status=0
+    if ! tmp_dockerfile="\$(mktemp)"; then
+        exit 1
+    fi
+    sed "/claude.ai\/install.sh/s|bash -s \${current_version}|bash -s \${new_version}|" \\
+        "\${DOCKERFILE}" >"\${tmp_dockerfile}" || update_status=\$?
+    if ((update_status == 0)); then
+        cat "\${tmp_dockerfile}" >"\${DOCKERFILE}" || update_status=\$?
+    fi
+    rm -f "\${tmp_dockerfile}"
+    if ((update_status != 0)); then
+        exit 1
+    fi
     log_success "Dockerfile を \${current_version} → \${new_version} に更新しました"
     return 0
 }
@@ -126,7 +138,19 @@ update_dockerfile_version() {
         return 1
     fi
 
-    sed -i "/claude.ai\/install.sh/s|bash -s \${current_version}|bash -s \${new_version}|" "\${DOCKERFILE}"
+    local tmp_dockerfile update_status=0
+    if ! tmp_dockerfile="\$(mktemp)"; then
+        exit 1
+    fi
+    sed "/claude.ai\/install.sh/s|bash -s \${current_version}|bash -s \${new_version}|" \\
+        "\${DOCKERFILE}" >"\${tmp_dockerfile}" || update_status=\$?
+    if ((update_status == 0)); then
+        cat "\${tmp_dockerfile}" >"\${DOCKERFILE}" || update_status=\$?
+    fi
+    rm -f "\${tmp_dockerfile}"
+    if ((update_status != 0)); then
+        exit 1
+    fi
     log_success "Dockerfile を \${current_version} → \${new_version} に更新しました"
     return 0
 }

@@ -94,7 +94,13 @@ EOF
   local workdir="${TEST_TEMP_DIR}/some-project"
   mkdir -p "$fake_home" "$workdir"
 
-  HOME="$fake_home" run env -C "$workdir" "${REPO_ROOT}/script/trust-claude-workspace.sh"
+  # NOTE: `env -C` は子プロセスへ「物理パス」の PWD を渡すため、macOS の
+  #       /var -> private/var シンボリックリンク配下にある一時ディレクトリでは
+  #       スクリプトが見る $PWD が $workdir と一致しない (Linux の /tmp は
+  #       シンボリックリンクではないので差が出ない)。実運用と同じくシェルの
+  #       `cd` 経由で起動し、論理パスを保ったまま既定値を検証する。
+  HOME="$fake_home" run bash -c 'cd "$1" && exec "$2"' _ \
+    "$workdir" "${REPO_ROOT}/script/trust-claude-workspace.sh"
 
   assert_success
   run node -e "
