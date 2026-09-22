@@ -223,7 +223,8 @@ jobs:
     # macos-latest は Actions の課金係数が ubuntu-latest の 10 倍のため PR ごとには回さない。
     # BSD userland (sed / mktemp / realpath 等) 起因の退行は main への push と週次実行で検出する。
     # paths-filter に依存しないのは、schedule には差分の基準が存在しないため。
-    if: github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    # TEMP(#1286): 実ランナーで結果を確定させるため、この PR に限り pull_request でも実行する。マージ前に revert する。
+    if: github.event_name == 'schedule' || github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     permissions:
       contents: read
       actions: write
