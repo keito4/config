@@ -84,7 +84,12 @@ update_dockerfile_version() {
         return 1
     fi
 
-    sed -i "/claude.ai\/install.sh/s|bash -s \${current_version}|bash -s \${new_version}|" "\${DOCKERFILE}"
+    local tmp_dockerfile
+    tmp_dockerfile="\$(mktemp)"
+    sed "/claude.ai\/install.sh/s|bash -s \${current_version}|bash -s \${new_version}|" \\
+        "\${DOCKERFILE}" >"\${tmp_dockerfile}"
+    cat "\${tmp_dockerfile}" >"\${DOCKERFILE}"
+    rm -f "\${tmp_dockerfile}"
     log_success "Dockerfile を \${current_version} → \${new_version} に更新しました"
     return 0
 }
@@ -126,7 +131,12 @@ update_dockerfile_version() {
         return 1
     fi
 
-    sed -i "/claude.ai\/install.sh/s|bash -s \${current_version}|bash -s \${new_version}|" "\${DOCKERFILE}"
+    local tmp_dockerfile
+    tmp_dockerfile="\$(mktemp)"
+    sed "/claude.ai\/install.sh/s|bash -s \${current_version}|bash -s \${new_version}|" \\
+        "\${DOCKERFILE}" >"\${tmp_dockerfile}"
+    cat "\${tmp_dockerfile}" >"\${DOCKERFILE}"
+    rm -f "\${tmp_dockerfile}"
     log_success "Dockerfile を \${current_version} → \${new_version} に更新しました"
     return 0
 }

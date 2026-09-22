@@ -39,7 +39,17 @@ update_dockerfile_version() {
     fi
 
     # claude.ai/install.sh を含む行のみバージョンを更新
-    sed -i "/claude.ai\/install.sh/s|bash -s ${current_version}|bash -s ${new_version}|" "${DOCKERFILE}"
+    # NOTE: 引数なしの `sed -i` は GNU sed 専用。BSD sed (macOS) では直後の
+    #       引数をバックアップ拡張子として解釈するため、式がファイル名として
+    #       扱われて失敗する。一時ファイルへ書き出してから元ファイルへ流し込む
+    #       ことで、GNU / BSD どちらの sed でも動作させる。
+    #       `cat >` で書き戻すのは、元ファイルの権限と inode を保つため。
+    local tmp_dockerfile
+    tmp_dockerfile="$(mktemp)"
+    sed "/claude.ai\/install.sh/s|bash -s ${current_version}|bash -s ${new_version}|" \
+        "${DOCKERFILE}" >"${tmp_dockerfile}"
+    cat "${tmp_dockerfile}" >"${DOCKERFILE}"
+    rm -f "${tmp_dockerfile}"
     log_success "Dockerfile を ${current_version} → ${new_version} に更新しました"
     return 0
 }
