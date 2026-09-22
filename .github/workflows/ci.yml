@@ -43,6 +43,9 @@ on:
       - '.eslintrc.*'
       - '.prettierrc.*'
       - 'tsconfig.json'
+  schedule:
+    # 毎週月曜 05:00 JST。macOS ランナーでのみ BSD userland 起因の退行を検出する。
+    - cron: '0 20 * * 0'
 
 permissions:
   contents: read
@@ -56,6 +59,9 @@ jobs:
     name: Detect Changes
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # 週次実行は macOS の退行検出だけが目的。paths-filter は schedule に差分基準が
+    # ないため、ここで止めて ubuntu 側のジョブごとスキップさせる。
+    if: github.event_name != 'schedule'
     permissions:
       contents: read
       pull-requests: read
@@ -210,6 +216,39 @@ jobs:
           path: ./reports/bats-results.tap
           retention-days: 30
 
+  integration-test-macos:
+    name: Integration Tests (macOS)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    # macos-latest は Actions の課金係数が ubuntu-latest の 10 倍のため PR ごとには回さない。
+    # BSD userland (sed / mktemp / realpath 等) 起因の退行は main への push と週次実行で検出する。
+    # paths-filter に依存しないのは、schedule には差分の基準が存在しないため。
+    if: github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - uses: ./.github/actions/setup-node-ci
+
+      # zsh は macOS に同梱されているため bats のみ導入する。
+      - name: Install bats
+        run: brew install bats-core
+
+      - name: Run Bats integration tests
+        run: |
+          mkdir -p reports
+          bats test/integration/*.bats --formatter tap > reports/bats-results.tap
+
+      - name: Upload integration test results
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: integration-test-results-macos
+          path: ./reports/bats-results.tap
+          retention-days: 30
+
   actionlint:
     name: Workflow Lint
     runs-on: ubuntu-latest
@@ -297,7 +336,8 @@ jobs:
     name: Quality Gate
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [changes, lint, test, integration-test, actionlint, workflow-template-sync, pr-size-check]
+    needs:
+      [changes, lint, test, integration-test, integration-test-macos, actionlint, workflow-template-sync, pr-size-check]
     if: always()
     steps:
       - name: Check job results
@@ -305,6 +345,7 @@ jobs:
           LINT_RESULT: ${{ needs.lint.result }}
           TEST_RESULT: ${{ needs.test.result }}
           INTEGRATION_RESULT: ${{ needs.integration-test.result }}
+          INTEGRATION_MACOS_RESULT: ${{ needs.integration-test-macos.result }}
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
           WORKFLOW_TEMPLATE_SYNC_RESULT: ${{ needs.workflow-template-sync.result }}
           PR_SIZE_RESULT: ${{ needs.pr-size-check.result }}
@@ -316,6 +357,7 @@ jobs:
           echo "| Lint & Format | $LINT_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| Unit Tests | $TEST_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| Integration Tests | $INTEGRATION_RESULT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Integration Tests (macOS) | $INTEGRATION_MACOS_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| Workflow Lint | $ACTIONLINT_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| Workflow Template Sync | $WORKFLOW_TEMPLATE_SYNC_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| PR Size | $PR_SIZE_RESULT |" >> $GITHUB_STEP_SUMMARY
@@ -325,6 +367,7 @@ jobs:
           LINT_RESULT: ${{ needs.lint.result }}
           TEST_RESULT: ${{ needs.test.result }}
           INTEGRATION_RESULT: ${{ needs.integration-test.result }}
+          INTEGRATION_MACOS_RESULT: ${{ needs.integration-test-macos.result }}
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
           WORKFLOW_TEMPLATE_SYNC_RESULT: ${{ needs.workflow-template-sync.result }}
           PR_SIZE_RESULT: ${{ needs.pr-size-check.result }}
@@ -346,6 +389,10 @@ jobs:
           fi
           if ! check_result "$INTEGRATION_RESULT"; then
             echo "::error::Integration Tests failed"
+            FAILED=true
+          fi
+          if ! check_result "$INTEGRATION_MACOS_RESULT"; then
+            echo "::error::Integration Tests (macOS) failed"
             FAILED=true
           fi
           if ! check_result "$ACTIONLINT_RESULT"; then
