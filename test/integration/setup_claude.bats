@@ -93,12 +93,67 @@ load ../test_helper/test_helper
 # ---------------------------------------------------------------------------
 # commands / agents / skills の追加 CLAUDE_CONFIG_DIR へのリンク
 # 実際にスクリプトを偽 HOME で起動し、リンクが張られたかを検証する
+#
+# 起動元は必ず使い捨てリポジトリにする。REPO_ROOT（実リポジトリ）のまま起動すると
+# ensure_deploy_main_checkout が実環境の <repo>-deploy-main worktree を作成・追従させ、
+# bats を回すだけで手元の配備物が書き換わる。HOME だけ偽装しても防げない。
 # ---------------------------------------------------------------------------
 
-# 偽 HOME を用意して setup-claude.sh を実行する
-# claude CLI はスタブに差し替え、プラグイン導入で外部に触れないようにする
+# 使い捨てリポジトリの土台を作る（起動に要る script 一式だけ。中身は呼び出し側が足す）
+init_sandbox_repo() {
+  local root="$1"
+
+  git init -q -b main "$root"
+  git -C "$root" config user.email "test@example.com"
+  git -C "$root" config user.name "test"
+
+  mkdir -p "${root}/script"
+  cp "${REPO_ROOT}/script/setup-claude.sh" "${root}/script/setup-claude.sh"
+  cp -R "${REPO_ROOT}/script/lib" "${root}/script/lib"
+}
+
+# 初期コミットと bare origin を用意する。
+# スキルの配備元は deploy-main（origin/main 追従）なので、origin が無いと
+# 作業ツリーへのフォールバック経路しか検証できない。
+publish_sandbox_repo() {
+  local root="$1"
+
+  git -C "$root" add -A
+  git -C "$root" commit -q -m "sandbox: initial"
+
+  git init -q --bare "${root}.git"
+  git -C "$root" remote add origin "${root}.git"
+  git -C "$root" push -q origin main
+}
+
+# setup-claude.sh 本体の挙動を見るための使い捨てリポジトリ。
+# ベースライン settings.json・スキル・commands など、スクリプトが REPO_ROOT から
+# 読む参照物をそのまま複製するので、実リポジトリと同じ入力のまま検証できる。
+make_config_sandbox_repo() {
+  local root="$1"
+
+  init_sandbox_repo "$root"
+  cp -R "${REPO_ROOT}/.claude" "${root}/.claude"
+  mkdir -p "${root}/.devcontainer"
+  cp "${REPO_ROOT}/.devcontainer/claude-settings.local.json" \
+    "${root}/.devcontainer/claude-settings.local.json"
+  publish_sandbox_repo "$root"
+}
+
+# 偽 HOME を用意し、使い捨てリポジトリの setup-claude.sh を実行する。
+# claude CLI はスタブに差し替え、プラグイン導入で外部に触れないようにする。
+# リポジトリ側の期待値は REPO_ROOT ではなく SANDBOX_REPO_ROOT 配下を参照すること
+# （比較対象が実リポジトリだと、何を検証しているのかが曖昧になる）。
+SANDBOX_REPO_ROOT=""
 run_setup_in_fake_home() {
   local fake_home="$1"
+
+  # 冪等性の検証で同一テストから複数回呼ばれるため、リポジトリは一度だけ作る
+  if [[ -z "$SANDBOX_REPO_ROOT" ]]; then
+    SANDBOX_REPO_ROOT="${TEST_TEMP_DIR}/config-sandbox"
+    make_config_sandbox_repo "$SANDBOX_REPO_ROOT"
+  fi
+
   mkdir -p "${fake_home}/.claude" "${fake_home}/.stub-bin"
   cat > "${fake_home}/.stub-bin/claude" <<'STUB'
 #!/usr/bin/env bash
@@ -111,7 +166,7 @@ STUB
   HOME="$fake_home" \
   PATH="${fake_home}/.stub-bin:${PATH}" \
   PRIVATE_CONFIG_DIR="${PRIVATE_CONFIG_DIR:-${fake_home}/no-private-config}" \
-    run bash "${REPO_ROOT}/script/setup-claude.sh"
+    run bash "${SANDBOX_REPO_ROOT}/script/setup-claude.sh"
 }
 
 # 追加 config dir は settings.json / .claude.json を持つものだけが対象になる。
@@ -251,7 +306,7 @@ JSON
 
   [ -f "${fake_home}/.claude/settings.json" ]
   [ ! -L "${fake_home}/.claude/settings.json" ]
-  cmp -s "${fake_home}/.claude/settings.json" "${REPO_ROOT}/.claude/settings.json"
+  cmp -s "${fake_home}/.claude/settings.json" "${SANDBOX_REPO_ROOT}/.claude/settings.json"
 }
 
 @test "setup-claude.sh replaces a settings.json symlink with a real file, keeping its content" {
@@ -288,7 +343,7 @@ JSON
 
   run_setup_in_fake_home "$fake_home"
 
-  jq --slurpfile baseline "${REPO_ROOT}/.claude/settings.json" -e '
+  jq --slurpfile baseline "${SANDBOX_REPO_ROOT}/.claude/settings.json" -e '
     .model == "opus"
     and .hooks.SessionStart[0].hooks[0].command == "agent-deck hook-handler"
     and .permissions.deny == ["Read(./secrets/**)"]
@@ -352,7 +407,7 @@ JSON
   # リポジトリのスキルは <name>/SKILL.md 形式で、~/.claude 側にリンクされる
   [ -L "${fake_home}/.claude/skills/ci-check" ]
   # リンク越しにリポジトリの正本が読めること（宣言ではなく実体で確認）
-  [ "$(cat "${fake_home}/.claude/skills/ci-check/SKILL.md")" = "$(cat "${REPO_ROOT}/.claude/skills/ci-check/SKILL.md")" ]
+  [ "$(cat "${fake_home}/.claude/skills/ci-check/SKILL.md")" = "$(cat "${SANDBOX_REPO_ROOT}/.claude/skills/ci-check/SKILL.md")" ]
 }
 
 @test "setup-claude.sh does not treat README.md or skills.txt as skills" {
@@ -469,24 +524,15 @@ JSON
 # ---------------------------------------------------------------------------
 
 # 追従検証用の使い捨てリポジトリを作る。戻り値のパスが REPO_ROOT 相当になる。
+# 配備されたのがどのチェックアウトかを目印スキル1個で見分けるため、
+# make_config_sandbox_repo と違いリポジトリの .claude は複製しない。
 make_sandbox_repo() {
   local root="$1"
 
-  git init -q -b main "$root"
-  git -C "$root" config user.email "test@example.com"
-  git -C "$root" config user.name "test"
-
-  mkdir -p "${root}/script" "${root}/.claude/skills/sandbox-skill"
-  cp "${REPO_ROOT}/script/setup-claude.sh" "${root}/script/setup-claude.sh"
-  cp -R "${REPO_ROOT}/script/lib" "${root}/script/lib"
+  init_sandbox_repo "$root"
+  mkdir -p "${root}/.claude/skills/sandbox-skill"
   printf -- '---\nname: sandbox-skill\n---\nmain\n' > "${root}/.claude/skills/sandbox-skill/SKILL.md"
-
-  git -C "$root" add -A
-  git -C "$root" commit -q -m "sandbox: initial"
-
-  git init -q --bare "${root}.git"
-  git -C "$root" remote add origin "${root}.git"
-  git -C "$root" push -q origin main
+  publish_sandbox_repo "$root"
 }
 
 # origin/main を1コミット進める（deploy-main が追従したかを見分ける目印を置く）
