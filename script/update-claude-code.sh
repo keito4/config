@@ -44,12 +44,26 @@ update_dockerfile_version() {
     #       扱われて失敗する。一時ファイルへ書き出してから元ファイルへ流し込む
     #       ことで、GNU / BSD どちらの sed でも動作させる。
     #       `cat >` で書き戻すのは、元ファイルの権限と inode を保つため。
-    local tmp_dockerfile
-    tmp_dockerfile="$(mktemp)"
+    # NOTE: この関数は `if update_dockerfile_version ...` の条件として呼ばれる
+    #       ため、関数内では errexit が無効になる。mktemp / sed の失敗を検知
+    #       せずに書き戻すと Dockerfile を空にしてしまうので、各段の終了
+    #       ステータスを明示的に確認する。update-all.sh はこのスクリプトの
+    #       終了コードで成否を判定するため、失敗は exit で伝播させる。
+    local tmp_dockerfile update_status=0
+    if ! tmp_dockerfile="$(mktemp)"; then
+        error "一時ファイルの作成に失敗しました"
+        exit 1
+    fi
     sed "/claude.ai\/install.sh/s|bash -s ${current_version}|bash -s ${new_version}|" \
-        "${DOCKERFILE}" >"${tmp_dockerfile}"
-    cat "${tmp_dockerfile}" >"${DOCKERFILE}"
+        "${DOCKERFILE}" >"${tmp_dockerfile}" || update_status=$?
+    if ((update_status == 0)); then
+        cat "${tmp_dockerfile}" >"${DOCKERFILE}" || update_status=$?
+    fi
     rm -f "${tmp_dockerfile}"
+    if ((update_status != 0)); then
+        error "Dockerfile のバージョン更新に失敗しました (exit code: ${update_status})"
+        exit 1
+    fi
     log_success "Dockerfile を ${current_version} → ${new_version} に更新しました"
     return 0
 }
