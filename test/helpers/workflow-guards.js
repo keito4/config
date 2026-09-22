@@ -41,7 +41,10 @@ function runCheck(flag, workflows) {
       });
       return { status: 0, output: stdout };
     } catch (error) {
-      return { status: error.status, output: `${error.stdout || ''}${error.stderr || ''}` };
+      // execFileSync が非ゼロ終了で投げた ExecException は status: number だが、
+      // シグナルで kill された場合は status が null になる (signal に理由が入る)。
+      // 呼び出し側は status: number を期待するため、その場合は非ゼロ値にフォールバックする。
+      return { status: error.status ?? 1, output: `${error.stdout || ''}${error.stderr || ''}` };
     }
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });

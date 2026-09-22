@@ -74,7 +74,9 @@ function runFleet(args, { discovered = [], workflows = {}, discoveryFails = fals
       });
       return { status: 0, output: stdout };
     } catch (error) {
-      return { status: error.status, output: `${error.stdout || ''}${error.stderr || ''}` };
+      // シグナルで kill された場合 error.status は null になるため、
+      // 非ゼロ終了を表す値へフォールバックする。
+      return { status: error.status ?? 1, output: `${error.stdout || ''}${error.stderr || ''}` };
     }
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
