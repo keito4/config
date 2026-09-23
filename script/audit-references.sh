@@ -114,6 +114,39 @@ find_reference_sources() {
   grep -IlF -e "$target" -e "$basename_target" -- "$@" 2>/dev/null || true
 }
 
+# Populate the global CODE_REFS/TEST_REFS/DOCS_REFS newline-separated lists with the
+# sources that reference $target, classified by category. When FORMAT is tsv, also
+# emits one row per matching source as a side effect.
+collect_target_references() {
+  local target="$1"
+  local basename_target="$2"
+  local source category
+
+  CODE_REFS=""
+  TEST_REFS=""
+  DOCS_REFS=""
+
+  while IFS= read -r source; do
+    [ "$source" != "$target" ] || continue
+    category=$(classify_source "$source")
+    case "$category" in
+      test)
+        TEST_REFS="${TEST_REFS}${source}"$'\n'
+        ;;
+      docs)
+        DOCS_REFS="${DOCS_REFS}${source}"$'\n'
+        ;;
+      *)
+        CODE_REFS="${CODE_REFS}${source}"$'\n'
+        ;;
+    esac
+
+    if [ "$FORMAT" = "tsv" ]; then
+      emit_tsv_row "$category" "$target" "$source"
+    fi
+  done < <(find_reference_sources "$target" "$basename_target" "${SOURCES[@]}")
+}
+
 if [ "$FORMAT" = "markdown" ]; then
   cat <<'HEADER'
 # Reference Inventory
@@ -127,47 +160,23 @@ fi
 
 ZERO_CODE_TEST=()
 SOURCES=()
-while IFS= read -r source; do
-  SOURCES+=("$source")
-done < <(tracked_files)
+mapfile -t SOURCES < <(tracked_files)
 
 while IFS= read -r target; do
   basename_target=$(basename "$target")
-  code_refs=""
-  test_refs=""
-  docs_refs=""
+  collect_target_references "$target" "$basename_target"
 
-  while IFS= read -r source; do
-    [ "$source" != "$target" ] || continue
-    category=$(classify_source "$source")
-    case "$category" in
-      test)
-        test_refs="${test_refs}${source}"$'\n'
-        ;;
-      docs)
-        docs_refs="${docs_refs}${source}"$'\n'
-        ;;
-      *)
-        code_refs="${code_refs}${source}"$'\n'
-        ;;
-    esac
-
-    if [ "$FORMAT" = "tsv" ]; then
-      emit_tsv_row "$category" "$target" "$source"
-    fi
-  done < <(find_reference_sources "$target" "$basename_target" "${SOURCES[@]}")
-
-  if [ -z "$code_refs$test_refs" ]; then
+  if [ -z "$CODE_REFS$TEST_REFS" ]; then
     ZERO_CODE_TEST+=("$target")
   fi
 
   if [ "$FORMAT" = "markdown" ]; then
     printf "## \`%s\`\n\n" "$target"
-    emit_markdown_list "Code/CI references" "$code_refs"
-    emit_markdown_list "Test references" "$test_refs"
-    emit_markdown_list "Documentation references" "$docs_refs"
+    emit_markdown_list "Code/CI references" "$CODE_REFS"
+    emit_markdown_list "Test references" "$TEST_REFS"
+    emit_markdown_list "Documentation references" "$DOCS_REFS"
     printf '\n'
-  elif [ -z "$code_refs$test_refs$docs_refs" ]; then
+  elif [ -z "$CODE_REFS$TEST_REFS$DOCS_REFS" ]; then
     emit_tsv_row "none" "$target" "-"
   fi
 done < <(target_files)
