@@ -27,6 +27,7 @@ Codex / ChatGPT アプリは projects.*.trust_level・marketplaces.*・プラグ
 Usage: codex-config-merge.py <base_toml> <target_toml>
 """
 
+import copy
 import os
 import stat
 import sys
@@ -45,6 +46,29 @@ def deep_merge(local: Any, base: Any) -> Any:
             merged[key] = deep_merge(local[key], value) if key in local else value
         return merged
     return base
+
+
+def merge_config(local: dict, base: dict) -> dict:
+    merged = copy.deepcopy(deep_merge(local, base))
+    http_auth = ("http_headers", "env_http_headers", "bearer_token_env_var", "http_headers_helper", "oauth_resource", "oauth", "scopes")
+    for name, shared in base.get("mcp_servers", {}).items():
+        server = merged["mcp_servers"][name]
+        local_url = local.get("mcp_servers", {}).get(name, {}).get("url", "")
+        # mcp-shared is an explicit host-local deployment, absent on other Macs.
+        keep_shared_runtime = local_url.startswith("http://127.0.0.1:47932/servers/")
+        if "url" in shared or ("command" in shared and keep_shared_runtime):
+            for key in ("command", "args", "env", "env_vars", "cwd"):
+                server.pop(key, None)
+            if "url" in shared and local_url != shared["url"]:
+                # Authentication belongs to an endpoint, never forward it to a new one.
+                for key in http_auth:
+                    server.pop(key, None)
+                    if key in shared:
+                        server[key] = shared[key]
+        elif "command" in shared:
+            for key in ("url", *http_auth):
+                server.pop(key, None)
+    return merged
 
 
 def main() -> int:
@@ -70,7 +94,7 @@ def main() -> int:
             print(f"⚠️  配備先の TOML が不正です（修正するまでマージ中断）: {target_path}: {err}", file=sys.stderr)
             return 1
 
-    output = tomli_w.dumps(deep_merge(local, base))
+    output = tomli_w.dumps(merge_config(local, base))
 
     was_symlink = target_path.is_symlink()
     if not was_symlink and target_path.exists() and target_path.read_text() == output:

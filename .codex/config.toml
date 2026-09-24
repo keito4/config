@@ -50,8 +50,7 @@ url = "https://mcp.vercel.com"
 bearer_token_env_var = "VERCEL_TOKEN"
 
 [mcp_servers.context7]
-command = "npx"
-args = ["-y", "@upstash/context7-mcp"]
+url = "https://mcp.context7.com/mcp"
 startup_timeout_sec = 90
 
 [mcp_servers.linear]
