@@ -166,6 +166,27 @@ describe('script/codex-config-merge.py', () => {
     }
   });
 
+  test.each([
+    ['url = "https://mcp.context7.com/mcp"', 'command = "npx"\n[mcp_servers.test.env]\nOLD = "value"', { url: 'https://mcp.context7.com/mcp' }],
+    ['command = "npx"', 'url = "http://127.0.0.1:47932/servers/test/mcp"\n[mcp_servers.test.http_headers]\nAuthorization = "Bearer fixture"', { url: 'http://127.0.0.1:47932/servers/test/mcp', http_headers: { Authorization: 'Bearer fixture' } }],
+    ['command = "npx"', 'url = "https://old.example/mcp"\n[mcp_servers.test.http_headers]\nAuthorization = "Bearer stale"', { command: 'npx' }],
+    ['url = "https://new.example/mcp"', 'url = "http://127.0.0.1:47932/servers/test/mcp"\n[mcp_servers.test.http_headers]\nAuthorization = "Bearer fixture"', { url: 'https://new.example/mcp' }],
+    ['url = "https://new.example/mcp"\n[mcp_servers.test.http_headers]\nPublic = "base"', 'url = "https://old.example/mcp"\nbearer_token_env_var = "OLD_TOKEN"\n[mcp_servers.test.http_headers]\nAuthorization = "Bearer stale"', { url: 'https://new.example/mcp', http_headers: { Public: 'base' } }],
+    ['url = "https://same.example/mcp"', 'url = "https://same.example/mcp"\n[mcp_servers.test.http_headers]\nAuthorization = "Bearer fixture"', { url: 'https://same.example/mcp', http_headers: { Authorization: 'Bearer fixture' } }],
+  ])('keeps MCP transports exclusive: %s', (baseEntry, localEntry, expected) => {
+    const repo = makeTempRepo();
+    try {
+      const basePath = path.join(repo, 'base.toml');
+      const targetPath = path.join(repo, 'config.toml');
+      fs.writeFileSync(basePath, `[mcp_servers.test]\n${baseEntry}\n`);
+      fs.writeFileSync(targetPath, `model = "local"\n[mcp_servers.test]\nstartup_timeout_sec = 90\n${localEntry}\n`);
+      expect(runMerge([basePath, targetPath]).status).toBe(0);
+      expect(readToml(targetPath)).toEqual({ model: 'local', mcp_servers: { test: { startup_timeout_sec: 90, ...expected } } });
+    } finally {
+      fs.rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
   test('aborts without touching the target when it contains invalid TOML', () => {
     const repo = makeTempRepo();
     try {
