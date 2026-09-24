@@ -1,4 +1,4 @@
-# 0023: MCP servers use HTTP where available
+# 0027: MCP servers use HTTP where available
 
 Status: Accepted
 

@@ -27,6 +27,7 @@ Codex / ChatGPT アプリは projects.*.trust_level・marketplaces.*・プラグ
 Usage: codex-config-merge.py <base_toml> <target_toml>
 """
 
+import copy
 import os
 import stat
 import sys
@@ -48,7 +49,8 @@ def deep_merge(local: Any, base: Any) -> Any:
 
 
 def merge_config(local: dict, base: dict) -> dict:
-    merged = deep_merge(local, base)
+    merged = copy.deepcopy(deep_merge(local, base))
+    http_auth = ("http_headers", "env_http_headers", "bearer_token_env_var", "http_headers_helper", "oauth_resource", "oauth", "scopes")
     for name, shared in base.get("mcp_servers", {}).items():
         server = merged["mcp_servers"][name]
         local_url = local.get("mcp_servers", {}).get(name, {}).get("url", "")
@@ -59,12 +61,12 @@ def merge_config(local: dict, base: dict) -> dict:
                 server.pop(key, None)
             if "url" in shared and local_url != shared["url"]:
                 # Authentication belongs to an endpoint, never forward it to a new one.
-                for key in ("http_headers", "env_http_headers", "bearer_token_env_var", "http_headers_helper"):
+                for key in http_auth:
                     server.pop(key, None)
                     if key in shared:
                         server[key] = shared[key]
         elif "command" in shared:
-            for key in ("url", "http_headers", "env_http_headers", "bearer_token_env_var", "http_headers_helper"):
+            for key in ("url", *http_auth):
                 server.pop(key, None)
     return merged
 

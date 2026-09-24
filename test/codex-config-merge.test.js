@@ -35,6 +35,8 @@ def _write_table(table, path_parts, lines):
 
 
 def _format(v):
+    if isinstance(v, list):
+        return "[" + ", ".join(_format(item) for item in v) + "]"
     if isinstance(v, bool):
         return "true" if v else "false"
     if isinstance(v, int):
@@ -166,7 +168,41 @@ describe('script/codex-config-merge.py', () => {
     }
   });
 
+  test('preserves base HTTP authentication on a fresh deployment', () => {
+    const repo = makeTempRepo();
+    try {
+      const basePath = path.join(repo, 'base.toml');
+      const targetPath = path.join(repo, 'config.toml');
+      fs.writeFileSync(
+        basePath,
+        '[mcp_servers.test]\nurl="https://fixture.example/mcp"\nbearer_token_env_var="FIXTURE_TOKEN"\n[mcp_servers.test.http_headers]\nPublic="base"\n',
+      );
+      expect(runMerge([basePath, targetPath]).status).toBe(0);
+      expect(readToml(targetPath)).toEqual({
+        mcp_servers: {
+          test: {
+            url: 'https://fixture.example/mcp',
+            bearer_token_env_var: 'FIXTURE_TOKEN',
+            http_headers: { Public: 'base' },
+          },
+        },
+      });
+    } finally {
+      fs.rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
   test.each([
+    [
+      'command="fixture"',
+      'url="https://old.example/mcp"\noauth_resource="old"\nscopes=["old"]\n[mcp_servers.test.oauth]\nclient_id="old"',
+      { command: 'fixture' },
+    ],
+    [
+      'url="https://new.example/mcp"\nscopes=["new"]\n[mcp_servers.test.oauth]\nclient_id="new"',
+      'url="https://old.example/mcp"\noauth_resource="old"\nscopes=["old"]\n[mcp_servers.test.oauth]\nclient_id="old"',
+      { url: 'https://new.example/mcp', scopes: ['new'], oauth: { client_id: 'new' } },
+    ],
     [
       'url = "https://mcp.context7.com/mcp"',
       'command = "npx"\n[mcp_servers.test.env]\nOLD = "value"',

@@ -32,6 +32,7 @@
 | [0024](0024-pr-size-hard-gate.md)                               | PR サイズ制限を警告からハード制約に変更する                       | Accepted           |
 | [0025](0025-launch-mcp-servers-from-global-binaries.md)         | MCP サーバーを npx ではなくグローバル導入済みバイナリで起動する   | Accepted           |
 | [0026](0026-claude-token-guard-by-inspection.md)                | 配布対象外リポジトリの Claude トークンガードを検査で担保する      | Accepted           |
+| [0027](0027-mcp-shared-http.md) | MCP servers use HTTP where available | Accepted |
 
 ## ADR テンプレート
 
