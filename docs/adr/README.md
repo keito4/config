@@ -33,6 +33,7 @@
 | [0025](0025-launch-mcp-servers-from-global-binaries.md)         | MCP サーバーを npx ではなくグローバル導入済みバイナリで起動する   | Accepted           |
 | [0026](0026-claude-token-guard-by-inspection.md)                | 配布対象外リポジトリの Claude トークンガードを検査で担保する      | Accepted           |
 | [0027](0027-mcp-shared-http.md)                                 | MCP servers use HTTP where available                              | Accepted           |
+| [0028](0028-macos-ci-integration-tests.md)                      | macOS integration test runner for CI                              | Accepted           |
 
 ## ADR テンプレート
 
