@@ -38,6 +38,8 @@ describe('Claude workflow contracts', () => {
     expect(workflow).toContain('Bash(gh issue close:*)');
     expect(workflow).toContain('gh issue close <number> --reason completed');
     expect(workflow).toContain('Keep the Issue open when you pushed changes');
+    // セルフホスト等へ移行済みのリポジトリの runner を同期で巻き戻さないため、変数で切り替える
+    expect(workflow).toContain("runs-on: ${{ vars.CLAUDE_RUNNER || 'ubuntu-latest' }}");
   });
 
   test.each(issueWorkflows)('%s skips draft PR issue comments through the Pulls API', (workflowPath) => {
