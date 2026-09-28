@@ -31,6 +31,15 @@ describe('Claude workflow contracts', () => {
     expect(workflow).not.toContain('"allowedTools"');
   });
 
+  // 調査のみで対応不要と結論した Issue を Claude 自身が閉じられるようにする（手動クローズの手間を無くす）
+  test.each(issueWorkflows)('%s lets Claude close Issues that need no change', (workflowPath) => {
+    const workflow = readWorkflow(workflowPath);
+
+    expect(workflow).toContain('Bash(gh issue close:*)');
+    expect(workflow).toContain('gh issue close <number> --reason completed');
+    expect(workflow).toContain('Keep the Issue open when you pushed changes');
+  });
+
   test.each(issueWorkflows)('%s skips draft PR issue comments through the Pulls API', (workflowPath) => {
     const workflow = readWorkflow(workflowPath);
 
