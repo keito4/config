@@ -10,6 +10,7 @@
 #
 # カスタマイズ:
 #   - timeout-minutes: タイムアウト（デフォルト: 30分）
+#   - runs-on: リポジトリ変数 CLAUDE_RUNNER で変更（例: ubicloud-standard-2、未設定なら ubuntu-latest）
 #   - allowed_tools: Claude に許可するツール
 #   - claude_args: 追加の system prompt 等
 #
@@ -61,7 +62,7 @@ jobs:
           github.event.pull_request.draft == false) ||
         (github.event_name == 'issues' && (contains(github.event.issue.body || '', '@claude') || contains(github.event.issue.title || '', '@claude')))
       )
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CLAUDE_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 30
     permissions:
       contents: write

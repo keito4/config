@@ -88,6 +88,154 @@
     {
       "name": "keito4/raycast-extensions",
       "groups": ["claude-config"]
+    },
+    {
+      "name": "Elu-co-jp/.github-private",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "Elu-co-jp/cloud_provisioning",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "Elu-co-jp/cyber_ace_1on1",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "Elu-co-jp/elu-workspace-utils",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "Elu-co-jp/emp_track_service",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "Elu-co-jp/job-post-generator",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "Elu-co-jp/job_description",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "Elu-co-jp/prog-insight",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/accomodation_query_management",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/activity_bookings",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/ai_concierge",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/chatbot",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/chatbot_v2",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/cloud-provisioning",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/goal_dashboard",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/interactive_movie_management",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/japan-data-platform",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/n8n_workflows",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/notion_mcp",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/oykot-lp",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/oykot-product-videos",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/oykot-ticket",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/oykot-tools",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/pbx-operation",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/poc_ai_audio",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/poc_remotion_catv",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/poc_travel_concierge",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/pubtech-gyoza-poc",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/remotion_poc",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/researcher",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/screen-image-fidelity",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/shift_management",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/slack_workflow_manager",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/taxi_inquery_management",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/trend_scope",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/tv_program_management",
+      "groups": ["workflow-claude"]
+    },
+    {
+      "name": "OYKOT-jp/workfromjapan",
+      "groups": ["workflow-claude"]
     }
   ]
 }
