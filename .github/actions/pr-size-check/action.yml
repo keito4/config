@@ -32,6 +32,13 @@ runs:
             return;
           }
 
+          // Dependabot lockfile updates can exceed the review-size limit.
+          // Use the PR author so human re-runs also work without label write access.
+          if (pullRequest.user?.login === 'dependabot[bot]') {
+            core.info('PR size gate skipped for Dependabot; other CI checks still apply.');
+            return;
+          }
+
           const maxLines = parseInt('${{ inputs.max-lines }}', 10);
           const maxFiles = parseInt('${{ inputs.max-files }}', 10);
           const overrideLabel = '${{ inputs.override-label }}';
