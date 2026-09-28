@@ -103,19 +103,15 @@ events. If the shortcuts do not switch after a rebuild, the fallback is to bind
 Kanary already holds the required permission and uses the same key-injection
 mechanism as its Command taps.
 
-### Amendment (2026-09-28): prebuilt Swift helpers
+### Amendment (2026-09-28): keep interpreting Swift helpers, alert on failure
 
-`send-ime-key` and `select-input-source` used to interpret their Swift source
-with `xcrun swift` on every invocation. When an Xcode update reset the license
-agreement, `xcrun` exited 69 and `Ctrl+Shift+J` silently stopped switching the
-IME. Both wrappers now exec `~/.local/share/input-source/run-cached-swift`,
-which compiles the source once per content hash with `xcrun swiftc` into
-`$XDG_CACHE_HOME/input-source/` and execs the binary. home-manager activation
-(`home.activation.prebuildInputSourceHelpers`) prebuilds both helpers, so the
-hotkeys no longer depend on the Xcode toolchain at runtime; `xcrun` is only
-needed again when the Swift source itself changes. If that build fails, the
-runner does not fall back to a stale binary: it shows a `display alert` telling
-the user to run `sudo xcodebuild -license accept` instead of failing silently.
-Stale builds are cleaned up only in `--build` mode (activation), so concurrent
-hotkey invocations never delete each other's binary. Running the
-compiled binary also cuts the hotkey latency from seconds to well under one.
+An Xcode update reset the license agreement, so `xcrun swift` exited 69 and
+`Ctrl+Shift+J` silently stopped switching the IME. Prebuilding the helpers with
+`swiftc` (#1298) removed the runtime dependency on `xcrun`, but key events posted
+from the prebuilt ad-hoc binary were silently dropped: it is not covered by
+skhd's Accessibility grant, while the Apple-signed `swift-frontend` interpreter
+is. The helpers therefore keep running through `xcrun swift`. When that fails,
+the wrappers show a `display alert` telling the user to run
+`sudo xcodebuild -license accept` instead of failing silently. The wrappers read
+the sources from `${HOME}/.local/share/input-source/`, where home-manager
+installs them regardless of `XDG_DATA_HOME`.
