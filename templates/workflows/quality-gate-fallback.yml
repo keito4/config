@@ -53,6 +53,13 @@ jobs:
             const MAX_FILES = 25;
             const OVERRIDE_LABEL = 'size/override';
             const pullRequest = context.payload.pull_request;
+            // Dependabot lockfile updates can exceed the review-size limit.
+            // Use the PR author so human re-runs also work without label write access.
+            if (pullRequest.user?.login === 'dependabot[bot]') {
+              core.info('PR size gate skipped for Dependabot; other CI checks still apply.');
+              return;
+            }
+
             const totalChanges = pullRequest.additions + pullRequest.deletions;
 
             core.info(`PR size: ${totalChanges} lines / ${pullRequest.changed_files} files`);
