@@ -2,6 +2,5 @@
 set -eu
 
 data_home="${XDG_DATA_HOME:-${HOME}/.local/share}"
-src="${data_home}/input-source/send-ime-key.swift"
 
-exec /usr/bin/xcrun swift "$src" "$@"
+exec "${data_home}/input-source/run-cached-swift" send-ime-key "$@"

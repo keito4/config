@@ -102,3 +102,18 @@ events. If the shortcuts do not switch after a rebuild, the fallback is to bind
 `Ctrl+Shift+J` / `Ctrl+Shift+;` as Kanary app hotkeys that emit かな / 英数, since
 Kanary already holds the required permission and uses the same key-injection
 mechanism as its Command taps.
+
+### Amendment (2026-09-28): prebuilt Swift helpers
+
+`send-ime-key` and `select-input-source` used to interpret their Swift source
+with `xcrun swift` on every invocation. When an Xcode update reset the license
+agreement, `xcrun` exited 69 and `Ctrl+Shift+J` silently stopped switching the
+IME. Both wrappers now exec `~/.local/share/input-source/run-cached-swift`,
+which compiles the source once per content hash with `xcrun swiftc` into
+`$XDG_CACHE_HOME/input-source/` and execs the binary. home-manager activation
+(`home.activation.prebuildInputSourceHelpers`) prebuilds both helpers, so the
+hotkeys no longer depend on the Xcode toolchain at runtime. If a rebuild fails,
+the runner falls back to the previous build; if no build exists at all, it
+shows a `display alert` telling the user to run
+`sudo xcodebuild -license accept` instead of failing silently. Running the
+compiled binary also cuts the hotkey latency from seconds to well under one.
