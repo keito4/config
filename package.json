@@ -41,7 +41,7 @@
     "conventional-changelog-conventionalcommits": "^9.3.1",
     "conventional-commits-filter": "^6.0.1",
     "conventional-commits-parser": "^7.1.2",
-    "eslint": "10.10.0",
+    "eslint": "10.11.0",
     "eslint-config-prettier": "10.1.8",
     "globals": "17.12.0",
     "husky": "9.1.7",
@@ -50,7 +50,7 @@
     "js-yaml": "^5.4.2",
     "prettier": "3.9.8",
     "semantic-release": "25.0.9",
-    "takt": "0.65.0"
+    "takt": "0.66.1"
   },
   "overrides": {
     "@opentelemetry/propagator-jaeger": ">=2.9.0"
