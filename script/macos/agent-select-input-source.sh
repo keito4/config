@@ -1,6 +1,5 @@
 #!/bin/sh
 set -eu
 
-data_home="${XDG_DATA_HOME:-${HOME}/.local/share}"
-
-exec "${data_home}/input-source/run-cached-swift" select-input-source "$@"
+# home-manager installs the runner here regardless of XDG_DATA_HOME
+exec "${HOME}/.local/share/input-source/run-cached-swift" select-input-source "$@"

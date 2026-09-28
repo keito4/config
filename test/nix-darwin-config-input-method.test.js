@@ -92,7 +92,7 @@ describe('nix-darwin and home-manager input method configuration', () => {
     expect(inputSourceModule).toContain('".local/share/input-source/select-input-source.swift"');
     expect(inputSourceModule).toContain('".local/bin/select-input-source"');
     expect(inputSourceModule).toContain('".local/bin/agent-select-input-source"');
-    expect(inputSourceWrapper).toContain('XDG_DATA_HOME');
+    expect(inputSourceWrapper).toContain('${HOME}/.local/share/input-source/run-cached-swift');
     expect(inputSourceWrapper).toContain('/input-source/run-cached-swift');
     expect(inputSourceWrapper).toContain('select-input-source');
     expect(inputSourceWrapper).not.toContain('.config/karabiner');
@@ -133,10 +133,17 @@ describe('nix-darwin and home-manager input method configuration', () => {
     expect(runner).toContain('XDG_CACHE_HOME');
     expect(runner).toContain('exec "$bin"');
 
-    // ビルドに失敗しても直前のビルド済みバイナリで動き続け、
-    // それも無ければ黙って落ちずに本人へ知らせる
-    expect(runner).toContain('fallback');
+    // home-manager は XDG_DATA_HOME に関係なく ~/.local/share に置くので、参照先もそこに固定する
+    expect(runner).toContain('src="${HOME}/.local/share/input-source/${name}.swift"');
+    expect(runner).not.toContain('${XDG_DATA_HOME');
+    for (const wrapper of wrappers) {
+      expect(wrapper).not.toContain('${XDG_DATA_HOME');
+    }
+
+    // ビルド失敗時は古いバイナリへ fallback せず、黙って落ちずに本人へ知らせる
+    expect(runner).not.toContain('fallback');
     expect(runner).toContain('display alert');
+    expect(runner).toContain('sudo xcodebuild -license accept');
 
     // activation で事前ビルドしておき、ライセンス切れの前にバイナリを用意する
     expect(inputSourceModule).toContain('".local/share/input-source/run-cached-swift"');

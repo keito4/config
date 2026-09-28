@@ -112,8 +112,10 @@ IME. Both wrappers now exec `~/.local/share/input-source/run-cached-swift`,
 which compiles the source once per content hash with `xcrun swiftc` into
 `$XDG_CACHE_HOME/input-source/` and execs the binary. home-manager activation
 (`home.activation.prebuildInputSourceHelpers`) prebuilds both helpers, so the
-hotkeys no longer depend on the Xcode toolchain at runtime. If a rebuild fails,
-the runner falls back to the previous build; if no build exists at all, it
-shows a `display alert` telling the user to run
-`sudo xcodebuild -license accept` instead of failing silently. Running the
+hotkeys no longer depend on the Xcode toolchain at runtime; `xcrun` is only
+needed again when the Swift source itself changes. If that build fails, the
+runner does not fall back to a stale binary: it shows a `display alert` telling
+the user to run `sudo xcodebuild -license accept` instead of failing silently.
+Stale builds are cleaned up only in `--build` mode (activation), so concurrent
+hotkey invocations never delete each other's binary. Running the
 compiled binary also cuts the hotkey latency from seconds to well under one.
