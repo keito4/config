@@ -92,9 +92,7 @@ describe('nix-darwin and home-manager input method configuration', () => {
     expect(inputSourceModule).toContain('".local/share/input-source/select-input-source.swift"');
     expect(inputSourceModule).toContain('".local/bin/select-input-source"');
     expect(inputSourceModule).toContain('".local/bin/agent-select-input-source"');
-    expect(inputSourceWrapper).toContain('${HOME}/.local/share/input-source/run-cached-swift');
-    expect(inputSourceWrapper).toContain('/input-source/run-cached-swift');
-    expect(inputSourceWrapper).toContain('select-input-source');
+    expect(inputSourceWrapper).toContain('/input-source/select-input-source.swift');
     expect(inputSourceWrapper).not.toContain('.config/karabiner');
     expect(inputSourceSwift).toContain('TISSelectInputSource(source)');
     expect(inputSourceSwift).not.toContain('TISEnableInputSource');
@@ -107,50 +105,39 @@ describe('nix-darwin and home-manager input method configuration', () => {
 
     expect(inputSourceModule).toContain('".local/share/input-source/send-ime-key.swift"');
     expect(inputSourceModule).toContain('".local/bin/send-ime-key"');
-    expect(sendKeyWrapper).toContain('/input-source/run-cached-swift');
-    expect(sendKeyWrapper).toContain('send-ime-key');
+    expect(sendKeyWrapper).toContain('/input-source/send-ime-key.swift');
     expect(sendKeySwift).toContain('return 104'); // かな
     expect(sendKeySwift).toContain('return 102'); // 英数
     expect(sendKeySwift).toContain('.cghidEventTap');
   });
 
-  test('Swift helpers run from a prebuilt binary instead of interpreting with xcrun at hotkey time', () => {
+  test('Swift helpers are interpreted by xcrun and alert instead of failing silently', () => {
     const inputSourceModule = readRepoFile('nix/home/input-source.nix');
-    const runner = readRepoFile('script/macos/run-cached-swift.sh');
     const wrappers = [
       readRepoFile('script/macos/send-ime-key.sh'),
       readRepoFile('script/macos/agent-select-input-source.sh'),
     ];
 
-    // Xcode 更新でライセンス同意がリセットされると `xcrun swift` が exit 69 で落ち、
-    // Ctrl+Shift+J が無反応になる (2026-09-28)。ホットキー実行時は xcrun に依存せず、
-    // ソースのハッシュごとにキャッシュしたビルド済みバイナリを exec する。
-    for (const wrapper of wrappers) {
-      expect(wrapper).not.toContain('xcrun swift "$src"');
-    }
-    expect(runner).toContain('xcrun swiftc');
-    expect(runner).toContain('shasum -a 256');
-    expect(runner).toContain('XDG_CACHE_HOME');
-    expect(runner).toContain('exec "$bin"');
+    // ビルド済みバイナリ (ad-hoc 署名) から送ったキーイベントは TCC に黙って捨てられ、
+    // Ctrl+Shift+J が効かなくなった (2026-09-28)。Apple 署名の swift-frontend で
+    // 解釈実行する方式に戻す。
+    expect(fs.existsSync(path.join(repoPath, 'script/macos/run-cached-swift.sh'))).toBe(false);
+    expect(inputSourceModule).not.toContain('run-cached-swift');
+    expect(inputSourceModule).not.toContain('prebuildInputSourceHelpers');
 
-    // home-manager は XDG_DATA_HOME に関係なく ~/.local/share に置くので、参照先もそこに固定する
-    expect(runner).toContain('src="${HOME}/.local/share/input-source/${name}.swift"');
-    expect(runner).not.toContain('${XDG_DATA_HOME');
     for (const wrapper of wrappers) {
+      expect(wrapper).toContain('/usr/bin/xcrun swift "$src" "$@"');
+      // home-manager は XDG_DATA_HOME に関係なく ~/.local/share に置くので、参照先もそこに固定する
+      expect(wrapper).toContain('${HOME}/.local/share/input-source/');
       expect(wrapper).not.toContain('${XDG_DATA_HOME');
+      // Xcode 更新でライセンス同意が外れると xcrun は exit 69 で落ちる。黙って落ちずに知らせる
+      expect(wrapper).toContain('display alert');
+      expect(wrapper).toContain('sudo xcodebuild -license accept');
+      // alert はライセンス未同意 (xcrun の exit 69) のときだけ出し、ヘルパー自身の
+      // 使い方エラー (64/66 など) では出さずに終了コードをそのまま返す
+      expect(wrapper).toContain('[ "$status" -eq 69 ]');
+      expect(wrapper).toContain('exit "$status"');
     }
-
-    // ビルド失敗時は古いバイナリへ fallback せず、黙って落ちずに本人へ知らせる
-    expect(runner).not.toContain('fallback');
-    expect(runner).toContain('display alert');
-    expect(runner).toContain('sudo xcodebuild -license accept');
-
-    // activation で事前ビルドしておき、ライセンス切れの前にバイナリを用意する
-    expect(inputSourceModule).toContain('".local/share/input-source/run-cached-swift"');
-    expect(inputSourceModule).toContain('home.activation.prebuildInputSourceHelpers');
-    expect(inputSourceModule).toContain('lib.hm.dag.entryAfter [ "linkGeneration" ]');
-    expect(inputSourceModule).toContain('--build send-ime-key');
-    expect(inputSourceModule).toContain('--build select-input-source');
   });
 
   test('keyboard remapping is documented through Kanary without home-manager Karabiner state', () => {
