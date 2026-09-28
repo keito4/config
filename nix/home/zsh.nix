@@ -104,7 +104,7 @@
       nrp = "nr preview";
 
       # Nix shortcuts
-      nix-switch = "darwin-rebuild switch --flake ~/develop/github.com/keito4/config/nix";
+      nix-switch = "nix flake archive ~/develop/github.com/keito4/config/nix >/dev/null && sudo darwin-rebuild switch --flake ~/develop/github.com/keito4/config/nix";
       nix-update = "cd ~/develop/github.com/keito4/config/nix && nix flake update";
     };
   };
