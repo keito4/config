@@ -133,6 +133,10 @@ describe('nix-darwin and home-manager input method configuration', () => {
       // Xcode 更新でライセンス同意が外れると xcrun は exit 69 で落ちる。黙って落ちずに知らせる
       expect(wrapper).toContain('display alert');
       expect(wrapper).toContain('sudo xcodebuild -license accept');
+      // alert はライセンス未同意 (xcrun の exit 69) のときだけ出し、ヘルパー自身の
+      // 使い方エラー (64/66 など) では出さずに終了コードをそのまま返す
+      expect(wrapper).toContain('[ "$status" -eq 69 ]');
+      expect(wrapper).toContain('exit "$status"');
     }
   });
 
