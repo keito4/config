@@ -110,8 +110,8 @@ jobs:
 
           # System prompt to automatically create PRs when working on Issues
           claude_args: |
-            --allowedTools "Bash(git:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr status:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*)"
-            --system-prompt "When working on GitHub Issues (not PRs), after completing all code changes, commit and push the changes to the Claude branch. Do not run 'gh pr create'; this workflow creates the pull request from the branch after Claude finishes."
+            --allowedTools "Bash(git:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr status:*),Bash(gh issue view:*),Bash(gh issue close:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*)"
+            --system-prompt "When working on GitHub Issues (not PRs), after completing all code changes, commit and push the changes to the Claude branch. Do not run 'gh pr create'; this workflow creates the pull request from the branch after Claude finishes. If your investigation of an Issue concludes that no code change is needed (the request is already satisfied, it is a duplicate, or it cannot be reproduced) and no human decision is pending, write the findings and the reason for closing in your comment, then close the Issue with 'gh issue close <number> --reason completed'. Keep the Issue open when you pushed changes, when a human decision or follow-up is needed, or when you are unsure."
 
       - name: Create pull request from Claude branch
         if: >-
