@@ -9,6 +9,8 @@ CONFIG_REPO="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$SCRIPT_DIR/lib/output.sh"
 # shellcheck source=script/lib/project-detect.sh
 source "$SCRIPT_DIR/lib/project-detect.sh"
+# shellcheck source=script/lib/private_config.sh
+source "$SCRIPT_DIR/lib/private_config.sh"
 
 TYPE=""
 LEVEL="standard"
@@ -58,10 +60,12 @@ mkdir -p "$TARGET_DIR"
 TYPE="${TYPE:-$(project::detect_type "$TARGET_DIR")}"
 PACKAGE_MANAGER="$(project::detect_package_manager "$TARGET_DIR")"
 
-# CI ランナー。GitHub ホストランナーが枯渇した OYKOT-jp では 2026-08-30 以降
-# ジョブが0ステップのまま即失敗するようになり、8/31 に全リポジトリを Ubicloud へ移行した。
+# CI ランナー。GitHub ホストランナーが枯渇した組織では、ジョブが0ステップのまま
+# 即失敗するようになり、全リポジトリを Ubicloud へ移行した（2026-08-31）。
 # 新規リポジトリだけ ubuntu-latest に戻るのを防ぐため、導入済みの owner では Ubicloud を既定にする。
 # Ubicloud 未導入の owner を巻き込んで壊さないよう、既定は owner ごとに切り替える。
+# 導入済み owner の一覧は組織情報なので、private-config の config/org.env にある
+# SETUP_CI_UBICLOUD_OWNERS（空白区切り）から読む。
 detect_ci_runner() {
   local owner dir
 
@@ -89,12 +93,14 @@ detect_ci_runner() {
   # 取りこぼさないよう小文字へ寄せて比較する
   owner="$(printf '%s' "$owner" | tr '[:upper:]' '[:lower:]')"
 
-  case "$owner" in
-    oykot-jp|elu-co-jp) echo "ubicloud-standard-2" ;;
-    *) echo "ubuntu-latest" ;;
-  esac
+  if private_config::list_contains "${SETUP_CI_UBICLOUD_OWNERS:-}" "$owner"; then
+    echo "ubicloud-standard-2"
+  else
+    echo "ubuntu-latest"
+  fi
 }
 
+private_config::load_org_env
 CI_RUNNER="${CI_RUNNER:-$(detect_ci_runner)}"
 
 # テンプレート正本は ubuntu-latest のまま置く（配布先の keito4/* が Ubicloud 未導入のため）。

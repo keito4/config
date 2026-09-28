@@ -6,6 +6,9 @@
 # 実行から全リポジトリへ反映される。
 #
 # 走査は読み取りのみ。対象リポジトリへ Issue や PR は作らない。
+#
+# 公開リポジトリの Actions ログは誰でも読めるため、ここでは keito4 だけを走査する。
+# 組織リポジトリの走査は非公開の private-config から同じスクリプトを呼んで行う。
 name: Fleet Workflow Guards
 
 on:
@@ -20,7 +23,7 @@ on:
       owners:
         description: '走査する GitHub オーナー（空白区切り）'
         required: false
-        default: 'keito4 Elu-co-jp OYKOT-jp'
+        default: 'keito4'
       repos:
         description: '走査するリポジトリ名（空白区切り）。空なら自動検出。指定時は owners を1つに絞ること'
         required: false
@@ -50,12 +53,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CLAUDE_PAT }}
           FLEET_DAYS: ${{ inputs.days || '90' }}
-          FLEET_OWNERS: ${{ inputs.owners || 'keito4 Elu-co-jp OYKOT-jp' }}
+          FLEET_OWNERS: ${{ inputs.owners || 'keito4' }}
           FLEET_REPOS: ${{ inputs.repos || '' }}
         run: |
           set -u
-          # リポジトリ名はオーナーを跨いで一意ではない（notion_mcp は keito4 と OYKOT-jp の
-          # 両方にある）。--repos を複数オーナーへ配ると別物を走査してしまう。
+          # リポジトリ名はオーナーを跨いで一意ではない（同名リポジトリが複数オーナーにある）。
+          # --repos を複数オーナーへ配ると別物を走査してしまう。
           if [ -n "$FLEET_REPOS" ] && [ "$(printf '%s\n' $FLEET_OWNERS | wc -l)" -ne 1 ]; then
             echo "::error::repos を指定するときは owners を1つに絞ってください" >&2
             exit 1

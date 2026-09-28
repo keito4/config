@@ -207,7 +207,7 @@ process of the same user via `ps`.
 ./script/fix-mcp-token-exposure.sh --print linear  # 生成される定義を確認
 ```
 
-**Managed servers**: `linear`, `supabase`, `sentry-elu`
+**Managed servers**: `linear`, `supabase`, and the organization Sentry server named by `SENTRY_MCP_SERVER` in the private configuration (`config/org.env`)
 
 **Notes**:
 
@@ -266,14 +266,15 @@ repositories.
 ./script/fleet-workflow-guards.sh                       # 直近90日に push されたリポジトリ
 ./script/fleet-workflow-guards.sh --days 30
 ./script/fleet-workflow-guards.sh --repos "config ohana"
-./script/fleet-workflow-guards.sh --owner Elu-co-jp
+./script/fleet-workflow-guards.sh --owner <org>
 ```
 
 Requires `gh` authenticated with a token that can read the target repositories.
 `.github/workflows/fleet-workflow-guards.yml` runs it weekly with `CLAUDE_PAT`
-over `keito4`, `Elu-co-jp`, and `OYKOT-jp`, and writes the per-repository result to the job
-summary. Repository names are not unique across owners (`notion_mcp` exists under both
-`keito4` and `OYKOT-jp`), so the `repos` input may only be combined with a single owner.
+over `keito4`, and writes the per-repository result to the job summary. Organization
+repositories are scanned from the private configuration repository instead, because
+Actions logs of this public repository are world-readable. Repository names are not unique
+across owners, so the `repos` input may only be combined with a single owner.
 
 ### setup-ci.sh
 

@@ -199,12 +199,12 @@ init_extra_config_dir() {
   local fake_home="${TEST_TEMP_DIR}/home"
   mkdir -p "${fake_home}/.claude/commands"
   init_extra_config_dir "${fake_home}/.claude-private"
-  init_extra_config_dir "${fake_home}/.claude-elu"
+  init_extra_config_dir "${fake_home}/.claude-acme"
 
   run_setup_in_fake_home "$fake_home"
 
   [ -L "${fake_home}/.claude-private/commands" ]
-  [ -L "${fake_home}/.claude-elu/commands" ]
+  [ -L "${fake_home}/.claude-acme/commands" ]
 }
 
 @test "setup-claude.sh content linking is idempotent" {
@@ -424,28 +424,28 @@ JSON
   local fake_home="${TEST_TEMP_DIR}/home"
   local private="${TEST_TEMP_DIR}/private-config"
   mkdir -p "${fake_home}/.claude" "${private}/.claude/skills"
-  printf -- '---\nname: oykot-tasks\n---\nbody\n' > "${private}/.claude/skills/oykot-tasks.md"
+  printf -- '---\nname: org-tasks\n---\nbody\n' > "${private}/.claude/skills/org-tasks.md"
 
   PRIVATE_CONFIG_DIR="$private" run_setup_in_fake_home "$fake_home"
 
   # <name>/SKILL.md が正本ファイルへの symlink になっていること
-  [ -L "${fake_home}/.claude/skills/oykot-tasks/SKILL.md" ]
-  [ "$(readlink "${fake_home}/.claude/skills/oykot-tasks/SKILL.md")" = "${private}/.claude/skills/oykot-tasks.md" ]
+  [ -L "${fake_home}/.claude/skills/org-tasks/SKILL.md" ]
+  [ "$(readlink "${fake_home}/.claude/skills/org-tasks/SKILL.md")" = "${private}/.claude/skills/org-tasks.md" ]
   # リンク越しに正本の内容が読めること（宣言ではなく実体で確認）
-  [ "$(cat "${fake_home}/.claude/skills/oykot-tasks/SKILL.md")" = "$(cat "${private}/.claude/skills/oykot-tasks.md")" ]
+  [ "$(cat "${fake_home}/.claude/skills/org-tasks/SKILL.md")" = "$(cat "${private}/.claude/skills/org-tasks.md")" ]
 }
 
 @test "setup-claude.sh replaces an existing real SKILL.md copy with a symlink to private-config" {
   local fake_home="${TEST_TEMP_DIR}/home"
   local private="${TEST_TEMP_DIR}/private-config"
-  mkdir -p "${fake_home}/.claude/skills/oykot-tasks" "${private}/.claude/skills"
-  echo "canonical" > "${private}/.claude/skills/oykot-tasks.md"
-  echo "stale copy" > "${fake_home}/.claude/skills/oykot-tasks/SKILL.md"
+  mkdir -p "${fake_home}/.claude/skills/org-tasks" "${private}/.claude/skills"
+  echo "canonical" > "${private}/.claude/skills/org-tasks.md"
+  echo "stale copy" > "${fake_home}/.claude/skills/org-tasks/SKILL.md"
 
   PRIVATE_CONFIG_DIR="$private" run_setup_in_fake_home "$fake_home"
 
-  [ -L "${fake_home}/.claude/skills/oykot-tasks/SKILL.md" ]
-  [ "$(cat "${fake_home}/.claude/skills/oykot-tasks/SKILL.md")" = "canonical" ]
+  [ -L "${fake_home}/.claude/skills/org-tasks/SKILL.md" ]
+  [ "$(cat "${fake_home}/.claude/skills/org-tasks/SKILL.md")" = "canonical" ]
 }
 
 @test "setup-claude.sh materializes directory-form private skills as a symlinked directory" {
@@ -480,14 +480,14 @@ JSON
   local fake_home="${TEST_TEMP_DIR}/home"
   local private="${TEST_TEMP_DIR}/private-config"
   mkdir -p "${fake_home}/.claude" "${private}/.claude/skills/review-queue"
-  echo "flat" > "${private}/.claude/skills/oykot-tasks.md"
+  echo "flat" > "${private}/.claude/skills/org-tasks.md"
   echo "dir" > "${private}/.claude/skills/review-queue/SKILL.md"
 
   PRIVATE_CONFIG_DIR="$private" run_setup_in_fake_home "$fake_home"
   PRIVATE_CONFIG_DIR="$private" run_setup_in_fake_home "$fake_home"
 
   [ "$status" -eq 0 ]
-  [ -L "${fake_home}/.claude/skills/oykot-tasks/SKILL.md" ]
+  [ -L "${fake_home}/.claude/skills/org-tasks/SKILL.md" ]
   [ -L "${fake_home}/.claude/skills/review-queue" ]
   [ "$(cat "${fake_home}/.claude/skills/review-queue/SKILL.md")" = "dir" ]
 }
@@ -511,7 +511,7 @@ JSON
   PRIVATE_CONFIG_DIR="${TEST_TEMP_DIR}/does-not-exist" run_setup_in_fake_home "$fake_home"
 
   [ "$status" -eq 0 ]
-  [ ! -e "${fake_home}/.claude/skills/oykot-tasks" ]
+  [ ! -e "${fake_home}/.claude/skills/org-tasks" ]
 }
 
 # ---------------------------------------------------------------------------

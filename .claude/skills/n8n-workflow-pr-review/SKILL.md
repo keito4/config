@@ -6,7 +6,7 @@ description: keito4-org/n8n_custom_node の n8n ワークフロー/テンプレ�
 # n8n ワークフローPRレビュー
 
 対象リポジトリ: `keito4-org/n8n_custom_node`（テンプレートの正本）
-ワークフロー実体は elu / OYKOT の n8n インスタンスにあり、リポジトリのテンプレートJSONと双方向に同期される。
+ワークフロー実体は 各組織の n8n インスタンスにあり、リポジトリのテンプレートJSONと双方向に同期される。
 
 ## 0. PRの分類
 
