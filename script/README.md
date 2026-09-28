@@ -313,7 +313,7 @@ Checks staged TS/JS files for excessive line counts.
 
 **Configuration**: Create `.filelengthignore` (same syntax as `.gitignore`) to exclude files.
 
-**Template**: `.filelengthignore.template`
+**Template**: `.devcontainer/templates/.filelengthignore.template` (copied into the config-base image as `/usr/local/share/config-templates/.filelengthignore.template`)
 
 ### pre-pr-checklist.sh
 
