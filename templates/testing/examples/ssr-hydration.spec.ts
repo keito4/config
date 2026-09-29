@@ -225,7 +225,7 @@ test.describe('SSR/Hydration Tests', () => {
     test('TTFB（Time to First Byte）が許容範囲内', async ({ page }) => {
       const startTime = Date.now();
 
-      const response = await page.goto(`${BASE_URL}/`, { waitUntil: 'commit' });
+      await page.goto(`${BASE_URL}/`, { waitUntil: 'commit' });
 
       const ttfb = Date.now() - startTime;
 
@@ -345,7 +345,7 @@ test.describe('SSR/Hydration Tests', () => {
           const hasNoCache = cacheControl.includes('no-cache') || cacheControl.includes('no-store');
           const hasPrivate = cacheControl.includes('private');
           const hasShortMaxAge = /max-age=([0-9]+)/.exec(cacheControl)?.[1];
-          const isShort = hasShortMaxAge ? parseInt(hasShortMaxAge) <= 60 : false;
+          const isShort = hasShortMaxAge ? parseInt(hasShortMaxAge, 10) <= 60 : false;
 
           expect(hasNoCache || hasPrivate || isShort).toBe(true);
         }
