@@ -1,7 +1,7 @@
 # macOS 新規マシンセットアップ
 
 新規 Mac (Apple Silicon) をこのリポジトリの nix-darwin 構成で立ち上げる手順。
-実際の新規マシンセットアップ (oykotnoMacBook-Air, 2026-07) で検証済み。
+実際の新規マシンセットアップ (2026-07) で検証済み。
 
 ## 前提
 
@@ -46,23 +46,36 @@ curl -fsSL https://install.determinate.systems/nix | sh -s -- install
   `/Applications` または `~/Applications` に配置する。無いと activation が
   システムチェックで失敗する。
 
-## 5. flake にホストを追加
+## 5. 端末一覧にホストを追加
 
-`nix/flake.nix` の `darwinConfigurations` に新規マシンのエントリを追加する。
+端末名・ユーザー名は組織情報を含みうるため、公開の `nix/flake.nix` ではなく
+非公開の `keito4/private-config` の `nix/hosts.nix` で管理している。
+`nix/flake.nix` は flake input `private-config` からこのファイルを読む。
 
 ```nix
-"<hostname>" = mkDarwin {
-  hostname = "<hostname>";   # scutil --get LocalHostName の値
+"<hostname>" = {             # scutil --get LocalHostName の値
   username = "<username>";   # whoami の値
   determinateNix = true;     # Determinate Nix の場合のみ
 };
 ```
 
-## 6. 初回の darwin-rebuild
-
-初回は darwin-rebuild が未導入のため `nix run` で実行する。
+private-config へ push したら、このリポジトリで入力を更新してコミットする。
 
 ```bash
+cd ~/develop/github.com/keito4/config/nix && nix flake update private-config
+```
+
+private-config の取得には GitHub の認証が要る（`gh auth login` 済みで、git が
+`gh` を credential helper として使える状態にしておく）。
+
+## 6. 初回の darwin-rebuild
+
+初回は darwin-rebuild が未導入のため `nix run` で実行する。sudo 下の root は
+GitHub の認証を持たないので、先にユーザー権限で flake の入力を取得しておく。
+
+```bash
+nix --extra-experimental-features "nix-command flakes" \
+  flake archive ~/develop/github.com/keito4/config/nix
 sudo /nix/var/nix/profiles/default/bin/nix run nix-darwin/master#darwin-rebuild \
   --extra-experimental-features "nix-command flakes" \
   -- switch --flake ~/develop/github.com/keito4/config/nix

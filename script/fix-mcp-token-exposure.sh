@@ -4,7 +4,7 @@
 # 展開済みトークンを argv に渡している MCP 定義を、環境変数経由へ書き換える
 # ============================================================================
 # 背景:
-#   linear / supabase / sentry-elu は、シェルが展開したトークンを
+#   linear / supabase / 組織の Sentry は、シェルが展開したトークンを
 #   mcp-remote や @sentry/mcp-server の *コマンドライン引数* に渡していたため、
 #   同一ユーザーの任意プロセスから `ps` で平文のまま読めた。
 #
@@ -21,11 +21,11 @@
 #   反映には対象セッションの再起動が必要 (MCP は起動時に spawn される)。
 #
 # 2026-09-05 追記 — npx 起動は遅く、かつ壊れる:
-#   sentry-elu は `npx -y @sentry/mcp-server@latest` で起動していた。`@latest` は
+#   組織の Sentry は `npx -y @sentry/mcp-server@latest` で起動していた。`@latest` は
 #   起動のたびにレジストリ解決を走らせるため遅く (freee-mcp で実測 20.0 秒、
 #   Claude Code の起動タイムアウトは 30 秒)、さらに複数の MCP が同じ npx キャッシュを
 #   共有するため、並行起動でキャッシュが ENOTEMPTY を起こすと起動自体が失敗する
-#   (2026-09-05 未明 JST に実際に slack/sentry-elu が同時に CONNECTION_CLOSED になった)。
+#   (2026-09-05 未明 JST に実際に slack と Sentry が同時に CONNECTION_CLOSED になった)。
 #   そこでグローバル導入済みバイナリの直叩きへ移す。前提として次が要る:
 #       npm i -g @sentry/mcp-server
 #   トレードオフとして npx の自動更新は失われ、更新は `npm i -g` が必要になる。
@@ -60,9 +60,19 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=script/lib/output.sh
 source "$REPO_ROOT/script/lib/output.sh"
+# shellcheck source=script/lib/private_config.sh
+source "$REPO_ROOT/script/lib/private_config.sh"
+
+# 組織の Sentry MCP のサーバー名とトークンの環境変数名は組織情報なので、
+# 公開リポジトリには置かず private-config の config/org.env から読む。
+# 未設定の端末では Sentry を管理対象に含めない。
+private_config::load_org_env
+SENTRY_MCP_SERVER="${SENTRY_MCP_SERVER:-}"
+SENTRY_MCP_TOKEN_ENV="${SENTRY_MCP_TOKEN_ENV:-SENTRY_ACCESS_TOKEN}"
+private_config::assert_env_name SENTRY_MCP_TOKEN_ENV "$SENTRY_MCP_TOKEN_ENV"
 
 # 管理対象の MCP サーバー名 (lib/output.sh と同じく bash 4.0+ が前提)
-MANAGED_SERVERS="linear supabase sentry-elu"
+MANAGED_SERVERS="linear supabase${SENTRY_MCP_SERVER:+ $SENTRY_MCP_SERVER}"
 
 # プロジェクトスコープの .mcp.json を探すルート
 PROJECT_ROOT_DEFAULT="$HOME/develop"
@@ -87,8 +97,9 @@ server_command() {
         supabase)
             printf '%s%s' "$NPX_CACHE_PRELUDE" 'export SUPABASE_AUTH_HEADER="Bearer $SUPABASE_ACCESS_TOKEN"; exec npx -y mcp-remote '"'"'https://mcp.supabase.com/mcp?read_only=true'"'"' --header '"'"'Authorization:${SUPABASE_AUTH_HEADER}'"'"''
             ;;
-        sentry-elu)
-            printf '%s"%s/sentry-mcp"' 'export SENTRY_ACCESS_TOKEN="$ELU_SENTRY_TOKEN" SENTRY_HOST=sentry.io; exec ' "$(npm_global_bin)"
+        # 未設定時は実在しえない名前にして、空の引数を Sentry と誤認しない
+        "${SENTRY_MCP_SERVER:-(unset)}")
+            printf '%s"%s/sentry-mcp"' "export SENTRY_ACCESS_TOKEN=\"\$${SENTRY_MCP_TOKEN_ENV}\" SENTRY_HOST=sentry.io; exec " "$(npm_global_bin)"
             ;;
         *)
             print_error "未知の MCP サーバー: $1"
@@ -188,7 +199,7 @@ Usage: fix-mcp-token-exposure.sh [--check | --audit | --print <server>] [config_
    実行中プロセスの argv が最終的な事実で、定義が緑でも古いセッションが
    生きていれば赤になる。その場合は該当セッションの再起動が要る。
 
-前提: sentry-elu はグローバル導入済みバイナリを直叩きする (npx 起動は遅く、
+前提: Sentry (SENTRY_MCP_SERVER) はグローバル導入済みバイナリを直叩きする (npx 起動は遅く、
 共有 npx キャッシュの破損で起動不能になるため)。事前に次を実行しておくこと:
     npm i -g @sentry/mcp-server
 

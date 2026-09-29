@@ -16,7 +16,7 @@ Accepted
 
 **2. 共有 npx キャッシュが壊れると起動そのものが失敗する。** 複数の MCP 定義が
 `npm_config_cache` に同じディレクトリ（`$TMPDIR/mcp-npm-cache`）を指定しており、
-並行起動でパッケージ展開が衝突する。2026-09-05 未明 (JST) に `slack` と `sentry-elu` が同時に
+並行起動でパッケージ展開が衝突する。2026-09-05 未明 (JST) に `slack` と組織の Sentry MCP が同時に
 `CONNECTION_CLOSED` になった件は、認証でも遅延でもなく、この破損だった。
 
 ```text
@@ -44,7 +44,7 @@ npm i -g @sentry/mcp-server
 - 資格情報の渡し方は変えない。ADR の対象は起動方法だけで、トークンは引き続き
   環境変数経由で渡す（argv に載せない）。
 
-このリポジトリが管理するのは `sentry-elu` だけである。`slack` は
+このリポジトリが管理するのは組織の Sentry MCP（サーバー名は private-config の `config/org.env` の `SENTRY_MCP_SERVER`）だけである。`slack` は
 `script/fix-mcp-token-exposure.sh` の管理対象外で、登録は各マシンの
 `~/.claude.json` にしかない（トークンを argv に載せておらず、この
 スクリプトが直す対象ではないため）。同じ方針を手で適用しており、前提は
@@ -55,7 +55,7 @@ npm i -g @sentry/mcp-server
 
 ## Consequences
 
-- 起動時間が短くなった。実測で `slack` 0.80 秒 / `sentry-elu` 0.28 秒（いずれも
+- 起動時間が短くなった。実測で `slack` 0.80 秒 / Sentry 0.28 秒（いずれも
   `initialize` の応答までの時間）。`npx` 版は破損により応答なし。
 - **自動更新が失われる。** `@latest` をやめたので、更新は `npm i -g` を明示的に
   実行する必要がある。これは受け入れるトレードオフで、起動の確実性と引き換えにする。

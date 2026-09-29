@@ -55,7 +55,7 @@ PR 作成後等に自動トリガーされるスキル。
 **Claude Code は `<name>/SKILL.md` 形式のディレクトリしかスキルとして読まない。**
 フラットな `<name>.md` は無視されるため、新しいスキルは必ずディレクトリで追加すること。
 `script/setup-claude.sh` がこれらを `~/.claude/skills/<name>` に symlink し、
-`~/.claude` 以外の CLAUDE_CONFIG_DIR（`~/.claude-elu` 等）にも波及させる。
+`~/.claude` 以外の CLAUDE_CONFIG_DIR（`~/.claude-<org>` 等）にも波及させる。
 個人情報を含むスキルは keito4/private-config の `.claude/skills/` が正本（同じ仕組みで展開される）。
 
 ---

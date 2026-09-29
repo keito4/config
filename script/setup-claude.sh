@@ -187,7 +187,7 @@ seed_user_settings() {
 
 # 追加の CLAUDE_CONFIG_DIR を列挙する
 # Agent Deck の config.toml が group ごとに config_dir を切り替えるため、
-# ~/.claude 以外の dir が存在しうる（例: ~/.claude-private, ~/.claude-elu）。
+# ~/.claude 以外の dir が存在しうる（例: ~/.claude-private, ~/.claude-<org>）。
 # CLAUDE_EXTRA_CONFIG_DIRS で明示指定も可能（スペース区切り）。
 list_extra_config_dirs() {
     if [[ -n "${CLAUDE_EXTRA_CONFIG_DIRS:-}" ]]; then
@@ -210,7 +210,7 @@ list_extra_config_dirs() {
 #
 # なぜ必要か: settings.json は CLAUDE_CONFIG_DIR ごとに独立しており、
 # ~/.claude の hooks / permissions / plugins は他の dir では一切読まれない。
-# 2026-07-15 時点で ~/.claude-private は hooks 1個・~/.claude-elu は 0個と、
+# 2026-07-15 時点で ~/.claude-private は hooks 1個・~/.claude-<org> は 0個と、
 # Quality Gates も permissions も attribution も効かない状態になっていた。
 sync_settings_to_extra_config_dirs() {
     if [[ ! -f "$SETTINGS_FILE" ]]; then
@@ -311,7 +311,7 @@ link_content_to_extra_config_dirs() {
 #   1. Claude Code はスキルを <name>/SKILL.md ディレクトリ形式でしか読まない。
 #      commands / agents のようにディレクトリごとリンクすると、npx skills add で
 #      入るホスト固有のスキルと同居できないため、スキル単位でリンクする。
-#   2. 組織メンバーのメール・Slack ID・内部 Notion ID を含むスキル（例 oykot-tasks）は
+#   2. 組織メンバーのメール・Slack ID・内部 Notion ID を含むスキル（例: 組織のタスク管理スキル）は
 #      public な keito4/config には置けず、keito4/private-config が正本になる。
 #      新端末では private-config のスキルが materialize されず呼べなかった。
 #

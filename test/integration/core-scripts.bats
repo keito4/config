@@ -130,9 +130,15 @@ setup_ci_fixture() {
     printf '{"name":"fixture","scripts":{"lint":"true","test":"true","build":"true"}}\n' > "$dir/package.json"
 }
 
+# Ubicloud 導入済み owner は private-config から読む。テストでは実端末の private-config を
+# 読まないよう存在しない場所を指し、架空の owner を直接与える（大文字小文字の揺れも検証する）。
+export PRIVATE_CONFIG_DIR=/nonexistent-private-config
+export SETUP_CI_UBICLOUD_OWNERS="acme-org"
+
 @test "setup-ci.sh uses the Ubicloud runner for Ubicloud-enabled owners" {
-    local dir="$TEST_TEMP_DIR/oykot"
-    setup_ci_fixture "$dir" "git@github.com:OYKOT-jp/fixture.git"
+    # (fixture の owner は Acme-Org。SETUP_CI_UBICLOUD_OWNERS は小文字で与えている)
+    local dir="$TEST_TEMP_DIR/acme"
+    setup_ci_fixture "$dir" "git@github.com:Acme-Org/fixture.git"
 
     run bash "$REPO_ROOT/script/setup-ci.sh" --target "$dir"
     [ "$status" -eq 0 ]
@@ -141,6 +147,16 @@ setup_ci_fixture() {
     ! grep -q "runs-on: ubuntu-latest" "$dir/.github/workflows/ci.yml"
     # コピーしたテンプレートも配置時に書き換わること
     ! grep -rq "runs-on: ubuntu-latest" "$dir/.github/workflows/"
+}
+
+@test "setup-ci.sh keeps ubuntu-latest when no Ubicloud owner is configured" {
+    local dir="$TEST_TEMP_DIR/unconfigured"
+    setup_ci_fixture "$dir" "git@github.com:Acme-Org/fixture.git"
+
+    SETUP_CI_UBICLOUD_OWNERS= run bash "$REPO_ROOT/script/setup-ci.sh" --target "$dir"
+    [ "$status" -eq 0 ]
+
+    grep -q "runs-on: ubuntu-latest" "$dir/.github/workflows/ci.yml"
 }
 
 @test "setup-ci.sh keeps ubuntu-latest for owners without Ubicloud" {
@@ -178,7 +194,7 @@ setup_ci_fixture() {
     # setup-new-repo.sh は git init するだけで origin を張らないため、
     # owner はディレクトリ配置からしか分からない。新規リポジトリこそ
     # ランナー移行の対象なので、この経路が素通りしないことを固定する。
-    local dir="$TEST_TEMP_DIR/github.com/OYKOT-jp/fixture"
+    local dir="$TEST_TEMP_DIR/github.com/Acme-Org/fixture"
     mkdir -p "$(dirname "$dir")"
 
     run bash "$REPO_ROOT/script/setup-new-repo.sh" "$dir" --type nodejs --no-install
@@ -203,7 +219,7 @@ setup_ci_fixture() {
 @test "setup-ci.sh ignores a matching directory name outside github.com" {
     # 配置規約を確かめずに親ディレクトリ名だけで決めると、たまたま同名の
     # ディレクトリがあるだけで Ubicloud に倒れる。そこを踏まないことを固定する。
-    local dir="$TEST_TEMP_DIR/elsewhere/OYKOT-jp/fixture"
+    local dir="$TEST_TEMP_DIR/elsewhere/Acme-Org/fixture"
     setup_ci_fixture "$dir" ""
 
     run bash "$REPO_ROOT/script/setup-ci.sh" --target "$dir"
@@ -215,7 +231,7 @@ setup_ci_fixture() {
 
 @test "setup-ci.sh falls back to the path when the remote is unparseable" {
     # sed が不一致の行をそのまま返すと owner が空にならず、パスへ落ちない
-    local dir="$TEST_TEMP_DIR/github.com/OYKOT-jp/odd-remote"
+    local dir="$TEST_TEMP_DIR/github.com/Acme-Org/odd-remote"
     setup_ci_fixture "$dir" "not-a-valid-remote"
 
     run bash "$REPO_ROOT/script/setup-ci.sh" --target "$dir"
@@ -226,7 +242,7 @@ setup_ci_fixture() {
 
 @test "setup-ci.sh keeps GitHub expressions intact in the terraform workflow" {
     local dir="$TEST_TEMP_DIR/terraform"
-    setup_ci_fixture "$dir" "git@github.com:OYKOT-jp/fixture.git"
+    setup_ci_fixture "$dir" "git@github.com:Acme-Org/fixture.git"
     touch "$dir/main.tf"
 
     run bash "$REPO_ROOT/script/setup-ci.sh" --target "$dir" --type terraform

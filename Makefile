@@ -30,7 +30,10 @@ claude-setup: ## Setup Claude Code (sync settings + install plugins)
 	@./script/setup-claude.sh
 
 # Nix management
+# 端末一覧は非公開の private-config から取る。sudo 下の root は GitHub 認証を持たないので、
+# flake の入力はユーザー権限で先に store へ取得しておく。
 nix-switch: ## Apply Nix configuration (darwin-rebuild switch)
+	nix flake archive ./nix >/dev/null
 	sudo darwin-rebuild switch --flake ./nix
 
 nix-build: ## Build Nix configuration without applying

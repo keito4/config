@@ -141,14 +141,14 @@ make claude-plugins
 
 - `~/.claude/plugins/installed_plugins.json`
 - `~/.claude-private/plugins/installed_plugins.json`
-- `~/.claude-elu/plugins/installed_plugins.json`
+- `~/.claude-<org>/plugins/installed_plugins.json`
 
 `setup-claude.sh` は `settings.json` の共有キー（`CLAUDE_SHARED_SETTINGS_KEYS`）を
 追加 config dir へ同期するが、**プラグインのインストール自体は `~/.claude` に対してしか
 実行しない**。そのため uninstall は config dir ごとに回す必要がある：
 
 ```bash
-for cfg in ~/.claude ~/.claude-private ~/.claude-elu; do
+for cfg in ~/.claude ~/.claude-*; do
   CLAUDE_CONFIG_DIR="$cfg" claude plugin uninstall <name>@<marketplace> -s user -y
 done
 ```

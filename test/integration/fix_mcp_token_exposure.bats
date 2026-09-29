@@ -6,6 +6,12 @@ load ../test_helper/test_helper
 
 SCRIPT() { echo "$REPO_ROOT/script/fix-mcp-token-exposure.sh"; }
 
+# 組織の Sentry 設定は private-config から読む。テストでは実端末の private-config を
+# 読まないよう存在しない場所を指し、架空の組織の値を直接与える。
+export PRIVATE_CONFIG_DIR=/nonexistent-private-config
+export SENTRY_MCP_SERVER=sentry-acme
+export SENTRY_MCP_TOKEN_ENV=ACME_SENTRY_TOKEN
+
 # 検査用の .claude.json を作る。$1 = 出力先ディレクトリ, $2 = leaky|hardened
 write_config() {
     local dir="$1" variant="$2"
@@ -26,10 +32,10 @@ write_config() {
       "args": ["-lc", "exec npx -y mcp-remote https://mcp.supabase.com/mcp --header \"Authorization: Bearer $SUPABASE_ACCESS_TOKEN\""],
       "env": {}
     },
-    "sentry-elu": {
+    "sentry-acme": {
       "type": "stdio",
       "command": "bash",
-      "args": ["-lc", "exec npx -y @sentry/mcp-server@latest --access-token=\"$ELU_SENTRY_TOKEN\""],
+      "args": ["-lc", "exec npx -y @sentry/mcp-server@latest --access-token=\"$ACME_SENTRY_TOKEN\""],
       "env": {}
     }
   }
@@ -38,7 +44,7 @@ JSON
     else
         local entries="" name
         echo '{ "mcpServers": {' > "$dir/.claude.json"
-        for name in linear supabase sentry-elu; do
+        for name in linear supabase sentry-acme; do
             entries="${entries}${entries:+,}\"$name\": $("$(SCRIPT)" --print "$name")"
         done
         printf '%s' "$entries" >> "$dir/.claude.json"
@@ -57,12 +63,36 @@ JSON
     [ "$(printf '%s\n' "$output" | wc -l | tr -d ' ')" -eq 3 ]
     printf '%s\n' "$output" | grep -qx 'linear'
     printf '%s\n' "$output" | grep -qx 'supabase'
-    printf '%s\n' "$output" | grep -qx 'sentry-elu'
+    printf '%s\n' "$output" | grep -qx 'sentry-acme'
+}
+
+@test "--list omits Sentry when no organization Sentry is configured" {
+    SENTRY_MCP_SERVER= run "$(SCRIPT)" --list
+    assert_success
+    [ "$(printf '%s\n' "$output" | wc -l | tr -d ' ')" -eq 2 ]
+}
+
+@test "sentry token comes from the configured environment variable" {
+    run "$(SCRIPT)" --print sentry-acme
+    assert_success
+    printf '%s' "$output" | grep -qF 'SENTRY_ACCESS_TOKEN=\"$ACME_SENTRY_TOKEN\"'
+}
+
+@test "org env from private-config is read without overriding the caller" {
+    local private="$TEST_TEMP_DIR/private"
+    mkdir -p "$private/config"
+    printf 'SENTRY_MCP_SERVER=sentry-fromfile\nSENTRY_MCP_TOKEN_ENV=FROMFILE_TOKEN\n' > "$private/config/org.env"
+    run env -u SENTRY_MCP_SERVER -u SENTRY_MCP_TOKEN_ENV PRIVATE_CONFIG_DIR="$private" "$(SCRIPT)" --list
+    assert_success
+    printf '%s\n' "$output" | grep -qx 'sentry-fromfile'
+    run env PRIVATE_CONFIG_DIR="$private" SENTRY_MCP_SERVER=sentry-caller "$(SCRIPT)" --list
+    assert_success
+    printf '%s\n' "$output" | grep -qx 'sentry-caller'
 }
 
 @test "--print emits valid JSON for every managed server" {
     local name
-    for name in linear supabase sentry-elu; do
+    for name in linear supabase sentry-acme; do
         run "$(SCRIPT)" --print "$name"
         assert_success
         printf '%s' "$output" | python3 -c 'import json,sys; json.load(sys.stdin)'
@@ -76,7 +106,7 @@ JSON
 
 @test "generated definitions never embed a secret in argv" {
     local name
-    for name in linear supabase sentry-elu; do
+    for name in linear supabase sentry-acme; do
         run "$(SCRIPT)" --print "$name"
         assert_success
         # JSON をデコードしてから判定する (シェル側のエスケープに依存しない)
@@ -103,16 +133,16 @@ assert "--header \"Authorization: Bearer" not in cmd, "token expanded into argv:
 }
 
 @test "sentry passes its token through the environment" {
-    run "$(SCRIPT)" --print sentry-elu
+    run "$(SCRIPT)" --print sentry-acme
     assert_success
     printf '%s' "$output" | grep -q 'export SENTRY_ACCESS_TOKEN='
     printf '%s' "$output" | grep -q 'SENTRY_HOST=sentry.io'
 }
 
 # npx 起動は遅く (レジストリ解決が毎回走る)、複数 MCP で共有する npx キャッシュが
-# 壊れると起動自体が失敗する。sentry-elu はグローバル導入済みバイナリを直叩きする。
+# 壊れると起動自体が失敗する。sentry-acme はグローバル導入済みバイナリを直叩きする。
 @test "sentry launches a global binary by absolute path instead of npx" {
-    run "$(SCRIPT)" --print sentry-elu
+    run "$(SCRIPT)" --print sentry-acme
     assert_success
     ! printf '%s' "$output" | grep -q 'npx'
     # MCP は login shell の PATH に npm の global bin を持たないことがあるため絶対パスで埋める

@@ -72,11 +72,9 @@ describe('home-manager dotfiles and agent tooling', () => {
 
     // 組織名を含むキーや 1Password サービストークンを公開リポジトリに残さない
     [zshModule, devcontainerEnvLoader].forEach((loader) => {
-      ['ELU_SENTRY_TOKEN', 'ELU_NOTION_API_KEY', 'OYKOT_NOTION_API_KEY', 'OP_SERVICE_ACCOUNT_TOKEN'].forEach(
-        (envKey) => {
-          expect(loader).not.toContain(envKey);
-        },
-      );
+      // 組織別トークン（<組織>_SENTRY_TOKEN / <組織>_NOTION_API_KEY）は名前にも組織名が入る
+      expect(loader).not.toMatch(/[A-Z]+_(SENTRY_TOKEN|NOTION_API_KEY)/);
+      expect(loader).not.toContain('OP_SERVICE_ACCOUNT_TOKEN');
     });
   });
 

@@ -57,11 +57,28 @@
         "type": "github"
       }
     },
+    "private-config": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790649327,
+        "narHash": "sha256-qJgyF4LSKWL7nekNqgImHkPXljkG1DPY4Xd5ecnLI0U=",
+        "ref": "refs/heads/main",
+        "rev": "27b3a96ffd7b81fe7f72bbec5631ba2701929063",
+        "revCount": 386,
+        "type": "git",
+        "url": "https://github.com/keito4/private-config.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://github.com/keito4/private-config.git"
+      }
+    },
     "root": {
       "inputs": {
         "home-manager": "home-manager",
         "nix-darwin": "nix-darwin",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "private-config": "private-config"
       }
     }
   },
