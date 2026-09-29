@@ -48,7 +48,7 @@ def deep_merge(local: Any, base: Any) -> Any:
     return base
 
 
-def merge_config(local: dict, base: dict) -> dict:
+def merge_config(local: dict[str, Any], base: dict[str, Any]) -> dict[str, Any]:
     merged = copy.deepcopy(deep_merge(local, base))
     http_auth = ("http_headers", "env_http_headers", "bearer_token_env_var", "http_headers_helper", "oauth_resource", "oauth", "scopes")
     for name, shared in base.get("mcp_servers", {}).items():

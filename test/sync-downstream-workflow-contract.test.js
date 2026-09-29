@@ -40,8 +40,10 @@ describe('sync-downstream workflow contracts', () => {
 
     // 各分岐は必ず落ちること。`exit 1` を1つ落とすだけで、検証を通過したように
     // 見えて matrix へ進む — preflight を入れた意味が消える。
-    const errors = step.run.match(/::error::/g).length;
-    const exits = step.run.match(/^\s*exit 1$/gm).length;
+    // match() は一致が無いと null を返すため、.length を直接呼ぶと TypeError になる。
+    // 一致数 0 は「アサーション失敗」として扱いたいのでまず [] にフォールバックする。
+    const errors = (step.run.match(/::error::/g) || []).length;
+    const exits = (step.run.match(/^\s*exit 1$/gm) || []).length;
     expect(errors).toBeGreaterThanOrEqual(6);
     expect(exits).toBe(errors);
   });
