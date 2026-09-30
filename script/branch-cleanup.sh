@@ -154,6 +154,28 @@ find_merged_branches() {
   done < <(git branch --merged "$MAIN_BRANCH" | clean_branch_list)
 }
 
+# Compute the epoch-seconds cutoff for staleness, given a day count. Falls back to "0"
+# (i.e. nothing is stale) when neither BSD nor GNU `date` understands the arguments.
+compute_cutoff_date() {
+  local days=$1
+
+  date -v-"${days}"d +%s 2>/dev/null || date -d "${days} days ago" +%s 2>/dev/null || echo "0"
+}
+
+# Return success (0) when $branch should be treated as stale: not already in
+# MERGED_BRANCHES, not protected, and its last commit predates $cutoff_date.
+is_stale_branch() {
+  local branch=$1
+  local cutoff_date=$2
+  local last_commit_date
+
+  array_contains "$branch" "${MERGED_BRANCHES[@]}" && return 1
+  is_protected_branch "$branch" && return 1
+
+  last_commit_date=$(git log -1 --format=%ct "$branch" 2>/dev/null || echo "0")
+  [ "$last_commit_date" != "0" ] && [ "$last_commit_date" -lt "$cutoff_date" ]
+}
+
 # Populate the global STALE_BRANCHES array with non-protected, not-yet-merged branches whose
 # last commit predates STALE_DAYS. No-op when MERGED_ONLY is set.
 find_stale_branches() {
@@ -162,23 +184,12 @@ find_stale_branches() {
     return
   fi
 
-  local cutoff_date
-  local branch
-  local last_commit_date
-  cutoff_date=$(date -v-"${STALE_DAYS}"d +%s 2>/dev/null || date -d "${STALE_DAYS} days ago" +%s 2>/dev/null || echo "0")
+  local cutoff_date branch
+  cutoff_date=$(compute_cutoff_date "$STALE_DAYS")
 
   while IFS= read -r branch; do
-    # Skip if already in merged list
-    if array_contains "$branch" "${MERGED_BRANCHES[@]}"; then
-      continue
-    fi
-
-    if ! is_protected_branch "$branch"; then
-      last_commit_date=$(git log -1 --format=%ct "$branch" 2>/dev/null || echo "0")
-
-      if [ "$last_commit_date" -lt "$cutoff_date" ] && [ "$last_commit_date" != "0" ]; then
-        STALE_BRANCHES+=("$branch")
-      fi
+    if is_stale_branch "$branch" "$cutoff_date"; then
+      STALE_BRANCHES+=("$branch")
     fi
   done < <(git branch | clean_branch_list)
 }
