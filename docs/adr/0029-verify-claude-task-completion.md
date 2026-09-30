@@ -11,7 +11,7 @@ oykot-tools #351 explicitly reports that `make test` and `bash tests/script/test
 
 ## Decision
 
-- Require the tracking comment for the current run to contain `<!-- claude-task-status: complete -->` only after delivering the requested result and completing delegated work. Blocked work uses `<!-- claude-task-status: blocked -->` with the reason and next action.
+- Require the tracking comment for the current run to contain `Claude task status: complete` only after delivering the requested result and completing delegated work. Blocked work uses `Claude task status: blocked` with the reason and next action.
 - After Claude exits, validate the saved SDK result and current run's comment. An error, missing final marker, or unfinished checklist cannot count as completion. Recovered tool denials alone do not fail completed work.
 - Log only denial tool/command families and known assistant error categories. Never print tool arguments, result text, or the raw execution file.
 - Preserve pushed changes in a draft PR when the run fails verification. Use `Refs`, not `Closes`, for incomplete work. Do not retry or merge automatically.
@@ -20,3 +20,5 @@ oykot-tools #351 explicitly reports that `make test` and `bash tests/script/test
 ## Consequences
 
 Process success and delivered-task completion become separately observable. The marker is a delivery signal, not proof of audit quality or CI success. Required checks and review remain necessary. A later failed run's safe diagnostics identify whether a runtime permission or a provider error needs attention without exposing full logs. Existing workflows must receive both the prompt and verification step together.
+
+Live acceptance showed that the upstream MCP server strips HTML comments. Use a visible status line. When an agent replaces its tracking comment without the run link, identify that same comment using the successful MCP update receipt in this run; never select an arbitrary recent bot comment.

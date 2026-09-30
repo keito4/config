@@ -3,7 +3,7 @@ const path = require('path');
 const yaml = require('js-yaml');
 
 const workflows = ['.github/workflows/claude.yml', 'templates/workflows/claude.yml'];
-const complete = '- [x] Result posted\n<!-- claude-task-status: complete -->';
+const complete = '- [x] Result posted\nClaude task status: complete';
 
 async function verify(workflowPath, messages, body = complete, options = {}) {
   const workflow = yaml.load(fs.readFileSync(path.join(__dirname, '..', workflowPath), 'utf8'));
@@ -20,7 +20,9 @@ async function verify(workflowPath, messages, body = complete, options = {}) {
   const comment = {
     id: 7,
     user: { login: options.login || 'claude[bot]' },
-    body: `**Claude finished**\n[View job](https://github.com/owner/repo/actions/runs/42)\n${body}`,
+    body: options.noRunLink
+      ? body
+      : `**Claude finished**\n[View job](https://github.com/owner/repo/actions/runs/42)\n${body}`,
   };
   const github = {
     paginate: jest
@@ -69,14 +71,44 @@ describe.each(workflows)('%s validates delivered work', (workflowPath) => {
   test.each([
     ['progress only', '- [ ] Post findings'],
     ['checked boxes but no final result', '- [x] Post findings\nStill working'],
-    ['a quoted/example completion marker', 'The example is <!-- claude-task-status: complete -->'],
+    ['a quoted/example completion marker', 'The example is Claude task status: complete'],
     ['unfinished tasks under a complete marker', `- [ ] Run tests\n${complete}`],
-    ['explicitly blocked', '<!-- claude-task-status: blocked -->\nNeeds authentication'],
+    ['explicitly blocked', 'Claude task status: blocked\nNeeds authentication'],
   ])('rejects %s', async (_label, body) => {
     const { outputs, core, github } = await verify(workflowPath, [result], body);
     expect(outputs.task_complete).toBe(false);
     expect(core.setFailed).toHaveBeenCalled();
     expect(github.rest.issues.updateComment.mock.calls[0][0].body).not.toContain('**Claude finished**');
+  });
+
+  test('keeps the visible status after the upstream HTML sanitizer', async () => {
+    const sanitized = `${complete}\n<!-- invisible -->`.replace(/<!--[\s\S]*?-->/g, '');
+    expect((await verify(workflowPath, [result], sanitized)).outputs.task_complete).toBe(true);
+  });
+
+  test('identifies the updated comment from its successful MCP receipt without a run link', async () => {
+    const messages = [
+      {
+        type: 'assistant',
+        message: { content: [{ type: 'tool_use', id: 'call-1', name: 'mcp__github_comment__update_claude_comment' }] },
+      },
+      {
+        type: 'user',
+        message: {
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: 'call-1',
+              content: [{ type: 'text', text: JSON.stringify({ id: 7 }) }],
+            },
+          ],
+        },
+      },
+      result,
+    ];
+    expect((await verify(workflowPath, messages, complete, { noRunLink: true })).outputs.task_complete).toBe(true);
+    messages[1].message.content[0].is_error = true;
+    expect((await verify(workflowPath, messages, complete, { noRunLink: true })).outputs.task_complete).toBe(false);
   });
 
   test('checks the latest attempt instead of a prior success with the same run ID', async () => {

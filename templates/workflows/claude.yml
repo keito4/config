@@ -127,7 +127,7 @@ jobs:
           # System prompt to automatically create PRs when working on Issues
           claude_args: |
             --allowedTools "Bash(git:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr status:*),Bash(gh issue view:*),Bash(gh issue close:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(make test:*),Bash(bash tests/*),Bash(bats:*)"
-            --append-system-prompt "When working on GitHub Issues (not PRs), after completing all code changes, commit and push the changes to the Claude branch. Do not run 'gh pr create'; this workflow creates the pull request from the branch after Claude finishes. If your investigation of an Issue concludes that no code change is needed (the request is already satisfied, it is a duplicate, or it cannot be reproduced) and no human decision is pending, write the findings and the reason for closing in your comment, then close the Issue with 'gh issue close <number> --reason completed'. Keep the Issue open when you pushed changes, when a human decision or follow-up is needed, or when you are unsure. Await all delegated tasks and collect their results before ending. Post the requested findings or change summary in the tracking comment, including validation results. End the final comment with <!-- claude-task-status: complete --> only when the requested work has been delivered and every required checklist item is complete. If blocked, post the exact blocker and next action with <!-- claude-task-status: blocked -->; do not keep retrying the same denied operation or claim completion. Follow explicit requests for audit-only work: no code changes or PRs for those requests."
+            --append-system-prompt "When working on GitHub Issues (not PRs), after completing all code changes, commit and push the changes to the Claude branch. Do not run 'gh pr create'; this workflow creates the pull request from the branch after Claude finishes. If your investigation of an Issue concludes that no code change is needed (the request is already satisfied, it is a duplicate, or it cannot be reproduced) and no human decision is pending, write the findings and the reason for closing in your comment, then close the Issue with 'gh issue close <number> --reason completed'. Keep the Issue open when you pushed changes, when a human decision or follow-up is needed, or when you are unsure. Await all delegated tasks and collect their results before ending. Post the requested findings or change summary in the tracking comment, including validation results. End the final comment with Claude task status: complete only when the requested work has been delivered and every required checklist item is complete. If blocked, post the exact blocker and next action with Claude task status: blocked; do not keep retrying the same denied operation or claim completion. Follow explicit requests for audit-only work: no code changes or PRs for those requests."
 
       - name: Verify Claude task completion
         id: claude-result
@@ -161,11 +161,28 @@ jobs:
             const comments = await github.paginate(inline ? github.rest.pulls.listReviewComments : github.rest.issues.listComments,
               { ...context.repo, [inline ? 'pull_number' : 'issue_number']: context.issue.number, per_page: 100 });
             const runLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const comment = comments.findLast(entry => entry.user?.login === 'claude[bot]' && entry.body?.includes(`(${runLink})`));
+            const parts = messages.flatMap(message => Array.isArray(message.message?.content) ? message.message.content : []);
+            const call = parts.findLast(part => part.type === 'tool_use' && part.name === 'mcp__github_comment__update_claude_comment');
+            const receipt = call && parts.findLast(part => part.type === 'tool_result' && part.tool_use_id === call.id && !part.is_error);
+            let data = receipt?.content;
+            let commentId;
+            for (let depth = 0; depth < 6 && data; depth++) {
+              if (typeof data === 'string') {
+                try { data = JSON.parse(data); } catch { break; }
+              } else if (Array.isArray(data)) {
+                data = data.find(part => part.type === 'text')?.text;
+              } else if (Number.isInteger(data.id)) {
+                commentId = data.id;
+                break;
+              } else { data = data.content; }
+            }
+            const comment = comments.findLast(entry => entry.user?.login === 'claude[bot]' &&
+              (commentId ? entry.id === commentId : entry.body?.includes(`(${runLink})`)));
+
             const body = comment?.body || '';
             const complete = result?.subtype === 'success' && result?.is_error === false &&
-              /(?:^|\n)<!-- claude-task-status: complete -->\s*$/.test(body) &&
-              !body.includes('<!-- claude-task-status: blocked -->') && !/^\s*[-*] \[ \]/m.test(body);
+              /(?:^|\n)Claude task status: complete\s*$/.test(body) &&
+              !body.includes('Claude task status: blocked') && !/^\s*[-*] \[ \]/m.test(body);
             core.setOutput('task_complete', Boolean(complete));
             if (!complete) {
               core.setFailed('Claude task is incomplete or blocked. See the tracking comment and safe diagnostics above.');
