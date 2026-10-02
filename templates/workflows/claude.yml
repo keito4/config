@@ -126,12 +126,77 @@ jobs:
 
           # System prompt to automatically create PRs when working on Issues
           claude_args: |
-            --allowedTools "Bash(git:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr status:*),Bash(gh issue view:*),Bash(gh issue close:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*)"
-            --system-prompt "When working on GitHub Issues (not PRs), after completing all code changes, commit and push the changes to the Claude branch. Do not run 'gh pr create'; this workflow creates the pull request from the branch after Claude finishes. If your investigation of an Issue concludes that no code change is needed (the request is already satisfied, it is a duplicate, or it cannot be reproduced) and no human decision is pending, write the findings and the reason for closing in your comment, then close the Issue with 'gh issue close <number> --reason completed'. Keep the Issue open when you pushed changes, when a human decision or follow-up is needed, or when you are unsure."
+            --allowedTools "Bash(git:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr status:*),Bash(gh issue view:*),Bash(gh issue close:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(make test:*),Bash(bash tests/*),Bash(bats:*)"
+            --append-system-prompt "When working on GitHub Issues (not PRs), after completing all code changes, commit and push the changes to the Claude branch. Do not run 'gh pr create'; this workflow creates the pull request from the branch after Claude finishes. If your investigation of an Issue concludes that no code change is needed (the request is already satisfied, it is a duplicate, or it cannot be reproduced) and no human decision is pending, write the findings and the reason for closing in your comment, then close the Issue with 'gh issue close <number> --reason completed'. Keep the Issue open when you pushed changes, when a human decision or follow-up is needed, or when you are unsure. Await all delegated tasks and collect their results before ending. Post the requested findings or change summary in the tracking comment, including validation results. End the final comment with Claude task status: complete only when the requested work has been delivered and every required checklist item is complete. If blocked, post the exact blocker and next action with Claude task status: blocked; do not keep retrying the same denied operation or claim completion. Follow explicit requests for audit-only work: no code changes or PRs for those requests."
+
+      - name: Verify Claude task completion
+        id: claude-result
+        if: >-
+          !cancelled() && steps.claude.outcome != 'skipped' &&
+          steps.pr_draft.outputs.is_draft != 'true' &&
+          steps.claude-auth.outputs.available == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          CLAUDE_EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            core.setOutput('task_complete', false);
+            const file = process.env.CLAUDE_EXECUTION_FILE || path.join(process.env.RUNNER_TEMP, 'claude-execution-output.json');
+            const messages = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : [];
+            const result = messages.findLast(message => message.type === 'result');
+            const denied = {};
+            for (const denial of result?.permission_denials || []) {
+              const tool = /^(Bash|Read|Write|Edit|Glob|Grep|Agent|Task)$/.test(denial.tool_name) ? denial.tool_name : 'other';
+              const command = String(denial.tool_input?.command || '').match(/^\s*(?:\S*\/)?(bash|sh|bats|make|python3?|node|npm|pnpm|npx|git|gh|rg|find|ls|cat|chmod)\b/)?.[1];
+              const key = tool === 'Bash' ? `Bash:${command || 'other'}` : tool;
+              denied[key] = (denied[key] || 0) + 1;
+            }
+            const knownErrors = ['authentication_failed', 'billing_error', 'rate_limit', 'server_error', 'invalid_request', 'max_output_tokens'];
+            const errors = [...new Set(messages.filter(message => message.type === 'assistant' && message.error)
+              .map(message => knownErrors.includes(message.error) ? message.error : 'unknown'))];
+            core.info(JSON.stringify({ sdk_success: result?.subtype === 'success' && result?.is_error === false, denied, errors }));
+            const inline = context.eventName === 'pull_request_review_comment';
+            const comments = await github.paginate(inline ? github.rest.pulls.listReviewComments : github.rest.issues.listComments,
+              { ...context.repo, [inline ? 'pull_number' : 'issue_number']: context.issue.number, per_page: 100 });
+            const runLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const parts = messages.flatMap(message => Array.isArray(message.message?.content) ? message.message.content : []);
+            const call = parts.findLast(part => part.type === 'tool_use' && part.name === 'mcp__github_comment__update_claude_comment');
+            const receipt = call && parts.findLast(part => part.type === 'tool_result' && part.tool_use_id === call.id && !part.is_error);
+            let data = receipt?.content;
+            let commentId;
+            for (let depth = 0; depth < 6 && data; depth++) {
+              if (typeof data === 'string') {
+                try { data = JSON.parse(data); } catch { break; }
+              } else if (Array.isArray(data)) {
+                data = data.find(part => part.type === 'text')?.text;
+              } else if (Number.isInteger(data.id)) {
+                commentId = data.id;
+                break;
+              } else { data = data.content; }
+            }
+            const comment = comments.findLast(entry => entry.user?.login === 'claude[bot]' &&
+              (commentId ? entry.id === commentId : entry.body?.includes(`(${runLink})`)));
+
+            const body = comment?.body || '';
+            const complete = result?.subtype === 'success' && result?.is_error === false &&
+              /(?:^|\n)Claude task status: complete\s*$/.test(body) &&
+              !body.includes('Claude task status: blocked') && !/^\s*[-*] \[ \]/m.test(body);
+            core.setOutput('task_complete', Boolean(complete));
+            if (!complete) {
+              core.setFailed('Claude task is incomplete or blocked. See the tracking comment and safe diagnostics above.');
+              if (comment) {
+                const updated = body.replace(/^\*\*Claude finished[^\n]*?\*\*/, '**Claude task incomplete**')
+                  .replace(/<img[^>]*5ac382c7-e004-429b-8e35-7feb3e8f9c6f[^>]*\/>/g, '');
+                await (inline ? github.rest.pulls.updateReviewComment : github.rest.issues.updateComment)(
+                  { ...context.repo, comment_id: comment.id, body: `${updated}\n\nCompletion verification: incomplete or blocked; this run requires follow-up.` });
+              }
+            }
 
       - name: Create pull request from Claude branch
         if: >-
-          steps.claude.outputs.branch_name != '' &&
+          !cancelled() && steps.claude.outputs.branch_name != '' &&
           (
             github.event_name == 'issues' ||
             (github.event_name == 'issue_comment' && !github.event.issue.pull_request)
@@ -139,6 +204,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || github.token }}
           CLAUDE_BRANCH: ${{ steps.claude.outputs.branch_name }}
+          CLAUDE_TASK_COMPLETE: ${{ steps.claude-result.outputs.task_complete }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
@@ -165,7 +231,13 @@ jobs:
             TITLE="Claude changes for issue #$ISSUE_NUMBER"
           fi
 
-          BODY=$(printf "Closes #%s\n\nCreated automatically from Claude Code branch \`%s\`." "$ISSUE_NUMBER" "$CLAUDE_BRANCH")
+          ISSUE_ACTION="Closes"
+          PR_ARGS=()
+          if [ "$CLAUDE_TASK_COMPLETE" != 'true' ]; then
+            ISSUE_ACTION="Refs"
+            PR_ARGS=(--draft)
+          fi
+          BODY=$(printf "%s #%s\n\nCreated automatically from Claude Code branch \`%s\`. Task completion verified: %s. Check the Claude run before marking this PR ready." "$ISSUE_ACTION" "$ISSUE_NUMBER" "$CLAUDE_BRANCH" "$CLAUDE_TASK_COMPLETE")
 
           ASSIGNEE_ARGS=()
           if [ -n "$PR_ASSIGNEE" ]; then
@@ -177,4 +249,5 @@ jobs:
             --base "$DEFAULT_BRANCH" \
             --title "$TITLE" \
             --body "$BODY" \
-            "${ASSIGNEE_ARGS[@]}"
+            "${ASSIGNEE_ARGS[@]}" \
+            "${PR_ARGS[@]}"
