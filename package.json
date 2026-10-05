@@ -43,14 +43,14 @@
     "conventional-commits-parser": "^7.1.2",
     "eslint": "10.11.0",
     "eslint-config-prettier": "10.1.8",
-    "globals": "17.12.0",
+    "globals": "17.13.0",
     "husky": "9.1.7",
     "jest": "30.5.2",
     "jest-junit": "^17.0.0",
     "js-yaml": "^5.4.2",
     "prettier": "3.9.9",
     "semantic-release": "25.0.9",
-    "takt": "0.66.1"
+    "takt": "0.67.1"
   },
   "overrides": {
     "@opentelemetry/propagator-jaeger": ">=2.9.0"
