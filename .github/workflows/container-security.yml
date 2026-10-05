@@ -6,11 +6,15 @@ on:
     paths:
       - '.devcontainer/**'
       - 'npm/global.json'
+      - '.trivyignore'
+      - '.github/workflows/container-security.yml'
   pull_request:
     branches: [main, pre-production, production]
     paths:
       - '.devcontainer/**'
       - 'npm/global.json'
+      - '.trivyignore'
+      - '.github/workflows/container-security.yml'
   schedule:
     - cron: '0 5 * * 2'
   workflow_dispatch:
@@ -140,7 +144,7 @@ jobs:
             exit 1
           fi
 
-      # なぜ必要か: このジョブは paths フィルタ付き (.devcontainer/**, npm/global.json) で
+      # なぜ必要か: このジョブはコンテナとスキャン設定の paths フィルタ付きで
       #   通常の PR では走らず、branch protection の必須チェックにも入っていない。
       #   そのため main が red になっても誰も気づかない。実際 2026-09-01 から 09-08 まで
       #   CRITICAL 1件 (CVE-2026-56854) を検知したまま一週間放置された (#1236)。
