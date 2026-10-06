@@ -137,7 +137,7 @@ function validateManifest(manifest) {
   if (manifest === null || typeof manifest !== 'object') {
     throw new Error('manifest: top-level object is required');
   }
-  if (manifest.groups === null || typeof manifest.groups !== 'object') {
+  if (manifest.groups === null || typeof manifest.groups !== 'object' || Array.isArray(manifest.groups)) {
     throw new Error('manifest: "groups" object is required');
   }
   if (!Array.isArray(manifest.repos)) {
