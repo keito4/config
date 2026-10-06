@@ -41,6 +41,10 @@ describe('validateManifest', () => {
     expect(() => validateManifest({ repos: [] })).toThrow(/"groups" object is required/u);
   });
 
+  test('rejects an array passed as groups', () => {
+    expect(() => validateManifest({ groups: [], repos: [] })).toThrow(/"groups" object is required/u);
+  });
+
   test('rejects a manifest without repos', () => {
     expect(() => validateManifest({ groups: {} })).toThrow(/"repos" array is required/u);
   });
