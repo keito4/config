@@ -201,3 +201,23 @@ CVE-2026-41242
 #   2026-09-01 (last success 2026-08-31), which matches the Trivy DB picking this up.
 # Review date: 2026-11-08
 CVE-2026-56854
+
+# CVE-2026-102992: piscina: Prototype-pollution gadget in ThreadPool.options allows RCE
+# Severity: CRITICAL (Trivy/NVD); upstream advisory rates it HIGH
+# Affected: piscina 4.9.3 bundled in Cursor CLI 2026.10.01-e373342
+# Fixed in: piscina 4.9.4, 5.3.2, 6.0.0-rc.5
+# Reason: Cursor's official installer still distributes this version (checked 2026-10-05).
+#   Verified piscina/package.json in its linux/x64 archive; no newer official CLI build
+#   is offered by the installer. Updating npm/global.json cannot replace this private
+#   dependency. Temporarily accept the finding while awaiting a patched Cursor bundle.
+# Risk: Exploitation requires another bug to pollute Object.prototype in the CLI process;
+#   then worker options can execute code or inject environment variables. We have not
+#   proven that prerequisite unreachable in Cursor. This exception does not fix the RCE.
+# Expected resolution: Recheck the official bundle and remove this entry once it ships
+#   a patched piscina version. This plain-text ignore applies to this CVE image-wide
+#   and does not expire automatically; review any additional occurrences at that time.
+# Tracking: https://github.com/keito4/config/issues/1334
+# Advisory: https://github.com/piscinajs/piscina/security/advisories/GHSA-67c8-pqhq-4rmx
+# Installer: https://cursor.com/install
+# Review date: 2026-11-05
+CVE-2026-102992

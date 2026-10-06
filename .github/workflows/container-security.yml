@@ -6,11 +6,15 @@ on:
     paths:
       - '.devcontainer/**'
       - 'npm/global.json'
+      - '.trivyignore'
+      - '.github/workflows/container-security.yml'
   pull_request:
     branches: [main, pre-production, production]
     paths:
       - '.devcontainer/**'
       - 'npm/global.json'
+      - '.trivyignore'
+      - '.github/workflows/container-security.yml'
   schedule:
     - cron: '0 5 * * 2'
   workflow_dispatch:
@@ -140,7 +144,7 @@ jobs:
             exit 1
           fi
 
-      # なぜ必要か: このジョブは paths フィルタ付き (.devcontainer/**, npm/global.json) で
+      # なぜ必要か: このジョブはコンテナとスキャン設定の paths フィルタ付きで
       #   通常の PR では走らず、branch protection の必須チェックにも入っていない。
       #   そのため main が red になっても誰も気づかない。実際 2026-09-01 から 09-08 まで
       #   CRITICAL 1件 (CVE-2026-56854) を検知したまま一週間放置された (#1236)。
@@ -274,7 +278,7 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/config-base:cache
 
       - name: Generate SBOM with Syft
-        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           image: config-base:sbom
           artifact-name: sbom.spdx.json
