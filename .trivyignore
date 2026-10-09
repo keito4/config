@@ -1,184 +1,6 @@
 # Trivy Ignore File
 # This file contains CVEs that are intentionally ignored during security scans
 
-# Vercel CLI esbuild binary vulnerabilities (Go stdlib v1.18.3)
-# These are transitive dependencies that we cannot control directly
-# The vulnerabilities are in the esbuild binary bundled with Vercel CLI
-# and will be resolved when Vercel updates their esbuild dependency
-
-# CVE-2023-24538: golang: html/template: backticks not treated as string delimiters
-# Severity: CRITICAL
-# Affected: stdlib v1.18.3 (esbuild binary)
-# Fixed in: 1.19.8, 1.20.3
-# Reason: Transitive dependency via Vercel CLI, esbuild only used at build-time
-# Expected resolution: Wait for Vercel to update esbuild
-# Note 2026-04-27: Vercel CLI 52.0.0 still bundles esbuild 0.27.0 with same Go stdlib
-# Note 2026-06-28: Verified still present - Vercel CLI has not yet updated esbuild Go stdlib
-# Review date: 2026-08-28
-CVE-2023-24538
-
-# CVE-2023-24540: golang: html/template: improper handling of JavaScript whitespace
-# Severity: CRITICAL
-# Affected: stdlib v1.18.3 (esbuild binary)
-# Fixed in: 1.19.9, 1.20.4
-# Reason: Transitive dependency via Vercel CLI, esbuild only used at build-time
-# Expected resolution: Wait for Vercel to update esbuild
-# Note 2026-04-27: Vercel CLI 52.0.0 still bundles esbuild 0.27.0 with same Go stdlib
-# Note 2026-06-28: Verified still present - Vercel CLI has not yet updated esbuild Go stdlib
-# Review date: 2026-08-28
-CVE-2023-24540
-
-# CVE-2024-24790: golang: net/netip: Unexpected behavior from Is methods for IPv4-mapped IPv6 addresses
-# Severity: CRITICAL
-# Affected: stdlib v1.18.3 (esbuild binary)
-# Fixed in: 1.21.11, 1.22.4
-# Reason: Transitive dependency via Vercel CLI, esbuild only used at build-time
-# Expected resolution: Wait for Vercel to update esbuild
-# Note 2026-04-27: Vercel CLI 52.0.0 still bundles esbuild 0.27.0 with same Go stdlib
-# Note 2026-06-28: Verified still present - Vercel CLI has not yet updated esbuild Go stdlib
-# Review date: 2026-08-28
-CVE-2024-24790
-
-# CVE-2025-68121: golang: crypto/tls: session resumption vulnerability
-# Severity: CRITICAL
-# Affected: stdlib v1.24.12 (doppler binary)
-# Fixed in: 1.24.13, 1.25.7, 1.26.0-rc.3
-# Reason: Doppler CLI is built with older Go stdlib, waiting for upstream update
-# Expected resolution: Wait for Doppler to rebuild with patched Go version
-# Tracking: https://github.com/DopplerHQ/cli/issues (monitor for Go version update)
-# Note 2026-04-27: Doppler 3.76.0 (latest) still uses old Go stdlib
-# Note 2026-06-28: Check if Doppler CLI has released a build with updated Go stdlib
-# Review date: 2026-08-28
-CVE-2025-68121
-
-# Vercel CLI path-to-regexp vulnerability
-# @vercel/node@5.6.3 and @vercel/remix-builder@5.5.10 still depend on path-to-regexp@6.1.0
-# Vercel has started migration (added path-to-regexp-updated@6.3.0 alias) but hasn't removed the old dep
-
-# CVE-2024-45296: path-to-regexp: Backtracking regular expressions cause ReDoS
-# Severity: HIGH
-# Affected: path-to-regexp 6.1.0 (via @vercel/node, @vercel/remix-builder)
-# Fixed in: 6.3.0
-# Reason: Transitive dependency via Vercel CLI, cannot override without upstream fix
-# Expected resolution: Wait for Vercel to complete migration to path-to-regexp@6.3.0+
-# Tracking: https://github.com/vercel/vercel/issues
-# Note 2026-04-27: Vercel CLI 52.0.0 still depends on @vercel/node@5.7.13 with path-to-regexp@6.1.0
-# Note 2026-06-28: Check if latest Vercel CLI has resolved path-to-regexp dependency
-# Review date: 2026-08-28
-CVE-2024-45296
-
-# CVE-2026-29786: tar: Hardlink Path Traversal via Drive-Relative Linkpath
-# Severity: HIGH
-# Affected: tar@7.5.9 (via semantic-release > @semantic-release/npm > npm)
-# Fixed in: 7.5.10
-# Reason: Bundled dependency in npm package, cannot override
-# Tracking: https://github.com/npm/cli/issues
-# Note 2026-04-27: npm 11.13.0 now bundles tar@^7.5.13. Image rebuild via
-#   npm/global.json (npm 11.13.0) should resolve this. Re-verify after next
-#   rebuild-docker-cache run; remove this entry if scan no longer reports.
-# Note 2026-06-28: npm 11.17.0 is now in use. Remove this entry if next container
-#   scan no longer reports CVE-2026-29786.
-# Review date: 2026-08-28
-CVE-2026-29786
-
-# CVE-2026-27903: minimatch: ReDoS via multiple non-adjacent GLOBSTAR segments
-# Severity: HIGH
-# Affected: minimatch@10.2.2 (via semantic-release > @semantic-release/npm > npm)
-# Fixed in: 10.2.3
-# Reason: Bundled dependency in npm package, cannot override
-# Tracking: https://github.com/npm/cli/issues
-# Note 2026-04-27: npm 11.13.0 now bundles minimatch@^10.2.5. Image rebuild via
-#   npm/global.json (npm 11.13.0) should resolve this. Re-verify after next
-#   rebuild-docker-cache run; remove this entry if scan no longer reports.
-# Note 2026-06-28: npm 11.17.0 is now in use. Remove this entry if next container
-#   scan no longer reports CVE-2026-27903.
-# Review date: 2026-08-28
-CVE-2026-27903
-
-# CVE-2026-23112: kernel: nvmet-tcp: add bounds checks in nvmet_tcp_build_pdu_iovec
-# Severity: CRITICAL
-# Affected: linux-libc-dev 6.8.0-106.106 (Ubuntu 24.04 base image)
-# Fixed in: no fix available yet
-# Reason: Kernel header package from base image (mcr.microsoft.com/devcontainers/base:2.0-ubuntu-24.04)
-#   pulled in as a transitive dependency of build-essential; cannot remove or update independently
-# Expected resolution: Wait for Ubuntu to release patched linux-libc-dev package
-# Tracking: https://ubuntu.com/security/CVE-2026-23112
-# Note 2026-06-28: Still waiting for Ubuntu 24.04 patched linux-libc-dev
-# Review date: 2026-08-28
-CVE-2026-23112
-
-# New linux-libc-dev kernel header vulnerabilities from Ubuntu 24.04 base image
-# Severity: CRITICAL
-# Affected: linux-libc-dev 6.8.0-124.124 (Ubuntu 24.04 base image)
-# Fixed in: no fix available yet
-# Reason: Kernel header package from base image
-#   (mcr.microsoft.com/devcontainers/base:2.0-ubuntu-24.04) pulled in as a
-#   transitive dependency of build-essential; cannot remove or update independently
-# Expected resolution: Wait for Ubuntu to release patched linux-libc-dev package
-# Tracking:
-#   https://ubuntu.com/security/CVE-2026-31402
-#   https://ubuntu.com/security/CVE-2026-31637
-#   https://ubuntu.com/security/CVE-2026-43011
-#   https://ubuntu.com/security/CVE-2026-43037
-#   https://ubuntu.com/security/CVE-2026-43038
-#   https://ubuntu.com/security/CVE-2026-43185
-#   https://ubuntu.com/security/CVE-2026-43304
-#   https://ubuntu.com/security/CVE-2026-43501
-#   https://ubuntu.com/security/CVE-2026-45988
-#   https://ubuntu.com/security/CVE-2026-46043
-#   https://ubuntu.com/security/CVE-2026-46135
-# Review date: 2026-07-17
-CVE-2026-31402
-CVE-2026-31637
-CVE-2026-43011
-CVE-2026-43037
-CVE-2026-43038
-CVE-2026-43185
-CVE-2026-43304
-CVE-2026-43501
-CVE-2026-45988
-CVE-2026-46043
-CVE-2026-46135
-
-# CVE-2026-53215: kernel: net: mvpp2: refill RX buffers before XDP or skb use
-# Severity: CRITICAL
-# Affected: linux-libc-dev 6.8.0-136.136 (Ubuntu 24.04 base image)
-# Fixed in: no fix available yet
-# Reason: Kernel header package from base image
-#   (mcr.microsoft.com/devcontainers/base:2.0-ubuntu-24.04) pulled in as a
-#   transitive dependency of build-essential; cannot remove or update independently
-# Expected resolution: Wait for Ubuntu to release patched linux-libc-dev package
-# Tracking: https://ubuntu.com/security/CVE-2026-53215
-# Review date: 2026-08-28
-CVE-2026-53215
-
-# CVE-2026-33186: gRPC-Go authorization bypass via missing leading slash in :path
-# Severity: CRITICAL
-# Affected: google.golang.org/grpc v1.79.2 (usr/bin/gh), v1.75.1 (usr/local/bin/op)
-# Fixed in: 1.79.3
-# Reason: Vulnerability is in pre-built binaries (GitHub CLI and 1Password CLI);
-#   cannot upgrade grpc directly — waiting for upstream tool releases
-# Expected resolution: Wait for gh and op to release new builds with grpc >= 1.79.3
-# Tracking: https://github.com/cli/cli/releases (gh), https://github.com/1Password/onepassword-operator/releases (op)
-# Note 2026-04-27: gh 2.87.2 still bundles old gRPC; check after gh 2.88+ release
-# Note 2026-06-28: Check if current gh and op versions bundle grpc >= 1.79.3
-# Review date: 2026-08-28
-CVE-2026-33186
-
-# CVE-2026-41242: protobufjs: Arbitrary code execution
-# Severity: CRITICAL
-# Affected: protobufjs@8.0.0 (via @google/gemini-cli > @opentelemetry/otlp-transformer)
-# Fixed in: 8.0.1, 7.5.5
-# Reason: Transitive dependency via @google/gemini-cli; cannot override without upstream update
-# Expected resolution: Wait for @google/gemini-cli to update @opentelemetry/otlp-transformer to protobufjs >= 8.0.1
-# Tracking: https://github.com/google-gemini/gemini-cli/issues
-# Note 2026-04-27: gemini-cli 0.39.1 (latest @opentelemetry/otlp-transformer 0.215.0
-#   requires protobufjs ^8.0.1). Image rebuild should resolve this. Re-verify after
-#   next rebuild-docker-cache run; remove this entry if scan no longer reports.
-# Note 2026-06-28: Remove this entry if next container scan no longer reports CVE-2026-41242
-# Review date: 2026-08-28
-CVE-2026-41242
-
 # CVE-2026-56854: golang.org/x/crypto/ssh: source-address restriction silently ignored
 #   for Permissions returned by non-public-key auth callbacks
 # Severity: CRITICAL (Trivy/NVD). GitHub Advisory GHSA-gjhq-gjfw-99mq rates it HIGH
@@ -221,3 +43,21 @@ CVE-2026-56854
 # Installer: https://cursor.com/install
 # Review date: 2026-11-05
 CVE-2026-102992
+
+# CVE-2026-102828: simple-git: critical vulnerability (Trivy CRITICAL)
+# CVE-2026-102829: @simple-git/argv-parser: critical vulnerability (Trivy CRITICAL)
+# Severity: CRITICAL
+# Affected: simple-git 3.36.0 / @simple-git/argv-parser 1.1.1
+#   (usr/local/lib/node_modules/difit/node_modules/)
+# Fixed in: simple-git 4.0.1 / @simple-git/argv-parser 2.0.1
+# Reason: difit declares simple-git ^3.28.0 and has no release supporting simple-git 4.x,
+#   so updating npm/global.json cannot pull the fix. An npm override would force a major
+#   bump into difit untested. Temporarily accept while waiting for difit to support 4.x.
+# Risk: difit is a local diff viewer run by the developer against their own repositories;
+#   untrusted git arguments are not passed to it in this image. This exception does not fix it.
+# Expected resolution: Remove these entries once difit depends on simple-git >= 4.0.1.
+# Tracking: https://github.com/keito4/config/issues/1339
+# Note 2026-10-10: Accepted per owner decision in monthly maintenance (C).
+# Review date: 2026-11-10
+CVE-2026-102828
+CVE-2026-102829
