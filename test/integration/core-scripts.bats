@@ -266,7 +266,10 @@ export SETUP_CI_UBICLOUD_OWNERS="acme-org"
     assert_file_exists "$REPO_ROOT/script/check-trivyignore-review.sh"
     [ -x "$REPO_ROOT/script/check-trivyignore-review.sh" ]
 
-    run env TODAY=2026-09-01 "$REPO_ROOT/script/check-trivyignore-review.sh" "$REPO_ROOT/.trivyignore"
+    local ignore_file="$TEST_TEMP_DIR/trivyignore"
+    printf '# Review date: 2026-09-01\nCVE-2026-12345\n' > "$ignore_file"
+
+    run env TODAY=2026-09-01 "$REPO_ROOT/script/check-trivyignore-review.sh" "$ignore_file"
     assert_success
     printf '%s\n' "$output" | grep -Fq "Trivy ignore entries due for review"
 }
