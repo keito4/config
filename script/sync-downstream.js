@@ -199,6 +199,28 @@ function listSourceFiles(configRoot, entry) {
 }
 
 /**
+ * Sync one source file into the downstream tree and report its outcome.
+ *
+ * @param {string} configRoot - Absolute path to the config repository root
+ * @param {string} targetRoot - Absolute path to the downstream checkout
+ * @param {{source: string, target: string}} file - Concrete file pair
+ * @param {boolean} check - When true, report differences without writing
+ * @returns {'copied' | 'unchanged'}
+ */
+function syncFile(configRoot, targetRoot, file, check) {
+  const sourceContent = sanitizeForDownstream(file.source, fs.readFileSync(path.join(configRoot, file.source)));
+  const targetPath = path.join(targetRoot, file.target);
+  if (fs.existsSync(targetPath) && sourceContent.equals(fs.readFileSync(targetPath))) {
+    return 'unchanged';
+  }
+  if (!check) {
+    fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+    fs.writeFileSync(targetPath, sourceContent);
+  }
+  return 'copied';
+}
+
+/**
  * Copy resolved files into the downstream working tree.
  *
  * @param {string} configRoot - Absolute path to the config repository root
@@ -211,26 +233,15 @@ function syncFiles(configRoot, targetRoot, resolved, options = {}) {
   const check = options.check === true;
   const result = { copied: [], unchanged: [], excluded: [] };
 
-  for (const entry of resolved.entries) {
-    for (const file of listSourceFiles(configRoot, entry)) {
-      if (isIgnored(file.source)) {
-        continue;
-      }
-      if (resolved.exclude.has(file.target)) {
-        result.excluded.push(file.target);
-        continue;
-      }
-      const sourceContent = sanitizeForDownstream(file.source, fs.readFileSync(path.join(configRoot, file.source)));
-      const targetPath = path.join(targetRoot, file.target);
-      if (fs.existsSync(targetPath) && sourceContent.equals(fs.readFileSync(targetPath))) {
-        result.unchanged.push(file.target);
-        continue;
-      }
-      if (!check) {
-        fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-        fs.writeFileSync(targetPath, sourceContent);
-      }
-      result.copied.push(file.target);
+  const files = resolved.entries
+    .flatMap((entry) => listSourceFiles(configRoot, entry))
+    .filter((file) => !isIgnored(file.source));
+
+  for (const file of files) {
+    if (resolved.exclude.has(file.target)) {
+      result.excluded.push(file.target);
+    } else {
+      result[syncFile(configRoot, targetRoot, file, check)].push(file.target);
     }
   }
 
