@@ -5,50 +5,14 @@ const path = require('path');
 
 const hooksDir = path.join(__dirname, '../.claude/hooks');
 
-// Hook tests for block/pre/post/stop lifecycle hooks not covered by dedicated test files.
+// Hook tests for pre/post/stop lifecycle hooks not covered by dedicated test files.
+// block_git_no_verify.py and block_config_edit.py are covered by launching the hook in
+// hooks-block-git-no-verify.test.js and hooks-block-config-edit-behavior.test.js.
 // block_dangerous_commands.py and block_inline_secrets.py are covered in hooks-command-safety.test.js.
 // post_edit_auto_lint.py and post_git_push_ci.py are covered in hooks-post-tools.test.js.
 // post_pr_ci_watch.py, post_pr_ai_review.py, and pre_exit_plan_ai_review.py are covered in hooks-post-pr-tools.test.js.
 
 describe('Claude Code Hooks lifecycle', () => {
-  describe('block_git_no_verify.py — commit hook protection', () => {
-    let content;
-
-    beforeAll(() => {
-      content = fs.readFileSync(path.join(hooksDir, 'block_git_no_verify.py'), 'utf8');
-    });
-
-    test('should have shebang line', () => {
-      expect(content.startsWith('#!/usr/bin/env python3')).toBe(true);
-    });
-
-    test('should block --no-verify flag', () => {
-      expect(content).toContain('--no-verify');
-    });
-
-    test('should block HUSKY=0 env variable', () => {
-      expect(content).toContain('HUSKY=0');
-    });
-
-    // -n / 終了コードの実際の挙動は test/hooks-block-git-no-verify.test.js が
-    // フックを起動して検証する（結合フラグ -nm 等は文字列検査では証明できないため）。
-    test('should block hooksPath override (core.hooksPath)', () => {
-      expect(content).toContain('core.hookspath');
-    });
-
-    test('should use shlex for safe command tokenization', () => {
-      expect(content).toContain('shlex.split');
-    });
-
-    test('should propagate the hook exit code', () => {
-      expect(content).toContain('sys.exit(main())');
-    });
-
-    test('should suggest sanitized alternative command', () => {
-      expect(content).toContain('sanitized_cmd');
-    });
-  });
-
   describe('pre_git_quality_gates.py — CI quality enforcement', () => {
     let content;
 
@@ -126,54 +90,6 @@ describe('Claude Code Hooks lifecycle', () => {
 
     test('should check code complexity script', () => {
       expect(content).toContain('code-complexity-check.sh');
-    });
-  });
-
-  describe('block_config_edit.py — linter config protection', () => {
-    let content;
-
-    beforeAll(() => {
-      content = fs.readFileSync(path.join(hooksDir, 'block_config_edit.py'), 'utf8');
-    });
-
-    test('should have shebang line', () => {
-      expect(content.startsWith('#!/usr/bin/env python3')).toBe(true);
-    });
-
-    test('should define PROTECTED_BASENAMES set', () => {
-      expect(content).toContain('PROTECTED_BASENAMES');
-    });
-
-    test('should protect ESLint flat config (eslint.config.mjs)', () => {
-      expect(content).toContain('eslint.config.mjs');
-    });
-
-    test('should protect legacy ESLint config (.eslintrc)', () => {
-      expect(content).toContain('.eslintrc');
-    });
-
-    test('should protect Biome config (biome.json)', () => {
-      expect(content).toContain('biome.json');
-    });
-
-    test('should protect Prettier config (.prettierrc)', () => {
-      expect(content).toContain('.prettierrc');
-    });
-
-    test('should protect TypeScript config (tsconfig.json)', () => {
-      expect(content).toContain('tsconfig.json');
-    });
-
-    test('should protect ShellCheck config (.shellcheckrc)', () => {
-      expect(content).toContain('.shellcheckrc');
-    });
-
-    test('should exit 2 when protected file is edited', () => {
-      expect(content).toContain('sys.exit(2)');
-    });
-
-    test('should exit 0 for unprotected files', () => {
-      expect(content).toContain('sys.exit(0)');
     });
   });
 
