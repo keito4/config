@@ -6,15 +6,15 @@
       "overridden": false
     },
     "@commitlint/cli": {
-      "version": "21.2.3",
+      "version": "21.2.4",
       "overridden": false
     },
     "@commitlint/config-conventional": {
-      "version": "21.2.3",
+      "version": "21.2.4",
       "overridden": false
     },
     "@google/gemini-cli": {
-      "version": "0.63.0",
+      "version": "0.64.0",
       "overridden": false
     },
     "@leonardsellem/n8n-mcp-server": {
@@ -22,11 +22,11 @@
       "overridden": false
     },
     "@openai/codex": {
-      "version": "0.162.1",
+      "version": "0.163.0",
       "overridden": false
     },
     "agent-browser": {
-      "version": "0.39.0",
+      "version": "0.39.1",
       "overridden": false
     },
     "bash-language-server": {
@@ -42,11 +42,11 @@
       "overridden": false
     },
     "mcp-remote": {
-      "version": "0.14.3",
+      "version": "0.15.1",
       "overridden": false
     },
     "n8n": {
-      "version": "2.42.6",
+      "version": "2.43.7",
       "overridden": false
     },
     "pm2": {
@@ -62,7 +62,7 @@
       "overridden": false
     },
     "vercel": {
-      "version": "63.1.2",
+      "version": "64.5.0",
       "overridden": false
     },
     "vscode-langservers-extracted": {
@@ -70,7 +70,7 @@
       "overridden": false
     },
     "yaml-language-server": {
-      "version": "1.25.0",
+      "version": "2.0.0",
       "overridden": false
     }
   }
