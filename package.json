@@ -47,10 +47,10 @@
     "husky": "9.1.7",
     "jest": "30.5.2",
     "jest-junit": "^17.0.0",
-    "js-yaml": "^5.4.2",
+    "js-yaml": "^5.5.0",
     "prettier": "3.9.10",
     "semantic-release": "25.0.9",
-    "takt": "0.70.0"
+    "takt": "0.71.0"
   },
   "overrides": {
     "@opentelemetry/propagator-jaeger": ">=2.9.0"
