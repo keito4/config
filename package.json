@@ -48,7 +48,7 @@
     "jest": "30.5.2",
     "jest-junit": "^17.0.0",
     "js-yaml": "^5.4.2",
-    "prettier": "3.9.9",
+    "prettier": "3.9.10",
     "semantic-release": "25.0.9",
     "takt": "0.70.0"
   },
