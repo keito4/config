@@ -41,9 +41,7 @@ function execEsm(esmCode) {
 /**
  * Runtime import tests for the ESLint .mjs modules.
  *
- * The existing text-based tests (eslint-complexity-rules.test.js,
- * eslint-main-config.test.js) only read the files as strings and match
- * against expected substrings. They cannot catch:
+ * Text-based matching on the source cannot catch:
  *   - Syntax errors that prevent module load
  *   - Wrong export types/shapes (e.g. named vs default)
  *   - Broken imports (missing or misnamed dependency)
@@ -194,6 +192,34 @@ describe('ESLint modules — runtime execution validation', () => {
       const [, options] = rulesEntry.rules['max-lines'];
       expect(typeof options.max).toBe('number');
       expect(options.max).toBe(500);
+    });
+
+    test('should ignore templates and minified files, and expose node and jest globals', () => {
+      const ignoresEntry = config.find((entry) => Array.isArray(entry.ignores));
+      expect(ignoresEntry.ignores).toEqual(expect.arrayContaining(['templates/', '*.min.js']));
+
+      const mainEntry = config.find((entry) => entry.languageOptions !== undefined);
+      expect(mainEntry.files).toContain('**/*.{js,jsx,mjs,cjs}');
+      expect(mainEntry.languageOptions.globals).toEqual(expect.objectContaining({ process: false, describe: false }));
+    });
+
+    test('main rules entry should warn on max-depth, max-params and max-nested-callbacks', () => {
+      const rules = config.find((entry) => entry.rules?.['max-depth'] !== undefined).rules;
+      expect(rules['max-depth']).toEqual(['warn', 4]);
+      expect(rules['max-params']).toEqual(['warn', 5]);
+      expect(rules['max-nested-callbacks']).toEqual(['warn', 3]);
+    });
+
+    test('main config uses the same complexity rules as eslint/complexity-rules.mjs', () => {
+      const { complexityRules, rules } = execEsm(
+        `import cfg from ${JSON.stringify(modulePath)};\n` +
+          `import { complexityRules } from ${JSON.stringify(path.join(repoPath, 'eslint/complexity-rules.mjs'))};\n` +
+          `const rules = cfg.find((e) => e.rules?.['max-depth'] !== undefined).rules;\n` +
+          `process.stdout.write(JSON.stringify({ complexityRules, rules }));\n`,
+      );
+      for (const [name, value] of Object.entries(complexityRules)) {
+        expect([name, rules[name]]).toEqual([name, value]);
+      }
     });
 
     test('test file override entry should disable max-lines-per-function', () => {
