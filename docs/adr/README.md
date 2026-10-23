@@ -34,6 +34,7 @@
 | [0026](0026-claude-token-guard-by-inspection.md)                | 配布対象外リポジトリの Claude トークンガードを検査で担保する      | Accepted           |
 | [0027](0027-mcp-shared-http.md)                                 | MCP servers use HTTP where available                              | Accepted           |
 | [0028](0028-macos-ci-integration-tests.md)                      | macOS integration test runner for CI                              | Accepted           |
+| [0029](0029-verify-claude-task-completion.md)                   | Claude の成果物を処理成功とは別に検証する                         | Proposed           |
 
 ## ADR テンプレート
 
