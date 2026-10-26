@@ -76,7 +76,7 @@ describe('quality-gate-fallback.yml (template and actual)', () => {
 
 describe('label-sync.yml (template and actual)', () => {
   const workflowPaths = ['templates/workflows/label-sync.yml', '.github/workflows/label-sync.yml'];
-  const node24Commit = '0993140792a314837dc1e7871c62a33702141725';
+  const node24Commit = 'd2e5330de0bc69f404e49e71b05b5c862482c0d8';
 
   test.each(workflowPaths)('%s: should trigger on push to main with .github/labels.yml changes', (wfPath) => {
     const workflow = readWorkflow(wfPath);
