@@ -30,7 +30,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.3",
+    "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.0.2",
     "@eslint/js": "^10.0.1",
     "@semantic-release/commit-analyzer": "13.0.1",
@@ -41,7 +41,7 @@
     "conventional-changelog-conventionalcommits": "^9.3.1",
     "conventional-commits-filter": "^6.0.1",
     "conventional-commits-parser": "^7.1.2",
-    "eslint": "10.12.0",
+    "eslint": "10.13.0",
     "eslint-config-prettier": "10.1.8",
     "globals": "17.13.0",
     "husky": "9.1.7",
@@ -50,7 +50,7 @@
     "js-yaml": "^5.5.0",
     "prettier": "3.9.10",
     "semantic-release": "25.0.9",
-    "takt": "0.71.0"
+    "takt": "0.72.0"
   },
   "overrides": {
     "@opentelemetry/propagator-jaeger": ">=2.9.0"
