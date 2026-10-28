@@ -17,14 +17,6 @@ describe('templates/eslint/eslint.config.mjs — TypeScript/Next.js ESLint templ
   });
 
   describe('File structure', () => {
-    test('should exist', () => {
-      expect(fs.existsSync(filePath)).toBe(true);
-    });
-
-    test('should be an ES module (.mjs)', () => {
-      expect(filePath).toMatch(/\.mjs$/);
-    });
-
     test('should use default export', () => {
       expect(content).toContain('export default');
     });

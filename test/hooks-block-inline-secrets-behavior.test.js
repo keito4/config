@@ -3,9 +3,7 @@
 /**
  * block_inline_secrets.py の挙動テスト。
  *
- * hooks-command-safety.test.js は「SECRET_PATTERNS に想定パターンの正規表現文字列が
- * 含まれているか」という静的な内容検査に留まる。このファイルでは実際にフックを
- * 起動し、埋め込まれた資格情報を含むコマンドが本当にブロックされ、変数参照や
+ * 実際にフックを起動し、埋め込まれた資格情報を含むコマンドが本当にブロックされ、変数参照や
  * 公開デモ用トークンを含む安全なコマンドが通過することを確認する。
  */
 
@@ -42,6 +40,8 @@ describe('block_inline_secrets.py — behavioral tests', () => {
       ['Anthropic API key', 'export ANTHROPIC_API_KEY=sk-ant-' + 'a'.repeat(95)],
       ['Slack token', 'export SLACK_TOKEN=xoxb-1234567890-abcdefghij'],
       ['Google API key', 'export GOOGLE_API_KEY=AIza' + 'a'.repeat(35)],
+      ['GitLab personal access token', 'export GITLAB_TOKEN=glpat-' + 'a'.repeat(20)],
+      ['Doppler token', 'export DOPPLER_TOKEN=dp.st.' + 'a'.repeat(40)],
       ['private key block', 'echo "-----BEGIN RSA PRIVATE KEY-----"'],
     ])('%s を検知してブロックする', (_label, command) => {
       const { status, stderr } = runHook(command);
