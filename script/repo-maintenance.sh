@@ -29,6 +29,14 @@ Usage: script/repo-maintenance.sh [--mode full|quick|check-only] [--skip CATEGOR
 EOF
 }
 
+# Map --check-foo-bar to CHECK_FOO_BAR_ONLY=true and force check-only mode
+set_check_only() {
+  local name="${1#--}"
+  name="${name//-/_}"
+  printf -v "${name^^}_ONLY" '%s' true
+  MODE="check-only"
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --mode)
@@ -43,44 +51,8 @@ while [[ $# -gt 0 ]]; do
       CREATE_PR=true
       shift
       ;;
-    --check-required-workflows)
-      CHECK_REQUIRED_WORKFLOWS_ONLY=true
-      MODE="check-only"
-      shift
-      ;;
-    --check-actions-pr-settings)
-      CHECK_ACTIONS_PR_SETTINGS_ONLY=true
-      MODE="check-only"
-      shift
-      ;;
-    --check-scheduled-maintenance)
-      CHECK_SCHEDULED_MAINTENANCE_ONLY=true
-      MODE="check-only"
-      shift
-      ;;
-    --check-artifact-retention)
-      CHECK_ARTIFACT_RETENTION_ONLY=true
-      MODE="check-only"
-      shift
-      ;;
-    --check-claude-action-credentials)
-      CHECK_CLAUDE_ACTION_CREDENTIALS_ONLY=true
-      MODE="check-only"
-      shift
-      ;;
-    --check-claude-token-guard)
-      CHECK_CLAUDE_TOKEN_GUARD_ONLY=true
-      MODE="check-only"
-      shift
-      ;;
-    --check-self-cancelling-workflows)
-      CHECK_SELF_CANCELLING_WORKFLOWS_ONLY=true
-      MODE="check-only"
-      shift
-      ;;
-    --check-gh-repo-context)
-      CHECK_GH_REPO_CONTEXT_ONLY=true
-      MODE="check-only"
+    --check-required-workflows|--check-actions-pr-settings|--check-scheduled-maintenance|--check-artifact-retention|--check-claude-action-credentials|--check-claude-token-guard|--check-self-cancelling-workflows|--check-gh-repo-context)
+      set_check_only "$1"
       shift
       ;;
     -h|--help)
