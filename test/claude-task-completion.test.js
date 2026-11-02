@@ -74,6 +74,14 @@ describe.each(workflows)('%s validates delivered work', (workflowPath) => {
     ['a quoted/example completion marker', 'The example is Claude task status: complete'],
     ['unfinished tasks under a complete marker', `- [ ] Run tests\n${complete}`],
     ['explicitly blocked', 'Claude task status: blocked\nNeeds authentication'],
+    ...[
+      '+ [ ] Validate',
+      '1. [ ] Validate',
+      '1) [ ] Validate',
+      '-  [ ] Validate',
+      '*\t[\t] Validate',
+      '  2. [\u00a0] Validate',
+    ].map((item) => [item, `${item}\n${complete}`]),
   ])('rejects %s', async (_label, body) => {
     const { outputs, core, github } = await verify(workflowPath, [result], body);
     expect(outputs.task_complete).toBe(false);

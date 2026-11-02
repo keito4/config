@@ -18,3 +18,11 @@ paths:
   .github/workflows/**/*.yml:
     ignore:
       - 'shellcheck reported issue in this script: SC[0-9]+:(info|style)'
+  # GitHub supports queue: max; actionlint 1.7.12 does not yet recognize it.
+  # https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency
+  .github/workflows/claude.yml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'
+  templates/workflows/claude.yml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'
