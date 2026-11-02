@@ -127,3 +127,18 @@ Preflight probes the first manifest repository and checks classic PAT workflow
 scopes when GitHub returns them; it cannot prove every fine-grained permission
 or access to every manifest repository. This change does not repair or validate
 the shared token for its other consumers.
+
+## Amendment 2026-11-03: verify CI before passing the fallback gate
+
+The fallback now requires the latest active `ci.yml` run for the PR head to
+complete successfully. Missing, disabled, unfinished, failed, and unreadable
+CI cannot provide a green Quality Gate. It waits up to 4200 seconds, allowing the longest explicitly timed CI path (60 minutes) plus 10 minutes of queue allowance. The consumer waits up to 4500 seconds; enclosing jobs allow 75/80 minutes. This is a finite policy, not a guarantee for jobs without explicit deadlines. This replaces
+the review waiter's existing budget. A follow-up change will verify the fallback
+workflow ID and current run attempt before accepting its Quality Gate job.
+
+Fix the common template/helper and apply only the matching gate changes to
+downstream defaults. Keep authentication, application CI, size policies and the
+sync manifest unchanged. Existing mixed synchronization PRs still need their
+own review; this gate correction does not approve those other changes.
+
+The fallback also observes `ready_for_review`, so downstream draft transitions can refresh the gate when application CI reruns.
