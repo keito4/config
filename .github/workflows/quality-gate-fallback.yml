@@ -5,6 +5,7 @@ name: CI Fallback
 on:
   pull_request:
     branches: [main, master, pre-production, production]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read

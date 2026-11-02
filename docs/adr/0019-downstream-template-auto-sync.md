@@ -140,3 +140,5 @@ Fix the common template/helper and apply only the matching gate changes to
 downstream defaults. Keep authentication, application CI, size policies and the
 sync manifest unchanged. Existing mixed synchronization PRs still need their
 own review; this gate correction does not approve those other changes.
+
+The fallback also observes `ready_for_review`, so downstream draft transitions can refresh the gate when application CI reruns.
