@@ -8,6 +8,7 @@
 {
   imports = [
     ../../modules/kanary.nix
+    ../../modules/keyboard-remapping.nix
     ../../modules/homebrew.nix
   ];
 

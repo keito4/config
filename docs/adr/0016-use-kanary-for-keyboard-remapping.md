@@ -103,6 +103,34 @@ events. If the shortcuts do not switch after a rebuild, the fallback is to bind
 Kanary already holds the required permission and uses the same key-injection
 mechanism as its Command taps.
 
+### Amendment (2026-11-02): reapply mappings after keyboard recreation
+
+The activation-time mapping does not cover keyboard services created later.
+With Kanary's Caps Lock setting still enabled, a newly created virtual keyboard
+had `UserKeyMapping = null`. Reapplying the OS mapping restored Caps Lock + A
+as Control + A. The earlier claim that virtual keyboards categorically bypass
+`hidutil` is therefore too broad: their service must receive the mapping too.
+
+`nix/modules/keyboard-remapping.nix` adds the user LaunchAgent
+`org.nixos.keyboard-remapping`. It runs the built-in `/usr/bin/hidutil` at login
+and every minute, targeting keyboard services only and using the complete
+`system.keyboard.userKeyMapping` list. It is enabled only when declarative key
+mapping is enabled and nonempty. Kanary's existing setting enforcement remains.
+
+Use `StartCalendarInterval = [ {} ]`, not `StartInterval`: the latter has stopped
+firing on a deployed Mac despite successful exit status. Calendar jobs also run
+after wake when a scheduled execution was missed. This is bounded automatic
+recovery, not an immediate device-attachment hook: while awake, a missing mapping
+normally recovers at the next minute boundary. No keyboard input is recorded.
+Per-device mappings changed outside Nix can be replaced by the declarative list.
+
+Validate the generated plist with `plutil -lint`, inspect `launchctl print
+gui/$(id -u)/org.nixos.keyboard-remapping`, and confirm both `runs` increasing
+without `kickstart` and `hidutil property --matching keyboard --get UserKeyMapping`
+after a missing mapping is restored. Disable the job with `launchctl bootout
+gui/$(id -u)/org.nixos.keyboard-remapping`; removing the module import and rebuilding
+also removes the persistent job.
+
 ### Amendment (2026-09-28): keep interpreting Swift helpers, alert on failure
 
 An Xcode update reset the license agreement, so `xcrun swift` exited 69 and
