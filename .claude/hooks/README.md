@@ -173,20 +173,20 @@ Hooksは、Claude Codeの特定のイベント（ツール実行前後、タス�
 
 **検出するパターン**:
 
-| パターン | ラベル |
-| ---------------------------------------- | ---------------------------- | ------------------- | --- | ---- | ----------- | ---------------- |
-| `(AKIA                                   | ASIA)[0-9A-Z]{16}` | AWS アクセスキー ID |
-| `aws_secret_access_key=...` | AWS シークレットアクセスキー |
-| `ghp_...` / `gho_...` / `github_pat_...` | GitHub トークン（3種） |
-| `sk-ant-...` | Anthropic API キー |
-| `sk-proj-...` / `sk-...` | OpenAI キー |
-| `xox[baprs]-...` | Slack トークン |
-| `[sr]k\_(live                            | test)\_...` | Stripe キー |
-| `lin_api_...` | Linear API キー |
-| `AIza...` | Google API キー |
-| `glpat-...` | GitLab PAT |
-| `dp.(pt                                  | st                           | sa                  | ct  | scim | audit)....` | Doppler トークン |
-| `-----BEGIN ... PRIVATE KEY-----` | 秘密鍵 |
+| パターン                                 | ラベル                       |
+| ---------------------------------------- | ---------------------------- |
+| `(AKIA\|ASIA)[0-9A-Z]{16}`               | AWS アクセスキー ID          |
+| `aws_secret_access_key=...`              | AWS シークレットアクセスキー |
+| `ghp_...` / `gho_...` / `github_pat_...` | GitHub トークン（3種）       |
+| `sk-ant-...`                             | Anthropic API キー           |
+| `sk-proj-...` / `sk-...`                 | OpenAI キー                  |
+| `xox[baprs]-...`                         | Slack トークン               |
+| `[sr]k_(live\|test)_...`                 | Stripe キー                  |
+| `lin_api_...`                            | Linear API キー              |
+| `AIza...`                                | Google API キー              |
+| `glpat-...`                              | GitLab PAT                   |
+| `dp.(pt\|st\|sa\|ct\|scim\|audit)....`   | Doppler トークン             |
+| `-----BEGIN ... PRIVATE KEY-----`        | 秘密鍵                       |
 
 **動作**:
 

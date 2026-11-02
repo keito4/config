@@ -23,8 +23,9 @@ def inspection_text(command: str) -> str:
     while pending:
         source = pending.pop()
         # Keep offsets so a shell invocation found outside quotes can be parsed
-        # from the original source. Separators in quoted arguments stay data.
-        masked = re.sub(r"'[^']*'|\"(?:\\.|[^\"\\])*\"", lambda m: " " * len(m[0]), source)
+        # from the original source. Quoted data and shell comments are masked
+        # together so quotes inside a comment cannot consume subsequent code.
+        masked = re.sub(r"'[^']*'|\"(?:\\.|[^\"\\])*\"|(?<![^\s;&|()<>])#[^\n]*", lambda m: " " * len(m[0]), source)
         texts.append(" ".join(masked.split()).lower())
         shells = re.finditer(
             r"(?:^|[;&|\n])\s*(?:env\s+)?(?P<shell>(?:/[^\s]+/)?(?:bash|sh|zsh|dash|ksh))(?=\s)",
@@ -32,7 +33,7 @@ def inspection_text(command: str) -> str:
         )
         for shell in shells:
             try:
-                words = shlex.split(source[shell.start("shell"):])
+                words = shlex.split(source[shell.start("shell"):], comments=True)
             except ValueError:
                 # An unparseable executable script must not silently pass.
                 sys.stderr.write("Cannot inspect shell command: unmatched quotes\n")
