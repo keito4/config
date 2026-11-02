@@ -214,7 +214,8 @@ jobs:
 
       - name: Create pull request from Claude branch
         if: >-
-          !cancelled() && steps.claude.outputs.branch_name != '' &&
+          !cancelled() && steps.claude.outcome != 'skipped' &&
+          steps.claude-auth.outputs.available == 'true' &&
           (
             github.event_name == 'issues' ||
             (github.event_name == 'issue_comment' && !github.event.issue.pull_request)
@@ -229,13 +230,41 @@ jobs:
           PR_ASSIGNEE: ${{ vars.CLAUDE_PR_ASSIGNEE }}
         run: |
           if [ -z "$CLAUDE_BRANCH" ]; then
-            echo "Claude did not create a branch. Skipping PR creation."
-            exit 0
+            echo "Claude did not report a branch; publication cannot be verified."
+            exit 1
           fi
 
-          if ! git ls-remote --exit-code --heads origin "$CLAUDE_BRANCH" >/dev/null; then
-            echo "Claude branch $CLAUDE_BRANCH was not pushed (no code changes). Skipping PR creation."
-            exit 0
+          REMOTE_STATUS=0
+          REMOTE_REF=$(git ls-remote --exit-code --heads origin "refs/heads/$CLAUDE_BRANCH") || REMOTE_STATUS=$?
+          if [ "$REMOTE_STATUS" -ne 0 ] && [ "$REMOTE_STATUS" -ne 2 ]; then
+            echo "Could not verify Claude branch $CLAUDE_BRANCH on origin."
+            exit 1
+          fi
+          CLAUDE_HEAD=$(git rev-parse --verify "refs/heads/${CLAUDE_BRANCH}^{commit}")
+          CURRENT_HEAD=$(git rev-parse --verify HEAD)
+          WORKTREE_STATUS=$(git status --porcelain)
+          if [ "$CURRENT_HEAD" != "$CLAUDE_HEAD" ] || [ -n "$WORKTREE_STATUS" ]; then
+            echo "Claude left a different checkout or uncommitted changes."
+            exit 1
+          fi
+          if [ "$REMOTE_STATUS" -eq 2 ]; then
+            # The action creates a local branch even for read-only findings.
+            # Only an absent remote ref plus verified, clean, unchanged work is a no-op.
+            if [ "$CLAUDE_TASK_COMPLETE" = 'true' ]; then
+              BASE_HEAD=$(git rev-parse --verify "refs/heads/${DEFAULT_BRANCH}^{commit}")
+              if [ "$CLAUDE_HEAD" = "$BASE_HEAD" ]; then
+                echo "Verified no-code result; no pull request is needed."
+                exit 0
+              fi
+            fi
+            echo "Claude branch $CLAUDE_BRANCH was not pushed."
+            exit 1
+          fi
+
+          REMOTE_HEAD=$(printf '%s\n' "$REMOTE_REF" | cut -f1)
+          if [ "$REMOTE_HEAD" != "$CLAUDE_HEAD" ]; then
+            echo "Claude branch $CLAUDE_BRANCH has changes that are not published on origin."
+            exit 1
           fi
 
           EXISTING_PR=$(gh pr list --head "$CLAUDE_BRANCH" --state open --json number --jq '.[0].number // empty')

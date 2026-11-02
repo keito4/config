@@ -14,6 +14,18 @@ Elu-co-jp/.github-private #323 stopped after denied reads while retaining `claud
 - Run finalization in a separate, always-evaluated job using only the workflow's trusted inline code and Issues write permission.
 - For open Issues already carrying a Claude queue label, set `claude-review` only when the job succeeds and the existing completion verifier reports true. Otherwise set `claude-blocked` and fail the finalizer. A draft PR never substitutes for completion.
 - A verified answer without a PR can enter review. A successfully completed closed Issue has its queue labels removed. Leave unrelated Issues and failed runs on closed Issues untouched.
+- An absent remote Claude branch is a successful no-code result only when the
+  completion gate passed, `ls-remote --exit-code` returned 2 (no matching ref),
+  the local Claude branch, local default branch and current HEAD are identical,
+  and the working tree is clean. The local default branch is the action's
+  checked-out starting point; a later remote update is not the work baseline.
+  Missing refs, unpushed commits, dirty files and remote/API failures must fail
+  the job so the finalizer cannot classify them as ready for review.
+- When the remote branch exists, require its commit to match both the local
+  Claude branch and current HEAD, with a clean working tree, before creating
+  or reusing a PR. An earlier push does not prove later work was published.
+  An executed Issue invocation without a branch output fails verification;
+  PR, cancelled and authentication-skipped invocations retain their skips.
 - Keep organizational read credentials specific to the audit repository. Roll out the shared behavior through representative repositories while retaining their runner, authentication, and action pins.
 
 ## Consequences
