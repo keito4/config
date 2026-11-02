@@ -18,3 +18,5 @@ Elu-co-jp/.github-private #323 stopped after denied reads while retaining `claud
 ## Consequences
 
 Issue state reflects delivery, while human review and merging remain separate. Cancellation of an entire workflow can still prevent finalization; this is not a stale-run recovery service. Existing config downstream subscriptions receive the template through their normal PR sync; other repositories require reviewed migration before opting into full-file synchronization.
+
+This change manages end-of-run result labels. During a retry, the previous result remains visible until finalization; use Actions or the tracking comment for current progress. A guarded transition back to `claude-working` at the start of a retry is follow-up work, including queued requests, authentication skips, and cancellation. These result labels do not trigger automatic merging or closing in the pilot repositories.
