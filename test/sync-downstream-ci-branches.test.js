@@ -126,6 +126,13 @@ describe('CI branch rendering through the real sync operation', () => {
     'on:\n  pull_request:\n    branches: [main]\n  pull_request:\n    paths: ["*.js"]\n',
     'on:\n  pull_request:\n    branches: [main]\n  pull_request:\n    branches: [master]\n',
     'on:\n  pull_request:\n    branches: [main]\non:\n  pull_request:\n    branches: [master]\n',
+    'on:\n  pull_request:\n    branches: [main]\n  pull_request: {branches: [production]}\n',
+    'on:\n  pull_request:\n    branches: [main]\n  pull_request: # comment\n    branches: [production]\n',
+    "on:\n  pull_request:\n    branches: [main]\n  'pull_request': {branches: [production]}\n",
+    'on:\n  pull_request:\n    branches: [main]\n  pull_request : {branches: [production]}\n',
+    'on:\n  pull_request:\n    branches: [main]\non: {pull_request: {branches: [production]}}\n',
+    "on:\n  pull_request:\n    branches: [main]\n'on': {pull_request: {branches: [production]}}\n",
+    "on:\n  pull_request:\n    branches: [main]\n    'branches': [production]\n",
   ])('rejects missing or ambiguous canonical scope before copying files: %j', (content) => {
     write(configRoot, source, content);
     write(targetRoot, target, 'existing target');

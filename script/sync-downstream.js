@@ -60,9 +60,11 @@ function renderCiBranches(configRoot, files, resolved) {
   const branchPattern = /^ {4}branches: \[[^\n]*\]$/gmu;
   if (
     sections.length !== 1 ||
+    [...content.matchAll(/^(?:on|'on'|"on")[ \t]*:/gmu)].length !== 1 ||
+    [...sections[0][0].matchAll(/^ {2}(?:pull_request|'pull_request'|"pull_request")[ \t]*:/gmu)].length !== 1 ||
     pulls.length !== 1 ||
     [...pulls[0][0].matchAll(branchPattern)].length !== 1 ||
-    [...pulls[0][0].matchAll(/^ {4}branches:/gmu)].length !== 1
+    [...pulls[0][0].matchAll(/^ {4}(?:branches|'branches'|"branches")[ \t]*:/gmu)].length !== 1
   ) {
     throw new Error('ciBranches requires exactly one canonical on.pull_request.branches list');
   }
