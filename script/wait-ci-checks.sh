@@ -1,104 +1,83 @@
 #!/usr/bin/env bash
-# Wait for required CI checks before running Claude Code Review.
-
+# Wait for the genuine fallback Quality Gate for this head before Claude Review.
 set -euo pipefail
 
 REPO="${1:-${GITHUB_REPOSITORY:-}}"
 HEAD_SHA="${2:-${GITHUB_SHA:-}}"
 MAX_WAIT_TIME="${MAX_WAIT_TIME:-900}"
 POLL_INTERVAL="${POLL_INTERVAL:-30}"
-QUALITY_GATE_MISSING_GRACE="${QUALITY_GATE_MISSING_GRACE:-120}"
 ELAPSED_TIME=0
-
 if [ -z "$REPO" ] || [ -z "$HEAD_SHA" ]; then
   echo "Usage: $0 <owner/repo> <head-sha>" >&2
   exit 2
 fi
-
 write_ci_result() {
-  local value="$1"
-  if [ -n "${GITHUB_OUTPUT:-}" ]; then
-    echo "ci_passed=$value" >> "$GITHUB_OUTPUT"
-  fi
+  if [ -n "${GITHUB_OUTPUT:-}" ]; then echo "ci_passed=$1" >> "$GITHUB_OUTPUT"; fi
 }
 
-fetch_check_runs() {
-  if [ -n "${CHECK_RUNS_JSON:-}" ]; then
-    echo "$CHECK_RUNS_JSON" | jq -c '.[] | {name, status, conclusion}'
-    return
-  fi
-
-  gh api "repos/$REPO/commits/$HEAD_SHA/check-runs" \
-    --jq '.check_runs[] | select(.name != "check-ci-status" and .name != "claude-review") | {name, status, conclusion}'
-}
-
-# check-run JSON (1件でも複数件でも可) を "name: status - conclusion" 形式で表示
-print_check_summary() {
-  local runs="$1"
-  echo "$runs" | jq -r '"\(.name): \(.status) - \(.conclusion)"'
-}
-
-# ポーリング間隔だけ待機し、経過時間を進める
-wait_before_next_poll() {
-  sleep "$POLL_INTERVAL"
-  ELAPSED_TIME=$((ELAPSED_TIME + POLL_INTERVAL))
+# Workflow identity and attempt-scoped jobs prevent stale or same-name checks passing.
+fetch_gate_state() {
+  local workflow workflow_id pages selected run_id attempt current jobs
+  workflow="$(gh api "repos/$REPO/actions/workflows/quality-gate-fallback.yml")" || return 1
+  workflow_id="$(jq -er 'select(.state == "active" and .path == ".github/workflows/quality-gate-fallback.yml") | .id | select(type == "number" and . > 0)' <<< "$workflow")" || return 1
+  pages="$(gh api --paginate --slurp "repos/$REPO/actions/workflows/$workflow_id/runs?head_sha=$HEAD_SHA&per_page=100")" || return 1
+  selected="$(jq -cer --arg sha "$HEAD_SHA" --argjson id "$workflow_id" '
+    [.[].workflow_runs[] | select(.head_sha == $sha and .workflow_id == $id)]
+    | if any(.[]; (.created_at | type) != "string" or (.run_number | type) != "number" or (.id | type) != "number" or (.run_attempt | type) != "number") then error("Invalid run metadata") else . end
+    | sort_by([(.created_at | fromdateiso8601), .run_number, .id, .run_attempt]) | last // {}' <<< "$pages")" || return 1
+  run_id="$(jq -r '.id // empty' <<< "$selected")"
+  if [ -z "$run_id" ]; then echo pending; return; fi
+  current="$(gh api "repos/$REPO/actions/runs/$run_id")" || return 1
+  attempt="$(jq -er --arg sha "$HEAD_SHA" --argjson wid "$workflow_id" --argjson selected "$selected" '
+    select(.id == $selected.id and .workflow_id == $wid and .head_sha == $sha and
+      (.run_attempt | type) == "number" and .run_attempt >= $selected.run_attempt) | .run_attempt' <<< "$current")" || return 1
+  case "$(jq -r '.status' <<< "$current")" in
+    queued|in_progress|waiting|pending|requested) echo pending; return ;;
+    completed) ;;
+    *) return 1 ;;
+  esac
+  if [ "$(jq -r '.conclusion' <<< "$current")" != success ]; then echo failure; return; fi
+  jobs="$(gh api --paginate --slurp "repos/$REPO/actions/runs/$run_id/attempts/$attempt/jobs?per_page=100")" || return 1
+  jq -r --arg sha "$HEAD_SHA" '
+    [.[].jobs[] | select(.name == "Quality Gate" and .head_sha == $sha)] | max_by(.id)
+    | if . == null then "pending"
+      elif .status == "completed" then (if .conclusion == "success" then "success" else "failure" end)
+      elif (.status == "queued" or .status == "in_progress" or .status == "waiting") then "pending"
+      else "failure" end' <<< "$jobs"
 }
 
 echo "Waiting for CI to complete for $REPO (SHA: $HEAD_SHA)"
-
 while [ "$ELAPSED_TIME" -lt "$MAX_WAIT_TIME" ]; do
-  echo "Elapsed time: ${ELAPSED_TIME}s / ${MAX_WAIT_TIME}s"
-
-  CHECK_RUNS="$(fetch_check_runs)"
-
-  echo "Check Runs:"
-  print_check_summary "$CHECK_RUNS"
-
-  QUALITY_GATE="$(echo "$CHECK_RUNS" | jq -r 'select(.name == "Quality Gate")')"
-
-  if [ -z "$QUALITY_GATE" ]; then
-    if [ "$ELAPSED_TIME" -ge "$QUALITY_GATE_MISSING_GRACE" ]; then
-      DETECT_CHANGES="$(echo "$CHECK_RUNS" | jq -r 'select(.name == "Detect Changes")')"
-      if [ -z "$DETECT_CHANGES" ]; then
-        write_ci_result true
-        echo "CI workflow skipped by path filters; proceeding with Claude Code Review."
-        exit 0
-      fi
+  if ! GATE_STATE="$(fetch_gate_state)"; then
+    write_ci_result false
+    echo 'Could not verify the current Quality Gate (API or metadata error)'
+    exit 0
+  fi
+  if [ "$GATE_STATE" = failure ]; then
+    write_ci_result false
+    echo 'Quality Gate failed'
+    exit 0
+  fi
+  if [ "$GATE_STATE" = success ]; then
+    # Preserve completed-failure rejection without requiring optional pending checks.
+    if ! CHECK_RUNS="$(gh api --paginate --slurp "repos/$REPO/commits/$HEAD_SHA/check-runs?per_page=100")"; then
+      write_ci_result false
+      exit 0
     fi
-
-    echo "Quality Gate check has not started yet, waiting..."
-    wait_before_next_poll
-    continue
-  fi
-
-  if echo "$QUALITY_GATE" | jq -e 'select(.status != "completed")' >/dev/null; then
-    echo "Quality Gate is still running, waiting..."
-    print_check_summary "$QUALITY_GATE"
-    wait_before_next_poll
-    continue
-  fi
-
-  if echo "$QUALITY_GATE" | jq -e 'select(.conclusion != "success")' >/dev/null; then
-    write_ci_result false
-    echo "Quality Gate failed:"
-    echo "$QUALITY_GATE" | jq -r 'select(.conclusion != "success") | "\(.name): \(.conclusion)"'
+    if ! jq -e --arg sha "$HEAD_SHA" '
+      [.[].check_runs[] | select(.head_sha == $sha and .name != "check-ci-status" and .name != "claude-review")]
+      | group_by([.app.id, .name]) | map(max_by(.id))
+      | all(.[]; .status != "completed" or .conclusion == "success" or .conclusion == "skipped" or .conclusion == "neutral")' <<< "$CHECK_RUNS" >/dev/null; then
+      write_ci_result false
+      echo 'Some CI checks failed or could not be read'
+      exit 0
+    fi
+    write_ci_result true
+    echo 'All CI checks passed'
     exit 0
   fi
-
-  FAILED_CHECKS="$(echo "$CHECK_RUNS" | jq -r 'select(.status == "completed" and .conclusion != "success" and .conclusion != "skipped" and .conclusion != "neutral")')"
-
-  if [ -n "$FAILED_CHECKS" ]; then
-    write_ci_result false
-    echo "Some CI checks failed:"
-    echo "$FAILED_CHECKS" | jq -r '"\(.name): \(.conclusion)"'
-    exit 0
-  fi
-
-  write_ci_result true
-  echo "All CI checks passed"
-  exit 0
+  sleep "$POLL_INTERVAL"
+  ELAPSED_TIME=$((ELAPSED_TIME + POLL_INTERVAL))
 done
-
 write_ci_result false
 echo "Timeout: CI did not complete within ${MAX_WAIT_TIME}s"
-exit 0
