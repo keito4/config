@@ -15,6 +15,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { load } = require('js-yaml');
 
 const repoRoot = path.resolve(__dirname, '..');
 const DEFAULT_MANIFEST = path.join(repoRoot, '.github', 'sync-downstream.json');
@@ -55,17 +56,17 @@ function renderCiBranches(configRoot, files, resolved) {
     throw new Error('ciBranches requires exactly one included fallback template mapping');
   }
   const content = fs.readFileSync(path.join(configRoot, FALLBACK_SOURCE), 'utf8');
+  try {
+    load(content);
+  } catch (cause) {
+    throw new Error('ciBranches requires valid YAML with exactly one canonical on.pull_request.branches list', {
+      cause,
+    });
+  }
   const sections = [...content.matchAll(/^on:\n(?:[ \t].*\n|\n)*/gmu)];
   const pulls = [...(sections[0]?.[0] ?? '').matchAll(/^ {2}pull_request:\n(?: {4}.*\n|\n)*/gmu)];
   const branchPattern = /^ {4}branches: \[[^\n]*\]$/gmu;
-  if (
-    sections.length !== 1 ||
-    [...content.matchAll(/^(?:on|'on'|"on")[ \t]*:/gmu)].length !== 1 ||
-    [...sections[0][0].matchAll(/^ {2}(?:pull_request|'pull_request'|"pull_request")[ \t]*:/gmu)].length !== 1 ||
-    pulls.length !== 1 ||
-    [...pulls[0][0].matchAll(branchPattern)].length !== 1 ||
-    [...pulls[0][0].matchAll(/^ {4}(?:branches|'branches'|"branches")[ \t]*:/gmu)].length !== 1
-  ) {
+  if (sections.length !== 1 || pulls.length !== 1 || [...pulls[0][0].matchAll(branchPattern)].length !== 1) {
     throw new Error('ciBranches requires exactly one canonical on.pull_request.branches list');
   }
   const section = pulls[0];

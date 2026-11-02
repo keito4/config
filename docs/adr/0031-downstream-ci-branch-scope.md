@@ -24,6 +24,20 @@ replaces one canonical inline `branches` list directly under top-level
 `on.pull_request`. A missing or ambiguous mapping or section aborts before
 copying files. The field is invalid when that mapping is excluded.
 
+Before locating that canonical list, the engine validates the complete template
+with the existing locked `js-yaml` dependency's `load(content)`. Its default
+duplicate-key rejection covers quoted keys, inline mappings and comments whose
+indentation does not end a YAML mapping. The parsed object is never serialized;
+only the original branch-list bytes are replaced. Invalid YAML aborts both normal
+and check mode before any target file is written.
+
+The sync job reuses `setup-node-ci` with installation disabled, then runs
+`npm ci --ignore-scripts` in the config checkout before checking out downstream.
+This installs the existing lockfile without running root or dependency lifecycle
+scripts and keeps the downstream token scoped to checkout and PR creation. It
+adds registry downloads, npm cache writes and the existing install-time audit;
+no dependency or lockfile change is required.
+
 This is a limited exception to ADR 0019's literal-copy rule, not a template
 language. With no field, existing file-copy and settings-sanitization behavior
 remains unchanged. Application CI, other triggers and other templates retain

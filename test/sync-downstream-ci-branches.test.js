@@ -96,6 +96,21 @@ describe('CI branch rendering through the real sync operation', () => {
     expect(fs.readFileSync(path.join(targetRoot, target), 'utf8')).toBe(original);
   });
 
+  test.each(['# comment', '  # comment', '    # comment'])(
+    'preserves a valid comment after the canonical branch list: %s',
+    (comment) => {
+      const content = original.replace('jobs:\n', `${comment}\njobs:\n`);
+      write(configRoot, source, content);
+      const resolved = resolveFilesForRepo(manifestFor(['main']), 'fixture/repo');
+      expect(syncFiles(configRoot, targetRoot, resolved, { check: true }).copied).toEqual([target]);
+      expect(fs.existsSync(path.join(targetRoot, target))).toBe(false);
+      syncFiles(configRoot, targetRoot, resolved);
+      expect(fs.readFileSync(path.join(targetRoot, target), 'utf8')).toBe(
+        content.replace('branches: [main, master, pre-production, production]', 'branches: [main]'),
+      );
+    },
+  );
+
   test('actual manifest sync changes only the three fallback branch policies', () => {
     const manifest = loadManifest();
     const expected = new Set(['keito4/calendar_alerm', 'keito4/intent-gate-android', 'keito4/ohana']);
@@ -133,6 +148,14 @@ describe('CI branch rendering through the real sync operation', () => {
     'on:\n  pull_request:\n    branches: [main]\non: {pull_request: {branches: [production]}}\n',
     "on:\n  pull_request:\n    branches: [main]\n'on': {pull_request: {branches: [production]}}\n",
     "on:\n  pull_request:\n    branches: [main]\n    'branches': [production]\n",
+    'on:\n  pull_request:\n    branches: [main]\n  # comment\n    branches: [production]\n',
+    'on:\n  pull_request:\n    branches: [main]\n# comment\n    branches: [production]\n',
+    "on:\n  pull_request:\n    branches: [main]\n  # comment\n    'branches': [production]\n",
+    'on:\n  pull_request:\n    branches: [main]\n  # comment\n    "branches" : [production]\n',
+    'on:\n  pull_request:\n    branches: [main]\n# comment\n  pull_request: {branches: [production]}\n',
+    "on:\n  pull_request:\n    branches: [main]\n# comment\n  'pull_request': {branches: [production]}\n",
+    'on:\n  pull_request:\n    branches: [main]\njobs: {}\njobs: {}\n',
+    'on:\n  pull_request:\n    branches: [main]\njobs: [\n',
   ])('rejects missing or ambiguous canonical scope before copying files: %j', (content) => {
     write(configRoot, source, content);
     write(targetRoot, target, 'existing target');
