@@ -3,26 +3,6 @@ name: CI
 on:
   pull_request:
     branches: [main, master, pre-production, production]
-    paths:
-      - '**.js'
-      - '**.ts'
-      - '**.mjs'
-      - '**.cjs'
-      - '**.json'
-      - '**.yml'
-      - '**.yaml'
-      - '**.sh'
-      - '**.bats'
-      - 'test/fixtures/**'
-      - '.takt/**'
-      - '.github/actions/**'
-      - '.github/workflows/**'
-      - '.github/actionlint.yaml'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.eslintrc.*'
-      - '.prettierrc.*'
-      - 'tsconfig.json'
   push:
     branches: [main, master, pre-production, production]
     paths:

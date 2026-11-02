@@ -15,6 +15,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { load } = require('js-yaml');
 
 const repoRoot = path.resolve(__dirname, '..');
 const DEFAULT_MANIFEST = path.join(repoRoot, '.github', 'sync-downstream.json');
@@ -31,6 +32,48 @@ const IGNORED_PATTERNS = [/(^|\/)__pycache__(\/|$)/u, /\.pyc$/u];
 const SETTINGS_TARGET = '.claude/settings.json';
 const HOST_ONLY_SETTINGS_KEYS = ['enabledPlugins', 'extraKnownMarketplaces'];
 const HOST_ONLY_HOOK_COMMAND = /^\s*agent-deck\b/u;
+const CI_BRANCH_NAMES = new Set(['main', 'master', 'develop', 'pre-production', 'production']);
+const FALLBACK_SOURCE = 'templates/workflows/quality-gate-fallback.yml';
+const FALLBACK_TARGET = '.github/workflows/quality-gate-fallback.yml';
+
+function validateCiBranches(value) {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    value.some((branch) => !CI_BRANCH_NAMES.has(branch)) ||
+    new Set(value).size !== value.length
+  ) {
+    throw new Error('manifest: ciBranches must be a non-empty, unique array of supported literal branches');
+  }
+}
+
+// This one template has a repository-specific PR branch policy; other bytes stay literal.
+function renderCiBranches(configRoot, files, resolved) {
+  if (resolved.ciBranches === undefined) return undefined;
+  validateCiBranches(resolved.ciBranches);
+  const mappings = files.filter((file) => file.target === FALLBACK_TARGET);
+  if (mappings.length !== 1 || mappings[0].source !== FALLBACK_SOURCE || resolved.exclude.has(FALLBACK_TARGET)) {
+    throw new Error('ciBranches requires exactly one included fallback template mapping');
+  }
+  const content = fs.readFileSync(path.join(configRoot, FALLBACK_SOURCE), 'utf8');
+  try {
+    load(content);
+  } catch (cause) {
+    throw new Error('ciBranches requires valid YAML with exactly one canonical on.pull_request.branches list', {
+      cause,
+    });
+  }
+  const sections = [...content.matchAll(/^on:\n(?:[ \t].*\n|\n)*/gmu)];
+  const pulls = [...(sections[0]?.[0] ?? '').matchAll(/^ {2}pull_request:\n(?: {4}.*\n|\n)*/gmu)];
+  const branchPattern = /^ {4}branches: \[[^\n]*\]$/gmu;
+  if (sections.length !== 1 || pulls.length !== 1 || [...pulls[0][0].matchAll(branchPattern)].length !== 1) {
+    throw new Error('ciBranches requires exactly one canonical on.pull_request.branches list');
+  }
+  const section = pulls[0];
+  const offset = sections[0].index + section.index;
+  const rendered = section[0].replace(branchPattern, `    branches: [${resolved.ciBranches.join(', ')}]`);
+  return Buffer.from(content.slice(0, offset) + rendered + content.slice(offset + section[0].length));
+}
 
 /**
  * @param {object} hooks - settings.json の hooks（イベント名 -> マッチャ配列）
@@ -127,6 +170,9 @@ function validateRepo(repo, groups) {
   ) {
     throw new Error(`manifest: repo ${repo.name} "exclude" must be an array of strings`);
   }
+  if (repo.ciBranches !== undefined) {
+    validateCiBranches(repo.ciBranches);
+  }
 }
 
 /**
@@ -164,7 +210,7 @@ function loadManifest(manifestPath = DEFAULT_MANIFEST) {
 /**
  * @param {object} manifest - Validated manifest
  * @param {string} repoName - Downstream repository (owner/name)
- * @returns {{ entries: Array<{source: string, target: string}>, exclude: Set<string> }}
+ * @returns {{ entries: Array<{source: string, target: string}>, exclude: Set<string>, ciBranches?: string[] }}
  */
 function resolveFilesForRepo(manifest, repoName) {
   const repo = manifest.repos.find((entry) => entry.name === repoName);
@@ -172,7 +218,7 @@ function resolveFilesForRepo(manifest, repoName) {
     throw new Error(`manifest: unknown repo ${repoName}`);
   }
   const entries = repo.groups.flatMap((group) => manifest.groups[group]);
-  return { entries, exclude: new Set(repo.exclude ?? []) };
+  return { entries, exclude: new Set(repo.exclude ?? []), ciBranches: repo.ciBranches };
 }
 
 /**
@@ -205,10 +251,12 @@ function listSourceFiles(configRoot, entry) {
  * @param {string} targetRoot - Absolute path to the downstream checkout
  * @param {{source: string, target: string}} file - Concrete file pair
  * @param {boolean} check - When true, report differences without writing
+ * @param {Buffer | undefined} rendered - Optional validated fallback branch override
  * @returns {'copied' | 'unchanged'}
  */
-function syncFile(configRoot, targetRoot, file, check) {
-  const sourceContent = sanitizeForDownstream(file.source, fs.readFileSync(path.join(configRoot, file.source)));
+function syncFile(configRoot, targetRoot, file, check, rendered) {
+  const sourceContent =
+    rendered ?? sanitizeForDownstream(file.source, fs.readFileSync(path.join(configRoot, file.source)));
   const targetPath = path.join(targetRoot, file.target);
   if (fs.existsSync(targetPath) && sourceContent.equals(fs.readFileSync(targetPath))) {
     return 'unchanged';
@@ -225,7 +273,7 @@ function syncFile(configRoot, targetRoot, file, check) {
  *
  * @param {string} configRoot - Absolute path to the config repository root
  * @param {string} targetRoot - Absolute path to the downstream checkout
- * @param {{ entries: Array<{source: string, target: string}>, exclude: Set<string> }} resolved
+ * @param {{ entries: Array<{source: string, target: string}>, exclude: Set<string>, ciBranches?: string[] }} resolved
  * @param {{ check?: boolean }} [options] - check: report differences without writing
  * @returns {{ copied: string[], unchanged: string[], excluded: string[] }}
  */
@@ -236,12 +284,14 @@ function syncFiles(configRoot, targetRoot, resolved, options = {}) {
   const files = resolved.entries
     .flatMap((entry) => listSourceFiles(configRoot, entry))
     .filter((file) => !isIgnored(file.source));
+  const fallbackContent = renderCiBranches(configRoot, files, resolved);
 
   for (const file of files) {
     if (resolved.exclude.has(file.target)) {
       result.excluded.push(file.target);
     } else {
-      result[syncFile(configRoot, targetRoot, file, check)].push(file.target);
+      const rendered = file.source === FALLBACK_SOURCE && file.target === FALLBACK_TARGET ? fallbackContent : undefined;
+      result[syncFile(configRoot, targetRoot, file, check, rendered)].push(file.target);
     }
   }
 
