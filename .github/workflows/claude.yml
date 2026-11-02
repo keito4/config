@@ -169,7 +169,7 @@ jobs:
             const body = comment?.body || '';
             const complete = result?.subtype === 'success' && result?.is_error === false &&
               /(?:^|\n)Claude task status: complete\s*$/.test(body) &&
-              !body.includes('Claude task status: blocked') && !/^\s*[-*] \[ \]/m.test(body);
+              !body.includes('Claude task status: blocked') && !/^[ \t]*(?:[-+*]|\d{1,9}[.)])[ \t]+\[[^\S\r\n]\](?:[^\S\r\n]|$)/m.test(body);
             core.setOutput('task_complete', Boolean(complete));
             if (!complete) {
               core.setFailed('Claude task is incomplete or blocked. See the tracking comment and safe diagnostics above.');
