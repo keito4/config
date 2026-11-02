@@ -38,6 +38,18 @@ describe('Claude workflow contracts', () => {
     expect(workflow).toContain("runs-on: ${{ vars.CLAUDE_RUNNER || 'ubuntu-latest' }}");
   });
 
+  test.each(issueWorkflows)('%s allows CI inspection without run mutation commands', (workflowPath) => {
+    const workflow = readWorkflow(workflowPath);
+    const allowedTools = workflow.match(/--allowedTools "([^"]+)"/)[1].split(',');
+
+    expect(allowedTools.filter((tool) => tool.startsWith('Bash(gh run'))).toEqual([
+      'Bash(gh run list:*)',
+      'Bash(gh run view:*)',
+    ]);
+    expect(workflow).toMatch(/actions: read/);
+    expect(workflow).not.toMatch(/actions: write/);
+  });
+
   test.each(issueWorkflows)('%s skips draft PR issue comments through the Pulls API', (workflowPath) => {
     const workflow = readWorkflow(workflowPath);
 
