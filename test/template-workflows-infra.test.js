@@ -54,18 +54,6 @@ describe('quality-gate-fallback.yml (template and actual)', () => {
     expect(workflow).toContain('concurrency:');
   });
 
-  test.each(workflowPaths)('%s: should check if CI workflow ran before emitting pass', (wfPath) => {
-    const workflow = readWorkflow(wfPath);
-    // Uses ci_running output to decide whether to emit pass
-    expect(workflow).toContain('ci_running');
-  });
-
-  test.each(workflowPaths)('%s: should only emit Quality Gate pass when CI is not running', (wfPath) => {
-    const workflow = readWorkflow(wfPath);
-    // The "Pass" step should be conditional on ci_running being false
-    expect(workflow).toMatch(/ci_running.*==.*false/);
-  });
-
   test('template and actual should both emit "Quality Gate" job name', () => {
     const template = readWorkflow('templates/workflows/quality-gate-fallback.yml');
     const actual = readWorkflow('.github/workflows/quality-gate-fallback.yml');

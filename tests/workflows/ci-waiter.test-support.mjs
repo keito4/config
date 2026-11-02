@@ -37,6 +37,11 @@ const job = (extra = {}) => ({
 const stub = `#!/usr/bin/env node
 const fs = require('node:fs'), cp = require('node:child_process');
 const f = JSON.parse(fs.readFileSync(process.env.FIXTURE));
+if (Number(fs.readFileSync(process.env.CLOCK, 'utf8')) < (f.pendingUntil ?? 0)) {
+ const pending = r => ({...r, status:'in_progress', conclusion:null});
+ for (const key of ['ciRuns','runs','jobs','checks']) f[key] = f[key].map(pending);
+ f.ciCurrent = pending(f.ciCurrent); f.current = pending(f.current);
+}
 const args = process.argv.slice(2), endpoint = args.find(x => x.startsWith('repos/'));
 fs.appendFileSync(process.env.CALLS, JSON.stringify(args) + '\\n');
 let result;
@@ -77,12 +82,20 @@ function execute(options = {}) {
   const waitJob = review.split('\n  check-ci-status:\n')[1].split(/\n {2}[\w-]+:\n/)[0];
   const permissions = waitJob.match(/\n {4}permissions:\n((?: {6}.*\n)+)/)[1];
   const fixture = {
-    ciWorkflow: { id: 17, state: 'active', path: '.github/workflows/ci.yml' },
+    ciWorkflow: {
+      id: 17,
+      state: 'active',
+      path: '.github/workflows/ci.yml',
+    },
     ciRuns: [ciRun()],
     ciSecondPage: [],
     ciCurrent: ciRun(),
     actionsRead: / {6}actions: read\n/.test(permissions),
-    workflow: { id: 7, state: 'active', path: '.github/workflows/quality-gate-fallback.yml' },
+    workflow: {
+      id: 7,
+      state: 'active',
+      path: '.github/workflows/quality-gate-fallback.yml',
+    },
     runs: [run()],
     secondPage: [],
     current: run(),
@@ -91,20 +104,29 @@ function execute(options = {}) {
     ...options,
   };
   writeFileSync(join(dir, 'fixture.json'), JSON.stringify(fixture));
+  writeFileSync(join(dir, 'clock'), '0');
   writeFileSync(join(dir, 'gh'), stub, { mode: 0o755 });
-  writeFileSync(join(dir, 'sleep'), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
+  writeFileSync(
+    join(dir, 'sleep'),
+    `#!/usr/bin/env node
+const fs = require('node:fs');
+fs.writeFileSync(process.env.CLOCK, String(Number(fs.readFileSync(process.env.CLOCK, 'utf8')) + Number(process.argv[2])));
+`,
+    { mode: 0o755 },
+  );
   const output = join(dir, 'output');
   const result = spawnSync('bash', ['script/wait-ci-checks.sh', 'fixture/repo', sha], {
     encoding: 'utf8',
-    timeout: 5000,
+    timeout: options.useConfiguredTimeout ? 15000 : 5000,
     env: {
       ...process.env,
       PATH: dir + ':' + process.env.PATH,
       FIXTURE: join(dir, 'fixture.json'),
       CALLS: join(dir, 'calls'),
+      CLOCK: join(dir, 'clock'),
       GITHUB_OUTPUT: output,
-      MAX_WAIT_TIME: '2',
-      POLL_INTERVAL: '1',
+      MAX_WAIT_TIME: options.useConfiguredTimeout ? '' : '2',
+      POLL_INTERVAL: String(options.pollInterval ?? 1),
       QUALITY_GATE_MISSING_GRACE: '0',
     },
   });
@@ -112,7 +134,11 @@ function execute(options = {}) {
     assert.equal(result.status, 0, result.stderr);
     const passed = readFileSync(output, 'utf8').trim();
     const calls = readFileSync(join(dir, 'calls'), 'utf8');
-    return { passed, calls };
+    return {
+      passed,
+      calls,
+      elapsed: Number(readFileSync(join(dir, 'clock'), 'utf8')),
+    };
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
