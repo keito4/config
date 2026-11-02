@@ -13,19 +13,20 @@ on:
 permissions: {}
 
 concurrency:
-  # イベント種別 + トリガーのコメント/レビューIDを含めることで、
-  # 同一 PR/Issue 内でも異なるメンションが互いをキャンセルしない
+  # Serialize trusted Issue requests through finalization; skipped events stay separate.
   group: >-
     claude-${{ github.repository }}-${{
-      github.event.issue.number
-      || github.event.pull_request.number
-      || github.run_id
-    }}-${{
-      github.event.comment.id
-      || github.event.review.id
-      || github.run_id
+      github.event.issue.number && !github.event.issue.pull_request &&
+      github.event.sender.type != 'Bot' &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+        github.event.comment.author_association || github.event.issue.author_association) &&
+      ((github.event_name == 'issue_comment' && contains(github.event.comment.body || '', '@claude')) ||
+       (github.event_name == 'issues' && (contains(github.event.issue.body || '', '@claude') || contains(github.event.issue.title || '', '@claude')))) &&
+      format('issue-{0}', github.event.issue.number) ||
+      format('event-{0}', github.event.comment.id || github.event.review.id || github.run_id)
     }}
   cancel-in-progress: false
+  queue: max
 
 jobs:
   claude:
@@ -48,6 +49,8 @@ jobs:
       )
     runs-on: ${{ vars.CLAUDE_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 30
+    outputs:
+      task_complete: ${{ steps.claude-result.outputs.task_complete }}
     permissions:
       contents: write
       pull-requests: write
@@ -95,6 +98,37 @@ jobs:
             echo "available=false" >> "$GITHUB_OUTPUT"
             echo "::notice::Skipping Claude Code because no Claude authentication secret is configured."
           fi
+
+      - name: Mark tracked Issue as working
+        if: >-
+          github.event.issue.number && !github.event.issue.pull_request &&
+          steps.pr_draft.outputs.is_draft != 'true' &&
+          steps.claude-auth.outputs.available == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          script: |
+            const api = github.rest.issues;
+            const issue = { ...context.repo, issue_number: context.issue.number };
+            const { data } = await api.get(issue);
+            const states = ['claude', 'claude-working', 'claude-blocked', 'claude-review'];
+            const labels = data.labels.map(label => typeof label === 'string' ? label : label.name);
+            const tracked = labels.filter(label => states.includes(label));
+            if (data.state !== 'open' || !tracked.length) return;
+            const target = 'claude-working';
+            try { await api.getLabel({ ...context.repo, name: target }); }
+            catch (error) {
+              if (error.status !== 404) throw error;
+              try {
+                await api.createLabel({ ...context.repo, name: target, color: 'FBCA04' });
+              } catch (creationError) {
+                // Another Issue may create the same repository-wide label concurrently.
+                if (creationError.status !== 422) throw creationError;
+                await api.getLabel({ ...context.repo, name: target });
+              }
+            }
+            await api.addLabels({ ...issue, labels: [target] });
+            for (const name of tracked.filter(name => name !== target)) await api.removeLabel({ ...issue, name });
+            core.info(`Issue #${issue.issue_number}: ${target}`);
 
       - name: Run Claude Code
         id: claude
@@ -166,7 +200,7 @@ jobs:
             const body = comment?.body || '';
             const complete = result?.subtype === 'success' && result?.is_error === false &&
               /(?:^|\n)Claude task status: complete\s*$/.test(body) &&
-              !body.includes('Claude task status: blocked') && !/^\s*[-*] \[ \]/m.test(body);
+              !body.includes('Claude task status: blocked') && !/^[ \t]*(?:[-+*]|\d{1,9}[.)])[ \t]+\[[^\S\r\n]\](?:[^\S\r\n]|$)/m.test(body);
             core.setOutput('task_complete', Boolean(complete));
             if (!complete) {
               core.setFailed('Claude task is incomplete or blocked. See the tracking comment and safe diagnostics above.');
@@ -235,3 +269,48 @@ jobs:
             --body "$BODY" \
             "${ASSIGNEE_ARGS[@]}" \
             "${PR_ARGS[@]}"
+
+  finalize-issue:
+    needs: claude
+    if: >-
+      always() && needs.claude.result != 'skipped' &&
+      github.event.issue.number && !github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Finalize tracked Issue state
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          CLAUDE_RESULT: ${{ needs.claude.result }}
+          CLAUDE_TASK_COMPLETE: ${{ needs.claude.outputs.task_complete }}
+        with:
+          script: |
+            const api = github.rest.issues;
+            const issue = { ...context.repo, issue_number: context.issue.number };
+            const { data } = await api.get(issue);
+            const states = ['claude', 'claude-working', 'claude-blocked', 'claude-review'];
+            const labels = data.labels.map(label => typeof label === 'string' ? label : label.name);
+            const tracked = labels.filter(label => states.includes(label));
+            if (!tracked.length) return;
+            const complete = process.env.CLAUDE_RESULT === 'success' && process.env.CLAUDE_TASK_COMPLETE === 'true';
+            if (data.state !== 'open' && !complete) return;
+            const target = data.state !== 'open' ? null : complete ? 'claude-review' : 'claude-blocked';
+            if (target) {
+              try { await api.getLabel({ ...context.repo, name: target }); }
+              catch (error) {
+                if (error.status !== 404) throw error;
+                try {
+                  await api.createLabel({ ...context.repo, name: target, color: target === 'claude-review' ? '0E8A16' : 'D93F0B' });
+                } catch (creationError) {
+                  // Another Issue may create the same repository-wide label concurrently.
+                  if (creationError.status !== 422) throw creationError;
+                  await api.getLabel({ ...context.repo, name: target });
+                }
+              }
+              await api.addLabels({ ...issue, labels: [target] });
+            }
+            for (const name of tracked.filter(name => name !== target)) await api.removeLabel({ ...issue, name });
+            core.info(`Issue #${issue.issue_number}: ${target || 'completed; queue labels removed'}`);
+            if (!complete) core.setFailed('Claude work is blocked; resolve the reported blocker before requesting a retry.');
