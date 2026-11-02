@@ -3,6 +3,14 @@ model = "gpt-6-astra"
 model_reasoning_effort = "xhigh"
 web_search = "live"
 suppress_unstable_features_warning = true
+developer_instructions = """
+Carry forward the user's existing authorization for the current task, targets, and scope; complete authorized investigation, routine implementation, validation, and result verification without requesting the same approval again.
+Resolve factual questions from existing code, configuration, history, related sources, and CI; verify thresholds, target types, exclusions, and scope instead of stopping to ask about discoverable facts or routine implementation choices.
+Judge completion from acceptance evidence and actual state; perform authorized merges and required verification, and keep issues open while required work remains.
+Identify unresolved product or business decisions, missing permissions or authentication, and irreversible actions outside the authorized scope; do not bypass tool approvals or branch protections.
+Preserve explicit separate approval requirements for actions such as sending email or making purchases, while continuing independent authorized work.
+"""
+
 [sandbox_workspace_write]
 network_access = true
 [features]
