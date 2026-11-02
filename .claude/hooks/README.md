@@ -343,3 +343,11 @@ sys.exit(0)
 
 - [Claude Code Hooks ドキュメント](https://docs.anthropic.com/claude-code/hooks)
 - [settings.local.json.template](./../settings.local.json.template)
+
+## Hook regression checks
+
+Run `python3 -m unittest discover -s .claude/hooks/tests -v` from the repository root.
+The tests check launcher exit codes, quoted shell scripts versus data arguments,
+and GitHub CLI pending/failing/skipped check results. Command payloads are passed
+to the inspector as JSON and are never executed. Missing hook scripts retain the
+setup reminder; an installed hook's rejection is returned to Claude unchanged.

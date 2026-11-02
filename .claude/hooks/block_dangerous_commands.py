@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Defense-in-depth hook: detect dangerous commands including bash -c bypass.
 
-This hook inspects the FULL command string (not just the prefix) to catch
-dangerous patterns even when wrapped in bash -c, python3 -c, zsh -c, etc.
-Works alongside the deny list which only matches command prefixes.
+This hook checks command patterns and quoted scripts passed to shell -c.
+Quoted data arguments are masked to avoid treating their text as commands.
+It is a heuristic defense alongside the deny list, not a complete shell parser.
 """
 import sys
 import re
+import shlex
 from common import load_hook_input, get_command
 
 data = load_hook_input()
@@ -15,15 +16,39 @@ cmd = get_command(data)
 if not cmd.strip():
     sys.exit(0)
 
-# Normalize: collapse whitespace, lowercase for pattern matching
-normalized = " ".join(cmd.split()).lower()
+def inspection_text(command: str) -> str:
+    """Mask data arguments, but inspect quoted scripts passed to a shell's -c."""
+    texts = []
+    pending = [command]
+    while pending:
+        source = pending.pop()
+        # Keep offsets so a shell invocation found outside quotes can be parsed
+        # from the original source. Separators in quoted arguments stay data.
+        masked = re.sub(r"'[^']*'|\"(?:\\.|[^\"\\])*\"", lambda m: " " * len(m[0]), source)
+        texts.append(" ".join(masked.split()).lower())
+        shells = re.finditer(
+            r"(?:^|[;&|\n])\s*(?:env\s+)?(?P<shell>(?:/[^\s]+/)?(?:bash|sh|zsh|dash|ksh))(?=\s)",
+            masked,
+        )
+        for shell in shells:
+            try:
+                words = shlex.split(source[shell.start("shell"):])
+            except ValueError:
+                # An unparseable executable script must not silently pass.
+                sys.stderr.write("Cannot inspect shell command: unmatched quotes\n")
+                sys.exit(2)
+            for index, word in enumerate(words[1:], 1):
+                if not word.startswith("-") or word == "--":
+                    break
+                if word.startswith("--"):
+                    continue
+                if "c" in word[1:] and index + 1 < len(words):
+                    pending.append(words[index + 1])
+                    break
+    return " ; ".join(texts)
 
-# Strip single- and double-quoted string content so that shell separators
-# inside argument values (e.g. --name 'a;b') are not treated as real command
-# boundaries by [^|&;<>]* patterns. This prevents the quoted-separator bypass
-# identified in Codex P1 review (PR #795).
-normalized = re.sub(r"'[^']*'", " ", normalized)
-normalized = re.sub(r'"[^"]*"', " ", normalized)
+
+normalized = inspection_text(cmd)
 
 # ── Dangerous patterns (regex) ──────────────────────────────────
 DANGEROUS_PATTERNS = [
