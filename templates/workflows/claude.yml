@@ -98,6 +98,13 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Capture initial checkout commit
+        id: checkout-base
+        if: steps.pr_draft.outputs.is_draft != 'true'
+        run: |
+          SHA=$(git rev-parse --verify 'HEAD^{commit}')
+          printf 'sha=%s\n' "$SHA" >> "$GITHUB_OUTPUT"
+
       - name: Check Claude authentication
         id: claude-auth
         env:
@@ -254,6 +261,7 @@ jobs:
           GH_TOKEN: ${{ secrets.CLAUDE_PR_GITHUB_TOKEN || github.token }}
           CLAUDE_BRANCH: ${{ steps.claude.outputs.branch_name }}
           CLAUDE_TASK_COMPLETE: ${{ steps.claude-result.outputs.task_complete }}
+          INITIAL_CHECKOUT_SHA: ${{ steps.checkout-base.outputs.sha }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
@@ -282,7 +290,7 @@ jobs:
             # Only an absent remote ref plus verified, clean, unchanged work is a no-op.
             if [ "$CLAUDE_TASK_COMPLETE" = 'true' ]; then
               BASE_HEAD=$(git rev-parse --verify "refs/heads/${DEFAULT_BRANCH}^{commit}")
-              if [ "$CLAUDE_HEAD" = "$BASE_HEAD" ]; then
+              if [ -n "$INITIAL_CHECKOUT_SHA" ] && [ "$CLAUDE_HEAD" = "$BASE_HEAD" ] && [ "$CLAUDE_HEAD" = "$INITIAL_CHECKOUT_SHA" ]; then
                 echo "Verified no-code result; no pull request is needed."
                 exit 0
               fi
