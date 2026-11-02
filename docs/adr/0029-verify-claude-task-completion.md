@@ -26,3 +26,5 @@ Live acceptance showed that the upstream MCP server strips HTML comments. Use a 
 Evaluate the blocked marker against GitHub-rendered HTML after removing code elements and generated syntax-highlighted fence wrappers. Literal status examples in code do not block completed work. Ordinary paragraphs, blockquotes, and raw pre elements without a generated wrapper remain conservative blockers; rendered unfinished tasks and the final marker checks are unchanged.
 
 After excluding code examples, strip remaining HTML tags so emphasis, strikethrough and links cannot hide a blocked report. The strict final completion marker requirement remains unchanged.
+
+The pinned action can post an ordinary PR issue comment when creating an inline review reply fails. If no matching inline comment exists, apply the same bot identity and current-run receipt or run-link checks to issue comments, and update an incomplete result through the API for the collection where it was found. A matched inline comment remains authoritative, even when blocked; listing or update errors fail closed.

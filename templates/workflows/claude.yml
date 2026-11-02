@@ -217,8 +217,17 @@ jobs:
                 break;
               } else { data = data.content; }
             }
-            const comment = comments.findLast(entry => entry.user?.login === 'claude[bot]' &&
-              (commentId ? entry.id === commentId : entry.body?.includes(`(${runLink})`)));
+            const matches = entry => entry.user?.login === 'claude[bot]' &&
+              (commentId ? entry.id === commentId : entry.body?.includes(`(${runLink})`));
+            let comment = comments.findLast(matches);
+            let commentIsInline = inline;
+            if (!comment && inline) {
+              // The pinned action falls back to an issue comment when an inline reply fails.
+              const fallback = await github.paginate(github.rest.issues.listComments,
+                { ...context.repo, issue_number: context.issue.number, per_page: 100 });
+              comment = fallback.findLast(matches);
+              commentIsInline = false;
+            }
 
             const body = comment?.body || '';
             let unchecked = true;
@@ -250,7 +259,7 @@ jobs:
               if (comment) {
                 const updated = body.replace(/^\*\*Claude finished[^\n]*?\*\*/, '**Claude task incomplete**')
                   .replace(/<img[^>]*5ac382c7-e004-429b-8e35-7feb3e8f9c6f[^>]*\/>/g, '');
-                await (inline ? github.rest.pulls.updateReviewComment : github.rest.issues.updateComment)(
+                await (commentIsInline ? github.rest.pulls.updateReviewComment : github.rest.issues.updateComment)(
                   { ...context.repo, comment_id: comment.id, body: `${updated}\n\nCompletion verification: incomplete or blocked; this run requires follow-up.` });
               }
             }
