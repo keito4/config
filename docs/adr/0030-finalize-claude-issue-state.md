@@ -14,6 +14,12 @@ Elu-co-jp/.github-private #323 stopped after denied reads while retaining `claud
 - Run finalization in a separate, always-evaluated job using only the workflow's trusted inline code and Issues write permission.
 - For open Issues already carrying a Claude queue label, set `claude-review` only when the job succeeds and the existing completion verifier reports true. Otherwise set `claude-blocked` and fail the finalizer. A draft PR never substitutes for completion.
 - A verified answer without a PR can enter review. A successfully completed closed Issue has its queue labels removed. Leave unrelated Issues and failed runs on closed Issues untouched.
+- Render the tracking comment with GitHub's Markdown API in GFM mode before
+  checking unfinished tasks. Quoted and nested task lists count; fenced and
+  indented code examples do not. Require the completion marker both at the raw
+  comment's end and in the final rendered paragraph, so code/quote examples
+  cannot claim completion. API failures or invalid HTML fail closed and require
+  a retry. This uses the existing repository token and adds no permissions.
 - An absent remote Claude branch is a successful no-code result only when the
   completion gate passed, `ls-remote --exit-code` returned 2 (no matching ref),
   the local Claude branch, local default branch and current HEAD are identical,

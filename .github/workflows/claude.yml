@@ -198,9 +198,23 @@ jobs:
               (commentId ? entry.id === commentId : entry.body?.includes(`(${runLink})`)));
 
             const body = comment?.body || '';
-            const complete = result?.subtype === 'success' && result?.is_error === false &&
+            let unchecked = true;
+            let renderedComplete = false;
+            if (body) {
+              const { data: html } = await github.rest.markdown.render({
+                text: body, mode: 'gfm', context: `${context.repo.owner}/${context.repo.repo}`,
+              });
+              if (typeof html !== 'string' || !/<[a-z][^>]*>/i.test(html)) throw new Error('GitHub Markdown rendering returned invalid HTML');
+              renderedComplete = /(?:<p(?:\s[^>]*)?>|\n)Claude task status: complete\s*<\/p>\s*$/.test(html);
+              unchecked = [...html.matchAll(/<input\b[^>]*>/gi)].some(([tag]) => {
+                const attributes = new Map([...tag.matchAll(/([-\w]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g)]
+                  .map(([, name, double, single, bare]) => [name.toLowerCase(), double ?? single ?? bare ?? '']));
+                return attributes.get('class')?.split(/\s+/).includes('task-list-item-checkbox') && !attributes.has('checked');
+              });
+            }
+            const complete = result?.subtype === 'success' && result?.is_error === false && renderedComplete &&
               /(?:^|\n)Claude task status: complete\s*$/.test(body) &&
-              !body.includes('Claude task status: blocked') && !/^[ \t]*(?:[-+*]|\d{1,9}[.)])[ \t]+\[[^\S\r\n]\](?:[^\S\r\n]|$)/m.test(body);
+              !body.includes('Claude task status: blocked') && !unchecked;
             core.setOutput('task_complete', Boolean(complete));
             if (!complete) {
               core.setFailed('Claude task is incomplete or blocked. See the tracking comment and safe diagnostics above.');
