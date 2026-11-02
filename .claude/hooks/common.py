@@ -205,26 +205,26 @@ def get_pr_checks(
     timeout_seconds: int = 600,
     check_interval: int = 15,
 ) -> tuple[str, list]:
-    """Watch PR checks until all are complete, failed, unavailable, or timed out."""
+    """Watch PR checks until complete, failed, confirmed absent, or timed out."""
     start_time = time.time()
     last_status = None
 
     while time.time() - start_time < timeout_seconds:
         try:
             result = run_command(
-                ["gh", "pr", "checks", pr_number, "--json", "name,state,conclusion"],
+                ["gh", "pr", "checks", pr_number, "--json", "name,bucket"],
                 timeout=30,
             )
 
-            if result.returncode != 0:
-                elapsed = int(time.time() - start_time)
-                if elapsed < 30:
-                    print(f"   ⏳ CIチェック待機中... ({elapsed}秒)", file=sys.stderr, flush=True)
-                    time.sleep(check_interval)
-                    continue
-                return "no_checks", []
-
+            # gh uses 1 for failed checks and 8 for pending checks; both
+            # still return useful JSON. Other errors are unavailable results.
+            if result.returncode not in {0, 1, 8} or not result.stdout.strip():
+                time.sleep(check_interval)
+                continue
             checks = json.loads(result.stdout)
+            if not isinstance(checks, list):
+                time.sleep(check_interval)
+                continue
             if not checks:
                 elapsed = int(time.time() - start_time)
                 if elapsed < 30:
@@ -233,14 +233,10 @@ def get_pr_checks(
                     continue
                 return "no_checks", []
 
-            completed = [
-                c for c in checks
-                if c.get("state") in {"SUCCESS", "FAILURE", "SKIPPED"}
-            ]
-            failed = [
-                c for c in checks
-                if c.get("conclusion") == "FAILURE" or c.get("state") == "FAILURE"
-            ]
+            completed = [c for c in checks if c.get("bucket") in {"pass", "fail", "skipping", "cancel"}]
+            failed = [c for c in checks if c.get("bucket") in {"fail", "cancel"}]
+            if failed:
+                return "failure", failed
 
             total = len(checks)
             done = len(completed)
@@ -256,7 +252,7 @@ def get_pr_checks(
             time.sleep(check_interval)
         except Exception as e:
             print(f"⚠️  監視エラー: {e}", file=sys.stderr, flush=True)
-            break
+            time.sleep(check_interval)
 
     return "timeout", []
 
