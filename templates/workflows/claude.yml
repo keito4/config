@@ -223,11 +223,17 @@ jobs:
             const body = comment?.body || '';
             let unchecked = true;
             let renderedComplete = false;
+            let blocked = true;
             if (body) {
               const { data: html } = await github.rest.markdown.render({
                 text: body, mode: 'gfm', context: `${context.repo.owner}/${context.repo.repo}`,
               });
               if (typeof html !== 'string' || !/<[a-z][^>]*>/i.test(html)) throw new Error('GitHub Markdown rendering returned invalid HTML');
+              // GitHub renders syntax-highlighted fences as div.highlight > pre without code.
+              blocked = html.replace(/<code\b[^>]*>[\s\S]*?<\/code>/gi, '')
+                .replace(/<div\b[^>]*\sclass="highlight(?:\s[^"]*)?"[^>]*>\s*<pre\b[^>]*>[\s\S]*?<\/pre>\s*<\/div>/gi, '')
+                .replace(/<[^>]*>/g, '')
+                .includes('Claude task status: blocked');
               renderedComplete = /(?:<p(?:\s[^>]*)?>|\n)Claude task status: complete\s*<\/p>\s*$/.test(html);
               unchecked = [...html.matchAll(/<input\b[^>]*>/gi)].some(([tag]) => {
                 const attributes = new Map([...tag.matchAll(/([-\w]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g)]
@@ -237,7 +243,7 @@ jobs:
             }
             const complete = result?.subtype === 'success' && result?.is_error === false && renderedComplete &&
               /(?:^|\n)Claude task status: complete\s*$/.test(body) &&
-              !body.includes('Claude task status: blocked') && !unchecked;
+              !blocked && !unchecked;
             core.setOutput('task_complete', Boolean(complete));
             if (!complete) {
               core.setFailed('Claude task is incomplete or blocked. See the tracking comment and safe diagnostics above.');

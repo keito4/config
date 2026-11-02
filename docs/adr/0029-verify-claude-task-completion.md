@@ -22,3 +22,7 @@ oykot-tools #351 explicitly reports that `make test` and `bash tests/script/test
 Process success and delivered-task completion become separately observable. The marker is a delivery signal, not proof of audit quality or CI success. Required checks and review remain necessary. A later failed run's safe diagnostics identify whether a runtime permission or a provider error needs attention without exposing full logs. Existing workflows must receive both the prompt and verification step together.
 
 Live acceptance showed that the upstream MCP server strips HTML comments. Use a visible status line. When an agent replaces its tracking comment without the run link, identify that same comment using the successful MCP update receipt in this run; never select an arbitrary recent bot comment.
+
+Evaluate the blocked marker against GitHub-rendered HTML after removing code elements and generated syntax-highlighted fence wrappers. Literal status examples in code do not block completed work. Ordinary paragraphs, blockquotes, and raw pre elements without a generated wrapper remain conservative blockers; rendered unfinished tasks and the final marker checks are unchanged.
+
+After excluding code examples, strip remaining HTML tags so emphasis, strikethrough and links cannot hide a blocked report. The strict final completion marker requirement remains unchanged.
