@@ -62,6 +62,21 @@ class HookRegressionTests(unittest.TestCase):
             ("bash -c 'echo okay' # don't run anything else\ngit reset --hard", 2),
             ("echo foo#bar && bash -c 'git reset --hard'", 2),
             ("echo foo#bar", 0),
+            ("bash -c 'printf ok'; cat <<'EOF'\ndon't\nEOF", 0),
+            ("bash script.sh # don't change files", 0),
+            ("bash -c 'unclosed", 2),
+            ("bash -o pipefail -c 'git reset --hard'", 2),
+            ("bash -O extglob -c 'git reset --hard'", 2),
+            ("bash --rcfile config.sh -c 'git reset --hard'", 2),
+            ("bash --init-file config.sh -c 'git reset --hard'", 2),
+            ("sudo bash -c 'git reset --hard'", 2),
+            ("nohup bash -c 'git reset --hard'", 2),
+            ("time bash -c 'git reset --hard'", 2),
+            ("exec bash -c 'git reset --hard'", 2),
+            ("(bash -c 'git reset --hard')", 2),
+            ("echo $(bash -c 'git reset --hard')", 2),
+            ("FOO=1 bash -c 'git reset --hard'", 2),
+            ("env -i bash -c 'git reset --hard'", 2),
             ('git push origin main && echo -f', 0),
             ("echo 'git reset --hard'", 0),
             ('printf "%s" "git reset --hard"', 0),
@@ -93,6 +108,32 @@ class HookRegressionTests(unittest.TestCase):
             result, checks = common.get_pr_checks('66')
         self.assertEqual(result, 'success')
         self.assertEqual(len(checks), 1)
+
+    def test_pr_checks_retry_unavailable_polls_after_pending(self):
+        pending = subprocess.CompletedProcess([], 8, json.dumps([{'name': 'CI', 'bucket': 'pending'}]), '')
+        passed = subprocess.CompletedProcess([], 0, json.dumps([{'name': 'CI', 'bucket': 'pass'}]), '')
+        for unavailable in [
+            subprocess.CompletedProcess([], 0, '', ''),
+            subprocess.CompletedProcess([], 4, '', 'temporary API error'),
+            subprocess.CompletedProcess([], 1, 'not JSON', 'temporary API error'),
+            subprocess.TimeoutExpired('gh', 30),
+        ]:
+            with self.subTest(unavailable=unavailable):
+                with patch.object(common, 'run_command', side_effect=[pending, unavailable, passed]) as run, patch.object(common.time, 'sleep'), patch.object(common.time, 'time', side_effect=[0, 1, 1, 35, 35, 40, 40, 601]):
+                    result, checks = common.get_pr_checks('66')
+                self.assertEqual(result, 'success')
+                self.assertEqual(len(checks), 1)
+                self.assertEqual(run.call_count, 3)
+
+    def test_pr_checks_only_empty_json_means_no_checks(self):
+        empty = subprocess.CompletedProcess([], 0, '[]', '')
+        unavailable = subprocess.CompletedProcess([], 4, '', 'authentication required')
+        for poll, expected in [(empty, 'no_checks'), (unavailable, 'timeout')]:
+            with self.subTest(expected=expected):
+                with patch.object(common, 'run_command', return_value=poll), patch.object(common.time, 'sleep'), patch.object(common.time, 'time', side_effect=[0, 35, 35, 601]):
+                    result, checks = common.get_pr_checks('66')
+                self.assertEqual(result, expected)
+                self.assertEqual(checks, [])
 
     def test_pr_checks_report_failure_even_with_nonzero_exit(self):
         for bucket in ['fail', 'cancel']:

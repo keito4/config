@@ -28,24 +28,33 @@ def inspection_text(command: str) -> str:
         masked = re.sub(r"'[^']*'|\"(?:\\.|[^\"\\])*\"|(?<![^\s;&|()<>])#[^\n]*", lambda m: " " * len(m[0]), source)
         texts.append(" ".join(masked.split()).lower())
         shells = re.finditer(
-            r"(?:^|[;&|\n])\s*(?:env\s+)?(?P<shell>(?:/[^\s]+/)?(?:bash|sh|zsh|dash|ksh))(?=\s)",
+            r"(?:^|[;&|(\n{])\s*"
+            r"(?:(?:[A-Za-z_]\w*=[^\s;&|]*|sudo|nohup|exec|time(?:\s+-p)?|env(?:\s+(?:-i|--ignore-environment|--))*)\s+)*"
+            r"(?P<shell>(?:/[^\s]+/)?(?:bash|sh|zsh|dash|ksh))(?=\s)",
             masked,
         )
         for shell in shells:
             try:
-                words = shlex.split(source[shell.start("shell"):], comments=True)
+                # Read lazily: a later heredoc/body is not part of this shell's
+                # arguments and may contain quotes that are only literal data.
+                words = shlex.shlex(source[shell.start("shell"):], posix=True, punctuation_chars=True)
+                words.whitespace_split = True
+                next(words)  # shell executable
+                for word in words:
+                    if word in {"-o", "-O", "+o", "+O", "--rcfile", "--init-file"}:
+                        next(words, None)  # option value precedes the -c script
+                        continue
+                    if not word.startswith("-") or word == "--":
+                        break
+                    if not word.startswith("--") and "c" in word[1:]:
+                        script = next(words, None)
+                        if script is not None:
+                            pending.append(script)
+                        break
             except ValueError:
                 # An unparseable executable script must not silently pass.
                 sys.stderr.write("Cannot inspect shell command: unmatched quotes\n")
                 sys.exit(2)
-            for index, word in enumerate(words[1:], 1):
-                if not word.startswith("-") or word == "--":
-                    break
-                if word.startswith("--"):
-                    continue
-                if "c" in word[1:] and index + 1 < len(words):
-                    pending.append(words[index + 1])
-                    break
     return " ; ".join(texts)
 
 

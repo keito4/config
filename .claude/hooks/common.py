@@ -205,7 +205,7 @@ def get_pr_checks(
     timeout_seconds: int = 600,
     check_interval: int = 15,
 ) -> tuple[str, list]:
-    """Watch PR checks until all are complete, failed, unavailable, or timed out."""
+    """Watch PR checks until complete, failed, confirmed absent, or timed out."""
     start_time = time.time()
     last_status = None
 
@@ -219,9 +219,12 @@ def get_pr_checks(
             # gh uses 1 for failed checks and 8 for pending checks; both
             # still return useful JSON. Other errors are unavailable results.
             if result.returncode not in {0, 1, 8} or not result.stdout.strip():
-                checks = []
-            else:
-                checks = json.loads(result.stdout)
+                time.sleep(check_interval)
+                continue
+            checks = json.loads(result.stdout)
+            if not isinstance(checks, list):
+                time.sleep(check_interval)
+                continue
             if not checks:
                 elapsed = int(time.time() - start_time)
                 if elapsed < 30:
@@ -249,7 +252,7 @@ def get_pr_checks(
             time.sleep(check_interval)
         except Exception as e:
             print(f"⚠️  監視エラー: {e}", file=sys.stderr, flush=True)
-            break
+            time.sleep(check_interval)
 
     return "timeout", []
 
