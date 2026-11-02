@@ -17,9 +17,9 @@ write_ci_result() {
 
 # Workflow identity and attempt-scoped jobs prevent stale or same-name checks passing.
 fetch_gate_state() {
-  local workflow workflow_id pages selected run_id attempt current jobs
-  workflow="$(gh api "repos/$REPO/actions/workflows/quality-gate-fallback.yml")" || return 1
-  workflow_id="$(jq -er 'select(.state == "active" and .path == ".github/workflows/quality-gate-fallback.yml") | .id | select(type == "number" and . > 0)' <<< "$workflow")" || return 1
+  local workflow_name="$1" workflow workflow_id pages selected run_id attempt current jobs
+  workflow="$(gh api "repos/$REPO/actions/workflows/$workflow_name")" || return 1
+  workflow_id="$(jq -er --arg path ".github/workflows/$workflow_name" 'select(.state == "active" and .path == $path) | .id | select(type == "number" and . > 0)' <<< "$workflow")" || return 1
   pages="$(gh api --paginate --slurp "repos/$REPO/actions/workflows/$workflow_id/runs?head_sha=$HEAD_SHA&per_page=100")" || return 1
   selected="$(jq -cer --arg sha "$HEAD_SHA" --argjson id "$workflow_id" '
     [.[].workflow_runs[] | select(.head_sha == $sha and .workflow_id == $id)]
@@ -37,6 +37,7 @@ fetch_gate_state() {
     *) return 1 ;;
   esac
   if [ "$(jq -r '.conclusion' <<< "$current")" != success ]; then echo failure; return; fi
+  if [ "$workflow_name" = ci.yml ]; then echo success; return; fi
   jobs="$(gh api --paginate --slurp "repos/$REPO/actions/runs/$run_id/attempts/$attempt/jobs?per_page=100")" || return 1
   jq -r --arg sha "$HEAD_SHA" '
     [.[].jobs[] | select(.name == "Quality Gate" and .head_sha == $sha)] | max_by(.id)
@@ -48,11 +49,19 @@ fetch_gate_state() {
 
 echo "Waiting for CI to complete for $REPO (SHA: $HEAD_SHA)"
 while [ "$ELAPSED_TIME" -lt "$MAX_WAIT_TIME" ]; do
-  if ! GATE_STATE="$(fetch_gate_state)"; then
-    write_ci_result false
-    echo 'Could not verify the current Quality Gate (API or metadata error)'
-    exit 0
-  fi
+  GATE_STATE=success
+  # A later ci.yml rerun invalidates an earlier successful fallback receipt.
+  for WORKFLOW_NAME in ci.yml quality-gate-fallback.yml; do
+    if ! CURRENT_STATE="$(fetch_gate_state "$WORKFLOW_NAME")"; then
+      write_ci_result false
+      echo 'Could not verify current CI (API or metadata error)'
+      exit 0
+    fi
+    if [ "$CURRENT_STATE" != success ]; then
+      GATE_STATE="$CURRENT_STATE"
+      if [ "$CURRENT_STATE" = failure ]; then break; fi
+    fi
+  done
   if [ "$GATE_STATE" = failure ]; then
     write_ci_result false
     echo 'Quality Gate failed'

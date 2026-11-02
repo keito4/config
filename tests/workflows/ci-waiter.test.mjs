@@ -17,6 +17,7 @@ const run = (extra = {}) => ({
   conclusion: 'success',
   ...extra,
 });
+const ciRun = (extra = {}) => run({ id: 20, workflow_id: 17, ...extra });
 const check = (extra = {}) => ({
   id: 10,
   name: 'Quality Gate',
@@ -40,8 +41,12 @@ const f = JSON.parse(fs.readFileSync(process.env.FIXTURE));
 const args = process.argv.slice(2), endpoint = args.find(x => x.startsWith('repos/'));
 fs.appendFileSync(process.env.CALLS, JSON.stringify(args) + '\\n');
 let result;
+if (endpoint.includes('/actions/') && !f.actionsRead) process.exit(3);
 if (f.apiError || (f.checkError && endpoint.includes('/check-runs'))) process.exit(1);
 if (endpoint.includes('/check-runs')) result = args.includes('--slurp') ? [{check_runs:f.checks}] : {check_runs:f.checks};
+else if (endpoint.includes('/workflows/17/runs?')) result = [{workflow_runs:f.ciRuns}, {workflow_runs:f.ciSecondPage}];
+else if (endpoint.endsWith('/ci.yml')) result = f.ciWorkflow;
+else if (endpoint.endsWith('/actions/runs/' + f.ciCurrent.id)) result = f.ciCurrent;
 else if (endpoint.includes('/attempts/')) {
  if (!endpoint.includes('/attempts/' + f.current.run_attempt + '/')) process.exit(2);
  result = [{jobs:f.jobs}];
@@ -58,7 +63,15 @@ process.stdout.write(JSON.stringify(result));
 function execute(options = {}) {
   mkdirSync('.context', { recursive: true });
   const dir = mkdtempSync(resolve('.context/ci-waiter-'));
+  const review = readFileSync('.github/workflows/claude-code-review.yml', 'utf8');
+  const waitJob = review.split('\n  check-ci-status:\n')[1].split(/\n {2}[\w-]+:\n/)[0];
+  const permissions = waitJob.match(/\n {4}permissions:\n((?: {6}.*\n)+)/)[1];
   const fixture = {
+    ciWorkflow: { id: 17, state: 'active', path: '.github/workflows/ci.yml' },
+    ciRuns: [ciRun()],
+    ciSecondPage: [],
+    ciCurrent: ciRun(),
+    actionsRead: / {6}actions: read\n/.test(permissions),
     workflow: { id: 7, state: 'active', path: '.github/workflows/quality-gate-fallback.yml' },
     runs: [run()],
     secondPage: [],
@@ -160,3 +173,15 @@ test('waiter: a fake app gate cannot replace the real workflow', () => {
     'ci_passed=false',
   );
 });
+
+for (const [name, options] of Object.entries({
+  'pending newer attempt': { ciCurrent: ciRun({ run_attempt: 2, status: 'in_progress', conclusion: null }) },
+  'failed newer attempt': { ciCurrent: ciRun({ run_attempt: 2, conclusion: 'failure' }) },
+  'absent CI': { ciRuns: [] },
+  'foreign CI head': { ciRuns: [ciRun({ head_sha: 'old' })] },
+  'latest CI is pending': {
+    ciSecondPage: [ciRun({ id: 21, run_number: 11 })],
+    ciCurrent: ciRun({ id: 21, run_number: 11, status: 'queued', conclusion: null }),
+  },
+}))
+  test(`waiter: old fallback success rejects ${name}`, () => assert.equal(execute(options).passed, 'ci_passed=false'));
