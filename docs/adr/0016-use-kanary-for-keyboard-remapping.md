@@ -127,7 +127,7 @@ Per-device mappings changed outside Nix can be replaced by the declarative list.
 Validate the generated plist with `plutil -lint`, inspect `launchctl print
 gui/$(id -u)/org.nixos.keyboard-remapping`, and confirm both `runs` increasing
 without `kickstart` and `hidutil property --matching keyboard --get UserKeyMapping`
-after a missing mapping is restored. Disable the job with `launchctl bootout
+after a missing mapping is restored. Temporarily unload the job with `launchctl bootout
 gui/$(id -u)/org.nixos.keyboard-remapping`; removing the module import and rebuilding
 also removes the persistent job.
 
