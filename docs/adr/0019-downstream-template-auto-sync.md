@@ -92,3 +92,38 @@ be a failure nobody fixes.
 
 - Manifest schema violations fail fast in CI through the Jest suite, which
   validates the checked-in manifest against the real file tree.
+
+## Amendment 2026-11-02: isolate the downstream credential
+
+`CLAUDE_PAT` is also used by `fleet-workflow-guards.yml` and as a fallback in
+`scheduled-maintenance.yml`. Replacing it with a token restricted to the five
+downstream repositories would change those consumers' access.
+
+Only `sync-downstream.yml` now prefers `DOWNSTREAM_SYNC_TOKEN`; it falls back
+to `CLAUDE_PAT` only when the dedicated secret is absent. Preflight, downstream
+checkout, and PR creation select the same secret. A configured token rejected
+by GitHub fails the run with its secret name; it never retries with the legacy
+credential. The other workflows retain their existing credential selection.
+
+Provision a fine-grained PAT with resource owner `keito4` and access only to
+the five repositories in `.github/sync-downstream.json`:
+
+- `keito4/calendar_alerm`
+- `keito4/effectuation`
+- `keito4/intent-gate-android`
+- `keito4/ohana`
+- `keito4/raycast-extensions`
+
+Repository permissions are **Contents: read and write**, **Pull requests:
+read and write**, **Workflows: read and write**, and the automatically included
+**Metadata: read-only**. No organization or account permissions are needed.
+Use a proposed 90-day expiry and store it as the `DOWNSTREAM_SYNC_TOKEN`
+repository Actions secret on `keito4/config`; do not overwrite `CLAUDE_PAT`.
+The config checkout and failure notification still use `GITHUB_TOKEN`, so the
+dedicated PAT does not need access to `keito4/config` itself.
+
+Provisioning and a successful downstream run remain operational prerequisites.
+Preflight probes the first manifest repository and checks classic PAT workflow
+scopes when GitHub returns them; it cannot prove every fine-grained permission
+or access to every manifest repository. This change does not repair or validate
+the shared token for its other consumers.

@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
+const vm = require('vm');
+const { spawnSync } = require('child_process');
 
 const repoPath = path.resolve(__dirname, '..');
 const workflowPath = '.github/workflows/sync-downstream.yml';
@@ -28,7 +30,7 @@ describe('sync-downstream workflow contracts', () => {
     const step = jobs.preflight.steps.find((s) => s.name === 'Validate downstream token');
 
     expect(step).toBeDefined();
-    expect(step.env.CLAUDE_PAT).toBe('${{ secrets.CLAUDE_PAT }}');
+    expect(step.env.DOWNSTREAM_TOKEN).toBe('${{ secrets.DOWNSTREAM_SYNC_TOKEN || secrets.CLAUDE_PAT }}');
     // 未設定・失効・権限不足・API 到達不能はそれぞれ対処が違う。区別せずに
     // 一括で「失効」と言うと、直せない相手を直そうとすることになる。
     expect(step.run).toMatch(/api\.github\.com\/repos\//);
@@ -83,7 +85,119 @@ describe('sync-downstream workflow contracts', () => {
   test('keeps the downstream checkout and PR creation on the validated secret', () => {
     const { jobs } = loadWorkflow();
 
-    const patUses = jobs.sync.steps.filter((s) => s.with && s.with.token === '${{ secrets.CLAUDE_PAT }}');
+    const token = jobs.preflight.steps.find((s) => s.name === 'Validate downstream token').env.DOWNSTREAM_TOKEN;
+    const patUses = jobs.sync.steps.filter((s) => s.with && s.with.token === token);
     expect(patUses).toHaveLength(2);
+  });
+});
+
+// Execute the checked-in preflight shell with synthetic secrets and a local
+// curl stub. No credentials or network are used by these regression cases.
+describe('downstream credential selection', () => {
+  let tempDir;
+  const secrets = { DOWNSTREAM_SYNC_TOKEN: 'dedicated-test-value', CLAUDE_PAT: 'legacy-test-value' };
+  const evaluate = (expression, values) => vm.runInNewContext(expression.slice(3, -2), { secrets: values });
+
+  beforeEach(() => {
+    const contextDir = path.join(repoPath, '.context');
+    fs.mkdirSync(contextDir, { recursive: true });
+    tempDir = fs.mkdtempSync(path.join(contextDir, 'sync-auth-test-'));
+    fs.writeFileSync(
+      path.join(tempDir, 'curl'),
+      `#!/bin/bash
+printf '%s\\n' "$@" >> "$RUNNER_TEMP/curl-args"
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -o) printf '{"permissions":{"push":true}}' > "$2"; shift ;;
+    -D) printf 'x-oauth-scopes: %s\\r\\n' "$TEST_OAUTH_SCOPES" > "$2"; shift ;;
+  esac
+  shift
+done
+printf '%s' "$TEST_HTTP_STATUS"
+`,
+      { mode: 0o755 },
+    );
+  });
+
+  afterEach(() => fs.rmSync(tempDir, { recursive: true, force: true }));
+
+  function runPreflight(values, status = '200', scopes = '') {
+    const step = loadWorkflow().jobs.preflight.steps.find((s) => s.name === 'Validate downstream token');
+    const env = Object.fromEntries(Object.entries(step.env).map(([key, value]) => [key, evaluate(value, values)]));
+    const script = step.run.replaceAll('${{ github.repository }}', 'keito4/config');
+    const result = spawnSync('bash', ['--noprofile', '--norc', '-eo', 'pipefail', '-c', script], {
+      cwd: repoPath,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        ...env,
+        PATH: `${tempDir}:${process.env.PATH}`,
+        RUNNER_TEMP: tempDir,
+        TEST_HTTP_STATUS: status,
+        TEST_OAUTH_SCOPES: scopes,
+      },
+    });
+    const argsPath = path.join(tempDir, 'curl-args');
+    return { ...result, args: fs.existsSync(argsPath) ? fs.readFileSync(argsPath, 'utf8') : '' };
+  }
+
+  test.each([
+    ['dedicated', secrets, 'DOWNSTREAM_SYNC_TOKEN', secrets.DOWNSTREAM_SYNC_TOKEN],
+    ['legacy', { ...secrets, DOWNSTREAM_SYNC_TOKEN: '' }, 'CLAUDE_PAT', secrets.CLAUDE_PAT],
+  ])('uses the %s token for validation, checkout, and PR creation', (_, values, name, token) => {
+    const result = runPreflight(values);
+    expect(result.status).toBe(0);
+    expect(result.args).toContain(`Authorization: Bearer ${token}`);
+    expect(result.stdout).toContain(`${name} can push`);
+    const consumers = loadWorkflow().jobs.sync.steps.filter((s) => s.with?.token);
+    expect(consumers).toHaveLength(2);
+    expect(consumers.map((s) => evaluate(s.with.token, values))).toEqual([token, token]);
+    expect(result.stdout).not.toContain(token);
+  });
+
+  test('fails before calling GitHub when both secrets are missing', () => {
+    const result = runPreflight({ DOWNSTREAM_SYNC_TOKEN: '', CLAUDE_PAT: '' });
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain('DOWNSTREAM_SYNC_TOKEN');
+    expect(result.stdout).toContain('CLAUDE_PAT');
+    expect(result.args).toBe('');
+  });
+
+  test.each(['401', '403', '404', '429', '500', '000'])(
+    'names the selected secret on HTTP %s without trying the fallback',
+    (status) => {
+      const result = runPreflight(secrets, status);
+      expect(result.status).toBe(1);
+      expect(result.stdout).toContain('DOWNSTREAM_SYNC_TOKEN');
+      expect(result.args.match(/Authorization: Bearer/g)).toHaveLength(1);
+      expect(result.args).not.toContain(secrets.CLAUDE_PAT);
+      expect(result.stdout).not.toContain(secrets.DOWNSTREAM_SYNC_TOKEN);
+    },
+  );
+
+  test('identifies an expired legacy token when the dedicated secret is absent', () => {
+    const result = runPreflight({ ...secrets, DOWNSTREAM_SYNC_TOKEN: '' }, '401');
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain('CLAUDE_PAT was rejected');
+  });
+
+  test.each([
+    ['repo, workflow', 0],
+    ['repo', 1],
+  ])('preserves classic PAT scope validation for %s', (scopes, status) => {
+    const result = runPreflight(secrets, '200', scopes);
+    expect(result.status).toBe(status);
+    expect(result.stdout).toContain('DOWNSTREAM_SYNC_TOKEN');
+    if (status === 1) expect(result.stdout).toContain("missing the 'workflow' scope");
+  });
+
+  test('failure notification directs operators to the selected secret rather than replacing CLAUDE_PAT', () => {
+    const notification = loadWorkflow().jobs.notify.steps[0];
+    expect(evaluate(notification.env.DOWNSTREAM_TOKEN_NAME, secrets)).toBe('DOWNSTREAM_SYNC_TOKEN');
+    expect(evaluate(notification.env.DOWNSTREAM_TOKEN_NAME, { ...secrets, DOWNSTREAM_SYNC_TOKEN: '' })).toBe(
+      'CLAUDE_PAT',
+    );
+    expect(notification.run).toContain('$DOWNSTREAM_TOKEN_NAME');
+    expect(notification.run).not.toContain('gh secret set CLAUDE_PAT');
   });
 });
