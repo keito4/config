@@ -10,7 +10,7 @@ module.exports = {
     '!coverage/**/*',
     '!dist/**/*',
     '!templates/**/*',
-    '!**/*.test.js',
+    '!**/*.test{,-support}.{js,mjs,cjs}',
     '!**/*.spec.js',
     '!eslint.config.mjs',
     '!eslint/complexity-rules.mjs',
