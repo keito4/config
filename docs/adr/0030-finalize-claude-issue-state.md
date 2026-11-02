@@ -23,8 +23,11 @@ Elu-co-jp/.github-private #323 stopped after denied reads while retaining `claud
 - An absent remote Claude branch is a successful no-code result only when the
   completion gate passed, `ls-remote --exit-code` returned 2 (no matching ref),
   the local Claude branch, local default branch and current HEAD are identical,
-  and the working tree is clean. The local default branch is the action's
-  checked-out starting point; a later remote update is not the work baseline.
+  and the working tree is clean. Capture the actual checkout commit in a fixed
+  step before Claude runs and also require that commit to match. Local default
+  refs can be advanced by Claude, so they cannot establish the initial baseline
+  alone. Missing capture output fails closed. Use the actual checkout rather
+  than a later remote update or an assumed event-time commit.
   Missing refs, unpushed commits, dirty files and remote/API failures must fail
   the job so the finalizer cannot classify them as ready for review.
 - When the remote branch exists, require its commit to match both the local

@@ -19,6 +19,7 @@ describe.each(workflows)('%s verifies publication before succeeding', (workflowP
   const git = (...args) => {
     const result = spawnSync('git', args, { cwd: repo, env: gitEnv, encoding: 'utf8' });
     if (result.status !== 0) throw new Error(result.stderr);
+    return result.stdout.trim();
   };
 
   beforeEach(() => {
@@ -49,6 +50,7 @@ describe.each(workflows)('%s verifies publication before succeeding', (workflowP
       CLAUDE_BRANCH: 'claude/12',
       CLAUDE_TASK_COMPLETE: 'true',
       DEFAULT_BRANCH: 'main',
+      INITIAL_CHECKOUT_SHA: git('rev-parse', 'HEAD'),
       ISSUE_NUMBER: '12',
       ISSUE_TITLE: 'Requested change',
       PR_ASSIGNEE: 'reviewer',
@@ -84,6 +86,16 @@ describe.each(workflows)('%s verifies publication before succeeding', (workflowP
       git('branch', '-D', 'claude/12');
     }
     if (scenario === 'missing-base') git('branch', '-D', 'main');
+    if (scenario === 'missing-initial') env.INITIAL_CHECKOUT_SHA = '';
+    if (scenario === 'wrong-initial') env.INITIAL_CHECKOUT_SHA = '0'.repeat(40);
+    if (scenario === 'advanced-local-base') {
+      git('checkout', 'main');
+      fs.writeFileSync(path.join(repo, 'tracked'), 'undelivered default-branch change\n');
+      git('add', 'tracked');
+      git('commit', '-m', 'undelivered on main');
+      git('checkout', 'claude/12');
+      git('merge', '--ff-only', 'main');
+    }
     if (scenario === 'other-head') {
       git('checkout', '-b', 'other');
       git('commit', '--allow-empty', '-m', 'different head');
@@ -100,6 +112,9 @@ describe.each(workflows)('%s verifies publication before succeeding', (workflowP
     'remote-error',
     'missing-ref',
     'missing-base',
+    'missing-initial',
+    'wrong-initial',
+    'advanced-local-base',
     'other-head',
   ])('handles absent remote branch: %s', (scenario) => {
     change(scenario);
@@ -153,6 +168,28 @@ describe.each(workflows)('%s verifies publication before succeeding', (workflowP
     github.event_name = 'issue_comment';
     github.event.issue.pull_request = { url: 'https://github.com/owner/repo/pull/12' };
     expect(eligible(steps, github, () => false)).toBe(false);
+  });
+
+  test('captures the actual checkout before Claude and fails if capture fails', () => {
+    const steps = yaml.load(fs.readFileSync(path.join(repoPath, workflowPath), 'utf8')).jobs.claude.steps;
+    const capture = steps.find((entry) => entry.id === 'checkout-base');
+    expect(capture).toBeDefined();
+    expect(steps.indexOf(capture)).toBeGreaterThan(steps.findIndex((entry) => entry.name === 'Checkout repository'));
+    expect(steps.indexOf(capture)).toBeLessThan(steps.findIndex((entry) => entry.id === 'claude'));
+    expect(capture.if).toBe("steps.pr_draft.outputs.is_draft != 'true'");
+    expect(step().env.INITIAL_CHECKOUT_SHA).toBe('${{ steps.checkout-base.outputs.sha }}');
+    const output = path.join(dir, 'checkout-output');
+    const executeCapture = (extra = {}) =>
+      spawnSync('bash', ['-eo', 'pipefail', '-c', capture.run], {
+        cwd: repo,
+        env: { ...gitEnv, GITHUB_OUTPUT: output, ...extra },
+        encoding: 'utf8',
+      });
+    expect(executeCapture().status).toBe(0);
+    expect(fs.readFileSync(output, 'utf8')).toBe(`sha=${env.INITIAL_CHECKOUT_SHA}\n`);
+    fs.rmSync(output);
+    expect(executeCapture({ GIT_DIR: path.join(dir, 'missing-git') }).status).not.toBe(0);
+    expect(fs.existsSync(output)).toBe(false);
   });
 
   test.each(['true', 'false'])('preserves PR policy for a published branch with task_complete=%s', (complete) => {
