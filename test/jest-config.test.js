@@ -73,3 +73,14 @@ describe('Jest configuration runtime behavior', () => {
     }
   });
 });
+
+test('coverage counts product modules but not independent workflow tests or their fixtures', () => {
+  const matches = require('jest-util').globsToMatcher(baseJestConfig.collectCoverageFrom);
+  const products = ['src/product.js', 'src/product.mjs', 'src/product.cjs'];
+  const tests = [
+    'test/example.test.js',
+    'tests/workflows/ci-example.test.mjs',
+    'tests/workflows/ci-example.test-support.mjs',
+  ];
+  expect([...products, ...tests].filter(matches)).toEqual(products);
+});
