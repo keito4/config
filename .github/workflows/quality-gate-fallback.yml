@@ -1,29 +1,5 @@
-# Quality Gate Fallback
-#
-# Required Status Check "Quality Gate" を必ず報告するための fallback ワークフロー。
-#
-# 必要な背景:
-#   - setup-team-protection.sh はブランチ保護に "Quality Gate" を必須チェックとして登録する
-#   - ci.yml の Quality Gate ジョブが paths フィルタでスキップされた場合や、
-#     ci.yml 自体が存在しない / 走らない場合、PR は永遠に
-#     "Expected — Waiting for status to be reported" のまま blocked になる
-#   - この fallback は paths に関係なく必ず起動し、PR サイズを先に検査する
-#   - その後 ci.yml の実行可否をチェックし、走っていなければ Pass を emit する
-#
-# 動作:
-#   - ci.yml が走っている / 成功している場合 → 何もしない (本体の Quality Gate が優先)
-#   - ci.yml が走っていない場合 → Pass で Quality Gate を emit
-#
-# 使い方:
-#   .github/workflows/quality-gate-fallback.yml にコピーして配置
-#   setup-team-protection.sh で "Quality Gate" を必須チェックに設定する場合は必須
-#
-# 既知の制限:
-#   - GITHUB_TOKEN で push されたコミット (claude[bot] / dependabot[bot] が
-#     GITHUB_TOKEN で押した場合など) では `pull_request` イベントが発火しないため、
-#     この fallback も実行されない。その場合は別途 PAT 経由の push か
-#     workflow_dispatch / repository_dispatch での再トリガーが必要。
-#
+# Quality Gate verifies the latest ci.yml run for the PR head.
+# Missing, disabled, failed or unfinished CI never passes. PR size remains enforced.
 name: CI Fallback
 
 on:
@@ -43,7 +19,7 @@ jobs:
   quality-gate:
     name: Quality Gate
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 20
     steps:
       - name: Enforce PR size
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
@@ -93,36 +69,45 @@ jobs:
         with:
           script: |
             try {
-              const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                head_sha: context.sha,
-                per_page: 20,
-              });
-
-              const ciRun = runs.workflow_runs.find(
-                r => r.name === 'CI' && r.id !== context.runId
-              );
-
-              if (ciRun && ciRun.status !== 'completed') {
-                core.info(`CI workflow is running (${ciRun.html_url}), this fallback is not needed.`);
-                core.setOutput('ci_running', 'true');
-              } else if (ciRun && ciRun.conclusion === 'success') {
-                core.info(`CI workflow already succeeded (${ciRun.html_url}).`);
-                core.setOutput('ci_running', 'true');
-              } else {
-                core.info('CI workflow did not run for this commit. Providing fallback Quality Gate.');
-                core.setOutput('ci_running', 'false');
+              const { owner, repo } = context.repo;
+              const head_sha = context.payload.pull_request.head.sha;
+              const { data: workflow } = await github.rest.actions.getWorkflow({ owner, repo, workflow_id: 'ci.yml' });
+              if (workflow.state !== 'active' || workflow.path !== '.github/workflows/ci.yml') {
+                throw new Error('ci.yml is absent or disabled');
               }
+              const deadline = Date.now() + 900000;
+              do {
+                const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+                  owner, repo, workflow_id: workflow.id, head_sha, per_page: 100,
+                });
+                const matching = runs.filter(r => r.workflow_id === workflow.id && r.head_sha === head_sha && r.id !== context.runId);
+                const order = r => [Date.parse(r.created_at), r.run_number, r.id, r.run_attempt];
+                if (matching.some(r => !order(r).every(Number.isFinite))) throw new Error('Invalid CI run metadata');
+                matching.sort((a, b) => {
+                  const left = order(a), right = order(b);
+                  for (let i = 0; i < left.length; i++) if (left[i] !== right[i]) return right[i] - left[i];
+                  return 0;
+                });
+                if (matching.length) {
+                  const selected = matching[0];
+                  const { data: run } = await github.rest.actions.getWorkflowRun({ owner, repo, run_id: selected.id });
+                  if (run.id !== selected.id || run.workflow_id !== workflow.id || run.head_sha !== head_sha ||
+                      !Number.isSafeInteger(run.run_attempt) || run.run_attempt < selected.run_attempt) {
+                    throw new Error('CI run identity or attempt changed');
+                  }
+                  if (run.status === 'completed') {
+                    if (run.conclusion !== 'success') throw new Error(`CI concluded ${run.conclusion}`);
+                    core.info(`CI succeeded: run ${run.id}, attempt ${run.run_attempt}, SHA ${head_sha}`);
+                    return;
+                  }
+                  if (!['queued', 'in_progress', 'waiting', 'pending', 'requested'].includes(run.status)) {
+                    throw new Error(`Unknown CI status: ${run.status}`);
+                  }
+                }
+                core.info('Waiting for the current head CI run to succeed...');
+                await new Promise(resolve => setTimeout(resolve, Math.min(30000, Math.max(0, deadline - Date.now()))));
+              } while (Date.now() < deadline);
+              throw new Error('CI did not succeed within 900 seconds (absent or unfinished)');
             } catch (err) {
-              // 権限不足 (actions: read 未付与) や一時的な API 障害でクエリ失敗時は
-              // 安全側に倒す。"CI 実行中扱い" にして fallback の Pass emit をスキップし、
-              // 本体の Quality Gate (ci.yml) の結果を待つ。Required check が
-              // 未報告のままになる可能性はあるが、誤った Pass / Fail よりは安全。
-              core.warning(`Could not query workflow runs (${err.status || err.message}). Skipping fallback.`);
-              core.setOutput('ci_running', 'true');
+              core.setFailed(`Quality Gate could not verify CI success: ${err.message}`);
             }
-
-      - name: Pass (CI skipped)
-        if: steps.check.outputs.ci_running == 'false'
-        run: echo "Quality Gate passed (CI skipped — no code changes detected or workflow disabled)."
