@@ -4,6 +4,6 @@ load ../test_helper/test_helper
 
 @test "wait-ci-checks.sh verifies workflow identity and fails closed" {
     cd "$REPO_ROOT"
-    run node --test tests/workflows/ci-waiter.test.mjs
+    run node --test tests/workflows/ci-waiter.test.mjs tests/workflows/ci-waiter-identity.test.mjs
     assert_success
 }

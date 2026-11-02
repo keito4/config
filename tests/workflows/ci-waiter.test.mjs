@@ -1,6 +1,39 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { run, ciRun, check, job, execute } from './ci-waiter.test-support.mjs';
+import { readFileSync } from 'node:fs';
+import { run, check, execute } from './ci-waiter.test-support.mjs';
+import { fallbackRejectCases, ciRetryRejectCases } from './ci-waiter-cases.test-support.mjs';
+
+test('waiter: configured budget permits a 70-minute pending CI', () => {
+  const result = execute({
+    useConfiguredTimeout: true,
+    pollInterval: 300,
+    pendingUntil: 4200,
+  });
+  assert.equal(result.passed, 'ci_passed=true');
+  assert.equal(result.elapsed, 4200);
+});
+test('waiter: unfinished CI fails at the bounded 75-minute deadline', () => {
+  const result = execute({
+    useConfiguredTimeout: true,
+    pollInterval: 300,
+    pendingUntil: 4800,
+  });
+  assert.equal(result.passed, 'ci_passed=false');
+  assert.equal(result.elapsed, 4500);
+});
+test('waiter: an explicit shorter caller timeout remains effective', () => {
+  const result = execute({ pendingUntil: 2400 });
+  assert.equal(result.passed, 'ci_passed=false');
+  assert.equal(result.elapsed, 2);
+});
+test('waiter: consumer job encloses the budget and model job stays unchanged', () => {
+  const review = readFileSync('.github/workflows/claude-code-review.yml', 'utf8');
+  const checkJob = review.split('\n  check-ci-status:\n')[1].split('\n  claude-review:\n')[0];
+  const modelJob = review.split('\n  claude-review:\n')[1];
+  assert.match(checkJob, / {4}timeout-minutes: 80\b/);
+  assert.match(modelJob, / {4}timeout-minutes: 20\b/);
+});
 
 test('waiter: exact workflow, SHA, attempt and successful gate passes', () => {
   const result = execute();
@@ -8,30 +41,7 @@ test('waiter: exact workflow, SHA, attempt and successful gate passes', () => {
   assert.match(result.calls, /quality-gate-fallback.yml/);
   assert.match(result.calls, /attempts\/1\/jobs/);
 });
-for (const [name, options] of Object.entries({
-  absent: { runs: [], secondPage: [], checks: [] },
-  'missing gate despite other success': { jobs: [], checks: [check({ name: 'Optional' })] },
-  'failed gate': { jobs: [job({ conclusion: 'failure' })], checks: [check({ conclusion: 'failure' })] },
-  pending: {
-    current: run({ status: 'in_progress', conclusion: null }),
-    checks: [check({ status: 'in_progress', conclusion: null })],
-  },
-  'unknown status': { current: run({ status: 'unknown' }) },
-  'API error': { apiError: true },
-  'check API error': { checkError: true },
-  disabled: { workflow: { id: 7, state: 'disabled_manually', path: '.github/workflows/quality-gate-fallback.yml' } },
-  'wrong SHA': { runs: [run({ head_sha: 'old' })] },
-  'fake workflow': { runs: [run({ workflow_id: 8 })] },
-  'latest attempt failure': { current: run({ run_attempt: 2, conclusion: 'failure' }) },
-  'stale success before newer failure': {
-    runs: [run(), run({ id: 11, run_number: 11 })],
-    current: run({ id: 11, run_number: 11, conclusion: 'failure' }),
-  },
-  'genuine old failed check': { checks: [check(), check({ id: 11, name: 'Build', conclusion: 'failure' })] },
-  'gate skipped': { jobs: [job({ conclusion: 'skipped' })] },
-  'missing job head': { jobs: [job({ head_sha: null })] },
-  'run cancelled': { current: run({ conclusion: 'cancelled' }) },
-}))
+for (const [name, options] of Object.entries(fallbackRejectCases))
   test(`waiter: rejects ${name}`, () => assert.equal(execute(options).passed, 'ci_passed=false'));
 test('waiter: pagination selects current run from page two', () => {
   const result = execute({
@@ -47,11 +57,18 @@ test('waiter: keeps optional pending, skipped and neutral semantics', () => {
     check({
       id: 20 + i,
       name: `Optional ${i}`,
+      check_suite: { id: 300 },
       status: state === 'in_progress' ? state : 'completed',
       conclusion: state === 'in_progress' ? null : state,
     }),
   );
-  assert.equal(execute({ checks }).passed, 'ci_passed=true');
+  assert.equal(
+    execute({
+      checks: [check(), ...checks],
+      otherRuns: [run({ id: 30, workflow_id: 30, check_suite_id: 300 })],
+    }).passed,
+    'ci_passed=true',
+  );
 });
 test('waiter: superseded failure does not reject current success', () => {
   assert.equal(execute({ checks: [check({ id: 9, conclusion: 'failure' }), check()] }).passed, 'ci_passed=true');
@@ -64,21 +81,15 @@ test('waiter: a newer successful attempt uses its own jobs', () => {
 });
 test('waiter: a fake app gate cannot replace the real workflow', () => {
   assert.equal(
-    execute({ runs: [], checks: [check({ app: { id: 99, slug: 'other-app' } })] }).passed,
+    execute({
+      runs: [],
+      checks: [check({ app: { id: 99, slug: 'other-app' } })],
+    }).passed,
     'ci_passed=false',
   );
 });
 
-for (const [name, options] of Object.entries({
-  'pending newer attempt': { ciCurrent: ciRun({ run_attempt: 2, status: 'in_progress', conclusion: null }) },
-  'failed newer attempt': { ciCurrent: ciRun({ run_attempt: 2, conclusion: 'failure' }) },
-  'absent CI': { ciRuns: [] },
-  'foreign CI head': { ciRuns: [ciRun({ head_sha: 'old' })] },
-  'latest CI is pending': {
-    ciSecondPage: [ciRun({ id: 21, run_number: 11 })],
-    ciCurrent: ciRun({ id: 21, run_number: 11, status: 'queued', conclusion: null }),
-  },
-}))
+for (const [name, options] of Object.entries(ciRetryRejectCases))
   test(`waiter: old fallback success rejects ${name}`, () => assert.equal(execute(options).passed, 'ci_passed=false'));
 
 for (const endpoint of ['/workflows/17/runs?', '/workflows/7/runs?', '/attempts/', '/check-runs']) {

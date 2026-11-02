@@ -3,7 +3,9 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const repoPath = path.resolve(__dirname, '..');
-const inheritedGitEnvKeys = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_PREFIX'];
+const inheritedGitEnvKeys = execFileSync('git', ['rev-parse', '--local-env-vars'], { encoding: 'utf8' })
+  .trim()
+  .split('\n');
 
 function cleanGitEnv(extra = {}) {
   const env = { ...process.env, ...extra };

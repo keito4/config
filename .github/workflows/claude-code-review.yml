@@ -16,7 +16,7 @@ jobs:
     # Draft PRはスキップ
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    timeout-minutes: 20 # CIの完了を待つため延長
+    timeout-minutes: 80 # CIとfallbackの有限待機上限を包囲
     continue-on-error: true # ワークフローファイル変更時の初回PR用
     outputs:
       ci_passed: ${{ steps.check.outputs.ci_passed }}
