@@ -56,16 +56,20 @@ function renderCiBranches(configRoot, files, resolved) {
   }
   const content = fs.readFileSync(path.join(configRoot, FALLBACK_SOURCE), 'utf8');
   const sections = [...content.matchAll(/^on:\n(?:[ \t].*\n|\n)*/gmu)];
-  const branchPattern = /^ {2}pull_request:\n {4}branches: \[[^\n]*\]$/gmu;
-  if (sections.length !== 1 || [...sections[0][0].matchAll(branchPattern)].length !== 1) {
+  const pulls = [...(sections[0]?.[0] ?? '').matchAll(/^ {2}pull_request:\n(?: {4}.*\n|\n)*/gmu)];
+  const branchPattern = /^ {4}branches: \[[^\n]*\]$/gmu;
+  if (
+    sections.length !== 1 ||
+    pulls.length !== 1 ||
+    [...pulls[0][0].matchAll(branchPattern)].length !== 1 ||
+    [...pulls[0][0].matchAll(/^ {4}branches:/gmu)].length !== 1
+  ) {
     throw new Error('ciBranches requires exactly one canonical on.pull_request.branches list');
   }
-  const section = sections[0];
-  const rendered = section[0].replace(
-    branchPattern,
-    `  pull_request:\n    branches: [${resolved.ciBranches.join(', ')}]`,
-  );
-  return Buffer.from(content.slice(0, section.index) + rendered + content.slice(section.index + section[0].length));
+  const section = pulls[0];
+  const offset = sections[0].index + section.index;
+  const rendered = section[0].replace(branchPattern, `    branches: [${resolved.ciBranches.join(', ')}]`);
+  return Buffer.from(content.slice(0, offset) + rendered + content.slice(offset + section[0].length));
 }
 
 /**

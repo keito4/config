@@ -122,6 +122,8 @@ describe('CI branch rendering through the real sync operation', () => {
     'name: missing on\njobs:\n  pull_request:\n    branches: [main]\n',
     'on:\n  push:\n    branches: [main]\n',
     'on:\n  pull_request:\n    branches:\n      - main\n',
+    'on:\n  pull_request:\n    branches: [main]\n    branches: [production]\n',
+    'on:\n  pull_request:\n    branches: [main]\n  pull_request:\n    paths: ["*.js"]\n',
     'on:\n  pull_request:\n    branches: [main]\n  pull_request:\n    branches: [master]\n',
     'on:\n  pull_request:\n    branches: [main]\non:\n  pull_request:\n    branches: [master]\n',
   ])('rejects missing or ambiguous canonical scope before copying files: %j', (content) => {
