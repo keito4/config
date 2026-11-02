@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const yaml = require('js-yaml');
+const vm = require('vm');
 
 const root = path.resolve(__dirname, '..');
 const keys = [
@@ -16,11 +17,15 @@ for (const file of ['.github/workflows/claude.yml', 'templates/workflows/claude.
   const job = Object.values(workflow.jobs).find((value) => value.steps?.some((step) => step.id === 'claude-auth'));
   const gate = job.steps.find((step) => step.id === 'claude-auth');
   const action = job.steps.find((step) => step.id === 'claude');
-  test(`${file}: every admitted credential reaches the pinned Action`, () => {
+  test(`${file}: preferred credentials reach the pinned Action`, () => {
     for (const key of keys) {
       const expression = '${{ secrets.' + key + ' }}';
       expect(gate.env[key]).toBe(expression);
-      expect(action.with[key.toLowerCase()]).toBe(expression);
+      expect(action.with[key.toLowerCase()]).toBe(
+        key === 'ANTHROPIC_API_KEY'
+          ? "${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}"
+          : expression,
+      );
     }
     expect(action.uses).toBe('anthropics/claude-code-action@6d5ae526d25ce88daa2200be073e1a373167f064');
     expect(action.if).toContain("steps.claude-auth.outputs.available == 'true'");
@@ -34,6 +39,10 @@ for (const file of ['.github/workflows/claude.yml', 'templates/workflows/claude.
       const configured = keys.map((_, index) => Boolean(mask & (1 << index)));
       const env = Object.fromEntries(keys.map((key, index) => [key, configured[index] ? 'test-only-placeholder' : '']));
       try {
+        for (const key of keys) {
+          const forwarded = vm.runInNewContext(action.with[key.toLowerCase()].slice(3, -2), { secrets: env });
+          expect(forwarded).toBe(key === 'ANTHROPIC_API_KEY' && configured[0] ? '' : env[key]);
+        }
         execFileSync('bash', ['-euo', 'pipefail', '-c', gate.run], {
           env: { ...env, GITHUB_OUTPUT: output },
           stdio: 'pipe',
