@@ -133,8 +133,8 @@ the shared token for its other consumers.
 The fallback now requires the latest active `ci.yml` run for the PR head to
 complete successfully. Missing, disabled, unfinished, failed, and unreadable
 CI cannot provide a green Quality Gate. It waits up to 4200 seconds, allowing the longest explicitly timed CI path (60 minutes) plus 10 minutes of queue allowance. The consumer waits up to 4500 seconds; enclosing jobs allow 75/80 minutes. This is a finite policy, not a guarantee for jobs without explicit deadlines. This replaces
-the review waiter's existing budget. A follow-up change will verify the fallback
-workflow ID and current run attempt before accepting its Quality Gate job.
+the review waiter's existing budget. The waiter verifies current workflow/run/attempt and gate-check identity.
+Complete run inventory reconciliation rejects known latest failures before their checks appear; optional pending/skipped/neutral retain their semantics.
 
 Fix the common template/helper and apply only the matching gate changes to
 downstream defaults. Keep authentication, application CI, size policies and the

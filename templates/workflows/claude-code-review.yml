@@ -37,6 +37,7 @@ jobs:
       ci_passed: ${{ steps.check.outputs.ci_passed }}
       review_gate_changed: ${{ steps.gate-change.outputs.review_gate_changed }}
     permissions:
+      actions: read
       contents: read
       pull-requests: read
       checks: read
