@@ -4,6 +4,13 @@ const yaml = require('js-yaml');
 
 const workflows = ['.github/workflows/claude.yml', 'templates/workflows/claude.yml'];
 const complete = '- [x] Result posted\nClaude task status: complete';
+// GitHub POST /markdown, mode:gfm, recorded 2026-11-02. No test-side Markdown parser.
+const rendered = fs
+  .readFileSync(path.join(__dirname, 'fixtures/claude-markdown.jsonl'), 'utf8')
+  .trim()
+  .split('\n')
+  .map(JSON.parse);
+const renderedByName = Object.fromEntries(rendered.map((fixture) => [fixture.name, fixture.html]));
 
 async function verify(workflowPath, messages, body = complete, options = {}) {
   const workflow = yaml.load(fs.readFileSync(path.join(__dirname, '..', workflowPath), 'utf8'));
@@ -33,6 +40,13 @@ async function verify(workflowPath, messages, body = complete, options = {}) {
           : [comment],
       ),
     rest: {
+      markdown: {
+        render: jest.fn(async (args) => {
+          expect(args).toEqual({ text: comment.body, mode: 'gfm', context: 'owner/repo' });
+          if (options.renderError) throw new Error('render denied');
+          return { data: Object.hasOwn(options, 'html') ? options.html : renderedByName.complete };
+        }),
+      },
       issues: { listComments: jest.fn(), updateComment: jest.fn() },
       pulls: { listReviewComments: jest.fn(), updateReviewComment: jest.fn() },
     },
@@ -69,24 +83,37 @@ describe.each(workflows)('%s validates delivered work', (workflowPath) => {
   });
 
   test.each([
-    ['progress only', '- [ ] Post findings'],
+    ['progress only', '- [ ] Post findings', renderedByName.bullet],
     ['checked boxes but no final result', '- [x] Post findings\nStill working'],
     ['a quoted/example completion marker', 'The example is Claude task status: complete'],
-    ['unfinished tasks under a complete marker', `- [ ] Run tests\n${complete}`],
+    ['unfinished tasks under a complete marker', `- [ ] Run tests\n${complete}`, renderedByName.bullet],
     ['explicitly blocked', 'Claude task status: blocked\nNeeds authentication'],
     ...[
-      '+ [ ] Validate',
-      '1. [ ] Validate',
-      '1) [ ] Validate',
-      '-  [ ] Validate',
-      '*\t[\t] Validate',
-      '  2. [\u00a0] Validate',
-    ].map((item) => [item, `${item}\n${complete}`]),
-  ])('rejects %s', async (_label, body) => {
-    const { outputs, core, github } = await verify(workflowPath, [result], body);
+      ['plus', '+ [ ] Validate'],
+      ['ordered', '1. [ ] Validate'],
+      ['paren', '1) [ ] Validate'],
+      ['spaces', '-  [ ] Validate'],
+      ['tabs', '*\t[\t] Validate'],
+      ['nbsp', '  2. [\u00a0] Validate'],
+    ].map(([name, item]) => [item, `${item}\n${complete}`, renderedByName[name]]),
+  ])('rejects %s', async (_label, body, html = renderedByName.complete) => {
+    const { outputs, core, github } = await verify(workflowPath, [result], body, { html });
     expect(outputs.task_complete).toBe(false);
     expect(core.setFailed).toHaveBeenCalled();
     expect(github.rest.issues.updateComment.mock.calls[0][0].body).not.toContain('**Claude finished**');
+  });
+
+  test.each(rendered)('uses native GFM structure: $name', async (fixture) => {
+    expect((await verify(workflowPath, [result], fixture.body, { html: fixture.html })).outputs.task_complete).toBe(
+      fixture.complete,
+    );
+  });
+
+  test('Markdown render failures and invalid responses fail closed', async () => {
+    await expect(verify(workflowPath, [result], complete, { renderError: true })).rejects.toThrow('render denied');
+    for (const html of ['', null, {}, 'not HTML']) {
+      await expect(verify(workflowPath, [result], complete, { html })).rejects.toThrow(/render/i);
+    }
   });
 
   test('keeps the visible status after the upstream HTML sanitizer', async () => {
@@ -120,7 +147,10 @@ describe.each(workflows)('%s validates delivered work', (workflowPath) => {
   });
 
   test('checks the latest attempt instead of a prior success with the same run ID', async () => {
-    const { outputs } = await verify(workflowPath, [result], '- [ ] Still working', { olderBody: complete });
+    const { outputs } = await verify(workflowPath, [result], '- [ ] Still working', {
+      olderBody: complete,
+      html: renderedByName.bullet,
+    });
     expect(outputs.task_complete).toBe(false);
   });
 
@@ -132,6 +162,7 @@ describe.each(workflows)('%s validates delivered work', (workflowPath) => {
   test('updates the correct review-comment API for an inline request', async () => {
     const { outputs, github } = await verify(workflowPath, [result], '- [ ] Still working', {
       eventName: 'pull_request_review_comment',
+      html: renderedByName.bullet,
     });
     expect(outputs.task_complete).toBe(false);
     expect(github.rest.pulls.updateReviewComment).toHaveBeenCalled();
