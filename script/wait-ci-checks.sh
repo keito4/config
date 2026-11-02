@@ -15,14 +15,30 @@ write_ci_result() {
   if [ -n "${GITHUB_OUTPUT:-}" ]; then echo "ci_passed=$1" >> "$GITHUB_OUTPUT"; fi
 }
 
+# GH pagination must account for every response row before a success can be trusted.
+complete_pages() {
+  jq -ce --arg key "$1" '
+    if type != "array" or length == 0 then error("Invalid pages") else . end
+    | if any(.[]; type != "object" or (.[$key] | type) != "array" or
+        (.total_count | type) != "number" or .total_count < 0 or .total_count != (.total_count | floor))
+      then error("Invalid page schema") else . end
+    | .[0].total_count as $total
+    | if any(.[]; .total_count != $total) then error("Inconsistent page counts") else . end
+    | [.[].[$key][]]
+    | if length != $total or any(.[]; type != "object" or (.id | type) != "number" or
+        (.head_sha | type) != "string" or (.status | type) != "string") or
+        ([.[].id] | unique | length) != $total then error("Incomplete or duplicate rows") else . end'
+}
+
 # Workflow identity and attempt-scoped jobs prevent stale or same-name checks passing.
 fetch_gate_state() {
   local workflow_name="$1" workflow workflow_id pages selected run_id attempt current jobs
   workflow="$(gh api "repos/$REPO/actions/workflows/$workflow_name")" || return 1
   workflow_id="$(jq -er --arg path ".github/workflows/$workflow_name" 'select(.state == "active" and .path == $path) | .id | select(type == "number" and . > 0)' <<< "$workflow")" || return 1
   pages="$(gh api --paginate --slurp "repos/$REPO/actions/workflows/$workflow_id/runs?head_sha=$HEAD_SHA&per_page=100")" || return 1
+  pages="$(complete_pages workflow_runs <<< "$pages")" || return 1
   selected="$(jq -cer --arg sha "$HEAD_SHA" --argjson id "$workflow_id" '
-    [.[].workflow_runs[] | select(.head_sha == $sha and .workflow_id == $id)]
+    if any(.[]; .head_sha != $sha or .workflow_id != $id) then error("Unexpected run identity") else . end
     | if any(.[]; (.created_at | type) != "string" or (.run_number | type) != "number" or (.id | type) != "number" or (.run_attempt | type) != "number") then error("Invalid run metadata") else . end
     | sort_by([(.created_at | fromdateiso8601), .run_number, .id, .run_attempt]) | last // {}' <<< "$pages")" || return 1
   run_id="$(jq -r '.id // empty' <<< "$selected")"
@@ -39,8 +55,9 @@ fetch_gate_state() {
   if [ "$(jq -r '.conclusion' <<< "$current")" != success ]; then echo failure; return; fi
   if [ "$workflow_name" = ci.yml ]; then echo success; return; fi
   jobs="$(gh api --paginate --slurp "repos/$REPO/actions/runs/$run_id/attempts/$attempt/jobs?per_page=100")" || return 1
+  jobs="$(complete_pages jobs <<< "$jobs")" || return 1
   jq -r --arg sha "$HEAD_SHA" '
-    [.[].jobs[] | select(.name == "Quality Gate" and .head_sha == $sha)] | max_by(.id)
+    [.[] | select(.name == "Quality Gate" and .head_sha == $sha)] | max_by(.id)
     | if . == null then "pending"
       elif .status == "completed" then (if .conclusion == "success" then "success" else "failure" end)
       elif (.status == "queued" or .status == "in_progress" or .status == "waiting") then "pending"
@@ -73,8 +90,12 @@ while [ "$ELAPSED_TIME" -lt "$MAX_WAIT_TIME" ]; do
       write_ci_result false
       exit 0
     fi
+    if ! CHECK_RUNS="$(complete_pages check_runs <<< "$CHECK_RUNS")"; then
+      write_ci_result false
+      exit 0
+    fi
     if ! jq -e --arg sha "$HEAD_SHA" '
-      [.[].check_runs[] | select(.head_sha == $sha and .name != "check-ci-status" and .name != "claude-review")]
+      [.[] | select(.head_sha == $sha and .name != "check-ci-status" and .name != "claude-review")]
       | group_by([.app.id, .name]) | map(max_by(.id))
       | all(.[]; .status != "completed" or .conclusion == "success" or .conclusion == "skipped" or .conclusion == "neutral")' <<< "$CHECK_RUNS" >/dev/null; then
       write_ci_result false
