@@ -101,22 +101,18 @@ describe('nix-darwin and home-manager input method configuration', () => {
   test('send-ime-key emits physical kana/eisuu keys for reliable IME switching', () => {
     const inputSourceModule = readRepoFile('nix/home/input-source.nix');
     const sendKeyWrapper = readRepoFile('script/macos/send-ime-key.sh');
-    const sendKeySwift = readRepoFile('script/macos/send-ime-key.swift');
 
-    expect(inputSourceModule).toContain('".local/share/input-source/send-ime-key.swift"');
+    expect(inputSourceModule).not.toContain('send-ime-key.swift');
     expect(inputSourceModule).toContain('".local/bin/send-ime-key"');
-    expect(sendKeyWrapper).toContain('/input-source/send-ime-key.swift');
-    expect(sendKeySwift).toContain('return 104'); // かな
-    expect(sendKeySwift).toContain('return 102'); // 英数
-    expect(sendKeySwift).toContain('.cghidEventTap');
+    expect(sendKeyWrapper).toContain('key=0x68'); // かな: kVK_JIS_Kana = 104
+    expect(sendKeyWrapper).toContain('key=0x66'); // 英数: kVK_JIS_Eisu = 102
+    expect(sendKeyWrapper).toContain('exec /usr/local/bin/skhd -k "$key"');
+    expect(sendKeyWrapper).not.toContain('xcrun');
   });
 
-  test('Swift helpers are interpreted by xcrun and alert instead of failing silently', () => {
+  test('input source query helper retains its Xcode failure alert', () => {
     const inputSourceModule = readRepoFile('nix/home/input-source.nix');
-    const wrappers = [
-      readRepoFile('script/macos/send-ime-key.sh'),
-      readRepoFile('script/macos/agent-select-input-source.sh'),
-    ];
+    const wrappers = [readRepoFile('script/macos/agent-select-input-source.sh')];
 
     // ビルド済みバイナリ (ad-hoc 署名) から送ったキーイベントは TCC に黙って捨てられ、
     // Ctrl+Shift+J が効かなくなった (2026-09-28)。Apple 署名の swift-frontend で

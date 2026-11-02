@@ -143,3 +143,17 @@ the wrappers show a `display alert` telling the user to run
 `sudo xcodebuild -license accept` instead of failing silently. The wrappers read
 the sources from `${HOME}/.local/share/input-source/`, where home-manager
 installs them regardless of `XDG_DATA_HOME`.
+
+### Amendment (2026-11-02): send IME keys through the trusted skhd executable
+
+The interpreted helper adds 0.24–0.30 seconds before posting an IME key in local
+startup measurements. Keep the existing global shortcuts and physical kana/eisuu
+keys, but have `send-ime-key` execute `/usr/local/bin/skhd -k` directly. This is
+the same stable, signed executable already granted Accessibility access, avoiding
+both per-press Swift startup and a new helper identity requiring another grant.
+No new daemon or permission is needed.
+
+Remove the unused key-sending Swift source and its home-manager entry. The
+separate `select-input-source` query/selection helper continues to use Swift.
+Verify both shortcuts in an editable field after deployment, including typing
+characters rather than relying solely on the input indicator.
