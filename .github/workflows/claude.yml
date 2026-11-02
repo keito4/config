@@ -99,6 +99,37 @@ jobs:
             echo "::notice::Skipping Claude Code because no Claude authentication secret is configured."
           fi
 
+      - name: Mark tracked Issue as working
+        if: >-
+          github.event.issue.number && !github.event.issue.pull_request &&
+          steps.pr_draft.outputs.is_draft != 'true' &&
+          steps.claude-auth.outputs.available == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          script: |
+            const api = github.rest.issues;
+            const issue = { ...context.repo, issue_number: context.issue.number };
+            const { data } = await api.get(issue);
+            const states = ['claude', 'claude-working', 'claude-blocked', 'claude-review'];
+            const labels = data.labels.map(label => typeof label === 'string' ? label : label.name);
+            const tracked = labels.filter(label => states.includes(label));
+            if (data.state !== 'open' || !tracked.length) return;
+            const target = 'claude-working';
+            try { await api.getLabel({ ...context.repo, name: target }); }
+            catch (error) {
+              if (error.status !== 404) throw error;
+              try {
+                await api.createLabel({ ...context.repo, name: target, color: 'FBCA04' });
+              } catch (creationError) {
+                // Another Issue may create the same repository-wide label concurrently.
+                if (creationError.status !== 422) throw creationError;
+                await api.getLabel({ ...context.repo, name: target });
+              }
+            }
+            await api.addLabels({ ...issue, labels: [target] });
+            for (const name of tracked.filter(name => name !== target)) await api.removeLabel({ ...issue, name });
+            core.info(`Issue #${issue.issue_number}: ${target}`);
+
       - name: Run Claude Code
         id: claude
         if: steps.pr_draft.outputs.is_draft != 'true' && steps.claude-auth.outputs.available == 'true'

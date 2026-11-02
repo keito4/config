@@ -10,6 +10,7 @@ Elu-co-jp/.github-private #323 stopped after denied reads while retaining `claud
 ## Decision
 
 - Serialize trusted Issue requests through finalization, retaining pending requests with `queue: max`. Unrelated events have separate groups.
+- Immediately before an authenticated Claude invocation, read the current Issue and move an open tracked Issue to `claude-working`, adding that label before removing other queue/result labels. Keep the existing actor/mention guard and use fixed inline workflow code. Leave closed, untracked, and PR requests unchanged. API errors stop the Claude step; finalization still handles the failed job.
 - Run finalization in a separate, always-evaluated job using only the workflow's trusted inline code and Issues write permission.
 - For open Issues already carrying a Claude queue label, set `claude-review` only when the job succeeds and the existing completion verifier reports true. Otherwise set `claude-blocked` and fail the finalizer. A draft PR never substitutes for completion.
 - A verified answer without a PR can enter review. A successfully completed closed Issue has its queue labels removed. Leave unrelated Issues and failed runs on closed Issues untouched.
@@ -19,4 +20,4 @@ Elu-co-jp/.github-private #323 stopped after denied reads while retaining `claud
 
 Issue state reflects delivery, while human review and merging remain separate. Cancellation of an entire workflow can still prevent finalization; this is not a stale-run recovery service. Existing config downstream subscriptions receive the template through their normal PR sync; other repositories require reviewed migration before opting into full-file synchronization.
 
-This change manages end-of-run result labels. During a retry, the previous result remains visible until finalization; use Actions or the tracking comment for current progress. A guarded transition back to `claude-working` at the start of a retry is follow-up work, including queued requests, authentication skips, and cancellation. These result labels do not trigger automatic merging or closing in the pilot repositories.
+Queued requests retain the previous result until their turn starts; each start reads the live Issue rather than its original event labels. Missing authentication skips the working transition and Claude, then finalizes tracked open Issues as blocked. Queued or authentication-skipped requests do not acquire a working state. Cancellation after the working transition may leave `claude-working` if finalization cannot run, requiring manual inspection. Actions and the tracking comment remain the source for current execution progress. These result labels do not trigger automatic merging or closing in the pilot repositories.
