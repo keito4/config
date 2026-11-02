@@ -232,6 +232,7 @@ jobs:
               // GitHub renders syntax-highlighted fences as div.highlight > pre without code.
               blocked = html.replace(/<code\b[^>]*>[\s\S]*?<\/code>/gi, '')
                 .replace(/<div\b[^>]*\sclass="highlight(?:\s[^"]*)?"[^>]*>\s*<pre\b[^>]*>[\s\S]*?<\/pre>\s*<\/div>/gi, '')
+                .replace(/<[^>]*>/g, '')
                 .includes('Claude task status: blocked');
               renderedComplete = /(?:<p(?:\s[^>]*)?>|\n)Claude task status: complete\s*<\/p>\s*$/.test(html);
               unchecked = [...html.matchAll(/<input\b[^>]*>/gi)].some(([tag]) => {
