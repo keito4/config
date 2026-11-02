@@ -3,6 +3,27 @@ const foreign = (id, workflow = id) => run({ id, workflow_id: workflow, check_su
 const build = (id, suite, conclusion = 'success') =>
   check({ id, name: 'Build', check_suite: { id: suite }, conclusion });
 export const identityCases = [
+  ...[
+    'failure',
+    'cancelled',
+    'timed_out',
+    'action_required',
+    'stale',
+    'startup_failure',
+    'success',
+    'skipped',
+    'neutral',
+  ].map((conclusion) => [
+    `observed latest foreign ${conclusion} before its check`,
+    {
+      checks: [check(), build(301, 300, 'failure')],
+      otherRuns: [foreign(30, 30)],
+      afterChecks: {
+        allRuns: [ciRun(), run(), foreign(30, 30), { ...foreign(31, 30), conclusion }],
+      },
+    },
+    ['success', 'skipped', 'neutral'].includes(conclusion),
+  ]),
   ['malformed optional check ID', { checks: [check(), check({ id: -1, name: 'Optional' })] }, false],
   [
     'unknown unrelated run conclusion',
@@ -30,7 +51,13 @@ export const identityCases = [
     },
     false,
   ],
-  ['observed fallback pending check', { checks: [check({ id: 11, status: 'in_progress', conclusion: null })] }, false],
+  [
+    'observed fallback pending check',
+    {
+      checks: [check({ id: 11, status: 'in_progress', conclusion: null })],
+    },
+    false,
+  ],
   [
     'observed CI pending check',
     {
@@ -67,6 +94,14 @@ export const identityCases = [
   [
     'unrelated optional pending',
     {
+      otherRuns: [
+        {
+          ...foreign(30),
+          name: 'Claude Code Review',
+          status: 'in_progress',
+          conclusion: null,
+        },
+      ],
       checks: [
         check(),
         check({
@@ -142,7 +177,11 @@ export const identityCases = [
 ];
 export const evolvingRerun = {
   afterChecks: {
-    current: run({ run_attempt: 2, status: 'in_progress', conclusion: null }),
+    current: run({
+      run_attempt: 2,
+      status: 'in_progress',
+      conclusion: null,
+    }),
     checks: [check({ id: 11, status: 'in_progress', conclusion: null })],
   },
   settleAt: 1,
