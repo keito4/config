@@ -25,6 +25,22 @@ function loadWorkflow() {
 // 文字列検索ではなく job 単位で表明する。ファイル全体を grep すると、
 // ゲートが別 job へ移っても、notify から always() が消えても素通りする。
 describe('sync-downstream workflow contracts', () => {
+  test('installs the locked parser without lifecycle scripts before downstream credentials are checked out', () => {
+    const { steps } = loadWorkflow().jobs.sync;
+    const setup = steps.findIndex((step) => step.uses === './.github/actions/setup-node-ci');
+    const install = steps.findIndex((step) => step.run === 'npm ci --ignore-scripts');
+    const downstream = steps.findIndex((step) => step.with?.path === 'downstream');
+
+    expect(steps[0].uses).toMatch(/^actions\/checkout@/);
+    expect(steps[0].with?.token).toBeUndefined();
+    expect(setup).toBeGreaterThan(0);
+    expect(steps[setup].with.install).toBe('false');
+    expect(install).toBeGreaterThan(setup);
+    expect(downstream).toBeGreaterThan(install);
+    expect(steps[install]['working-directory']).toBeUndefined();
+    expect(steps[install].env).toBeUndefined();
+  });
+
   test('validates the downstream token before any matrix job runs', () => {
     const { jobs } = loadWorkflow();
     const step = jobs.preflight.steps.find((s) => s.name === 'Validate downstream token');
