@@ -75,7 +75,7 @@ async function execute(file, options = {}) {
       return {
         data:
           options.current ??
-          (options.transition && polls === 1
+          ((options.transition && polls === 1) || (options.succeedAfterMs !== undefined && now < options.succeedAfterMs)
             ? run({ status: 'in_progress', conclusion: null })
             : [...(options.runs ?? [run()]), ...(options.secondPage ?? [])].find((r) => r.id === args.run_id)),
       };

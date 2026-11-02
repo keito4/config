@@ -19,7 +19,7 @@ jobs:
   quality-gate:
     name: Quality Gate
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 75
     steps:
       - name: Enforce PR size
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
@@ -75,7 +75,7 @@ jobs:
               if (workflow.state !== 'active' || workflow.path !== '.github/workflows/ci.yml') {
                 throw new Error('ci.yml is absent or disabled');
               }
-              const deadline = Date.now() + 900000;
+              const deadline = Date.now() + 4200000;
               do {
                 const runs = [];
                 let total;
@@ -123,7 +123,7 @@ jobs:
                 core.info('Waiting for the current head CI run to succeed...');
                 await new Promise(resolve => setTimeout(resolve, Math.min(30000, Math.max(0, deadline - Date.now()))));
               } while (Date.now() < deadline);
-              throw new Error('CI did not succeed within 900 seconds (absent or unfinished)');
+              throw new Error('CI did not succeed within 4200 seconds (absent or unfinished)');
             } catch (err) {
               core.setFailed(`Quality Gate could not verify CI success: ${err.message}`);
             }

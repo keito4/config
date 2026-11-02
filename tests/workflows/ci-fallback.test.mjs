@@ -1,8 +1,20 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import { paths, sha, run, execute } from './ci-fallback.test-support.mjs';
+import { execute as executeWaiter } from './ci-waiter.test-support.mjs';
 
 for (const file of paths) {
+  test(`${file}: permits 60 minute CI and fails at the bounded 70 minute deadline`, async () => {
+    const completed = await execute(file, { succeedAfterMs: 3600000 });
+    assert.deepEqual(completed.failures, []);
+    assert.equal(completed.now, 3600000);
+    const unfinished = await execute(file, { succeedAfterMs: 4200001 });
+    assert.match(unfinished.failures[0], /4200 seconds/);
+    assert.equal(unfinished.now, 4200000);
+    assert.match(readFileSync(file, 'utf8'), / {4}timeout-minutes: 75\n/);
+  });
+
   test(`${file}: only exact head and workflow success passes`, async () => {
     const result = await execute(file);
     assert.deepEqual(result.failures, []);
@@ -44,5 +56,17 @@ for (const file of paths) {
     });
     assert.ok(result.failures.length);
     assert.ok(result.calls.some(([type, args]) => type === 'list' && args.page === 2));
+  });
+}
+
+for (const [name, options, passed, elapsed] of [
+  ['40 minute success', { useConfiguredTimeout: true, pollInterval: 300, pendingUntil: 2400 }, 'true', 2400],
+  ['75 minute timeout', { useConfiguredTimeout: true, pollInterval: 300, pendingUntil: 4800 }, 'false', 4500],
+  ['explicit shorter timeout', { pendingUntil: 2400 }, 'false', 2],
+]) {
+  test(`actual waiter: ${name}`, () => {
+    const result = executeWaiter(options);
+    assert.equal(result.passed, `ci_passed=${passed}`);
+    assert.equal(result.elapsed, elapsed);
   });
 }
