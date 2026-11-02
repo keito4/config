@@ -1,6 +1,7 @@
 """Behavior checks for hook launchers, command inspection, and PR check polling."""
 import importlib.util
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -20,13 +21,16 @@ class HookRegressionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         (ROOT / ".context").mkdir(exist_ok=True)
+        cls.git_env = os.environ.copy()
+        for key in subprocess.check_output(['git', 'rev-parse', '--local-env-vars'], text=True).splitlines():
+            cls.git_env.pop(key, None)
 
     def test_launchers_preserve_rejection_and_only_report_missing_files(self):
         settings = json.loads((ROOT / '.claude' / 'settings.json').read_text())
         entries = settings['hooks']['PreToolUse'] + settings['hooks']['Stop']
         with tempfile.TemporaryDirectory(dir=ROOT / '.context') as directory:
             fixture = Path(directory)
-            subprocess.run(['git', 'init', '-q', str(fixture)], check=True)
+            subprocess.run(['git', 'init', '-q', str(fixture)], env=self.git_env, check=True)
             for entry in entries:
                 for hook in entry['hooks']:
                     command = hook['command']
@@ -37,11 +41,11 @@ class HookRegressionTests(unittest.TestCase):
                         target = fixture / '.claude' / 'hooks' / match[1]
                         target.parent.mkdir(parents=True, exist_ok=True)
                         target.write_text('import sys\nsys.exit(2)\n')
-                        result = subprocess.run(['bash', '-c', command], cwd=fixture, text=True, capture_output=True)
+                        result = subprocess.run(['bash', '-c', command], cwd=fixture, env=self.git_env, text=True, capture_output=True)
                         self.assertEqual(result.returncode, 2)
                         self.assertNotIn('not found', result.stdout)
                         target.unlink()
-                        missing = subprocess.run(['bash', '-c', command], cwd=fixture, text=True, capture_output=True)
+                        missing = subprocess.run(['bash', '-c', command], cwd=fixture, env=self.git_env, text=True, capture_output=True)
                         self.assertEqual(missing.returncode, 0)
                         self.assertIn('not found', missing.stdout)
 
