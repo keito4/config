@@ -33,7 +33,7 @@ permissions:
   contents: read
 
 jobs:
-  # downstream の checkout と PR 作成はどちらも CLAUDE_PAT に乗っている。失効すると
+  # 専用 token を優先し、未設定のときだけ共有 CLAUDE_PAT を使う。失効すると
   # matrix の全 job が checkout 内部で `Bad credentials` を出して落ちるだけで、どの
   # シークレットをどう直せばよいかログから読み取れない。先に一度だけ検証して止める。
   preflight:
@@ -44,10 +44,11 @@ jobs:
 
       - name: Validate downstream token
         env:
-          CLAUDE_PAT: ${{ secrets.CLAUDE_PAT }}
+          DOWNSTREAM_TOKEN: ${{ secrets.DOWNSTREAM_SYNC_TOKEN || secrets.CLAUDE_PAT }}
+          DOWNSTREAM_TOKEN_NAME: ${{ secrets.DOWNSTREAM_SYNC_TOKEN != '' && 'DOWNSTREAM_SYNC_TOKEN' || 'CLAUDE_PAT' }}
         run: |
-          if [ -z "$CLAUDE_PAT" ]; then
-            echo "::error::CLAUDE_PAT secret is not configured. Create a token with the 'repo' and 'workflow' scopes and register it with: gh secret set CLAUDE_PAT --repo ${{ github.repository }}"
+          if [ -z "$DOWNSTREAM_TOKEN" ]; then
+            echo "::error::Neither DOWNSTREAM_SYNC_TOKEN nor CLAUDE_PAT is configured. Create a fine-grained PAT for the manifest repositories with Contents, Pull requests, and Workflows write permissions, then register it with: gh secret set DOWNSTREAM_SYNC_TOKEN --repo ${{ github.repository }}"
             exit 1
           fi
 
@@ -59,7 +60,7 @@ jobs:
           headers="$RUNNER_TEMP/probe-headers.txt"
 
           status=$(curl -sS -o "$body" -D "$headers" -w '%{http_code}' \
-            -H "Authorization: Bearer $CLAUDE_PAT" \
+            -H "Authorization: Bearer $DOWNSTREAM_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/$probe") || status=000
 
@@ -68,29 +69,29 @@ jobs:
           case "$status" in
             200) ;;
             000)
-              echo "::error::Could not reach https://api.github.com to validate CLAUDE_PAT. This is a network or GitHub API failure, not evidence that the token is bad. Re-run this workflow."
+              echo "::error::Could not reach https://api.github.com to validate $DOWNSTREAM_TOKEN_NAME. This is a network or GitHub API failure, not evidence that the token is bad. Re-run this workflow."
               exit 1
               ;;
             401)
-              echo "::error::CLAUDE_PAT was rejected (HTTP 401): the token is expired or revoked. Reissue it with the 'repo' and 'workflow' scopes and register it with: gh secret set CLAUDE_PAT --repo ${{ github.repository }}"
+              echo "::error::$DOWNSTREAM_TOKEN_NAME was rejected (HTTP 401): the token is expired or revoked. Restore the selected secret's required access; see docs/adr/0019-downstream-template-auto-sync.md before replacing a shared credential. Register it with: gh secret set $DOWNSTREAM_TOKEN_NAME --repo ${{ github.repository }}"
               exit 1
               ;;
             403 | 404)
-              echo "::error::CLAUDE_PAT is live but cannot see $probe (HTTP $status). Give the token access to every repository in .github/sync-downstream.json."
+              echo "::error::$DOWNSTREAM_TOKEN_NAME cannot access $probe (HTTP $status). Check repository access, approval, and API restrictions; it needs access to every repository in .github/sync-downstream.json."
               exit 1
               ;;
             429 | 5??)
-              echo "::error::GitHub API returned HTTP $status while validating CLAUDE_PAT. This is rate limiting or a GitHub outage, not a token problem. Re-run this workflow."
+              echo "::error::GitHub API returned HTTP $status while validating $DOWNSTREAM_TOKEN_NAME. This is rate limiting or a GitHub outage, not a token problem. Re-run this workflow."
               exit 1
               ;;
             *)
-              echo "::error::Unexpected HTTP $status from the GitHub API while validating CLAUDE_PAT against $probe. Check the run log before assuming the token is at fault."
+              echo "::error::Unexpected HTTP $status from the GitHub API while validating $DOWNSTREAM_TOKEN_NAME against $probe. Check the run log before assuming the token is at fault."
               exit 1
               ;;
           esac
 
           if [ "$(jq -r '.permissions.push // false' "$body")" != "true" ]; then
-            echo "::error::CLAUDE_PAT can read $probe but cannot push to it. sync-downstream needs write access to open pull requests. Grant write access and re-register the token."
+            echo "::error::$DOWNSTREAM_TOKEN_NAME can read $probe but cannot push to it. sync-downstream needs Contents, Pull requests, and Workflows write permissions. Grant write access and re-register the selected token."
             exit 1
           fi
 
@@ -98,11 +99,11 @@ jobs:
           # .github/workflows/ を書き換える PR だけが後段で落ちる。
           scopes=$(grep -i '^x-oauth-scopes:' "$headers" | cut -d: -f2- | tr -d ' \r' || true)
           if [ -n "$scopes" ] && ! printf '%s' ",$scopes," | grep -q ',workflow,'; then
-            echo "::error::CLAUDE_PAT is missing the 'workflow' scope (has: $scopes). Pull requests touching downstream .github/workflows/ will be rejected. Reissue the token with both 'repo' and 'workflow'."
+            echo "::error::$DOWNSTREAM_TOKEN_NAME is missing the 'workflow' scope (has: $scopes). Pull requests touching downstream .github/workflows/ will be rejected. Reissue the classic token with both 'repo' and 'workflow'."
             exit 1
           fi
 
-          echo "CLAUDE_PAT can push to $probe."
+          echo "$DOWNSTREAM_TOKEN_NAME can push to $probe."
 
   plan:
     needs: preflight
@@ -143,7 +144,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ matrix.repo }}
-          token: ${{ secrets.CLAUDE_PAT }}
+          token: ${{ secrets.DOWNSTREAM_SYNC_TOKEN || secrets.CLAUDE_PAT }}
           path: downstream
 
       - name: Sync managed files into downstream checkout
@@ -156,7 +157,7 @@ jobs:
         if: ${{ inputs.dry_run != true }}
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          token: ${{ secrets.CLAUDE_PAT }}
+          token: ${{ secrets.DOWNSTREAM_SYNC_TOKEN || secrets.CLAUDE_PAT }}
           path: downstream
           branch: chore/config-template-sync
           delete-branch: true
@@ -189,6 +190,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           TOKEN_RESULT: ${{ needs.preflight.result }}
+          DOWNSTREAM_TOKEN_NAME: ${{ secrets.DOWNSTREAM_SYNC_TOKEN != '' && 'DOWNSTREAM_SYNC_TOKEN' || 'CLAUDE_PAT' }}
         run: |
           TITLE="fix: Sync Downstream Repositories failed"
 
@@ -203,7 +205,7 @@ jobs:
           if [ "$TOKEN_RESULT" = "failure" ]; then
             # preflight は失効・権限不足・API 到達不能を撃ち分けて \`::error::\` に
             # 書いている。ここで原因を断定すると、その撃ち分けを潰してしまう。
-            CAUSE="The \`preflight\` job failed. If it reached \`Validate downstream token\`, that step's \`::error::\` line names the exact cause and remedy; otherwise the failure is in the checkout before it. When the token is expired, reissue it with the \`repo\` and \`workflow\` scopes and register it with \`gh secret set CLAUDE_PAT --repo $GH_REPO\`."
+            CAUSE="The \`preflight\` job failed. If it reached \`Validate downstream token\`, that step's \`::error::\` line names the exact cause and remedy; otherwise the failure is in the checkout before it. The selected secret is \`$DOWNSTREAM_TOKEN_NAME\`. See docs/adr/0019-downstream-template-auto-sync.md for dedicated token permissions; do not replace the shared CLAUDE_PAT with a downstream-only token."
           fi
 
           gh issue create \
