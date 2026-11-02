@@ -77,9 +77,25 @@ jobs:
               }
               const deadline = Date.now() + 900000;
               do {
-                const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
-                  owner, repo, workflow_id: workflow.id, head_sha, per_page: 100,
-                });
+                const runs = [];
+                let total;
+                for (let page = 1; ; page++) {
+                  const { data } = await github.rest.actions.listWorkflowRuns({
+                    owner, repo, workflow_id: workflow.id, head_sha, per_page: 100, page,
+                  });
+                  if (!Array.isArray(data.workflow_runs) || !Number.isSafeInteger(data.total_count) || data.total_count < 0) {
+                    throw new Error('Invalid CI page schema');
+                  }
+                  total ??= data.total_count;
+                  runs.push(...data.workflow_runs);
+                  if (data.total_count !== total || runs.length > total ||
+                      (runs.length < total && data.workflow_runs.length === 0)) throw new Error('Incomplete CI pages');
+                  if (runs.length === total) break;
+                }
+                if (runs.some(r => !r || typeof r !== 'object' || !Number.isSafeInteger(r.id) ||
+                    r.workflow_id !== workflow.id || r.head_sha !== head_sha ||
+                    !Number.isSafeInteger(r.run_number) || !Number.isSafeInteger(r.run_attempt)) ||
+                    new Set(runs.map(r => r.id)).size !== runs.length) throw new Error('Invalid or duplicate CI rows');
                 const matching = runs.filter(r => r.workflow_id === workflow.id && r.head_sha === head_sha && r.id !== context.runId);
                 const order = r => [Date.parse(r.created_at), r.run_number, r.id, r.run_attempt];
                 if (matching.some(r => !order(r).every(Number.isFinite))) throw new Error('Invalid CI run metadata');
