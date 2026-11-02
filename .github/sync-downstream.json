@@ -52,6 +52,7 @@
   "repos": [
     {
       "name": "keito4/calendar_alerm",
+      "ciBranches": ["main", "master"],
       "groups": [
         "claude-config",
         "workflow-claude",
@@ -66,6 +67,7 @@
     },
     {
       "name": "keito4/intent-gate-android",
+      "ciBranches": ["main"],
       "groups": [
         "claude-config",
         "workflow-claude",
@@ -77,6 +79,7 @@
     },
     {
       "name": "keito4/ohana",
+      "ciBranches": ["main", "develop"],
       "groups": [
         "claude-config",
         "workflow-claude",
