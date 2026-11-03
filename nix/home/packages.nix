@@ -7,7 +7,7 @@
     gh
     ghq
     deno
-    nodejs_24
+    (pkgs.callPackage ./nodejs-security.nix { })
     openjdk
     pipenv
     uv
