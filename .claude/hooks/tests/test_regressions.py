@@ -45,9 +45,50 @@ class HookRegressionTests(unittest.TestCase):
                         self.assertEqual(result.returncode, 2)
                         self.assertNotIn('not found', result.stdout)
                         target.unlink()
-                        missing = subprocess.run(['bash', '-c', command], cwd=fixture, env=self.git_env, text=True, capture_output=True)
+                        # リポジトリ側に無いときは $HOME/.claude/hooks へフォールバックし、exit code を保つ
+                        fake_home = fixture / 'home'
+                        fallback = fake_home / '.claude' / 'hooks' / match[1]
+                        fallback.parent.mkdir(parents=True, exist_ok=True)
+                        fallback.write_text('import sys\nsys.exit(2)\n')
+                        home_env = {**self.git_env, 'HOME': str(fake_home)}
+                        fell_back = subprocess.run(['bash', '-c', command], cwd=fixture, env=home_env, text=True, capture_output=True)
+                        self.assertEqual(fell_back.returncode, 2)
+                        self.assertNotIn('not found', fell_back.stdout)
+                        fallback.unlink()
+                        # 両方に無いときだけ not found を報告して exit 0
+                        missing = subprocess.run(['bash', '-c', command], cwd=fixture, env=home_env, text=True, capture_output=True)
                         self.assertEqual(missing.returncode, 0)
                         self.assertIn('not found', missing.stdout)
+
+    def test_advisory_launchers_preserve_output_but_never_reject(self):
+        settings = json.loads((ROOT / '.claude' / 'settings.json').read_text())
+        entries = settings['hooks']['UserPromptSubmit'] + settings['hooks']['PostToolUse']
+        scripts = {'prompt_task_reminder.py', 'post_commit_adr_reminder.py'}
+        with tempfile.TemporaryDirectory(dir=ROOT / '.context') as directory:
+            fixture = Path(directory)
+            subprocess.run(['git', 'init', '-q', str(fixture)], env=self.git_env, check=True)
+            fake_home = fixture / 'home'
+            home_env = {**self.git_env, 'HOME': str(fake_home)}
+            for entry in entries:
+                for hook in entry['hooks']:
+                    command = hook['command']
+                    match = re.search(r'\.claude/hooks/(\w+\.py)', command)
+                    if not match or match[1] not in scripts:
+                        continue
+                    for location in (fixture, fake_home):
+                        with self.subTest(script=match[1], location=location.name):
+                            target = location / '.claude' / 'hooks' / match[1]
+                            target.parent.mkdir(parents=True, exist_ok=True)
+                            target.write_text('import sys\nprint("advisory context")\nsys.exit(2)\n')
+                            try:
+                                result = subprocess.run(['bash', '-c', command], cwd=fixture, env=home_env, text=True, capture_output=True)
+                                self.assertEqual(result.returncode, 0)
+                                self.assertEqual(result.stdout, 'advisory context\n')
+                            finally:
+                                target.unlink()
+                    missing = subprocess.run(['bash', '-c', command], cwd=fixture, env=home_env, text=True, capture_output=True)
+                    self.assertEqual(missing.returncode, 0)
+                    self.assertEqual(missing.stdout, '')
 
     def test_commands_are_inspected_without_executing_them(self):
         cases = [

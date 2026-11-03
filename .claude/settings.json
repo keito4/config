@@ -213,7 +213,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { if [ -f .claude/hooks/block_dangerous_commands.py ]; then python3 .claude/hooks/block_dangerous_commands.py; else echo \"[hooks] .claude/hooks/block_dangerous_commands.py not found. Run /repo-maintenance to set up quality hooks.\"; fi; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/block_dangerous_commands.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/block_dangerous_commands.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; echo \"[hooks] block_dangerous_commands.py not found. Run /repo-maintenance to set up quality hooks.\"'"
           }
         ]
       },
@@ -222,7 +222,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { if [ -f .claude/hooks/block_inline_secrets.py ]; then python3 .claude/hooks/block_inline_secrets.py; else echo \"[hooks] .claude/hooks/block_inline_secrets.py not found. Run /repo-maintenance to set up quality hooks.\"; fi; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/block_inline_secrets.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/block_inline_secrets.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; echo \"[hooks] block_inline_secrets.py not found. Run /repo-maintenance to set up quality hooks.\"'"
           }
         ]
       },
@@ -231,7 +231,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { if [ -f .claude/hooks/block_git_no_verify.py ]; then python3 .claude/hooks/block_git_no_verify.py; else echo \"[hooks] .claude/hooks/block_git_no_verify.py not found. Run /repo-maintenance to set up quality hooks.\"; fi; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/block_git_no_verify.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/block_git_no_verify.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; echo \"[hooks] block_git_no_verify.py not found. Run /repo-maintenance to set up quality hooks.\"'"
           }
         ]
       },
@@ -240,7 +240,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { if [ -f .claude/hooks/pre_git_quality_gates.py ]; then python3 .claude/hooks/pre_git_quality_gates.py; else echo \"[hooks] .claude/hooks/pre_git_quality_gates.py not found. Run /repo-maintenance to set up quality hooks.\"; fi; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/pre_git_quality_gates.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/pre_git_quality_gates.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; echo \"[hooks] pre_git_quality_gates.py not found. Run /repo-maintenance to set up quality hooks.\"'"
           }
         ]
       },
@@ -249,7 +249,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { if [ -f .claude/hooks/block_config_edit.py ]; then python3 .claude/hooks/block_config_edit.py; else echo \"[hooks] .claude/hooks/block_config_edit.py not found. Run /repo-maintenance to set up quality hooks.\"; fi; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/block_config_edit.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/block_config_edit.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; echo \"[hooks] block_config_edit.py not found. Run /repo-maintenance to set up quality hooks.\"'"
           }
         ]
       },
@@ -258,7 +258,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { if [ -f .claude/hooks/block_managed_file_edit.py ]; then python3 .claude/hooks/block_managed_file_edit.py; else echo \"[hooks] .claude/hooks/block_managed_file_edit.py not found. Run /repo-maintenance to set up quality hooks.\"; fi; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/block_managed_file_edit.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/block_managed_file_edit.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; echo \"[hooks] block_managed_file_edit.py not found. Run /repo-maintenance to set up quality hooks.\"'"
           }
         ]
       },
@@ -267,7 +267,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { if [ -f .claude/hooks/pre_exit_plan_ai_review.py ]; then python3 .claude/hooks/pre_exit_plan_ai_review.py; else echo \"[hooks] .claude/hooks/pre_exit_plan_ai_review.py not found. Run /repo-maintenance to set up quality hooks.\"; fi; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/pre_exit_plan_ai_review.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/pre_exit_plan_ai_review.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; echo \"[hooks] pre_exit_plan_ai_review.py not found. Run /repo-maintenance to set up quality hooks.\"'"
           }
         ]
       }
@@ -278,7 +278,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { if [ -f .claude/hooks/post_edit_auto_lint.py ]; then python3 .claude/hooks/post_edit_auto_lint.py; else echo \"[hooks] .claude/hooks/post_edit_auto_lint.py not found. Run /repo-maintenance to set up quality hooks.\"; fi; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/post_edit_auto_lint.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/post_edit_auto_lint.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; echo \"[hooks] post_edit_auto_lint.py not found. Run /repo-maintenance to set up quality hooks.\"'"
           }
         ]
       },
@@ -298,7 +298,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { if [ -f .claude/hooks/post_git_push_ci.py ]; then python3 .claude/hooks/post_git_push_ci.py; else echo \"[hooks] .claude/hooks/post_git_push_ci.py not found. Run /repo-maintenance to set up quality hooks.\"; fi; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/post_git_push_ci.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/post_git_push_ci.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; echo \"[hooks] post_git_push_ci.py not found. Run /repo-maintenance to set up quality hooks.\"'"
           }
         ]
       },
@@ -307,7 +307,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { if [ -f .claude/hooks/post_pr_ai_review.py ]; then python3 .claude/hooks/post_pr_ai_review.py; else echo \"[hooks] .claude/hooks/post_pr_ai_review.py not found. Run /repo-maintenance to set up quality hooks.\"; fi; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/post_pr_ai_review.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/post_pr_ai_review.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; echo \"[hooks] post_pr_ai_review.py not found. Run /repo-maintenance to set up quality hooks.\"'"
           }
         ]
       },
@@ -316,7 +316,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { if [ -f .claude/hooks/post_pr_ci_watch.py ]; then python3 .claude/hooks/post_pr_ci_watch.py; else echo \"[hooks] .claude/hooks/post_pr_ci_watch.py not found. Run /repo-maintenance to set up quality hooks.\"; fi; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/post_pr_ci_watch.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/post_pr_ci_watch.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; echo \"[hooks] post_pr_ci_watch.py not found. Run /repo-maintenance to set up quality hooks.\"'"
           }
         ]
       },
@@ -325,7 +325,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { [ -f .claude/hooks/post_commit_adr_reminder.py ] && python3 .claude/hooks/post_commit_adr_reminder.py || true; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/post_commit_adr_reminder.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/post_commit_adr_reminder.py\"; [ -f \"$h\" ] && python3 \"$h\" || true'"
           }
         ]
       }
@@ -336,7 +336,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { if [ -f .claude/hooks/stop_test_verification.py ]; then python3 .claude/hooks/stop_test_verification.py; else echo \"[hooks] .claude/hooks/stop_test_verification.py not found. Run /repo-maintenance to set up quality hooks.\"; fi; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/stop_test_verification.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/stop_test_verification.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; echo \"[hooks] stop_test_verification.py not found. Run /repo-maintenance to set up quality hooks.\"'"
           }
         ]
       }
@@ -347,7 +347,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && { [ -f .claude/hooks/prompt_task_reminder.py ] && python3 .claude/hooks/prompt_task_reminder.py || true; }'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/prompt_task_reminder.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/prompt_task_reminder.py\"; [ -f \"$h\" ] && python3 \"$h\" || true'"
           }
         ]
       }

@@ -246,6 +246,19 @@ Hooksは、Claude Codeの特定のイベント（ツール実行前後、タス�
 
 ## Hooksの設定方法
 
+### 共有 settings.json の wrapper 形式（`$HOME/.claude/hooks` フォールバック）
+
+`.claude/settings.json`（新規ホストの `~/.claude/settings.json` の初期値になる正本）の hook コマンドは、次の形で各スクリプトを呼ぶ。`script/setup-claude.sh` は既存ホストの `hooks` を上書きしないため、既存環境へ反映するときは、ホストの `~/.claude/settings.json` の対応する hook コマンドを正本の形式に更新する（個別の hook 設定は残す）：
+
+```bash
+bash -c 'cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)"; h=.claude/hooks/<name>.py; [ -f "$h" ] || h="$HOME/.claude/hooks/<name>.py"; if [ -f "$h" ]; then exec python3 "$h"; fi; echo "[hooks] <name>.py not found. ..."'
+```
+
+- **リポジトリ相対を優先**し、無ければ **`$HOME/.claude/hooks/`（このリポジトリの `.claude/hooks` への symlink）へフォールバック**する。git 管理外のディレクトリや `.claude/hooks` 未配備のリポジトリでも `block_dangerous_commands` 等の遮断系が動く。
+- **遮断系は `exec` で呼ぶ**ことで Python の exit code（`2` = ブロック）がそのまま Claude Code へ伝わる。`[ -f X ] && python3 X || echo ...` の形は `|| echo` が exit 2 を握り潰して遮断が効かなくなるので使わない（2026-11-03 に母艦で実測）。
+- **advisory 系（`prompt_task_reminder.py` / `post_commit_adr_reminder.py`）は `exec` を使わず、末尾の `|| true` で exit 0 にする**。Python の起動・実行エラーでもプロンプトや後続処理を止めず、正常な出力は維持する。
+- 両方に無い場合のみフォールバックメッセージを出す（advisory 系は黙って終了）。
+
 ### ステップ1: settings.local.json に設定を追加
 
 `.claude/settings.local.json` ファイルに `hooks` フィールドを追加します：
