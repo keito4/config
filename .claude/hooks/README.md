@@ -248,7 +248,7 @@ Hooksは、Claude Codeの特定のイベント（ツール実行前後、タス�
 
 ### 共有 settings.json の wrapper 形式（`$HOME/.claude/hooks` フォールバック）
 
-`.claude/settings.json`（ホストの `~/.claude/settings.json` に同期される正本）の hook コマンドは、次の形で各スクリプトを呼ぶ：
+`.claude/settings.json`（新規ホストの `~/.claude/settings.json` の初期値になる正本）の hook コマンドは、次の形で各スクリプトを呼ぶ。`script/setup-claude.sh` は既存ホストの `hooks` を上書きしないため、既存環境へ反映するときは、ホストの `~/.claude/settings.json` の対応する hook コマンドを正本の形式に更新する（個別の hook 設定は残す）：
 
 ```bash
 bash -c 'cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)"; h=.claude/hooks/<name>.py; [ -f "$h" ] || h="$HOME/.claude/hooks/<name>.py"; if [ -f "$h" ]; then exec python3 "$h"; fi; echo "[hooks] <name>.py not found. ..."'
