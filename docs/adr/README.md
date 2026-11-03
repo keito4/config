@@ -35,7 +35,7 @@
 | [0027](0027-mcp-shared-http.md)                                 | MCP servers use HTTP where available                              | Accepted           |
 | [0028](0028-macos-ci-integration-tests.md)                      | macOS integration test runner for CI                              | Accepted           |
 | [0029](0029-verify-claude-task-completion.md)                   | Claude の成果物を処理成功とは別に検証する                         | Proposed           |
-| [0033](0033-pin-node-security-binary.md) | macOS Node のセキュリティ修正を公式バイナリで固定する | Proposed |
+| [0033](0033-pin-node-security-binary.md)                        | macOS Node のセキュリティ修正を公式バイナリで固定する             | Proposed           |
 
 ## ADR テンプレート
 
