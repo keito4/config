@@ -255,9 +255,9 @@ bash -c 'cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)"; h=.claude/
 ```
 
 - **リポジトリ相対を優先**し、無ければ **`$HOME/.claude/hooks/`（このリポジトリの `.claude/hooks` への symlink）へフォールバック**する。git 管理外のディレクトリや `.claude/hooks` 未配備のリポジトリでも `block_dangerous_commands` 等の遮断系が動く。
-- **`exec` で呼ぶ**ことで Python の exit code（`2` = ブロック）がそのまま Claude Code へ伝わる。`[ -f X ] && python3 X || echo ...` の形は `|| echo` が exit 2 を握り潰して遮断が効かなくなるので使わない（2026-11-03 に母艦で実測）。
-- 両方に無い場合のみフォールバックメッセージを出す（`|| true` だった advisory 系は黙って終了）。
-
+- **遮断系は `exec` で呼ぶ**ことで Python の exit code（`2` = ブロック）がそのまま Claude Code へ伝わる。`[ -f X ] && python3 X || echo ...` の形は `|| echo` が exit 2 を握り潰して遮断が効かなくなるので使わない（2026-11-03 に母艦で実測）。
+- **advisory 系（`prompt_task_reminder.py` / `post_commit_adr_reminder.py`）は `exec` を使わず、末尾の `|| true` で exit 0 にする**。Python の起動・実行エラーでもプロンプトや後続処理を止めず、正常な出力は維持する。
+- 両方に無い場合のみフォールバックメッセージを出す（advisory 系は黙って終了）。
 
 ### ステップ1: settings.local.json に設定を追加
 

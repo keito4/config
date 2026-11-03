@@ -325,7 +325,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/post_commit_adr_reminder.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/post_commit_adr_reminder.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; true'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/post_commit_adr_reminder.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/post_commit_adr_reminder.py\"; [ -f \"$h\" ] && python3 \"$h\" || true'"
           }
         ]
       }
@@ -347,7 +347,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/prompt_task_reminder.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/prompt_task_reminder.py\"; if [ -f \"$h\" ]; then exec python3 \"$h\"; fi; true'"
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\"; h=.claude/hooks/prompt_task_reminder.py; [ -f \"$h\" ] || h=\"$HOME/.claude/hooks/prompt_task_reminder.py\"; [ -f \"$h\" ] && python3 \"$h\" || true'"
           }
         ]
       }
