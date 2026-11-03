@@ -45,7 +45,18 @@ class HookRegressionTests(unittest.TestCase):
                         self.assertEqual(result.returncode, 2)
                         self.assertNotIn('not found', result.stdout)
                         target.unlink()
-                        missing = subprocess.run(['bash', '-c', command], cwd=fixture, env=self.git_env, text=True, capture_output=True)
+                        # リポジトリ側に無いときは $HOME/.claude/hooks へフォールバックし、exit code を保つ
+                        fake_home = fixture / 'home'
+                        fallback = fake_home / '.claude' / 'hooks' / match[1]
+                        fallback.parent.mkdir(parents=True, exist_ok=True)
+                        fallback.write_text('import sys\nsys.exit(2)\n')
+                        home_env = {**self.git_env, 'HOME': str(fake_home)}
+                        fell_back = subprocess.run(['bash', '-c', command], cwd=fixture, env=home_env, text=True, capture_output=True)
+                        self.assertEqual(fell_back.returncode, 2)
+                        self.assertNotIn('not found', fell_back.stdout)
+                        fallback.unlink()
+                        # 両方に無いときだけ not found を報告して exit 0
+                        missing = subprocess.run(['bash', '-c', command], cwd=fixture, env=home_env, text=True, capture_output=True)
                         self.assertEqual(missing.returncode, 0)
                         self.assertIn('not found', missing.stdout)
 
