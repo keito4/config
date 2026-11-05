@@ -26,26 +26,10 @@ describe('templates/eslint/eslint.config.mjs — TypeScript/Next.js ESLint templ
     });
   });
 
-  describe('Ignores configuration', () => {
-    test('should ignore node_modules', () => {
-      expect(content).toContain('node_modules/**');
-    });
-
-    test('should ignore .next directory', () => {
-      expect(content).toContain('.next/**');
-    });
-
-    test('should ignore dist directory', () => {
-      expect(content).toContain('dist/**');
-    });
-
-    test('should ignore build directory', () => {
-      expect(content).toContain('build/**');
-    });
-
-    test('should ignore coverage directory', () => {
-      expect(content).toContain('coverage/**');
-    });
+  test('should ignore dependency and build output directories', () => {
+    for (const dir of ['node_modules', '.next', 'dist', 'build', 'coverage']) {
+      expect(content).toContain(dir + '/**');
+    }
   });
 
   describe('TypeScript configuration', () => {

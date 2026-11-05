@@ -84,7 +84,7 @@ describe('home-manager dotfiles and agent tooling', () => {
     const collectorScript = readRepoFile('script/agent/collect-local-configs.sh');
     const collectorPath = path.join(repoPath, 'script/agent/collect-local-configs.sh');
 
-    expect(packagesModule).toContain('nodejs_24');
+    expect(packagesModule).toContain('nodejs-security.nix');
     expect(agentCommandsModule).toContain('".local/bin/agent-deck"');
     expect(agentCommandsModule).toContain('mkOutOfStoreSymlink "/opt/homebrew/bin/agent-deck"');
     expect(fs.statSync(collectorPath).mode & 0o111).toBeTruthy();
