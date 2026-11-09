@@ -51,7 +51,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `.cursor/`           | Cursor editor settings                                      |
 | `.devcontainer/`     | DevContainer configuration and Dockerfile                   |
 | `.gemini/`           | Gemini AI agent configuration                               |
-| `.github/workflows/` | GitHub Actions CI/CD workflows (16 workflows)               |
+| `.github/workflows/` | GitHub Actions CI/CD workflows (17 workflows)               |
 | `.husky/`            | Git hooks (pre-commit, commit-msg)                          |
 | `.takt/`             | TAKT workflow automation for scheduled agent tasks          |
 | `.vscode/`           | VS Code workspace settings                                  |
@@ -134,6 +134,7 @@ Development infrastructure template repository providing DevContainer images, CI
 
 | Workflow                    | Purpose                              |
 | --------------------------- | ------------------------------------ |
+| `ci-gate-contracts.yml`     | CI Gate Contracts                    |
 | `ci.yml`                    | CI                                   |
 | `claude-code-review.yml`    | Claude Code Review                   |
 | `claude.yml`                | Claude Code                          |
