@@ -27,7 +27,7 @@ for (const file of ['.github/workflows/claude.yml', 'templates/workflows/claude.
           : expression,
       );
     }
-    expect(action.uses).toBe('anthropics/claude-code-action@6d5ae526d25ce88daa2200be073e1a373167f064');
+    expect(action.uses).toBe('anthropics/claude-code-action@61a9c274fa7110a66dfafc1bbbced03833eb25fe');
     expect(action.if).toContain("steps.claude-auth.outputs.available == 'true'");
     expect(job.permissions['id-token']).toBe('write');
   });
