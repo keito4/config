@@ -8,13 +8,8 @@ on:
       - 'npm/global.json'
       - '.trivyignore'
       - '.github/workflows/container-security.yml'
-  pull_request:
-    branches: [main, pre-production, production]
-    paths:
-      - '.devcontainer/**'
-      - 'npm/global.json'
-      - '.trivyignore'
-      - '.github/workflows/container-security.yml'
+  # PR checks are called by CI so its required Quality Gate waits for both jobs.
+  workflow_call:
   schedule:
     - cron: '0 5 * * 2'
   workflow_dispatch:
@@ -22,7 +17,9 @@ on:
 permissions: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # github.workflow refers to the caller under workflow_call. Keep this distinct
+  # from CI's group so the reusable workflow cannot cancel its own caller.
+  group: container-security-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -144,9 +141,8 @@ jobs:
             exit 1
           fi
 
-      # なぜ必要か: このジョブはコンテナとスキャン設定の paths フィルタ付きで
-      #   通常の PR では走らず、branch protection の必須チェックにも入っていない。
-      #   そのため main が red になっても誰も気づかない。実際 2026-09-01 から 09-08 まで
+      # なぜ必要か: コンテナとスキャン設定の変更がない PR では検査しないため、
+      #   スケジュール実行や main の失敗も通知する。実際 2026-09-01 から 09-08 まで
       #   CRITICAL 1件 (CVE-2026-56854) を検知したまま一週間放置された (#1236)。
       #   PR での失敗は PR 上で見えるので、スケジュール実行と main への push だけ通知する。
       #
@@ -240,7 +236,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
-      contents: write
+      contents: read
       packages: read
 
     steps:
