@@ -52,6 +52,7 @@ jobs:
       scripts: ${{ steps.filter.outputs.scripts }}
       workflows: ${{ steps.filter.outputs.workflows }}
       dependencies: ${{ steps.filter.outputs.dependencies }}
+      container_security: ${{ steps.filter.outputs.container_security }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
 
@@ -84,6 +85,22 @@ jobs:
             dependencies:
               - 'package.json'
               - 'package-lock.json'
+            container_security:
+              - '.devcontainer/**'
+              - 'npm/global.json'
+              - '.trivyignore'
+              - '.github/workflows/container-security.yml'
+
+  container-security:
+    needs: [changes]
+    # The PR files API has a 3,000-file limit; conservatively scan larger PRs.
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.container_security == 'true' || github.event.pull_request.changed_files > 3000)
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+      issues: write
+    uses: ./.github/workflows/container-security.yml
 
   lint:
     name: Lint & Format
@@ -330,7 +347,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs:
-      [changes, lint, test, integration-test, integration-test-macos, actionlint, workflow-template-sync, pr-size-check]
+      [
+        changes,
+        lint,
+        test,
+        integration-test,
+        integration-test-macos,
+        actionlint,
+        workflow-template-sync,
+        pr-size-check,
+        container-security,
+      ]
     if: always()
     steps:
       - name: Check job results
@@ -342,6 +369,7 @@ jobs:
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
           WORKFLOW_TEMPLATE_SYNC_RESULT: ${{ needs.workflow-template-sync.result }}
           PR_SIZE_RESULT: ${{ needs.pr-size-check.result }}
+          CONTAINER_SECURITY_RESULT: ${{ needs.container-security.result }}
         run: |
           echo "## Quality Gate Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -354,6 +382,7 @@ jobs:
           echo "| Workflow Lint | $ACTIONLINT_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| Workflow Template Sync | $WORKFLOW_TEMPLATE_SYNC_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| PR Size | $PR_SIZE_RESULT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Container Security and SBOM | $CONTAINER_SECURITY_RESULT |" >> $GITHUB_STEP_SUMMARY
 
       - name: Verify all checks passed
         env:
@@ -364,6 +393,11 @@ jobs:
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
           WORKFLOW_TEMPLATE_SYNC_RESULT: ${{ needs.workflow-template-sync.result }}
           PR_SIZE_RESULT: ${{ needs.pr-size-check.result }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          CONTAINER_SECURITY_CHANGED: ${{ needs.changes.outputs.container_security }}
+          CONTAINER_SECURITY_RESULT: ${{ needs.container-security.result }}
         run: |
           # skipped は成功扱い（該当ファイルの変更がない場合）
           function check_result() {
@@ -372,6 +406,24 @@ jobs:
           }
 
           FAILED=false
+          if [[ "$CHANGES_RESULT" != "success" && ! ( "$EVENT_NAME" == "schedule" && "$CHANGES_RESULT" == "skipped" ) ]]; then
+            echo "::error::Change detection did not succeed"
+            FAILED=true
+          fi
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            if [[ ! "$PR_CHANGED_FILES" =~ ^[0-9]+$ ]]; then
+              echo "::error::PR changed file count is unavailable"
+              FAILED=true
+            elif [[ "$CONTAINER_SECURITY_CHANGED" == "true" || "$PR_CHANGED_FILES" -gt 3000 ]]; then
+              if [[ "$CONTAINER_SECURITY_RESULT" != "success" ]]; then
+                echo "::error::Container scan and SBOM must both succeed"
+                FAILED=true
+              fi
+            elif [[ "$CONTAINER_SECURITY_CHANGED" != "false" || "$CONTAINER_SECURITY_RESULT" != "skipped" ]]; then
+              echo "::error::Container security applicability or result is invalid"
+              FAILED=true
+            fi
+          fi
           if ! check_result "$LINT_RESULT"; then
             echo "::error::Lint & Format failed"
             FAILED=true
