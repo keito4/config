@@ -1,7 +1,36 @@
 # Trivy Ignore File
 # This file contains CVEs that are intentionally ignored during security scans
+
+# CVE-2026-102828: simple-git: critical vulnerability (Trivy CRITICAL)
+# CVE-2026-102829: @simple-git/argv-parser: critical vulnerability (Trivy CRITICAL)
+# Severity: CRITICAL
+# Affected: simple-git 3.36.0 / @simple-git/argv-parser 1.1.1
+#   (usr/local/lib/node_modules/difit/node_modules/)
+# Fixed in: simple-git 4.0.1 / @simple-git/argv-parser 2.0.1
+# Reason: difit declares simple-git ^3.28.0 and has no release supporting simple-git 4.x,
+#   so updating npm/global.json cannot pull the fix. An npm override would force a major
+#   bump into difit untested. Temporarily accept while waiting for difit to support 4.x.
+# Risk: difit is a local diff viewer run by the developer against their own repositories;
+#   untrusted git arguments are not passed to it in this image. This exception does not fix it.
+# Expected resolution: Remove these entries once difit depends on simple-git >= 4.0.1.
+# Tracking: https://github.com/keito4/config/issues/1339
+# Note 2026-10-10: Accepted per owner decision in monthly maintenance (C).
+# Note 2026-11-11: Re-verified in monthly maintenance. difit is still 5.0.12 with
+#   simple-git ^3.28.0 (checked against the npm registry), and a scan with this entry
+#   removed still reported both CVEs as the only CRITICAL findings, so the exception
+#   is still required. Extended to the next monthly maintenance window.
+# Review date: 2026-12-10
+CVE-2026-102828
+CVE-2026-102829
+
+# Removed 2026-11-11 (monthly maintenance, re-verified by scanning without them):
 #
-# 2026-11-11 月次メンテナンス: 登録済みの4エントリ（CVE-2026-56854 / CVE-2026-102992 /
-# CVE-2026-102828 / CVE-2026-102829）が全て Review date を過ぎたため、一旦すべて外して
-# 現在も検出されるかをこの PR のスキャンで再検証する。再検出されたものだけを
-# 新しい Review date を付けて次のコミットで戻す。
+# - CVE-2026-56854 (golang.org/x/crypto/ssh via 1Password CLI, Review date 2026-11-08)
+#   No longer detected. OP_CLI_VERSION has moved 2.39.0 -> 2.42.0, which ships a build
+#   with x/crypto >= 0.55.0.
+#
+# - CVE-2026-102992 (piscina via Cursor CLI, Review date 2026-11-05)
+#   No longer detected. The Cursor installer now ships a bundle with a patched piscina.
+#
+# Evidence: Container Security Scan on PR #1456 (run 42932284795) with all four entries
+# removed reported exactly 2 critical findings, CVE-2026-102828 and CVE-2026-102829.
