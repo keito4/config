@@ -1,49 +1,6 @@
 # Trivy Ignore File
 # This file contains CVEs that are intentionally ignored during security scans
 
-# CVE-2026-56854: golang.org/x/crypto/ssh: source-address restriction silently ignored
-#   for Permissions returned by non-public-key auth callbacks
-# Severity: CRITICAL (Trivy/NVD). GitHub Advisory GHSA-gjhq-gjfw-99mq rates it HIGH
-#   with CVSS 3.1 7.5 (AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N)
-# Affected: golang.org/x/crypto v0.52.0 embedded in usr/local/bin/op (1Password CLI 2.39.0)
-# Fixed in: golang.org/x/crypto 0.55.0
-# Reason: 1Password CLI is a closed-source pre-built binary. 2.39.0 is the latest release
-#   (confirmed 2026-09-08 via https://app-updates.agilebits.com/check/1/0/CLI2/en/0/N,
-#   the same endpoint update-dev-tools.yml polls), so there is no version to upgrade to.
-#   The defect is in the *server* side of x/crypto/ssh: a source-address critical option
-#   set by PasswordCallback / KeyboardInteractiveCallback / NoClientAuthCallback /
-#   GSSAPIWithMICConfig.AllowLogin was not checked against the client's remote address.
-#   op is used here as a client-side secrets CLI and does not expose an SSH server in
-#   this image, so the vulnerable code path is not reachable in our usage.
-# Expected resolution: Wait for 1Password to ship a CLI build with x/crypto >= 0.55.0.
-#   update-dev-tools.yml bumps OP_CLI_VERSION automatically; remove this entry once a
-#   scan after that bump no longer reports CVE-2026-56854.
-# Tracking: https://developer.1password.com/docs/cli/release-notes/
-# Note 2026-09-08: Advisory published 2026-08-28. main's Trivy scan has failed since
-#   2026-09-01 (last success 2026-08-31), which matches the Trivy DB picking this up.
-# Review date: 2026-11-08
-CVE-2026-56854
-
-# CVE-2026-102992: piscina: Prototype-pollution gadget in ThreadPool.options allows RCE
-# Severity: CRITICAL (Trivy/NVD); upstream advisory rates it HIGH
-# Affected: piscina 4.9.3 bundled in Cursor CLI 2026.10.01-e373342
-# Fixed in: piscina 4.9.4, 5.3.2, 6.0.0-rc.5
-# Reason: Cursor's official installer still distributes this version (checked 2026-10-05).
-#   Verified piscina/package.json in its linux/x64 archive; no newer official CLI build
-#   is offered by the installer. Updating npm/global.json cannot replace this private
-#   dependency. Temporarily accept the finding while awaiting a patched Cursor bundle.
-# Risk: Exploitation requires another bug to pollute Object.prototype in the CLI process;
-#   then worker options can execute code or inject environment variables. We have not
-#   proven that prerequisite unreachable in Cursor. This exception does not fix the RCE.
-# Expected resolution: Recheck the official bundle and remove this entry once it ships
-#   a patched piscina version. This plain-text ignore applies to this CVE image-wide
-#   and does not expire automatically; review any additional occurrences at that time.
-# Tracking: https://github.com/keito4/config/issues/1334
-# Advisory: https://github.com/piscinajs/piscina/security/advisories/GHSA-67c8-pqhq-4rmx
-# Installer: https://cursor.com/install
-# Review date: 2026-11-05
-CVE-2026-102992
-
 # CVE-2026-102828: simple-git: critical vulnerability (Trivy CRITICAL)
 # CVE-2026-102829: @simple-git/argv-parser: critical vulnerability (Trivy CRITICAL)
 # Severity: CRITICAL
@@ -58,6 +15,22 @@ CVE-2026-102992
 # Expected resolution: Remove these entries once difit depends on simple-git >= 4.0.1.
 # Tracking: https://github.com/keito4/config/issues/1339
 # Note 2026-10-10: Accepted per owner decision in monthly maintenance (C).
-# Review date: 2026-11-10
+# Note 2026-11-11: Re-verified in monthly maintenance. difit is still 5.0.12 with
+#   simple-git ^3.28.0 (checked against the npm registry), and a scan with this entry
+#   removed still reported both CVEs as the only CRITICAL findings, so the exception
+#   is still required. Extended to the next monthly maintenance window.
+# Review date: 2026-12-10
 CVE-2026-102828
 CVE-2026-102829
+
+# Removed 2026-11-11 (monthly maintenance, re-verified by scanning without them):
+#
+# - CVE-2026-56854 (golang.org/x/crypto/ssh via 1Password CLI, Review date 2026-11-08)
+#   No longer detected. OP_CLI_VERSION has moved 2.39.0 -> 2.42.0, which ships a build
+#   with x/crypto >= 0.55.0.
+#
+# - CVE-2026-102992 (piscina via Cursor CLI, Review date 2026-11-05)
+#   No longer detected. The Cursor installer now ships a bundle with a patched piscina.
+#
+# Evidence: Container Security Scan on PR #1456 (run 42932284795) with all four entries
+# removed reported exactly 2 critical findings, CVE-2026-102828 and CVE-2026-102829.
