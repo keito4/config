@@ -1,110 +1,53 @@
 'use strict';
 
-const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
-const hooksDir = path.join(__dirname, '../.claude/hooks');
+const hookPath = path.join(__dirname, '../.claude/hooks/block_dangerous_commands.py');
 
-describe('Claude Code command-safety hooks', () => {
-  describe('block_dangerous_commands.py — defense-in-depth', () => {
-    let content;
+/** フックに Bash ツールの入力を流し込み、終了コードを返す */
+function runHook(command) {
+  const result = spawnSync('python3', [hookPath], {
+    input: JSON.stringify({ tool_name: 'Bash', tool_input: { command } }),
+    encoding: 'utf8',
+    cwd: path.dirname(hookPath), // common.py を import できるようにする
+  });
+  return result.status;
+}
 
-    beforeAll(() => {
-      content = fs.readFileSync(path.join(hooksDir, 'block_dangerous_commands.py'), 'utf8');
-    });
+const BLOCKED_EXIT = 2;
+const ALLOWED_EXIT = 0;
 
-    test('should have shebang line', () => {
-      expect(content.startsWith('#!/usr/bin/env python3')).toBe(true);
-    });
+describe('block_dangerous_commands.py — behavioral tests', () => {
+  test.each([
+    ['git force push (--force)', 'git push --force origin main'],
+    ['git force push (-f)', 'git push -f origin main'],
+    ['git reset --hard', 'git reset --hard HEAD~1'],
+    ['rm -rf', 'rm -rf /some/dir'],
+    ['rm -r -f', 'rm -r -f /some/dir'],
+    ['docker system prune', 'docker system prune -a'],
+    ['terraform destroy', 'terraform destroy'],
+    ['kubectl delete deployment', 'kubectl delete deployment web'],
+    ['aws ec2 terminate-instances', 'aws ec2 terminate-instances --instance-ids i-123'],
+    ['aws s3 rm --recursive', 'aws s3 rm s3://bucket --recursive'],
+    ['gcloud projects delete', 'gcloud projects delete my-proj'],
+    ['az group delete', 'az group delete -n rg'],
+    ['npm publish', 'npm publish'],
+    ['SQL DROP (uppercase)', 'psql -c DROP TABLE users'],
+    ['helm uninstall', 'helm uninstall release'],
+    ['vercel --prod', 'vercel --prod'],
+    ['quoted script passed to bash -c', `bash -c 'git push --force origin main'`],
+  ])('should block %s', (_name, command) => {
+    expect(runHook(command)).toBe(BLOCKED_EXIT);
+  });
 
-    test('should define DANGEROUS_PATTERNS list', () => {
-      expect(content).toContain('DANGEROUS_PATTERNS');
-    });
-
-    test('should block git force push (--force)', () => {
-      expect(content).toContain('git\\s+push\\s+[^|&;<>]*--force');
-    });
-
-    test('should block git force push (-f)', () => {
-      expect(content).toContain('git\\s+push\\s+[^|&;<>]*-f\\b');
-    });
-
-    test('should bound force-push wildcard to avoid chained-command false positives', () => {
-      // [^|&;<>]* stops at a pipe/redirect/separator so a later -f in a chained
-      // command or flattened heredoc body does not trigger a false positive.
-      expect(content).not.toContain('git\\s+push\\s+.*-f\\b');
-    });
-
-    test('should block git reset --hard', () => {
-      expect(content).toContain('git\\s+reset\\s+--hard');
-    });
-
-    test('should block rm -rf', () => {
-      // Pattern covers rm -rf, rm -fr, rm -r -f combinations
-      expect(content).toContain('rm\\s+-rf');
-    });
-
-    test('should block docker system prune', () => {
-      expect(content).toContain('docker\\s+system\\s+prune');
-    });
-
-    test('should block terraform destroy', () => {
-      expect(content).toContain('terraform\\s+destroy');
-    });
-
-    test('should block kubectl delete deployments', () => {
-      expect(content).toContain('kubectl\\s+delete');
-    });
-
-    test('should block AWS EC2 terminate', () => {
-      expect(content).toContain('aws\\s+ec2\\s+terminate-instances');
-    });
-
-    test('should block AWS S3 recursive delete', () => {
-      expect(content).toContain('aws\\s+s3\\s+rm\\s+[^|&;<>]*--recursive');
-    });
-
-    test('should block gcloud project deletion', () => {
-      expect(content).toContain('gcloud\\s+projects\\s+delete');
-    });
-
-    test('should block Azure resource group deletion', () => {
-      expect(content).toContain('az\\s+group\\s+delete');
-    });
-
-    test('should block npm publish', () => {
-      expect(content).toContain('npm\\s+publish\\b');
-    });
-
-    test('should block SQL DROP statements', () => {
-      expect(content).toContain('drop\\s+(database|table|schema');
-    });
-
-    test('should block Helm uninstall', () => {
-      expect(content).toContain('helm\\s+(uninstall|delete)');
-    });
-
-    test('should block Vercel production deploy', () => {
-      expect(content).toContain('vercel\\s+--prod\\b');
-    });
-
-    test('should bound all flag wildcards to a single command (no greedy \\s+.*)', () => {
-      // Flag patterns must use [^|&;<>]* instead of .* so a match cannot reach a
-      // flag-like token in a chained command, pipe, redirect or heredoc body
-      // (normalize() flattens newlines to spaces). See #794 and follow-up.
-      expect(content).not.toContain('\\s+.*');
-    });
-
-    test('should exit 2 when dangerous command detected', () => {
-      expect(content).toContain('sys.exit(2)');
-    });
-
-    test('should exit 0 for safe commands', () => {
-      expect(content).toContain('sys.exit(0)');
-    });
-
-    test('should normalize command for matching (lowercase)', () => {
-      expect(content).toContain('.lower()');
-    });
+  test.each([
+    ['empty command', ''],
+    ['plain git push', 'git push origin main'],
+    ['git status', 'git status'],
+    ['-f in a chained command (flag wildcard is bounded)', 'git push origin main && ls -f'],
+    ['dangerous text only inside a quoted data argument', `echo 'git reset --hard'`],
+  ])('should allow %s', (_name, command) => {
+    expect(runHook(command)).toBe(ALLOWED_EXIT);
   });
 });
