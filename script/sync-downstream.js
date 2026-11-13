@@ -144,6 +144,35 @@ function validateGroup(groupName, entries) {
 }
 
 /**
+ * @param {object} repo - Repo entry with a validated name
+ * @param {object} groups - Manifest groups keyed by name
+ * @throws {Error} When the repo has no group opt-ins or references an unknown group
+ */
+function validateRepoGroups(repo, groups) {
+  if (!Array.isArray(repo.groups) || repo.groups.length === 0) {
+    throw new Error(`manifest: repo ${repo.name} must opt into at least one group`);
+  }
+  for (const group of repo.groups) {
+    if (!Object.hasOwn(groups, group)) {
+      throw new Error(`manifest: repo ${repo.name} references unknown group "${group}"`);
+    }
+  }
+}
+
+/**
+ * @param {object} repo - Repo entry with a validated name
+ * @throws {Error} When the optional "exclude" list is not an array of strings
+ */
+function validateRepoExclude(repo) {
+  if (repo.exclude === undefined) {
+    return;
+  }
+  if (!Array.isArray(repo.exclude) || repo.exclude.some((item) => typeof item !== 'string')) {
+    throw new Error(`manifest: repo ${repo.name} "exclude" must be an array of strings`);
+  }
+}
+
+/**
  * @param {unknown} repo - Candidate repo entry
  * @param {object} groups - Manifest groups keyed by name
  * @throws {Error} When the repo entry is missing/malformed, its name/group opt-ins are
@@ -156,20 +185,8 @@ function validateRepo(repo, groups) {
   if (typeof repo.name !== 'string' || !/^[\w.-]+\/[\w.-]+$/u.test(repo.name)) {
     throw new Error(`manifest: invalid repo name: ${JSON.stringify(repo.name)}`);
   }
-  if (!Array.isArray(repo.groups) || repo.groups.length === 0) {
-    throw new Error(`manifest: repo ${repo.name} must opt into at least one group`);
-  }
-  for (const group of repo.groups) {
-    if (!Object.hasOwn(groups, group)) {
-      throw new Error(`manifest: repo ${repo.name} references unknown group "${group}"`);
-    }
-  }
-  if (
-    repo.exclude !== undefined &&
-    (!Array.isArray(repo.exclude) || repo.exclude.some((item) => typeof item !== 'string'))
-  ) {
-    throw new Error(`manifest: repo ${repo.name} "exclude" must be an array of strings`);
-  }
+  validateRepoGroups(repo, groups);
+  validateRepoExclude(repo);
   if (repo.ciBranches !== undefined) {
     validateCiBranches(repo.ciBranches);
   }
