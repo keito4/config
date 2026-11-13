@@ -35,6 +35,9 @@
 | [0027](0027-mcp-shared-http.md)                                 | MCP servers use HTTP where available                              | Accepted           |
 | [0028](0028-macos-ci-integration-tests.md)                      | macOS integration test runner for CI                              | Accepted           |
 | [0029](0029-verify-claude-task-completion.md)                   | Claude の成果物を処理成功とは別に検証する                         | Proposed           |
+| [0030](0030-finalize-claude-issue-state.md)                     | キュー済み Claude Issue を検証済み結果から確定する                | Proposed           |
+| [0031](0031-downstream-ci-branch-scope.md)                      | 下流同期時に CI のブランチスコープを維持する                      | Accepted           |
+| [0032](0032-pr-ci-observation.md)                               | すべての PR で CI 結果を生成する                                  | Accepted           |
 | [0033](0033-pin-node-security-binary.md)                        | macOS Node のセキュリティ修正を公式バイナリで固定する             | Proposed           |
 
 ## ADR テンプレート
