@@ -68,6 +68,7 @@ Development infrastructure template repository providing DevContainer images, CI
 | `script/`            | Utility shell scripts                                       |
 | `templates/`         | Workflow, testing, ESLint, Biome, and policy templates      |
 | `test/`              | Test suites (Jest unit, BATS integration)                   |
+| `tests/`             | Workflow contract tests (CI waiter / fallback)              |
 | `vscode/`            | VS Code extensions list                                     |
 
 ## Available Commands
