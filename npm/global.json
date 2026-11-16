@@ -14,7 +14,7 @@
       "overridden": false
     },
     "@google/gemini-cli": {
-      "version": "0.67.0",
+      "version": "0.68.0",
       "overridden": false
     },
     "@leonardsellem/n8n-mcp-server": {
@@ -22,11 +22,11 @@
       "overridden": false
     },
     "@openai/codex": {
-      "version": "0.167.0",
+      "version": "0.169.0",
       "overridden": false
     },
     "agent-browser": {
-      "version": "0.41.2",
+      "version": "0.43.0",
       "overridden": false
     },
     "bash-language-server": {
@@ -42,11 +42,11 @@
       "overridden": false
     },
     "mcp-remote": {
-      "version": "0.16.5",
+      "version": "0.16.6",
       "overridden": false
     },
     "n8n": {
-      "version": "2.46.6",
+      "version": "2.47.7",
       "overridden": false
     },
     "pm2": {
@@ -54,7 +54,7 @@
       "overridden": false
     },
     "typescript-language-server": {
-      "version": "6.0.3",
+      "version": "6.1.0",
       "overridden": false
     },
     "typescript": {
@@ -62,7 +62,7 @@
       "overridden": false
     },
     "vercel": {
-      "version": "65.12.1",
+      "version": "65.16.0",
       "overridden": false
     },
     "vscode-langservers-extracted": {
