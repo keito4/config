@@ -53,6 +53,7 @@
     "takt": "0.76.1"
   },
   "overrides": {
-    "@opentelemetry/propagator-jaeger": ">=2.9.0"
+    "@opentelemetry/propagator-jaeger": ">=2.9.0",
+    "minimatch": "^11.0.1"
   }
 }
