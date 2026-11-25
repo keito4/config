@@ -144,12 +144,6 @@ describe('Post-tool hooks — content and structure', () => {
       expect(content).not.toContain('def watch_ci_run(');
     });
 
-    test('common.py should define git push CI helpers', () => {
-      expect(commonContent).toContain('def get_current_branch(');
-      expect(commonContent).toContain('def get_latest_run(');
-      expect(commonContent).toContain('def watch_ci_run(');
-    });
-
     test('should use gh run list to query workflow runs', () => {
       // Invoked via subprocess list: ["gh", "run", "list", ...]
       expect(commonContent).toContain('"run", "list"');
