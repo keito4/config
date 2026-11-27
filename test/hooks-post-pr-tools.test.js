@@ -1,237 +1,135 @@
 'use strict';
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const hooksDir = path.join(__dirname, '../.claude/hooks');
-const commonContent = fs.readFileSync(path.join(hooksDir, 'common.py'), 'utf8');
+const python = spawnSync('which', ['python3'], { encoding: 'utf8' }).stdout.trim();
 
-describe('Post-PR and pre-exit-plan hooks — content and structure', () => {
-  // ──────────────────────────────────────────────────────────────
-  // post_pr_ci_watch.py
-  // ──────────────────────────────────────────────────────────────
-  describe('post_pr_ci_watch.py — CI monitor after PR creation', () => {
-    let content;
+let sandbox;
+let binDir;
+let homeDir;
 
-    beforeAll(() => {
-      content = fs.readFileSync(path.join(hooksDir, 'post_pr_ci_watch.py'), 'utf8');
-    });
+function fakeCommand(name, stdout, code = 0) {
+  // printf is a shell builtin, so the script works with PATH limited to binDir.
+  const quoted = `'${stdout.replace(/'/g, "'\\''")}'`;
+  fs.writeFileSync(path.join(binDir, name), `#!/bin/sh\nprintf '%s\\n' ${quoted}\nexit ${code}\n`, { mode: 0o755 });
+}
 
-    test('should have shebang line', () => {
-      expect(content.startsWith('#!/usr/bin/env python3')).toBe(true);
-    });
+function runHook(script, input) {
+  // PATH holds only the fake bin dir so real codex/gemini/gh are never reached.
+  return spawnSync(python, [path.join(hooksDir, script)], {
+    input: JSON.stringify(input),
+    encoding: 'utf8',
+    cwd: hooksDir,
+    env: { PATH: binDir, HOME: homeDir },
+    timeout: 20000,
+  });
+}
 
-    test('should import extract_pr_url from common', () => {
-      expect(content).toContain('extract_pr_url');
-    });
+function writePlan() {
+  const plans = path.join(homeDir, '.claude', 'plans');
+  fs.mkdirSync(plans, { recursive: true });
+  fs.writeFileSync(path.join(plans, 'plan.md'), '# plan\n');
+}
 
-    test('should only trigger on gh pr create commands', () => {
-      expect(content).toContain('"gh pr create"');
-    });
+const bashPostInput = (command, stdout = '') => ({
+  tool_name: 'Bash',
+  tool_input: { command },
+  tool_response: { stdout, stderr: '' },
+});
+const PR_OUTPUT = 'https://github.com/o/r/pull/7';
 
-    test('should skip help invocations via is_help_command', () => {
-      expect(content).toContain('is_help_command');
-    });
+beforeEach(() => {
+  sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'hooks-pr-'));
+  binDir = path.join(sandbox, 'bin');
+  homeDir = path.join(sandbox, 'home');
+  fs.mkdirSync(binDir);
+  fs.mkdirSync(homeDir);
+});
 
-    test('should extract PR number from output', () => {
-      // pr_info should unpack four values including the PR number
-      expect(content).toContain('pr_number');
-    });
+afterEach(() => fs.rmSync(sandbox, { recursive: true, force: true }));
 
-    test('should use get_pr_checks helper from common', () => {
-      expect(content).toContain('get_pr_checks');
-      expect(content).not.toContain('def get_pr_checks(');
-      expect(commonContent).toContain('def get_pr_checks(');
-    });
-
-    test('should use gh pr checks to query check results', () => {
-      // Invoked via subprocess list: ["gh", "pr", "checks", ...]
-      expect(commonContent).toContain('"pr", "checks"');
-    });
-
-    test('should handle "success" conclusion', () => {
-      expect(content).toContain('"success"');
-    });
-
-    test('should handle "failure" conclusion', () => {
-      expect(content).toContain('"failure"');
-    });
-
-    test('should handle "timeout" when CI takes too long', () => {
-      expect(content).toContain('"timeout"');
-    });
-
-    test('should handle "no_checks" when CI is not configured', () => {
-      expect(content).toContain('"no_checks"');
-    });
-
-    test('should prompt the user to fix CI failures on the same branch', () => {
-      expect(content).toContain('このブランチで修正');
-    });
-
-    test('should always exit 0 (PostToolUse must not block)', () => {
-      expect(content).toContain('sys.exit(0)');
-      expect(content).not.toContain('sys.exit(2)');
-    });
+describe('post_pr_ci_watch.py', () => {
+  test.each([
+    ['unrelated commands', bashPostInput('git status', PR_OUTPUT)],
+    ['help invocations', bashPostInput('gh pr create --help', PR_OUTPUT)],
+    ['output without a PR URL', bashPostInput('gh pr create', 'error')],
+    ['non-Bash tools', { tool_name: 'Edit', tool_input: { command: 'gh pr create' } }],
+  ])('does nothing for %s', (_, input) => {
+    const r = runHook('post_pr_ci_watch.py', input);
+    expect(r.status).toBe(0);
+    expect(r.stderr).toBe('');
   });
 
-  // ──────────────────────────────────────────────────────────────
-  // post_pr_ai_review.py
-  // ──────────────────────────────────────────────────────────────
-  describe('post_pr_ai_review.py — AI review after PR creation', () => {
-    let content;
-
-    beforeAll(() => {
-      content = fs.readFileSync(path.join(hooksDir, 'post_pr_ai_review.py'), 'utf8');
-    });
-
-    test('should have shebang line', () => {
-      expect(content.startsWith('#!/usr/bin/env python3')).toBe(true);
-    });
-
-    test('should import extract_pr_url from common', () => {
-      expect(content).toContain('extract_pr_url');
-    });
-
-    test('should only trigger on gh pr create commands', () => {
-      expect(content).toContain('"gh pr create"');
-    });
-
-    test('should check for codex availability via common helper', () => {
-      expect(content).toContain('command_available("codex")');
-      expect(commonContent).toContain('def command_available(');
-    });
-
-    test('should check for gemini availability via common helper', () => {
-      expect(content).toContain('command_available("gemini")');
-    });
-
-    test('should skip gracefully when neither AI tool is installed', () => {
-      expect(content).toContain('not has_codex and not has_gemini');
-    });
-
-    test('should define run_codex_review function', () => {
-      expect(content).toContain('def run_codex_review(');
-    });
-
-    test('should define run_gemini_review function', () => {
-      expect(content).toContain('def run_gemini_review(');
-    });
-
-    test('should define post_pr_comment function', () => {
-      expect(content).toContain('def post_pr_comment(');
-    });
-
-    test('should define check_for_issues function', () => {
-      expect(content).toContain('def check_for_issues(');
-    });
-
-    test('should detect "patch is incorrect" as a problem indicator', () => {
-      expect(content).toContain('patch is incorrect');
-    });
-
-    test('should use gh pr comment to post review results', () => {
-      // Invoked via subprocess list: ["gh", "pr", "comment", ...]
-      expect(content).toContain('"pr", "comment"');
-    });
-
-    test('should run codex and gemini in parallel via common helper', () => {
-      expect(content).toContain('run_parallel_reviews');
-      expect(commonContent).toContain('ThreadPoolExecutor');
-    });
-
-    test('should include a timeout for AI review calls', () => {
-      expect(content).toContain('timeout=600');
-    });
-
-    test('common.py should handle AI command timeouts gracefully', () => {
-      expect(commonContent).toContain('TimeoutExpired');
-    });
-
-    test('should always exit 0 (PostToolUse must not block)', () => {
-      expect(content).toContain('sys.exit(0)');
-      expect(content).not.toContain('sys.exit(2)');
-    });
+  test('reports failing checks without blocking', () => {
+    fakeCommand('gh', '[{"name":"lint","bucket":"fail"}]', 1);
+    const r = runHook('post_pr_ci_watch.py', bashPostInput('gh pr create', PR_OUTPUT));
+    expect(r.status).toBe(0);
+    expect(r.stderr).toContain('- lint');
+    expect(r.stderr).toContain('このブランチで修正');
   });
 
-  // ──────────────────────────────────────────────────────────────
-  // pre_exit_plan_ai_review.py
-  // ──────────────────────────────────────────────────────────────
-  describe('pre_exit_plan_ai_review.py — AI plan review before ExitPlanMode', () => {
-    let content;
+  test('reports success when all checks pass', () => {
+    fakeCommand('gh', '[{"name":"lint","bucket":"pass"}]');
+    const r = runHook('post_pr_ci_watch.py', bashPostInput('gh pr create', PR_OUTPUT));
+    expect(r.status).toBe(0);
+    expect(r.stderr).toContain('全CIチェック成功');
+  });
+});
 
-    beforeAll(() => {
-      content = fs.readFileSync(path.join(hooksDir, 'pre_exit_plan_ai_review.py'), 'utf8');
-    });
+describe('post_pr_ai_review.py', () => {
+  test('ignores commands other than gh pr create', () => {
+    const r = runHook('post_pr_ai_review.py', bashPostInput('git status', PR_OUTPUT));
+    expect(r.status).toBe(0);
+    expect(r.stderr).toBe('');
+  });
 
-    test('should have shebang line', () => {
-      expect(content.startsWith('#!/usr/bin/env python3')).toBe(true);
-    });
+  test('skips without blocking when neither codex nor gemini is installed', () => {
+    const r = runHook('post_pr_ai_review.py', bashPostInput('gh pr create', PR_OUTPUT));
+    expect(r.status).toBe(0);
+    expect(r.stderr).toContain('スキップ');
+  });
+});
 
-    test('should import load_hook_input from common', () => {
-      expect(content).toContain('load_hook_input');
-    });
+describe('pre_exit_plan_ai_review.py', () => {
+  const exitPlan = { tool_name: 'ExitPlanMode', tool_input: {} };
 
-    test('should only trigger when tool_name is ExitPlanMode', () => {
-      expect(content).toContain('"ExitPlanMode"');
-    });
+  test('ignores tools other than ExitPlanMode', () => {
+    fakeCommand('codex', 'plan needs revision');
+    writePlan();
+    const r = runHook('pre_exit_plan_ai_review.py', { tool_name: 'Bash', tool_input: {} });
+    expect(r.status).toBe(0);
+    expect(r.stderr).toBe('');
+  });
 
-    test('should skip gracefully when neither AI tool is installed', () => {
-      expect(content).toContain('not has_codex and not has_gemini');
-    });
+  test('skips when no AI tool is installed', () => {
+    writePlan();
+    const r = runHook('pre_exit_plan_ai_review.py', exitPlan);
+    expect(r.status).toBe(0);
+    expect(r.stderr).toContain('スキップ');
+  });
 
-    test('should check AI tool availability via common helper', () => {
-      expect(content).toContain('command_available("codex")');
-      expect(content).toContain('command_available("gemini")');
-    });
+  test('skips when no plan file exists', () => {
+    fakeCommand('codex', 'plan needs revision');
+    const r = runHook('pre_exit_plan_ai_review.py', exitPlan);
+    expect(r.status).toBe(0);
+    expect(r.stderr).toContain('プランファイルが見つかりません');
+  });
 
-    test('should look for plan files in ~/.claude/plans directory', () => {
-      expect(content).toContain('.claude/plans');
-    });
+  test('blocks with exit 2 when a reviewer says the plan needs revision', () => {
+    fakeCommand('codex', 'Verdict: plan needs revision');
+    writePlan();
+    expect(runHook('pre_exit_plan_ai_review.py', exitPlan).status).toBe(2);
+  });
 
-    test('should detect plan files by .md extension', () => {
-      expect(content).toContain('*.md');
-    });
-
-    test('should read the most recently modified plan file', () => {
-      expect(content).toContain('os.path.getmtime');
-    });
-
-    test('should define run_codex_review for plan analysis', () => {
-      expect(content).toContain('def run_codex_review(');
-    });
-
-    test('should define run_gemini_review for plan analysis', () => {
-      expect(content).toContain('def run_gemini_review(');
-    });
-
-    test('should check for "plan needs revision" verdict from AI', () => {
-      expect(content).toContain('plan needs revision');
-    });
-
-    test('should check for "plan is ready" verdict from AI', () => {
-      expect(content).toContain('plan is ready');
-    });
-
-    test('should block with exit 2 when revision is needed', () => {
-      expect(content).toContain('sys.exit(2)');
-    });
-
-    test('should allow with exit 0 when plan is approved', () => {
-      expect(content).toContain('sys.exit(0)');
-    });
-
-    test('should run both AI reviews with a 10-minute timeout', () => {
-      expect(content).toContain('timeout=600');
-    });
-
-    test('should propagate review_prompt that includes plan content', () => {
-      expect(content).toContain('plan_content');
-      expect(content).toContain('review_prompt');
-    });
-
-    test('should handle file read errors gracefully', () => {
-      expect(content).toContain('except Exception');
-    });
+  test('allows when the reviewer says the plan is ready', () => {
+    fakeCommand('gemini', 'Verdict: plan is ready');
+    writePlan();
+    const r = runHook('pre_exit_plan_ai_review.py', exitPlan);
+    expect(r.status).toBe(0);
+    expect(r.stderr).toContain('問題なし');
   });
 });
